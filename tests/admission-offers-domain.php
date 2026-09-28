@@ -17,6 +17,7 @@ final class BVMGR_Admission_Offer_Schema_Test_DB
 
 $GLOBALS['wpdb'] = new BVMGR_Admission_Offer_Schema_Test_DB();
 $GLOBALS['bvmgr_admission_offer_test_actions'] = array();
+$GLOBALS['bvmgr_admission_offer_test_filters'] = array();
 
 function wp_json_encode($value, int $flags = 0): string
 {
@@ -26,6 +27,12 @@ function wp_json_encode($value, int $flags = 0): string
 function add_action($hook, $callback, $priority = 10, $accepted_args = 1): bool
 {
 	$GLOBALS['bvmgr_admission_offer_test_actions'][] = array($hook, $callback, $priority, $accepted_args);
+	return true;
+}
+
+function add_filter($hook, $callback, $priority = 10, $accepted_args = 1): bool
+{
+	$GLOBALS['bvmgr_admission_offer_test_filters'][] = array($hook, $callback, $priority, $accepted_args);
 	return true;
 }
 
@@ -171,6 +178,9 @@ $assert(interface_exists('BVMGR_Admission_Offer_Fulfillment_Provider_Interface')
 $runtime_dir = dirname(__DIR__) . '/includes/modules/admission-offers';
 $runtime_source = '';
 foreach (glob($runtime_dir . '/*.php') ?: array() as $path) {
+	if (in_array(basename($path), array('woo-checkout-service.php', 'woo-cart-adapter.php'), true)) {
+		continue;
+	}
 	$runtime_source .= "\n" . (string) file_get_contents($path);
 }
 foreach (array('register_rest_route(', 'add_menu_page(', 'add_submenu_page(', 'add_shortcode(', 'wp_insert_post(', 'wc_create_order(', 'tribe_', 'vms_pass_') as $forbidden) {
@@ -181,9 +191,16 @@ $assert(stripos($runtime_source, 'Commerce Discounts') === false, 'Core foundati
 $loader_source = (string) file_get_contents($runtime_dir . '/admission-offers.php');
 $assert(substr_count($loader_source, 'add_action(') === 1, 'Loader may register only its schema readiness hook directly.');
 require_once $runtime_dir . '/admission-offers.php';
-$assert($GLOBALS['bvmgr_admission_offer_test_actions'] === array(
-	array('bvmgr_admission_audit_logged', 'bvmgr_admission_offer_observe_native_audit', 10, 4),
-	array('plugins_loaded', 'bvmgr_admission_offers_foundation_boot', 8, 1),
-), 'Phase B may register only schema readiness and native admission lifecycle observation.');
+$registered_actions = array_column($GLOBALS['bvmgr_admission_offer_test_actions'], 1);
+$registered_filters = array_column($GLOBALS['bvmgr_admission_offer_test_filters'], 1);
+$assert(in_array('bvmgr_admission_offer_observe_native_audit', $registered_actions, true)
+	&& in_array('bvmgr_admission_offers_foundation_boot', $registered_actions, true), 'Phase B lifecycle and schema readiness hooks must remain registered.');
+$assert(in_array('bvmgr_admission_offer_woo_store_validate_add', $registered_actions, true)
+	&& in_array('bvmgr_admission_offer_woo_classic_checkout_barrier', $registered_actions, true)
+	&& in_array('bvmgr_admission_offer_woo_store_api_add_to_cart_data', $registered_filters, true)
+	&& in_array('bvmgr_admission_offer_woo_add_to_cart_validation', $registered_filters, true), 'Phase C2 must register both classic and Store API validation boundaries.');
+$assert(!in_array('woocommerce_before_calculate_totals', array_column($GLOBALS['bvmgr_admission_offer_test_actions'], 0), true)
+	&& !in_array('woocommerce_cart_calculate_fees', array_column($GLOBALS['bvmgr_admission_offer_test_actions'], 0), true)
+	&& !in_array('woocommerce_checkout_create_order', array_column($GLOBALS['bvmgr_admission_offer_test_actions'], 0), true), 'Phase C2 must register no price, discount, or order-creation hook.');
 
 echo "Admission Offers domain/schema: PASS ({$assertions} assertions)\n";

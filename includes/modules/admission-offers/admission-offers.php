@@ -11,6 +11,8 @@ require_once __DIR__ . '/eligibility.php';
 require_once __DIR__ . '/native-complimentary.php';
 require_once __DIR__ . '/claim-service.php';
 require_once __DIR__ . '/paid-claim-service.php';
+require_once __DIR__ . '/woo-checkout-service.php';
+require_once __DIR__ . '/woo-cart-adapter.php';
 require_once __DIR__ . '/lifecycle.php';
 
 if (!function_exists('bvmgr_admission_offers_foundation_boot')) {
@@ -20,7 +22,7 @@ if (!function_exists('bvmgr_admission_offers_foundation_boot')) {
 	}
 }
 
-// Phase B/C1 expose internal provider-facing services and observe the native
-// BVM admission lifecycle. They intentionally register no public route, admin
-// menu, cart/payment observer, campaign surface, or distribution adapter.
+// Phase C2 adds only Woo session/cart validation and an explicit fail-closed
+// checkout barrier. It registers no public activation route, pricing mutation,
+// order/payment hook, credential path, campaign surface, or scheduler.
 add_action('plugins_loaded', 'bvmgr_admission_offers_foundation_boot', 8);

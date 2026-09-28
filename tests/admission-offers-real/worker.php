@@ -46,6 +46,52 @@ if (($payload['mode'] ?? '') === 'paid_claim') {
 	exit(0);
 }
 
+if (($payload['mode'] ?? '') === 'woocommerce_checkout') {
+	global $wpdb;
+	wp_set_current_user(0);
+	$session = new WC_Session_Handler();
+	$session->init_session_cookie();
+	$cart = new WC_Cart();
+	WC()->session = $session;
+	WC()->cart = $cart;
+	$connection_id = (int) $wpdb->get_var('SELECT CONNECTION_ID()');
+	$interrupt = static function (string $point) use ($payload): void {
+		if ($point !== 'after_claim_lock' || empty($payload['marker'])) return;
+		file_put_contents((string) $payload['marker'], 'locked');
+		$deadline = microtime(true) + 15;
+		while (!is_file((string) $payload['release'])) {
+			if (microtime(true) > $deadline) throw new RuntimeException('release_timeout');
+			usleep(20000);
+		}
+	};
+	$service = new BVMGR_Admission_Offer_Woo_Checkout_Service(
+		$wpdb,
+		static fn(): string => (string) $payload['now'],
+		static fn() => $session,
+		static fn() => $cart,
+		null,
+		$interrupt
+	);
+	try {
+		$result = $service->activate((array) $payload['request']);
+		echo json_encode(array(
+			'ok' => true,
+			'connection_id' => $connection_id,
+			'session_id' => (string) $session->get_customer_id(),
+			'checkout_id' => (int) $result['checkout']['id'],
+		), JSON_THROW_ON_ERROR);
+	} catch (Throwable $error) {
+		echo json_encode(array(
+			'ok' => false,
+			'connection_id' => $connection_id,
+			'session_id' => (string) $session->get_customer_id(),
+			'error_class' => get_class($error),
+			'error' => $error->getMessage(),
+		), JSON_THROW_ON_ERROR);
+	}
+	exit(0);
+}
+
 final class BVMGR_Admission_Offer_Real_Pause_Store implements BVMGR_Admission_Offer_Capacity_Store_Interface
 {
 	private BVMGR_Admission_Offer_WPDB_Capacity_Store $inner;

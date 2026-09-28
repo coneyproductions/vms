@@ -273,8 +273,13 @@ final class BVMGR_Admission_Offer_Checkout_Repository extends BVMGR_Admission_Of
 			throw new BVMGR_Admission_Offer_Domain_Exception('invalid_checkout_minor_units');
 		}
 
+		$public_id = isset($input['public_id']) ? trim((string) $input['public_id']) : bvmgr_admission_offer_generate_public_id('ax');
+		if (!preg_match('/^ax_[a-f0-9]{32}$/', $public_id)) {
+			throw new BVMGR_Admission_Offer_Domain_Exception('invalid_checkout_public_id');
+		}
+
 		$data = array(
-			'public_id' => bvmgr_admission_offer_generate_public_id('ax'),
+			'public_id' => $public_id,
 			'offer_id' => (int) $input['offer_id'],
 			'claim_id' => (int) $input['claim_id'],
 			'reservation_id' => isset($input['reservation_id']) && (int) $input['reservation_id'] > 0 ? (int) $input['reservation_id'] : null,

@@ -25,8 +25,9 @@ repo_root=$(CDPATH= cd -- "$(dirname "$0")/../.." && pwd)
 public_root=${BVM_ADMISSION_OFFERS_PUBLIC_ROOT:-$(CDPATH= cd -- "$repo_root/../../../.." && pwd)}
 pre_phase_root=${BVM_ADMISSION_OFFERS_PRE_PHASE_ROOT:-$(CDPATH= cd -- "$repo_root/../vms-github-reconcile" && pwd)}
 plugin_root=${BVM_ADMISSION_OFFERS_PLUGIN_ROOT:-$repo_root}
+worktree_live_root=$(CDPATH= cd -- "$repo_root/../.." && pwd)/vms
 case "$plugin_root" in
-	"$repo_root"|"$public_root/wp-content/plugins/vms") ;;
+	"$repo_root"|"$worktree_live_root"|"$public_root/wp-content/plugins/vms") ;;
 	*) echo "certification plugin root is outside the approved mirror/live pair" >&2; exit 2 ;;
 esac
 if [ -n "$(git -C "$pre_phase_root" status --short)" ] || [ -e "$pre_phase_root/includes/modules/admission-offers" ] || grep -q "admission-offers/admission-offers.php" "$pre_phase_root/includes/modules/load.php"; then
@@ -64,6 +65,7 @@ EOF
 MYSQL_PWD="$db_password" "$mysql_command" --no-defaults --protocol=socket --socket="$BVM_DISPOSABLE_DB_SOCKET" -uroot -e 'CREATE DATABASE bvm_admission_offers_cert CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci'
 php83='/opt/homebrew/opt/php@8.3/bin/php'
 "$php83" /opt/homebrew/bin/wp core install --path="$wordpress_root" --url='http://admission-offers.invalid' --title='Admission Offers Certification' --admin_user='cert-admin' --admin_password='cert-password-123!' --admin_email='cert@example.invalid' --skip-email --quiet
+"$php83" /opt/homebrew/bin/wp plugin install woocommerce --version=11.1.2 --activate --path="$wordpress_root" --quiet
 "$php83" /opt/homebrew/bin/wp plugin activate bvm --path="$wordpress_root" --quiet
 "$php83" "$repo_root/tests/admission-offers-real/certify.php" "$wordpress_root" > "$runtime_root/certification.json"
 
