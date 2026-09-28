@@ -133,6 +133,7 @@ if (!function_exists('bvmgr_module_is_enabled')) {
 
 function bvmgr_load_modules(): void {
 	require_once __DIR__ . '/admissions/admissions.php';
+	require_once __DIR__ . '/admission-offers/admission-offers.php';
 	require_once __DIR__ . '/status-notices/status-notices.php';
 	require_once __DIR__ . '/staff-tasks/staff-tasks.php';
 	require_once __DIR__ . '/email-followups/email-followups.php';
