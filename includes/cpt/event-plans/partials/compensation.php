@@ -2,7 +2,7 @@
 
     <?php /* Pay Override Acknowledgment lives in the Compensation section above. */ ?>
 
-    <h4 id="vms-compensation" class="vms-collapsible-title" data-section-key="compensation" data-section-has-data="<?php
+    <h4 id="vms-compensation" class="vms-collapsible-title" data-section-key="compensation" data-section-summary="<?php echo esc_attr((string) ($vms_actual_draft_summary ?? '')); ?>" data-section-has-data="<?php
         echo (
             ((string) $comp_structure !== 'flat_fee')
             || ((string) $flat_fee_amount !== '')
@@ -445,8 +445,8 @@
                 <?php esc_html_e('Save basic event details first to enable pay locking.', 'backstage-venue-manager'); ?>
             </p>
             <p class="vms-mt-8 vms-mb-0">
-                <button type="submit" name="vms_event_plan_action" value="save_draft" class="button button-secondary">
-                    <?php esc_html_e('Save Basic Details', 'backstage-venue-manager'); ?>
+                <button type="button" class="button button-secondary" data-vms-open-section="basics">
+                    <?php esc_html_e('Open Event Details', 'backstage-venue-manager'); ?>
                 </button>
             </p>
         <?php endif; ?>

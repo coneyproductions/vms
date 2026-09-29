@@ -1,5 +1,4 @@
 <?php defined('ABSPATH') || exit; ?>
-    <h4><?php esc_html_e('Event Plan Status & Workflow', 'backstage-venue-manager'); ?></h4>
     <?php
         $vms_cancel_has_data = (
             $plan_status === 'cancelled'
@@ -91,6 +90,11 @@
 
     <?php if ($plan_status !== 'cancelled') : ?>
         <p class="description"><?php esc_html_e('Optional. If you enter a replacement date and click “Mark Cancelled,” Backstage Venue Manager will cancel this plan and immediately create a linked Draft Event Plan for the new date.', 'backstage-venue-manager'); ?></p>
+        <p>
+            <button type="submit" name="vms_event_plan_action" value="mark_cancelled" class="button vms-button-danger">
+                <?php esc_html_e('Mark Cancelled', 'backstage-venue-manager'); ?>
+            </button>
+        </p>
     <?php endif; ?>
 
     <?php if ($plan_status === 'cancelled') : ?>
@@ -130,36 +134,6 @@
     </div>
     <div data-vms-collapsible-break="1"></div>
 
-    <p class="vms-ep-status-current">
-        <strong><?php esc_html_e('Status:', 'backstage-venue-manager'); ?></strong>
-        <?php
-            $plan_status_label = function_exists('bvmgr_event_plan_status_label')
-                ? (string) bvmgr_event_plan_status_label((string) $plan_status)
-                : ucwords(str_replace(array('_', '-'), ' ', (string) $plan_status));
-            echo esc_html($plan_status_label);
-        ?>
-    </p>
- 
-    <p>
-        <button type="submit" name="vms_event_plan_action" value="save_draft" class="button">
-            <?php esc_html_e('Save Draft', 'backstage-venue-manager'); ?>
-        </button>
-
-        <button type="submit" name="vms_event_plan_action" value="mark_ready" class="button button-secondary">
-            <?php esc_html_e('Mark Ready', 'backstage-venue-manager'); ?>
-        </button>
-
-        <button type="submit" name="vms_event_plan_action" value="publish_now" class="button button-primary"
-            <?php echo ($plan_status === 'ready' || $plan_status === 'published') ? '' : ' disabled="disabled"'; ?>>
-            <?php esc_html_e('Publish Now', 'backstage-venue-manager'); ?>
-        </button>
-
-        <button type="submit" name="vms_event_plan_action" value="mark_cancelled" class="button vms-button-danger"
-            <?php echo ($plan_status === 'cancelled') ? ' disabled="disabled"' : ''; ?>>
-            <?php esc_html_e('Mark Cancelled', 'backstage-venue-manager'); ?>
-        </button>
-    </p>
-
     <?php if ($rescheduled_from_id > 0 && get_post_type($rescheduled_from_id) === 'vms_event_plan') : ?>
         <p class="description">
             <strong><?php esc_html_e('Rescheduled from:', 'backstage-venue-manager'); ?></strong>
@@ -168,4 +142,4 @@
         </p>
     <?php endif; ?>
 
-    <p class="description"><?php esc_html_e('“Publish Now” is only available once the plan is Ready. Use “Mark Cancelled” to explicitly cancel a plan.', 'backstage-venue-manager'); ?></p>
+    <p class="description"><?php esc_html_e('Workflow actions use the saved Event Plan state shown in the workspace status header.', 'backstage-venue-manager'); ?></p>

@@ -743,7 +743,11 @@
                 return;
             }
             if (!ajaxUrl || !saveNonce || !(postId > 0)) {
-                setStatus(statusEl, String(labels.saveUnavailable || 'Additional Vendors save is not available right now.'), 'error');
+                const unavailableMessage = String(labels.saveUnavailable || 'Additional Vendors save is not available right now.');
+                setStatus(statusEl, unavailableMessage, 'error');
+                document.dispatchEvent(new CustomEvent('vms:event-plan-section-save-result', {
+                    detail: { section: 'secondary_vendors', ok: false, message: unavailableMessage }
+                }));
                 return;
             }
 
@@ -754,7 +758,11 @@
             if (outcomePanel) {
                 btnSave.disabled = false;
                 const outcomeStatus = outcomePanel.querySelector('[data-vms-outcomes-status]');
-                setStatus(statusEl, outcomeStatus.dataset.unsaved, 'error');
+                const outcomeMessage = outcomeStatus.dataset.unsaved;
+                setStatus(statusEl, outcomeMessage, 'error');
+                document.dispatchEvent(new CustomEvent('vms:event-plan-section-save-result', {
+                    detail: { section: 'secondary_vendors', ok: false, message: outcomeMessage }
+                }));
                 return;
             }
             const params = new URLSearchParams();
@@ -834,12 +842,18 @@
                         : 'Additional Vendors saved.',
                     payload.data.changed ? 'success' : 'info'
                 );
+                document.dispatchEvent(new CustomEvent('vms:event-plan-section-save-result', {
+                    detail: { section: 'secondary_vendors', ok: true }
+                }));
                 return;
             } catch (error) {
                 const message = error && error.message && error.message !== 'secondary_vendor_save_failed'
                     ? error.message
                     : String(labels.saveFailed || 'Additional Vendors could not be saved. Reload the page and try again.');
                 setStatus(statusEl, message, 'error');
+                document.dispatchEvent(new CustomEvent('vms:event-plan-section-save-result', {
+                    detail: { section: 'secondary_vendors', ok: false, message: message }
+                }));
             } finally {
                 if (btnSave && document.body.contains(btnSave)) {
                     btnSave.disabled = false;

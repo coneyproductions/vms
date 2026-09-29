@@ -1930,7 +1930,11 @@
     return postJSON('vms_ticketing_v2_save_config', { plan_id: planId, config: cfg, return_config: 0 }, saveTimeoutMs)
       .then((res) => {
         if (!res || !res.success) {
-          if (!quiet) setV2Msg(humanizeV2Message((res && res.data && res.data.message) ? res.data.message : 'Save failed.'), 'error');
+          const failureMessage = humanizeV2Message((res && res.data && res.data.message) ? res.data.message : 'Save failed.');
+          if (!quiet) setV2Msg(failureMessage, 'error');
+          document.dispatchEvent(new CustomEvent('vms:event-plan-section-save-result', {
+            detail: { section: 'ticketing_v2', ok: false, message: failureMessage }
+          }));
           return false;
         }
         const normalized = res.data && res.data.config ? res.data.config : cfg;
@@ -1942,10 +1946,16 @@
         clearV2PreviewState();
         setV2Note('Config is saved. Preview is read-only; Commit creates or updates the calendar event, tickets, and add-ons.', 'info');
         if (!quiet) setV2Msg('Config saved.', 'success');
+        document.dispatchEvent(new CustomEvent('vms:event-plan-section-save-result', {
+          detail: { section: 'ticketing_v2', ok: true }
+        }));
         return true;
       })
       .catch(() => {
         if (!quiet) setV2Msg('Save failed.', 'error');
+        document.dispatchEvent(new CustomEvent('vms:event-plan-section-save-result', {
+          detail: { section: 'ticketing_v2', ok: false, message: 'Save failed.' }
+        }));
         return false;
       });
   }
@@ -4683,6 +4693,9 @@ if (d.tec_event_id) {
       if (!res || !res.success) {
         const msg = (res && res.data && res.data.message) ? res.data.message : 'Save config failed.';
         if (!o.quiet) setV2Msg(humanizeV2Message(msg), 'error');
+        document.dispatchEvent(new CustomEvent('vms:event-plan-section-save-result', {
+          detail: { section: 'ticketing_v2', ok: false, message: humanizeV2Message(msg) }
+        }));
         throw new Error('save_failed');
       }
       persistRequestedSectionTarget('ticketing_v2');
@@ -4697,6 +4710,9 @@ if (d.tec_event_id) {
         const successMsg = (o.successMsg && String(o.successMsg).trim()) ? String(o.successMsg).trim() : 'Config saved.';
         setV2Msg(successMsg, 'success');
       }
+      document.dispatchEvent(new CustomEvent('vms:event-plan-section-save-result', {
+        detail: { section: 'ticketing_v2', ok: true }
+      }));
       return normalized;
     });
   }
@@ -4781,10 +4797,17 @@ if (d.tec_event_id) {
       v2SaveBtn.disabled = true;
       try {
         if (!(await ensureTicketUiOverridesReadyForAction('Save config'))) {
+          document.dispatchEvent(new CustomEvent('vms:event-plan-section-save-result', {
+            detail: { section: 'ticketing_v2', ok: false, message: 'Save the Public UI overrides before saving Ticketing config.' }
+          }));
           return;
         }
         setV2Msg('Saving config…', 'info');
         await saveV2Config({ successMsg: 'Config saved.' });
+      } catch (error) {
+        document.dispatchEvent(new CustomEvent('vms:event-plan-section-save-result', {
+          detail: { section: 'ticketing_v2', ok: false, message: 'Ticketing config was not saved.' }
+        }));
       } finally {
         v2SaveBtn.disabled = false;
       }

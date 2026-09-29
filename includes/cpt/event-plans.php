@@ -285,12 +285,217 @@ if (!function_exists('bvmgr_event_plan_reopenable_sections')) {
     function bvmgr_event_plan_reopenable_sections(): array
     {
         return array(
+            'basics' => 'vms-event-plan-basics',
+            'schedule' => 'vms-event-plan-schedule',
             'secondary_vendors' => 'vms-additional-vendors',
             'staff' => 'vms-staffing',
             'compensation' => 'vms-compensation',
             'cancellation' => 'vms-cancellation',
             'readiness_details' => 'vms-readiness-details',
             'ticketing_v2' => 'vms_event_plan_ticketing_v2',
+            'advanced' => 'vms_event_plan_advanced_controls',
+        );
+    }
+}
+
+if (!function_exists('bvmgr_event_plan_section_registry')) {
+    /**
+     * Canonical Event Plan workspace sections and their accepted request fields.
+     *
+     * Field ownership is used by the scoped save endpoint. Ticketing v2 keeps its
+     * own Save -> Preview -> Commit contract; readiness and advanced are read-only.
+     */
+    function bvmgr_event_plan_section_registry(): array
+    {
+        return array(
+            'basics' => array(
+                'label' => __('Event Details', 'backstage-venue-manager'),
+                'editable' => true,
+                'strategy' => 'legacy_scoped',
+                'fields' => array('vms_event_date', 'vms_venue_id', 'vms_auto_title'),
+            ),
+            'schedule' => array(
+                'label' => __('Schedule & Lineup', 'backstage-venue-manager'),
+                'editable' => true,
+                'strategy' => 'legacy_scoped',
+                'fields' => array('vms_start_time', 'vms_end_time', 'vms_band_vendor_id', 'vms_clear_primary_vendor', 'vms_clear_lineup_primary_vendor', 'vms_lineup_present', 'vms_lineup_entries'),
+            ),
+            'compensation' => array(
+                'label' => __('Compensation', 'backstage-venue-manager'),
+                'editable' => true,
+                'strategy' => 'legacy_scoped',
+                'fields' => array(
+                    'vms_auto_comp', 'vms_auto_comp_venue', 'vms_comp_structure', 'vms_flat_fee_amount',
+                    'vms_door_split_percent', 'vms_attendance_bonus_mode', 'vms_attendance_bonus_start_count',
+                    'vms_attendance_bonus_step_size', 'vms_attendance_bonus_step_bonus', 'vms_attendance_bonus_per_ticket_rate',
+                    'vms_attendance_bonus_max_bonus', 'vms_commission_percent', 'vms_commission_mode', 'vms_deposit_amount',
+                    'vms_deposit_status', 'vms_deposit_treatment', 'vms_deposit_due_date', 'vms_deposit_paid_date',
+                    'vms_deposit_notes', 'vms_final_payment_timing', 'vms_final_payment_days_after', 'vms_final_payment_date',
+                    'vms_final_payment_custom_text', 'vms_final_payment_method', 'vms_final_payment_method_other',
+                    'vms_comp_package_id', 'vms_comp_selected_option', 'vms_pay_override_ack', 'vms_low_guarantee_ack',
+                ),
+            ),
+            'secondary_vendors' => array(
+                'label' => __('Additional Vendors', 'backstage-venue-manager'),
+                'editable' => true,
+                'strategy' => 'secondary_vendors',
+                'fields' => array(),
+            ),
+            'staff' => array(
+                'label' => __('Staffing', 'backstage-venue-manager'),
+                'editable' => true,
+                'strategy' => 'staffing_atomic',
+                'fields' => array(
+                    'vms_staff_assignments_present', 'vms_staffing_roles_present', 'vms_staff_assignments',
+                    'vms_staff_role_headcount', 'vms_staff_role_activation_threshold', 'vms_staff_role_time_mode',
+                    'vms_staff_role_shift_start', 'vms_staff_role_shift_end', 'vms_staff_role_start_anchor',
+                    'vms_staff_role_start_offset', 'vms_staff_role_end_anchor', 'vms_staff_role_end_offset',
+                    'vms_staff_role_duration_minutes', 'vms_staffing_template_apply', 'vms_staffing_template_id',
+                    'vms_staffing_template_mode',
+                ),
+            ),
+            'ticketing_v2' => array(
+                'label' => __('Ticketing', 'backstage-venue-manager'),
+                'editable' => true,
+                'strategy' => 'ticketing_v2',
+                'fields' => array(
+                    'vms_ticketing_sales_mode', 'vms_external_ticket_url', 'vms_external_ticket_provider',
+                    'vms_event_relationship', 'vms_external_event_producer', 'vms_external_event_producer_website',
+                    'vms_ticketing_enabled_override', 'vms_ticketing_ga_image_mode', 'vms_ticketing_ga_image_id',
+                ),
+            ),
+            'cancellation' => array(
+                'label' => __('Cancellation', 'backstage-venue-manager'),
+                'editable' => true,
+                'strategy' => 'legacy_scoped',
+                'fields' => array('vms_cancel_policy', 'vms_cancel_reason_code', 'vms_cancel_reason_note', 'vms_cancel_vendor_message'),
+            ),
+            'readiness_details' => array(
+                'label' => __('Readiness', 'backstage-venue-manager'),
+                'editable' => false,
+                'strategy' => 'read_only',
+                'fields' => array(),
+            ),
+            'advanced' => array(
+                'label' => __('Advanced', 'backstage-venue-manager'),
+                'editable' => false,
+                'strategy' => 'read_only',
+                'fields' => array(),
+            ),
+        );
+    }
+}
+
+if (!function_exists('bvmgr_event_plan_normalize_save_scope')) {
+    function bvmgr_event_plan_normalize_save_scope(string $scope): string
+    {
+        $scope = sanitize_key($scope);
+        $registry = bvmgr_event_plan_section_registry();
+        if ($scope === '' || empty($registry[$scope]['editable'])) {
+            return '';
+        }
+        return $scope;
+    }
+}
+
+if (!function_exists('bvmgr_event_plan_filter_section_request')) {
+    function bvmgr_event_plan_filter_section_request(string $scope, array $request): array
+    {
+        $scope = bvmgr_event_plan_normalize_save_scope($scope);
+        $registry = bvmgr_event_plan_section_registry();
+        if ($scope === '' || !isset($registry[$scope])) {
+            return array();
+        }
+
+        $filtered = array();
+        foreach ((array) ($registry[$scope]['fields'] ?? array()) as $field) {
+            if (array_key_exists($field, $request)) {
+                $filtered[$field] = $request[$field];
+            }
+        }
+        return $filtered;
+    }
+}
+
+if (!function_exists('bvmgr_event_plan_workspace_status')) {
+    /**
+     * Return the compact, saved-state status used by the operator workspace.
+     */
+    function bvmgr_event_plan_workspace_status(int $post_id, array $context = array()): array
+    {
+        $post_id = absint($post_id);
+        $status_key = function_exists('bvmgr_meta_key')
+            ? (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status')
+            : '_vms_event_plan_status';
+        $tec_key = function_exists('bvmgr_meta_key')
+            ? (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id')
+            : '_vms_tec_event_id';
+        $workflow_status = sanitize_key((string) get_post_meta($post_id, $status_key, true));
+        if ($workflow_status === '') {
+            $workflow_status = 'draft';
+        }
+
+        $tec_event_id = absint(get_post_meta($post_id, $tec_key, true));
+        $tec_post = $tec_event_id > 0 ? get_post($tec_event_id) : null;
+        $tec_status = ($tec_post && $tec_post->post_type === 'tribe_events')
+            ? sanitize_key((string) $tec_post->post_status)
+            : '';
+        $verification = function_exists('bvmgr_event_plan_verify_published_linked_tec_event')
+            ? bvmgr_event_plan_verify_published_linked_tec_event($post_id)
+            : array('ok' => false);
+        $health = function_exists('bvmgr_event_plan_deferred_calendar_publish_health')
+            ? bvmgr_event_plan_deferred_calendar_publish_health($post_id, true)
+            : array();
+        $queue_state = sanitize_key((string) ($health['queue_state'] ?? get_post_meta($post_id, '_vms_calendar_publish_queue_state', true)));
+        $publishing = !empty($health['valid_queued']) || !empty($health['valid_running']);
+        $recovery_needed = get_post_meta($post_id, '_vms_calendar_publish_recovery_needed', true) === '1';
+        $failed = $queue_state === 'failed' || !empty($health['interrupted']) || $recovery_needed;
+
+        if ($publishing) {
+            $calendar_key = 'publishing';
+            $calendar_label = __('Publishing…', 'backstage-venue-manager');
+        } elseif ($failed) {
+            $calendar_key = 'failed';
+            $calendar_label = __('Publish interrupted / failed', 'backstage-venue-manager');
+        } elseif (!empty($verification['ok'])) {
+            $calendar_key = 'published';
+            $calendar_label = __('Published', 'backstage-venue-manager');
+        } else {
+            $calendar_key = 'not_published';
+            $calendar_label = __('Not published', 'backstage-venue-manager');
+        }
+
+        $ticketing_sales_mode = function_exists('bvmgr_event_plan_get_ticketing_sales_mode')
+            ? bvmgr_event_plan_get_ticketing_sales_mode($post_id)
+            : sanitize_key((string) get_post_meta($post_id, '_vms_ticketing_sales_mode', true));
+        $ticketing_label = $ticketing_sales_mode === 'external'
+            ? __('External', 'backstage-venue-manager')
+            : sanitize_text_field((string) ($context['ticketing_label'] ?? __('Serenade Range', 'backstage-venue-manager')));
+
+        $assigned = max(0, (int) ($context['staff_assigned'] ?? 0));
+        $open = max(0, (int) ($context['staff_open'] ?? 0));
+        $blocking = max(0, (int) ($context['blocking_issue_count'] ?? 0));
+
+        return array(
+            'workflow_status' => $workflow_status,
+            'workflow_label' => function_exists('bvmgr_event_plan_status_label')
+                ? (string) bvmgr_event_plan_status_label($workflow_status)
+                : ucwords(str_replace(array('_', '-'), ' ', $workflow_status)),
+            'calendar_key' => $calendar_key,
+            'calendar_label' => $calendar_label,
+            'publishing' => $publishing,
+            'retry_allowed' => $failed && in_array($workflow_status, array('ready', 'published'), true),
+            'tec_event_id' => $tec_event_id,
+            'tec_status' => $tec_status,
+            'tec_label' => $tec_event_id > 0 && $tec_status !== ''
+                ? sprintf(__('TEC #%1$d · %2$s', 'backstage-venue-manager'), $tec_event_id, ucfirst($tec_status))
+                : __('Not linked', 'backstage-venue-manager'),
+            'ticketing_label' => $ticketing_label,
+            'staffing_label' => sprintf(__('%1$d assigned · %2$d open', 'backstage-venue-manager'), $assigned, $open),
+            'blocking_issue_count' => $blocking,
+            'queue_state' => $queue_state,
+            'last_error' => sanitize_key((string) get_post_meta($post_id, '_vms_calendar_publish_last_error', true)),
+            'last_error_message' => sanitize_text_field((string) get_post_meta($post_id, '_vms_calendar_publish_last_error_message', true)),
         );
     }
 }
@@ -664,6 +869,8 @@ class BVMGR_Admin_Event_Plans
         add_action('wp_ajax_vms_get_venue_comp_defaults', array($this, 'ajax_get_venue_comp_defaults'));
         add_action('wp_ajax_vms_get_event_plan_comp_options', array($this, 'ajax_get_event_plan_comp_options'));
         add_action('wp_ajax_vms_load_event_plan_admin_section', array($this, 'ajax_load_event_plan_admin_section'));
+        add_action('wp_ajax_vms_save_event_plan_section', array($this, 'ajax_save_event_plan_section'));
+        add_action('wp_ajax_vms_event_plan_workflow_action', array($this, 'ajax_event_plan_workflow_action'));
         add_action('wp_ajax_vms_save_event_plan_secondary_vendors', array($this, 'ajax_save_event_plan_secondary_vendors'));
         add_action('wp_ajax_vms_save_event_plan_ticket_ui_overrides', array($this, 'ajax_save_event_plan_ticket_ui_overrides'));
         add_action('wp_ajax_vms_save_event_plan_calendar_unpublished_suppress', array($this, 'ajax_save_event_plan_calendar_unpublished_suppress'));
@@ -4540,6 +4747,163 @@ class BVMGR_Admin_Event_Plans
         ));
     }
 
+    /**
+     * Run the existing Event Plan save authority with a bounded, verified request.
+     */
+    private function run_event_plan_scoped_save(int $post_id, string $scope, array $request): array
+    {
+        $post = get_post($post_id);
+        if (!$post instanceof WP_Post || $post->post_type !== 'vms_event_plan') {
+            return array('ok' => false, 'code' => 'event_plan_missing', 'message' => __('Event Plan not found.', 'backstage-venue-manager'));
+        }
+
+        $previous_post = isset($_POST) && is_array($_POST) ? $_POST : array();
+        $request['post_ID'] = $post_id;
+        $request['original_post_status'] = (string) $post->post_status;
+        $request['vms_event_plan_save_scope'] = $scope;
+        $request['vms_secondary_vendors_module_detached'] = '1';
+        if ($scope !== 'staff') {
+            $request['vms_staffing_lazy_unloaded'] = '1';
+        }
+        $request['bvmgr_event_plan_details_nonce'] = wp_create_nonce('bvmgr_save_event_plan_details');
+
+        $GLOBALS['bvmgr_event_plan_scoped_save_result'] = array(
+            'ok' => false,
+            'scope' => $scope,
+            'code' => 'section_save_incomplete',
+            'message' => __('The section save did not complete.', 'backstage-venue-manager'),
+        );
+        $_POST = wp_slash($request);
+        $GLOBALS['bvmgr_event_plan_request_cache_generation'] = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0)) + 1;
+
+        try {
+            $this->save_event_plan_meta($post_id, $post);
+            $result = isset($GLOBALS['bvmgr_event_plan_scoped_save_result']) && is_array($GLOBALS['bvmgr_event_plan_scoped_save_result'])
+                ? $GLOBALS['bvmgr_event_plan_scoped_save_result']
+                : array('ok' => false, 'scope' => $scope, 'code' => 'save_result_missing');
+        } finally {
+            $_POST = $previous_post;
+            $GLOBALS['bvmgr_event_plan_request_cache_generation'] = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0)) + 1;
+            unset($GLOBALS['bvmgr_event_plan_scoped_save_result']);
+        }
+
+        return $result;
+    }
+
+    public function ajax_save_event_plan_section(): void
+    {
+        $request = bvmgr_event_plan_current_post_request();
+        $post_id = absint($request['post_id'] ?? 0);
+        $scope = bvmgr_event_plan_normalize_save_scope((string) ($request['section'] ?? ''));
+        if ($post_id <= 0 || get_post_type($post_id) !== 'vms_event_plan' || $scope === '') {
+            wp_send_json_error(array('message' => __('Invalid Event Plan section.', 'backstage-venue-manager')), 400);
+        }
+        if (!current_user_can('edit_post', $post_id)) {
+            wp_send_json_error(array('message' => __('Not allowed.', 'backstage-venue-manager')), 403);
+        }
+        check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_section_save', 'nonce'), 'nonce', true);
+
+        $registry = bvmgr_event_plan_section_registry();
+        $strategy = sanitize_key((string) ($registry[$scope]['strategy'] ?? ''));
+        if ($strategy === 'secondary_vendors') {
+            wp_send_json_error(array('message' => __('Use the Additional Vendors section save control.', 'backstage-venue-manager')), 409);
+        }
+        if (!in_array($strategy, array('legacy_scoped', 'staffing_atomic', 'ticketing_v2'), true)) {
+            wp_send_json_error(array('message' => __('This section is read-only.', 'backstage-venue-manager')), 400);
+        }
+
+        $scoped_request = bvmgr_event_plan_filter_section_request($scope, $request);
+        $result = $this->run_event_plan_scoped_save($post_id, $scope, $scoped_request);
+        if (empty($result['ok'])) {
+            wp_send_json_error(array(
+                'code' => sanitize_key((string) ($result['code'] ?? $result['error'] ?? 'section_save_failed')),
+                'message' => sanitize_text_field((string) ($result['message'] ?? __('The section was not saved. Review the fields and try again.', 'backstage-venue-manager'))),
+            ), 500);
+        }
+
+        wp_send_json_success(array(
+            'section' => $scope,
+            'verified' => 1,
+            'message' => sprintf(__('%s saved.', 'backstage-venue-manager'), (string) ($registry[$scope]['label'] ?? __('Section', 'backstage-venue-manager'))),
+        ));
+    }
+
+    private function event_plan_saved_workflow_request(int $post_id, string $action): array
+    {
+        $meta_fields = array(
+            'vms_event_date' => '_vms_event_date',
+            'vms_venue_id' => '_vms_venue_id',
+            'vms_comp_structure' => '_vms_comp_structure',
+            'vms_flat_fee_amount' => '_vms_flat_fee_amount',
+            'vms_door_split_percent' => '_vms_door_split_percent',
+            'vms_attendance_bonus_mode' => '_vms_attendance_bonus_mode',
+            'vms_attendance_bonus_start_count' => '_vms_attendance_bonus_start_count',
+            'vms_attendance_bonus_step_size' => '_vms_attendance_bonus_step_size',
+            'vms_attendance_bonus_step_bonus' => '_vms_attendance_bonus_step_bonus',
+            'vms_attendance_bonus_per_ticket_rate' => '_vms_attendance_bonus_per_ticket_rate',
+            'vms_attendance_bonus_max_bonus' => '_vms_attendance_bonus_max_bonus',
+            'vms_commission_percent' => '_vms_commission_percent',
+            'vms_commission_mode' => '_vms_commission_mode',
+        );
+        $request = array('vms_event_plan_action' => $action);
+        foreach ($meta_fields as $field => $meta_key) {
+            $request[$field] = get_post_meta($post_id, $meta_key, true);
+        }
+        if (get_post_meta($post_id, '_vms_pay_override_ack', true) === '1') {
+            $request['vms_pay_override_ack'] = '1';
+        }
+        $low_ack_key = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'low_guarantee_ack') : '_vms_low_guarantee_ack';
+        if (get_post_meta($post_id, $low_ack_key, true) === '1') {
+            $request['vms_low_guarantee_ack'] = '1';
+        }
+        return $request;
+    }
+
+    public function ajax_event_plan_workflow_action(): void
+    {
+        $request = bvmgr_event_plan_current_post_request();
+        $post_id = absint($request['post_id'] ?? 0);
+        $workflow_action = sanitize_key((string) ($request['workflow_action'] ?? ''));
+        $allowed = array('mark_ready', 'publish_now', 'retry_publish');
+        if ($post_id <= 0 || get_post_type($post_id) !== 'vms_event_plan' || !in_array($workflow_action, $allowed, true)) {
+            wp_send_json_error(array('message' => __('Invalid workflow request.', 'backstage-venue-manager')), 400);
+        }
+        if (!current_user_can('edit_post', $post_id)) {
+            wp_send_json_error(array('message' => __('Not allowed.', 'backstage-venue-manager')), 403);
+        }
+        check_ajax_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_workflow_action', 'nonce'), 'nonce', true);
+
+        if ($workflow_action === 'retry_publish') {
+            $queued = function_exists('bvmgr_event_plan_schedule_deferred_calendar_publish')
+                && bvmgr_event_plan_schedule_deferred_calendar_publish($post_id, 'retry');
+            if (!$queued) {
+                wp_send_json_error(array('message' => __('Publishing could not be queued. Review the recovery details and try again.', 'backstage-venue-manager')), 500);
+            }
+            $status_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status';
+            $current_status = sanitize_key((string) get_post_meta($post_id, $status_key, true));
+            update_post_meta($post_id, $status_key, bvmgr_event_plan_status_after_deferred_calendar_publish_queue($current_status, $post_id));
+            wp_send_json_success(array('message' => __('Calendar publication retry queued.', 'backstage-venue-manager'), 'reload' => 1));
+        }
+
+        $result = $this->run_event_plan_scoped_save($post_id, 'workflow', $this->event_plan_saved_workflow_request($post_id, $workflow_action));
+        if (empty($result['ok'])) {
+            wp_send_json_error(array('message' => sanitize_text_field((string) ($result['message'] ?? __('Workflow action failed.', 'backstage-venue-manager')))), 500);
+        }
+
+        $status = bvmgr_event_plan_workspace_status($post_id);
+        $ok = true;
+        if ($workflow_action === 'mark_ready') {
+            $ok = in_array($status['workflow_status'], array('ready', 'published'), true);
+        } elseif ($workflow_action === 'publish_now') {
+            $ok = !empty($status['publishing']) || $status['calendar_key'] === 'published';
+        }
+        if (!$ok) {
+            wp_send_json_error(array('message' => __('The saved-state workflow action was blocked. Review the readiness and section status above.', 'backstage-venue-manager')), 409);
+        }
+
+        wp_send_json_success(array('message' => __('Workflow action completed.', 'backstage-venue-manager'), 'reload' => 1));
+    }
+
     private function event_plan_ticket_ui_override_meta_keys(): array
     {
         return array(
@@ -8406,12 +8770,14 @@ class BVMGR_Admin_Event_Plans
             : '';
         $staff_assignment_total = 0;
         $staff_role_total = 0;
+        $staff_open_total = 0;
         try {
             $staffing_boot_snapshot = function_exists('bvmgr_staffing_resolve_event_snapshot')
                 ? (array) bvmgr_staffing_resolve_event_snapshot((int) $post->ID)
                 : array();
             $staff_assignment_total = max(0, (int) ($staffing_boot_snapshot['headcount_filled_total'] ?? 0));
             $staff_role_total = count((array) ($staffing_boot_snapshot['roles'] ?? array()));
+            $staff_open_total = max(0, (int) ($staffing_boot_snapshot['open_headcount_total'] ?? 0));
         } finally {
             if (function_exists('bvmgr_event_plan_perf_span_finish')) {
                 bvmgr_event_plan_perf_span_finish('event_plan_admin_boot_staffing_summary', (int) $post->ID, $staffing_summary_trace, array(
@@ -8515,8 +8881,9 @@ class BVMGR_Admin_Event_Plans
             }
         ?>
 
-        <div
-            class="vms-ep-basic-grid"
+	        <h4 id="vms-event-plan-basics" class="vms-collapsible-title" data-section-key="basics" data-section-has-data="1" data-section-summary="<?php echo esc_attr(trim(implode(' · ', array_filter(array($event_date, $venue_id_effective > 0 ? get_the_title($venue_id_effective) : ''))))); ?>"><?php esc_html_e('Event Details', 'backstage-venue-manager'); ?></h4>
+	        <div
+	            class="vms-ep-basic-grid"
             <?php echo $scroll_to !== '' ? ' data-vms-scroll-target="' . esc_attr($scroll_to) . '"' : ''; ?>
             data-vms-lazy-loading-label="<?php echo esc_attr__('Loading section editor…', 'backstage-venue-manager'); ?>"
             data-vms-lazy-error-label="<?php echo esc_attr__('Unable to load this editor section right now. Refresh and try again.', 'backstage-venue-manager'); ?>"
@@ -8664,11 +9031,12 @@ class BVMGR_Admin_Event_Plans
         ?>
 
 
-    <?php $vms_time_lineup_html = $this->capture_event_plan_partial('time-lineup', get_defined_vars()); ?>
-    <?php echo $vms_time_lineup_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+	    <?php $vms_title_html = $this->capture_event_plan_partial('title', get_defined_vars()); ?>
+	    <?php echo $vms_title_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+	    </div>
 
-    <?php $vms_title_html = $this->capture_event_plan_partial('title', get_defined_vars()); ?>
-    <?php echo $vms_title_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+	    <?php $vms_time_lineup_html = $this->capture_event_plan_partial('time-lineup', get_defined_vars()); ?>
+	    <?php echo $vms_time_lineup_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
     <?php $vms_comp_defaults_nonce = wp_create_nonce('bvmgr_get_venue_comp_defaults'); ?>
     <?php $vms_compensation_html = $this->capture_event_plan_partial('compensation', get_defined_vars()); ?>
@@ -8732,7 +9100,7 @@ class BVMGR_Admin_Event_Plans
             data-vms-lazy-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
             data-vms-lazy-nonce="<?php echo esc_attr(wp_create_nonce('bvmgr_event_plan_admin_section')); ?>"
         >
-            <button type="button" class="vms-collapsible-toggle" aria-expanded="false">
+	            <button type="button" class="vms-collapsible-toggle" aria-expanded="false">
                 <span class="vms-collapsible-chevron" aria-hidden="true"></span>
                 <span class="vms-collapsible-label"><?php esc_html_e('Additional Vendors', 'backstage-venue-manager'); ?></span>
                 <span class="vms-collapsible-meta"><?php echo esc_html(implode(' • ', array_filter($vms_secondary_summary_bits))); ?></span>
@@ -8799,7 +9167,8 @@ class BVMGR_Admin_Event_Plans
         >
             <button type="button" class="vms-collapsible-toggle" aria-expanded="false">
                 <span class="vms-collapsible-chevron" aria-hidden="true"></span>
-                <span class="vms-collapsible-label"><?php esc_html_e('Staff', 'backstage-venue-manager'); ?></span>
+	                <span class="vms-collapsible-label"><?php esc_html_e('Staff', 'backstage-venue-manager'); ?></span>
+	                <span class="vms-collapsible-meta"><?php echo esc_html(sprintf(__('%1$d assigned · %2$d open', 'backstage-venue-manager'), $staff_assignment_total, $staff_open_total)); ?></span>
                 <span class="vms-collapsible-flag" aria-hidden="true" hidden><?php esc_html_e('Changed', 'backstage-venue-manager'); ?></span>
             </button>
             <div class="vms-collapsible-body" hidden>
@@ -8937,7 +9306,24 @@ class BVMGR_Admin_Event_Plans
             </div>
         </section>
     <?php endif; ?>
-    <?php echo $vms_workflow_status_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+	    <?php
+	        $workspace_ticketing = $this->get_event_plan_ticketing_boot_summary((int) $post->ID);
+	        $workspace_ticket_mode = sanitize_key((string) ($workspace_ticketing['ticket_mode'] ?? 'read_only'));
+	        $workspace_ticket_count = max(0, (int) ($workspace_ticketing['enabled_ticket_count'] ?? 0));
+	        $workspace_ticket_label = sprintf(
+	            __('%1$s · %2$d ticket types', 'backstage-venue-manager'),
+	            $workspace_ticket_mode === 'vms_managed' ? __('VMS managed', 'backstage-venue-manager') : ($workspace_ticket_mode === 'none' ? __('None', 'backstage-venue-manager') : __('Read-only', 'backstage-venue-manager')),
+	            $workspace_ticket_count
+	        );
+	        $workspace_status = bvmgr_event_plan_workspace_status((int) $post->ID, array(
+	            'ticketing_label' => $workspace_ticket_label,
+	            'staff_assigned' => $staff_assignment_total,
+	            'staff_open' => $staff_open_total,
+	            'blocking_issue_count' => absint($readiness_boot_summary['blocking_issue_count'] ?? 0),
+	        ));
+	        echo $this->capture_event_plan_partial('workspace-status', get_defined_vars()); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	    ?>
+	    <?php echo $vms_workflow_status_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
 	    <?php
         // Scroll helper (optional)
@@ -8971,6 +9357,14 @@ class BVMGR_Admin_Event_Plans
         if (isset($request['post_ID']) && absint($request['post_ID']) > 0 && absint($request['post_ID']) !== $post_id) {
             return;
         }
+
+        $section_save_scope = isset($request['vms_event_plan_save_scope'])
+            ? sanitize_key((string) $request['vms_event_plan_save_scope'])
+            : '';
+        $section_scoped_save = $section_save_scope !== '';
+        $save_compensation_scope = !$section_scoped_save || $section_save_scope === 'compensation';
+        $save_cancellation_scope = !$section_scoped_save || $section_save_scope === 'cancellation';
+        $evaluate_compensation_rules = !$section_scoped_save || in_array($section_save_scope, array('compensation', 'workflow'), true);
 
         if (function_exists('bvmgr_event_occurrence_lock_editor_request')) {
             $occurrence_lock = bvmgr_event_occurrence_lock_editor_request($post_id, $request);
@@ -9035,7 +9429,9 @@ class BVMGR_Admin_Event_Plans
         $lock_pay_request_basics = $this->get_lock_pay_basics_state($post_id, $request);
 
 	        // The main WP editor content is now the single canonical event description.
-	        delete_post_meta($post_id, '_vms_agenda_text');
+	        if (!$section_scoped_save) {
+	            delete_post_meta($post_id, '_vms_agenda_text');
+	        }
 
 	        $primary_vendor_submission = function_exists('bvmgr_event_plan_resolve_primary_vendor_submission')
 	            ? bvmgr_event_plan_resolve_primary_vendor_submission($post_id, $request)
@@ -9680,7 +10076,7 @@ class BVMGR_Admin_Event_Plans
 	                }
 
                 // Enforce acknowledgment if mismatch
-                if ($has_default && $differs && !$ack) {
+                if ($evaluate_compensation_rules && $has_default && $differs && !$ack) {
 
                     $requested_action = isset($request['vms_event_plan_action']) ? sanitize_text_field((string) $request['vms_event_plan_action']) : '';
                     $needs_ack_to_proceed = in_array($requested_action, array('mark_ready', 'publish_now', 'lock_draft_pay'), true);
@@ -9745,7 +10141,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
 
                 $needs_low_ack_to_proceed = in_array($requested_action_raw, array('mark_ready', 'publish_now', 'lock_draft_pay'), true);
 
-                if ($requires_low_guarantee_ack && !$low_guarantee_ack) {
+                if ($evaluate_compensation_rules && $requires_low_guarantee_ack && !$low_guarantee_ack) {
 
                     if (function_exists('bvmgr_add_admin_notice')) {
                         $sel = '$' . number_format_i18n((float) $selected_guarantee, 2);
@@ -10127,8 +10523,9 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 }
                 }
 
-                // Audit trail + default snapshot storage
-                if ($has_default) {
+                // Audit trail + default snapshot storage. Scoped non-compensation
+                // saves must not rewrite pay snapshots or acknowledgments.
+                if ($save_compensation_scope && $has_default) {
                     update_post_meta($post_id, '_vms_pay_default_source', $default['source']);
                     update_post_meta($post_id, '_vms_pay_default_structure', $default['structure']);
                     if ($default['flat_fee_amount'] === null) delete_post_meta($post_id, '_vms_pay_default_flat_fee_amount');
@@ -10157,7 +10554,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
 
                     if ($default['holiday_name'] !== '') update_post_meta($post_id, '_vms_pay_default_holiday_name', $default['holiday_name']);
                     else delete_post_meta($post_id, '_vms_pay_default_holiday_name');
-                } else {
+                } elseif ($save_compensation_scope) {
                     delete_post_meta($post_id, '_vms_pay_default_source');
                     delete_post_meta($post_id, '_vms_pay_default_structure');
                     delete_post_meta($post_id, '_vms_pay_default_flat_fee_amount');
@@ -10171,7 +10568,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     delete_post_meta($post_id, '_vms_pay_default_holiday_name');
                 }
 
-                if ($has_default && $differs && $ack) {
+                if ($save_compensation_scope && $has_default && $differs && $ack) {
                     $pay_ack_default_snapshot = array(
                         'source' => $default['source'],
                         'label'  => $default['label'],
@@ -10213,7 +10610,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     }
                     update_post_meta($post_id, '_vms_pay_override_ack_default_snapshot', $pay_ack_default_snapshot);
                     update_post_meta($post_id, '_vms_pay_override_ack_actual_snapshot', $pay_ack_actual_snapshot);
-                } else {
+                } elseif ($save_compensation_scope) {
                     // If no mismatch, do not keep an old acknowledgment around
                     delete_post_meta($post_id, '_vms_pay_override_ack');
                     delete_post_meta($post_id, '_vms_pay_override_ack_ts');
@@ -10228,7 +10625,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 $k_low_ack_user = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'low_guarantee_ack_user_id') : '_vms_low_guarantee_ack_user_id';
                 $k_low_ack_snapshot = function_exists('bvmgr_meta_key') ? bvmgr_meta_key('event_plan', 'low_guarantee_ack_snapshot') : '_vms_low_guarantee_ack_snapshot';
 
-                if ($requires_low_guarantee_ack && $low_guarantee_ack) {
+                if ($save_compensation_scope && $requires_low_guarantee_ack && $low_guarantee_ack) {
                     $low_ack_snapshot = array(
                         'structure' => $actual['structure'],
                         'flat_fee_amount' => $actual['flat_fee_amount'],
@@ -10255,7 +10652,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                         update_post_meta($post_id, $k_low_ack_user, get_current_user_id());
                     }
                     update_post_meta($post_id, $k_low_ack_snapshot, $low_ack_snapshot);
-                } else {
+                } elseif ($save_compensation_scope) {
                     delete_post_meta($post_id, $k_low_ack);
                     delete_post_meta($post_id, $k_low_ack_ts);
                     delete_post_meta($post_id, $k_low_ack_user);
@@ -10265,9 +10662,15 @@ if (function_exists('bvmgr_add_admin_notice')) {
 
 
                 // Auto toggles
-                $auto_title      = isset($request['vms_auto_title']) ? '1' : '0';
-                $auto_comp       = isset($request['vms_auto_comp']) ? '1' : '0';
-                $auto_comp_venue = isset($request['vms_auto_comp_venue']) ? '1' : '0';
+                $auto_title = (!$section_scoped_save || $section_save_scope === 'basics')
+                    ? (isset($request['vms_auto_title']) ? '1' : '0')
+                    : ((string) get_post_meta($post_id, '_vms_auto_title', true) ?: '0');
+                $auto_comp = $save_compensation_scope
+                    ? (isset($request['vms_auto_comp']) ? '1' : '0')
+                    : ((string) get_post_meta($post_id, '_vms_auto_comp', true) ?: '1');
+                $auto_comp_venue = $save_compensation_scope
+                    ? (isset($request['vms_auto_comp_venue']) ? '1' : '0')
+                    : ((string) get_post_meta($post_id, '_vms_auto_comp_venue', true) ?: '1');
 
                 // Package selection (persist so dropdown sticks even without Apply)
                 $comp_package_id = isset($request['vms_comp_package_id']) ? absint($request['vms_comp_package_id']) : 0;
@@ -10304,22 +10707,26 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     }
                 }
 
-                if (function_exists('bvmgr_event_plan_store_checkin_close_meta')) {
+                if (!$section_scoped_save && function_exists('bvmgr_event_plan_store_checkin_close_meta')) {
                     bvmgr_event_plan_store_checkin_close_meta($post_id);
                 }
 
                 // Save remaining core meta
-                $fields = array(
-                    '_vms_auto_title'      => $auto_title,
-                    '_vms_auto_comp'       => $auto_comp,
-                    '_vms_auto_comp_venue' => $auto_comp_venue,
-                );
+                $fields = array();
+                if (!$section_scoped_save || $section_save_scope === 'basics') {
+                    $fields['_vms_auto_title'] = $auto_title;
+                }
+                if ($save_compensation_scope) {
+                    $fields['_vms_auto_comp'] = $auto_comp;
+                    $fields['_vms_auto_comp_venue'] = $auto_comp_venue;
+                }
 
                 foreach ($fields as $k => $v) {
                     if ($v === '' || $v === null) delete_post_meta($post_id, $k);
                     else update_post_meta($post_id, $k, $v);
                 }
 
+                if ($save_compensation_scope) {
                 update_post_meta($post_id, '_vms_comp_structure', $comp_structure);
 
                 if ($flat_fee_amount === '') {
@@ -10458,6 +10865,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     if ($sel_opt !== '') update_post_meta($post_id, $k_comp_selected_option, $sel_opt);
                     else delete_post_meta($post_id, $k_comp_selected_option);
                 }
+                }
 
                 // Structured staffing save (STAFF-01 Phase A) with fallback to legacy map behavior.
                 if (!empty($staffing_present)) {
@@ -10541,6 +10949,14 @@ if (function_exists('bvmgr_add_admin_notice')) {
                         : array('ok' => false, 'error' => 'staffing_authority_unavailable', 'stage' => 'authority');
 
                     if (!bvmgr_event_plan_handle_staffing_section_save_result((int) $post_id, $staffing_section_save_result)) {
+                        if ($section_scoped_save) {
+                            $GLOBALS['bvmgr_event_plan_scoped_save_result'] = array(
+                                'ok' => false,
+                                'scope' => $section_save_scope,
+                                'code' => sanitize_key((string) ($staffing_section_save_result['error'] ?? 'staffing_save_failed')),
+                                'message' => __('Staffing was not saved. No partial Staffing changes were kept.', 'backstage-venue-manager'),
+                            );
+                        }
                         if (function_exists('bvmgr_event_plan_perf_span_finish')) {
                             bvmgr_event_plan_perf_span_finish('event_plan_staffing_save', $post_id, $staffing_save_trace, array(
                                 'section' => 'staffing_save',
@@ -10646,7 +11062,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 }
 
                 // Auto behaviors
-                if ($auto_title === '1') {
+                if ((!$section_scoped_save || in_array($section_save_scope, array('basics', 'schedule'), true)) && $auto_title === '1') {
 
                     $band_id = (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
                     $band_name = $band_id ? (string) get_the_title($band_id) : '';
@@ -10697,7 +11113,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 }
 
                 // Keep existing auto-comp behavior
-                if ($auto_comp === '1' && function_exists('bvmgr_maybe_apply_band_comp_defaults_to_plan')) {
+                if ($save_compensation_scope && $auto_comp === '1' && function_exists('bvmgr_maybe_apply_band_comp_defaults_to_plan')) {
                     bvmgr_maybe_apply_band_comp_defaults_to_plan($post_id);
                 }
 
@@ -10745,6 +11161,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     $cancel_reason_code_post = 'other';
                 }
 
+                if ($save_cancellation_scope) {
                 update_post_meta($post_id, $k_cancel_policy, $cancel_policy_post);
                 if ($cancel_reason_code_post === '') {
                     delete_post_meta($post_id, $k_cancel_reason_code);
@@ -10761,6 +11178,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 } else {
                     update_post_meta($post_id, $k_cancel_vendor_message, $cancel_vendor_message_post);
                 }
+                }
 
                 $current_status = (string) get_post_meta($post_id, $k_plan_status, true);
                 if ($current_status === '') {
@@ -10773,7 +11191,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 $queue_rescheduled_draft_after_cancel = false;
 
                 // BUG-01 hardening: recover legacy Draft+TEC mismatches when WP status is already non-draft.
-                if ($action === '' && $new_status === 'draft') {
+                if (!$section_scoped_save && $action === '' && $new_status === 'draft') {
                     $wp_status_now = sanitize_key((string) get_post_status($post_id));
                     $k_tec = function_exists('bvmgr_meta_key')
                         ? (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id')
@@ -11544,6 +11962,14 @@ if (function_exists('bvmgr_add_admin_notice')) {
 	                        'skip_reason' => $featured_image_only_save ? 'featured_image_only' : '',
 	                    ));
 	                }
+
+                if ($section_scoped_save) {
+                    $GLOBALS['bvmgr_event_plan_scoped_save_result'] = array(
+                        'ok' => true,
+                        'verified' => true,
+                        'scope' => $section_save_scope,
+                    );
+                }
 
                 if (function_exists('bvmgr_event_plan_perf_span_finish')) {
                     bvmgr_event_plan_perf_span_finish(

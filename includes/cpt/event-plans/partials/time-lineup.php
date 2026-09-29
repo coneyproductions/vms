@@ -4,7 +4,7 @@
                 ? bvmgr_event_plan_perf_span_start('event_plan_time_lineup_summary_render', (int) $post->ID, array('section' => 'time_lineup_summary'))
                 : '';
         ?>
-        <h4 class="vms-ep-basic-span"><?php esc_html_e('Time + Lineup & Schedule', 'backstage-venue-manager'); ?></h4>
+        <h4 id="vms-event-plan-schedule" class="vms-collapsible-title" data-section-key="schedule" data-section-has-data="1" data-section-summary="<?php echo esc_attr(sprintf(__('%1$s · %2$d supporting', 'backstage-venue-manager'), $lineup_primary_vendor_label, (int) ($lineup_summary['supporting_count'] ?? count($lineup_supporting_entries)))); ?>"><?php esc_html_e('Schedule & Lineup', 'backstage-venue-manager'); ?></h4>
 
         <div class="vms-ep-basic-item">
             <label for="vms_start_time"><strong><?php esc_html_e('Event Start / End', 'backstage-venue-manager'); ?></strong></label><br />

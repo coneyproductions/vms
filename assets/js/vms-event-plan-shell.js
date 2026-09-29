@@ -79,7 +79,7 @@
 
     var metabox = document.getElementById('vms_event_plan_details');
     var inside = (metabox && metabox.querySelector('.inside')) || document.querySelector('#vms_event_plan_details .inside');
-    var shellRoot = metabox || inside;
+    var shellRoot = form;
     if (!inside || !shellRoot) return false;
 
     var postIdInput = document.getElementById('post_ID') || form.querySelector('input#post_ID');
@@ -101,16 +101,26 @@
     var lazyLoadingLabel = readTextAttribute(messageSource, 'data-vms-lazy-loading-label', 'Loading section editor…');
     var lazyErrorLabel = readTextAttribute(messageSource, 'data-vms-lazy-error-label', 'Unable to load this editor section right now. Refresh and try again.');
     var sectionAnchorMap = {
+      basics: 'vms-event-plan-basics',
+      schedule: 'vms-event-plan-schedule',
       secondary_vendors: 'vms-additional-vendors',
       staff: 'vms-staffing',
       compensation: 'vms-compensation',
       cancellation: 'vms-cancellation',
       readiness_details: 'vms-readiness-details',
-      ticketing_v2: 'vms_event_plan_ticketing_v2'
+      ticketing_v2: 'vms_event_plan_ticketing_v2',
+      advanced: 'vms_event_plan_advanced_controls'
     };
     var lastTouchedSectionKey = '';
     var requestedSectionHandled = false;
-    var defaultCollapsedKeys = new Set(['cancellation', 'secondary_vendors', 'staff', 'readiness_details']);
+    var editableSectionOrder = ['basics', 'schedule', 'compensation', 'secondary_vendors', 'staff', 'ticketing_v2', 'cancellation'];
+    var editableSectionKeys = new Set(editableSectionOrder);
+    var activeSection = null;
+    var pendingSwitchSection = null;
+    var suppressBeforeUnload = false;
+    var statusRoot = document.querySelector('[data-vms-workspace-status]');
+    var sectionSaveUrl = statusRoot ? String(statusRoot.dataset.vmsSectionSaveUrl || '') : '';
+    var sectionSaveNonce = statusRoot ? String(statusRoot.dataset.vmsSectionSaveNonce || '') : '';
 
     function cssEscapeValue(value) {
       var raw = String(value || '');
@@ -224,10 +234,8 @@
       if (isLazySectionUnloaded(section)) {
         return true;
       }
-      if (Object.prototype.hasOwnProperty.call(saved, key)) {
-        return toBool(saved[key]);
-      }
-      return defaultCollapsedKeys.has(key);
+      if (!editableSectionKeys.has(key)) return true;
+      return key !== (normalizeRequestedSectionKey(requestedSectionKey) || 'basics');
     }
 
     function controlDirty(el) {
@@ -261,9 +269,19 @@
 
       var collapsed = section.classList.contains('is-collapsed');
       var dirty = sectionDirty(body);
+      section.classList.toggle('is-dirty', dirty);
       var show = collapsed && dirty;
       flag.classList.toggle('is-visible', show);
       flag.hidden = !show;
+      setSectionStatus(section, dirty ? 'Unsaved changes' : 'Saved', dirty ? 'dirty' : 'saved');
+    }
+
+    function setSectionStatus(section, label, state) {
+      if (!section) return;
+      var status = section.querySelector('[data-vms-section-status]');
+      if (!status) return;
+      status.textContent = label;
+      status.dataset.state = state || '';
     }
 
     function saveState(section) {
@@ -282,7 +300,31 @@
       section.classList.toggle('is-collapsed', !!collapsed);
       if (button) button.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
       if (body) body.hidden = !!collapsed;
+      if (!collapsed && editableSectionKeys.has(String(section.dataset.sectionKey || ''))) {
+        activeSection = section;
+        section.classList.add('is-active');
+      } else {
+        section.classList.remove('is-active');
+        if (activeSection === section) activeSection = null;
+      }
       saveState(section);
+      setFlag(section);
+    }
+
+    function resetSectionBaseline(section) {
+      if (!section) return;
+      section.querySelectorAll('input, select, textarea').forEach(function (control) {
+        control.dataset.vmsInitialState = readControlState(control);
+        if (control.matches('input[type="checkbox"],input[type="radio"]')) {
+          control.defaultChecked = control.checked;
+        } else if (control.tagName === 'SELECT') {
+          Array.from(control.options || []).forEach(function (option) {
+            option.defaultSelected = option.selected;
+          });
+        } else {
+          control.defaultValue = control.value || '';
+        }
+      });
       setFlag(section);
     }
 
@@ -378,9 +420,241 @@
       }
     }
 
+    function getEditableSections() {
+      return editableSectionOrder.map(function (key) {
+        return form.querySelector('.vms-collapsible-section[data-section-key="' + cssEscapeValue(key) + '"]');
+      }).filter(function (section) {
+        return !!section;
+      });
+    }
+
+    function nextEditableSection(section) {
+      var sections = getEditableSections();
+      var index = sections.indexOf(section);
+      if (index < 0 || !sections.length) return null;
+      return sections[(index + 1) % sections.length];
+    }
+
+    function waitForSpecialSave(sectionKey, trigger) {
+      return new Promise(function (resolve) {
+        var settled = false;
+        var timer = window.setTimeout(function () {
+          finish(false, 'The section save did not finish in time.');
+        }, 65000);
+        function finish(ok, message) {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timer);
+          document.removeEventListener('vms:event-plan-section-save-result', onResult);
+          resolve({ ok: !!ok, message: message || '' });
+        }
+        function onResult(event) {
+          var detail = event && event.detail ? event.detail : {};
+          if (String(detail.section || '') !== sectionKey) return;
+          finish(!!detail.ok, String(detail.message || ''));
+        }
+        document.addEventListener('vms:event-plan-section-save-result', onResult);
+        trigger();
+      });
+    }
+
+    function serializeSection(section) {
+      var params = new URLSearchParams();
+      section.querySelectorAll('input[name], select[name], textarea[name]').forEach(function (control) {
+        if (control.disabled || !control.name || control.type === 'submit' || control.type === 'button') return;
+        if ((control.type === 'checkbox' || control.type === 'radio') && !control.checked) return;
+        if (control.tagName === 'SELECT' && control.multiple) {
+          Array.from(control.selectedOptions || []).forEach(function (option) {
+            params.append(control.name, String(option.value || ''));
+          });
+          return;
+        }
+        params.append(control.name, String(control.value || ''));
+      });
+      return params;
+    }
+
+    async function saveSection(section) {
+      if (!section) return { ok: false, message: 'Section not found.' };
+      var key = String(section.dataset.sectionKey || '');
+      setSectionStatus(section, 'Saving…', 'saving');
+      section.classList.add('is-saving');
+
+      try {
+        if (key === 'secondary_vendors') {
+          var vendorSave = section.querySelector('#vms-secondary-vendor-save');
+          if (!vendorSave) return { ok: false, message: 'Load the Additional Vendors editor before saving.' };
+          if (vendorSave.disabled) return { ok: false, message: 'Additional Vendors is already saving.' };
+          return await waitForSpecialSave(key, function () { vendorSave.click(); });
+        }
+
+        if (!sectionSaveUrl || !sectionSaveNonce || !postId) {
+          return { ok: false, message: 'Section save is unavailable. Reload and try again.' };
+        }
+        var params = serializeSection(section);
+        params.set('action', 'vms_save_event_plan_section');
+        params.set('post_id', String(postId));
+        params.set('section', key);
+        params.set('nonce', sectionSaveNonce);
+        var response = await window.fetch(sectionSaveUrl, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+          body: params.toString()
+        });
+        var payload = await response.json().catch(function () { return null; });
+        if (!response.ok || !payload || !payload.success) {
+          return {
+            ok: false,
+            message: payload && payload.data && payload.data.message ? String(payload.data.message) : 'Save failed.'
+          };
+        }
+        if (key === 'ticketing_v2') {
+          var ticketingSave = section.querySelector('#vms-ticketing-v2-save-config-btn');
+          if (ticketingSave) {
+            var ticketingResult = await waitForSpecialSave(key, function () { ticketingSave.click(); });
+            if (!ticketingResult.ok) return ticketingResult;
+          }
+        }
+        return { ok: true, message: payload.data && payload.data.message ? String(payload.data.message) : 'Saved.' };
+      } catch (error) {
+        return { ok: false, message: error && error.message ? error.message : 'Save failed.' };
+      } finally {
+        section.classList.remove('is-saving');
+      }
+    }
+
+    async function saveAndMaybeOpen(section, target) {
+      var result = await saveSection(section);
+      if (!result.ok) {
+        var feedback = section.querySelector('[data-vms-section-feedback]');
+        if (feedback) feedback.textContent = result.message || 'Save failed.';
+        setCollapsed(section, false);
+        setSectionStatus(section, 'Save failed', 'failed');
+        return false;
+      }
+      resetSectionBaseline(section);
+      setSectionStatus(section, 'Saved', 'saved');
+      var successFeedback = section.querySelector('[data-vms-section-feedback]');
+      if (successFeedback) successFeedback.textContent = result.message || 'Saved.';
+      if (target) await openSection(target, true);
+      return true;
+    }
+
+    function ensureDirtyPrompt() {
+      var prompt = document.getElementById('vms-event-plan-dirty-prompt');
+      if (prompt) return prompt;
+      prompt = document.createElement('div');
+      prompt.id = 'vms-event-plan-dirty-prompt';
+      prompt.className = 'vms-ep-dirty-prompt';
+      prompt.hidden = true;
+      prompt.innerHTML =
+        '<div class="vms-ep-dirty-prompt__dialog" role="dialog" aria-modal="true" aria-labelledby="vms-ep-dirty-title">' +
+          '<h2 id="vms-ep-dirty-title">Unsaved section changes</h2>' +
+          '<p data-vms-dirty-copy></p>' +
+          '<div class="vms-ep-dirty-prompt__actions">' +
+            '<button type="button" class="button button-primary" data-vms-dirty-choice="save"></button>' +
+            '<button type="button" class="button" data-vms-dirty-choice="discard"></button>' +
+            '<button type="button" class="button" data-vms-dirty-choice="stay">Stay Here</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(prompt);
+      prompt.addEventListener('click', function (event) {
+        var choice = event.target.closest('[data-vms-dirty-choice]');
+        if (!choice) return;
+        var action = String(choice.dataset.vmsDirtyChoice || '');
+        var current = activeSection;
+        var target = pendingSwitchSection;
+        if (action === 'stay') {
+          prompt.hidden = true;
+          pendingSwitchSection = null;
+          return;
+        }
+        if (action === 'discard') {
+          var targetKey = target ? String(target.dataset.sectionKey || '') : '';
+          var nextUrl = new URL(window.location.href);
+          if (targetKey) nextUrl.searchParams.set('vms_ep_load_section', targetKey);
+          suppressBeforeUnload = true;
+          window.location.assign(nextUrl.toString());
+          return;
+        }
+        if (action === 'save' && current) {
+          prompt.hidden = true;
+          saveAndMaybeOpen(current, target).then(function (ok) {
+            if (ok) pendingSwitchSection = null;
+          });
+        }
+      });
+      return prompt;
+    }
+
+    function showDirtyPrompt(current, target) {
+      var prompt = ensureDirtyPrompt();
+      var targetLabel = target ? (target.querySelector('.vms-collapsible-label') || {}).textContent : 'the next section';
+      var currentLabel = current ? (current.querySelector('.vms-collapsible-label') || {}).textContent : 'this section';
+      prompt.querySelector('[data-vms-dirty-copy]').textContent = currentLabel + ' has unsaved changes.';
+      prompt.querySelector('[data-vms-dirty-choice="save"]').textContent = 'Save & Open ' + targetLabel;
+      prompt.querySelector('[data-vms-dirty-choice="discard"]').textContent = 'Discard Changes & Open ' + targetLabel;
+      pendingSwitchSection = target;
+      prompt.hidden = false;
+    }
+
+    async function openSection(section, force) {
+      if (!section) return false;
+      if (activeSection && activeSection !== section && sectionDirty(activeSection.querySelector('.vms-collapsible-body')) && !force) {
+        showDirtyPrompt(activeSection, section);
+        return false;
+      }
+      if (activeSection && activeSection !== section) setCollapsed(activeSection, true);
+      if (isLazySectionUnloaded(section)) {
+        var loaded = await loadLazySection(section);
+        if (!loaded) return false;
+      }
+      setCollapsed(section, false);
+      lastTouchedSectionKey = String(section.dataset.sectionKey || '');
+      return true;
+    }
+
+    function ensureSectionActions(section) {
+      if (!section) return;
+      var key = String(section.dataset.sectionKey || '');
+      var body = section.querySelector('.vms-collapsible-body');
+      if (!body || !editableSectionKeys.has(key)) return;
+      if (section.dataset.vmsWorkspaceActions === '1' && body.querySelector('.vms-ep-section-actions')) return;
+      section.dataset.vmsWorkspaceActions = '1';
+      var actions = document.createElement('div');
+      actions.className = 'vms-ep-section-actions';
+      actions.innerHTML =
+        '<div class="vms-ep-section-actions__buttons">' +
+          '<button type="button" class="button button-primary" data-vms-section-action="save">Save Changes</button>' +
+          '<button type="button" class="button button-secondary" data-vms-section-action="next">Save &amp; Next</button>' +
+          '<button type="button" class="button" data-vms-section-action="discard">Discard Changes</button>' +
+        '</div>' +
+        '<div class="vms-ep-section-actions__state"><strong data-vms-section-status data-state="saved">Saved</strong><span class="description" data-vms-section-feedback aria-live="polite"></span></div>';
+      body.appendChild(actions);
+    }
+
+    function prepareMetaboxSection(id, key, label) {
+      var box = document.getElementById(id);
+      if (!box || box.classList.contains('vms-collapsible-section')) return;
+      var body = box.querySelector('.inside');
+      if (!body) return;
+      box.classList.remove('closed');
+      box.classList.add('vms-collapsible-section', 'vms-collapsible-section--metabox');
+      box.dataset.sectionKey = key;
+      box.dataset.hasData = '1';
+      body.classList.add('vms-collapsible-body');
+      var toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'vms-collapsible-toggle vms-collapsible-toggle--metabox';
+      toggle.innerHTML = '<span class="vms-collapsible-chevron" aria-hidden="true"></span><span class="vms-collapsible-label"></span><span class="vms-collapsible-flag" hidden>Changed</span>';
+      toggle.querySelector('.vms-collapsible-label').textContent = label;
+      box.insertBefore(toggle, body);
+    }
+
     function revealRequestedSection() {
       var key = normalizeRequestedSectionKey(requestedSectionKey);
-      if (!key || requestedSectionHandled || key === 'ticketing_v2') {
+      if (!key || requestedSectionHandled) {
         return;
       }
 
@@ -394,7 +668,7 @@
       initExistingSection(section);
 
       function reveal() {
-        setCollapsed(section, false);
+        openSection(section, true);
         scrollSectionTargetIntoView(key, section);
       }
 
@@ -423,6 +697,7 @@
           section.dataset.hasData = '0';
         }
       }
+      ensureSectionActions(section);
       bindFlagWatchers(section, body);
       var key = section.dataset.sectionKey || '';
       if (!section.dataset.vmsCollapsedBootstrapped) {
@@ -470,9 +745,12 @@
       toggle.innerHTML =
         '<span class="vms-collapsible-chevron" aria-hidden="true"></span>' +
         '<span class="vms-collapsible-label"></span>' +
+        '<span class="vms-collapsible-meta"></span>' +
         '<span class="vms-collapsible-flag" aria-hidden="true" hidden>Changed</span>';
       label = toggle.querySelector('.vms-collapsible-label');
       if (label) label.textContent = title.textContent || 'Section';
+      var meta = toggle.querySelector('.vms-collapsible-meta');
+      if (meta) meta.textContent = String(title.getAttribute('data-section-summary') || '');
 
       body = document.createElement('div');
       body.className = 'vms-collapsible-body';
@@ -494,7 +772,13 @@
     }
 
     function initCollapsibleSections() {
-	  initTicketingDestinationFields(shellRoot);
+		  initTicketingDestinationFields(shellRoot);
+      prepareMetaboxSection('vms_event_plan_ticketing_v2', 'ticketing_v2', 'Ticketing');
+      if (statusRoot && inside && statusRoot.parentNode !== inside) {
+        inside.insertBefore(statusRoot, inside.firstChild);
+      } else if (statusRoot && inside && inside.firstChild !== statusRoot) {
+        inside.insertBefore(statusRoot, inside.firstChild);
+      }
       Array.from(shellRoot.querySelectorAll('.vms-collapsible-section[data-section-key]')).forEach(initExistingSection);
 
       var titles = getBareTitles();
@@ -502,6 +786,7 @@
       titles.forEach(function (title, index) {
         createWrappedSection(title, index);
       });
+      Array.from(shellRoot.querySelectorAll('.vms-collapsible-section[data-section-key]')).forEach(initExistingSection);
       revealRequestedSection();
     }
 
@@ -516,6 +801,15 @@
 
     if (!form.dataset.vmsCollapseDelegatedBound) {
       form.dataset.vmsCollapseDelegatedBound = '1';
+      form.addEventListener('click', function (event) {
+        var workflowSubmit = event.target.closest('button[type="submit"][name="vms_event_plan_action"]');
+        if (!workflowSubmit || !activeSection || !sectionDirty(activeSection.querySelector('.vms-collapsible-body'))) return;
+        event.preventDefault();
+        event.stopPropagation();
+        var blockedStatus = statusRoot ? statusRoot.querySelector('[data-vms-workflow-status]') : null;
+        var activeLabel = (activeSection.querySelector('.vms-collapsible-label') || {}).textContent || 'active section';
+        if (blockedStatus) blockedStatus.textContent = 'Save ' + activeLabel + ' before running this action.';
+      }, true);
       form.addEventListener('focusin', function (event) {
         var key = resolveSectionKeyFromNode(event.target);
         if (key) {
@@ -540,6 +834,72 @@
           lastTouchedSectionKey = interactedKey;
         }
 
+        var openSectionButton = event.target.closest('[data-vms-open-section]');
+        if (openSectionButton) {
+          event.preventDefault();
+          var requestedKey = normalizeRequestedSectionKey(openSectionButton.dataset.vmsOpenSection || '');
+          var requestedSection = requestedKey
+            ? form.querySelector('.vms-collapsible-section[data-section-key="' + cssEscapeValue(requestedKey) + '"]')
+            : null;
+          if (requestedSection) openSection(requestedSection, false);
+          return;
+        }
+
+        var sectionAction = event.target.closest('[data-vms-section-action]');
+        if (sectionAction) {
+          var actionSection = sectionAction.closest('.vms-collapsible-section[data-section-key]');
+          if (!actionSection) return;
+          event.preventDefault();
+          var sectionActionName = String(sectionAction.dataset.vmsSectionAction || '');
+          if (sectionActionName === 'save') {
+            saveAndMaybeOpen(actionSection, null);
+          } else if (sectionActionName === 'next') {
+            saveAndMaybeOpen(actionSection, nextEditableSection(actionSection));
+          } else if (sectionActionName === 'discard') {
+            suppressBeforeUnload = true;
+            window.location.reload();
+          }
+          return;
+        }
+
+        var workflowButton = event.target.closest('[data-vms-workflow-action]');
+        if (workflowButton) {
+          event.preventDefault();
+          var workflowStatus = statusRoot ? statusRoot.querySelector('[data-vms-workflow-status]') : null;
+          if (activeSection && sectionDirty(activeSection.querySelector('.vms-collapsible-body'))) {
+            var activeLabel = (activeSection.querySelector('.vms-collapsible-label') || {}).textContent || 'active section';
+            if (workflowStatus) workflowStatus.textContent = 'Save ' + activeLabel + ' before changing workflow status.';
+            return;
+          }
+          if (!statusRoot || !statusRoot.dataset.vmsWorkflowUrl || !statusRoot.dataset.vmsWorkflowNonce) return;
+          workflowButton.disabled = true;
+          if (workflowStatus) workflowStatus.textContent = 'Working…';
+          var workflowParams = new URLSearchParams();
+          workflowParams.set('action', 'vms_event_plan_workflow_action');
+          workflowParams.set('post_id', String(postId));
+          workflowParams.set('workflow_action', String(workflowButton.dataset.vmsWorkflowAction || ''));
+          workflowParams.set('nonce', String(statusRoot.dataset.vmsWorkflowNonce || ''));
+          window.fetch(String(statusRoot.dataset.vmsWorkflowUrl || ''), {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+            body: workflowParams.toString()
+          }).then(function (response) {
+            return response.json().then(function (payload) { return { response: response, payload: payload }; });
+          }).then(function (result) {
+            if (!result.response.ok || !result.payload || !result.payload.success) {
+              throw new Error(result.payload && result.payload.data && result.payload.data.message ? result.payload.data.message : 'Workflow action failed.');
+            }
+            if (workflowStatus) workflowStatus.textContent = result.payload.data.message || 'Workflow action completed.';
+            suppressBeforeUnload = true;
+            window.location.reload();
+          }).catch(function (error) {
+            workflowButton.disabled = false;
+            if (workflowStatus) workflowStatus.textContent = error && error.message ? error.message : 'Workflow action failed.';
+          });
+          return;
+        }
+
         var button = event.target.closest('.vms-collapsible-toggle');
         if (!button) return;
 
@@ -549,28 +909,62 @@
         event.preventDefault();
 
         var collapsed = section.classList.contains('is-collapsed');
-        if (collapsed && section.dataset.vmsLazySection !== undefined && section.dataset.vmsLazyLoaded !== '1') {
-          loadLazySection(section).then(function (loaded) {
-            if (loaded) {
-              setCollapsed(section, false);
-            }
-          });
+        if (!collapsed && editableSectionKeys.has(String(section.dataset.sectionKey || ''))) {
           return;
         }
-
-        setCollapsed(section, !collapsed);
+        if (editableSectionKeys.has(String(section.dataset.sectionKey || ''))) {
+          openSection(section, false);
+        } else {
+          setCollapsed(section, !collapsed);
+        }
       });
       form.addEventListener('submit', function (event) {
+        var submitter = event && event.submitter ? event.submitter : document.activeElement;
+        if (
+          submitter
+          && submitter.name === 'vms_event_plan_action'
+          && activeSection
+          && sectionDirty(activeSection.querySelector('.vms-collapsible-body'))
+        ) {
+          event.preventDefault();
+          var blockedStatus = statusRoot ? statusRoot.querySelector('[data-vms-workflow-status]') : null;
+          if (blockedStatus) blockedStatus.textContent = 'Save the active section before running a workflow action.';
+          return;
+        }
         if (!reopenInput) {
           return;
         }
 
-        var submitter = event && event.submitter ? event.submitter : document.activeElement;
         var submitterKey = resolveSectionKeyFromNode(submitter);
         var nextKey = submitterKey || lastTouchedSectionKey;
         reopenInput.value = normalizeRequestedSectionKey(nextKey);
       }, true);
+      document.addEventListener('vms:event-plan-section-save-result', function (event) {
+        var detail = event && event.detail ? event.detail : {};
+        var key = normalizeRequestedSectionKey(String(detail.section || ''));
+        var section = key
+          ? form.querySelector('.vms-collapsible-section[data-section-key="' + cssEscapeValue(key) + '"]')
+          : null;
+        if (!section) return;
+        var feedback = section.querySelector('[data-vms-section-feedback]');
+        if (!detail.ok) {
+          setCollapsed(section, false);
+          setSectionStatus(section, 'Save failed', 'failed');
+          if (feedback) feedback.textContent = String(detail.message || 'Save failed.');
+          return;
+        }
+        resetSectionBaseline(section);
+        setSectionStatus(section, 'Saved', 'saved');
+        if (feedback) feedback.textContent = String(detail.message || 'Saved.');
+      });
     }
+
+    window.addEventListener('beforeunload', function (event) {
+      if (suppressBeforeUnload || !activeSection || !sectionDirty(activeSection.querySelector('.vms-collapsible-body'))) return;
+      event.preventDefault();
+      event.returnValue = '';
+      return '';
+    });
 
     initCollapsibleSections();
     if (document.readyState === 'loading') {

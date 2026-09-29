@@ -4513,6 +4513,122 @@ body.post-type-vms_event_plan .vms-button-danger[disabled] {
   color: #6b7280;
 }
 
+body.post-type-vms_event_plan .vms-ep-workspace-status {
+  border: 1px solid #c3c4c7;
+  border-left: 4px solid #2271b1;
+  background: #fff;
+  padding: 12px 14px;
+  margin: 0 0 14px;
+}
+
+body.post-type-vms_event_plan .vms-ep-workspace-status[data-vms-calendar-state="failed"] {
+  border-left-color: #b32d2e;
+}
+
+body.post-type-vms_event_plan .vms-ep-workspace-status__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+
+body.post-type-vms_event_plan .vms-ep-workspace-status__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+body.post-type-vms_event_plan .vms-ep-workspace-status__error {
+  color: #b32d2e;
+  margin: 8px 0 0;
+}
+
+body.post-type-vms_event_plan .vms-collapsible-section.is-active {
+  border-left: 3px solid #2271b1;
+  padding-left: 12px;
+}
+
+body.post-type-vms_event_plan .vms-collapsible-section--metabox {
+  padding: 0 12px 10px;
+}
+
+body.post-type-vms_event_plan .vms-collapsible-section--metabox > .postbox-header {
+  display: none;
+}
+
+body.post-type-vms_event_plan .vms-collapsible-toggle--metabox {
+  padding-top: 12px;
+}
+
+body.post-type-vms_event_plan .vms-collapsible-meta {
+  color: #646970;
+  margin-left: auto;
+  font-size: 12px;
+}
+
+body.post-type-vms_event_plan .vms-ep-section-actions {
+  border-top: 1px solid #dcdcde;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 12px;
+}
+
+body.post-type-vms_event_plan .vms-ep-section-actions__buttons,
+body.post-type-vms_event_plan .vms-ep-section-actions__state {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+body.post-type-vms_event_plan [data-vms-section-status][data-state="dirty"],
+body.post-type-vms_event_plan [data-vms-section-status][data-state="failed"] {
+  color: #b32d2e;
+}
+
+body.post-type-vms_event_plan [data-vms-section-status][data-state="saving"] {
+  color: #996800;
+}
+
+.vms-ep-dirty-prompt {
+  position: fixed;
+  inset: 0;
+  z-index: 100100;
+  background: rgba(0, 0, 0, .45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.vms-ep-dirty-prompt[hidden] {
+  display: none;
+}
+
+.vms-ep-dirty-prompt__dialog {
+  width: min(620px, 100%);
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .25);
+  padding: 22px;
+}
+
+.vms-ep-dirty-prompt__dialog h2 {
+  margin-top: 0;
+}
+
+.vms-ep-dirty-prompt__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
 body.post-type-vms_event_plan .vms-secondary-vendor-row {
   gap: 10px;
 }
