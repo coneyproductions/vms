@@ -276,6 +276,49 @@
       return vendorOptionsPromise;
     }
 
+    function replaceVendorSelectOptions(selectEl, optionsHtml, fallbackKind) {
+      if (!selectEl || !optionsHtml) return false;
+
+      var selectedValue = String(selectEl.value || selectEl.getAttribute('data-lineup-selected-vendor-id') || '');
+      var selectedOption = (selectEl.options && selectEl.selectedIndex >= 0) ? selectEl.options[selectEl.selectedIndex] : null;
+      var fallbackLabel = selectedOption ? String(selectedOption.textContent || '').trim() : '';
+      var fallbackAttributes = {};
+      [
+        'data-vendor-title',
+        'data-tax-ok',
+        'data-tax-bypass-active',
+        'data-tax-bypass-until',
+        'data-tax-bypass-reason',
+        'data-tax-missing',
+        'data-lineup-support-default-fee'
+      ].forEach(function (attributeName) {
+        fallbackAttributes[attributeName] = selectedOption ? String(selectedOption.getAttribute(attributeName) || '') : '';
+      });
+      if (!fallbackAttributes['data-vendor-title'] && fallbackLabel) {
+        fallbackAttributes['data-vendor-title'] = fallbackLabel;
+      }
+
+      selectEl.innerHTML = optionsHtml;
+      if (selectedValue) {
+        selectEl.value = selectedValue;
+        if (String(selectEl.value || '') !== selectedValue) {
+          var fallbackOption = document.createElement('option');
+          fallbackOption.value = selectedValue;
+          fallbackOption.selected = true;
+          fallbackOption.textContent = fallbackLabel || (fallbackKind === 'primary' ? 'Assigned primary vendor' : 'Assigned vendor');
+          Object.keys(fallbackAttributes).forEach(function (attributeName) {
+            if (fallbackAttributes[attributeName] !== '' || attributeName.indexOf('data-tax-') === 0) {
+              fallbackOption.setAttribute(attributeName, fallbackAttributes[attributeName]);
+            }
+          });
+          selectEl.appendChild(fallbackOption);
+          selectEl.value = selectedValue;
+        }
+      }
+      selectEl.setAttribute('data-lineup-vendor-options-hydrated', '1');
+      return true;
+    }
+
     function hydratePrimaryVendorSelect(selectEl) {
       if (!selectEl) return Promise.resolve(false);
       if (selectEl.getAttribute('data-lineup-vendor-options-hydrated') === '1') return Promise.resolve(true);
@@ -286,30 +329,7 @@
           return false;
         }
 
-        var selectedValue = String(selectEl.value || '');
-        var selectedOption = (selectEl.options && selectEl.selectedIndex >= 0) ? selectEl.options[selectEl.selectedIndex] : null;
-        var fallbackLabel = selectedOption ? String(selectedOption.textContent || '').trim() : '';
-        var fallbackVendorTitle = selectedOption ? String(selectedOption.getAttribute('data-vendor-title') || fallbackLabel).trim() : '';
-        selectEl.innerHTML = optionsHtml;
-        if (selectedValue) {
-          selectEl.value = selectedValue;
-          if (String(selectEl.value || '') !== selectedValue) {
-            var fallbackOption = document.createElement('option');
-            fallbackOption.value = selectedValue;
-            fallbackOption.selected = true;
-            fallbackOption.textContent = fallbackLabel || 'Assigned primary vendor';
-            fallbackOption.setAttribute('data-vendor-title', fallbackVendorTitle || fallbackOption.textContent);
-            fallbackOption.setAttribute('data-tax-ok', '0');
-            fallbackOption.setAttribute('data-tax-bypass-active', '0');
-            fallbackOption.setAttribute('data-tax-bypass-until', '');
-            fallbackOption.setAttribute('data-tax-bypass-reason', '');
-            fallbackOption.setAttribute('data-tax-missing', '');
-            selectEl.appendChild(fallbackOption);
-            selectEl.value = selectedValue;
-          }
-        }
-        selectEl.setAttribute('data-lineup-vendor-options-hydrated', '1');
-        return true;
+        return replaceVendorSelectOptions(selectEl, optionsHtml, 'primary');
       });
     }
 
@@ -323,34 +343,7 @@
           return false;
         }
 
-        var selectedValue = String(selectEl.value || selectEl.getAttribute('data-lineup-selected-vendor-id') || '');
-        var selectedOption = (selectEl.options && selectEl.selectedIndex >= 0) ? selectEl.options[selectEl.selectedIndex] : null;
-        var fallbackLabel = selectedOption ? String(selectedOption.textContent || '').trim() : '';
-        var fallbackVendorTitle = selectedOption ? String(selectedOption.getAttribute('data-vendor-title') || fallbackLabel).trim() : '';
-        var fallbackDefaultFee = selectedOption ? String(selectedOption.getAttribute('data-lineup-support-default-fee') || '').trim() : '';
-
-        selectEl.innerHTML = optionsHtml;
-
-        if (selectedValue) {
-          selectEl.value = selectedValue;
-          if (String(selectEl.value || '') !== selectedValue) {
-            var fallbackOption = document.createElement('option');
-            fallbackOption.value = selectedValue;
-            fallbackOption.selected = true;
-            fallbackOption.textContent = fallbackLabel || 'Assigned vendor';
-            if (fallbackVendorTitle) {
-              fallbackOption.setAttribute('data-vendor-title', fallbackVendorTitle);
-            }
-            if (fallbackDefaultFee) {
-              fallbackOption.setAttribute('data-lineup-support-default-fee', fallbackDefaultFee);
-            }
-            selectEl.appendChild(fallbackOption);
-            selectEl.value = selectedValue;
-          }
-        }
-
-        selectEl.setAttribute('data-lineup-vendor-options-hydrated', '1');
-        return true;
+        return replaceVendorSelectOptions(selectEl, optionsHtml, 'supporting');
       });
     }
 
@@ -745,6 +738,29 @@
         }
       });
     }
+
+    document.addEventListener('vms:event-plan-derived-state-refreshed', function (event) {
+      var detail = event && event.detail ? event.detail : {};
+      var vendorOptions = detail && detail.vendor_options ? detail.vendor_options : {};
+      var primaryHtml = String(vendorOptions.primary_html || '');
+      var supportingHtml = String(vendorOptions.supporting_html || '');
+      if (String(detail.post_id || '') !== String(supportingVendorOptionsPostId || '')) return;
+      if (!primaryHtml && !supportingHtml) return;
+
+      vendorOptionsPromise = null;
+      if (primaryHtml) {
+        primaryVendorOptionsHtml = primaryHtml;
+        replaceVendorSelectOptions(primaryVendorSelect, primaryHtml, 'primary');
+      }
+      if (supportingHtml) {
+        supportingVendorOptionsHtml = supportingHtml;
+        if (supportingVendorOptionsTemplate) supportingVendorOptionsTemplate.innerHTML = supportingHtml;
+        rowElements().forEach(function (row) {
+          replaceVendorSelectOptions(row.querySelector('[data-lineup-vendor-select]'), supportingHtml, 'supporting');
+        });
+      }
+      refreshAll();
+    });
 
     section.addEventListener('click', function (event) {
       var target = event.target;

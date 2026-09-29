@@ -290,6 +290,44 @@
       });
     }
 
+    function applyAuthoritativeDerivedState(state) {
+      if (!state || typeof state !== 'object' || Number(state.post_id || 0) !== Number(postId || 0)) {
+        return false;
+      }
+
+      var holidayContainer = document.querySelector('[data-vms-event-details-holiday]');
+      var scheduleContainer = document.querySelector('[data-vms-schedule-date-status]');
+      var holidayAuthoritative = holidayContainer ? holidayContainer.querySelector('[data-vms-derived-authoritative]') : null;
+      var scheduleAuthoritative = scheduleContainer ? scheduleContainer.querySelector('[data-vms-derived-authoritative]') : null;
+      if (!holidayAuthoritative || !scheduleAuthoritative) {
+        return false;
+      }
+
+      holidayAuthoritative.innerHTML = String(state.holiday_html || '');
+      scheduleAuthoritative.innerHTML = String(state.schedule_date_html || '');
+      [holidayContainer, scheduleContainer].forEach(function (container) {
+        var authoritative = container.querySelector('[data-vms-derived-authoritative]');
+        var unsaved = container.querySelector('[data-vms-derived-unsaved]');
+        if (authoritative) authoritative.hidden = false;
+        if (unsaved) unsaved.hidden = true;
+      });
+
+      holidayContainer.dataset.vmsSavedEventDate = String(state.event_date || '');
+      holidayContainer.dataset.vmsSavedVenueId = String(state.venue_id || '');
+      scheduleContainer.dataset.vmsSavedEventDate = String(state.event_date || '');
+
+      var basicsSection = form.querySelector('.vms-collapsible-section[data-section-key="basics"]');
+      var basicsSummary = basicsSection ? basicsSection.querySelector('.vms-collapsible-meta') : null;
+      if (basicsSummary) {
+        basicsSummary.textContent = [String(state.event_date || ''), String(state.venue_label || '')].filter(Boolean).join(' · ');
+      }
+
+      document.dispatchEvent(new CustomEvent('vms:event-plan-derived-state-refreshed', {
+        detail: state
+      }));
+      return true;
+    }
+
     function setFlag(section) {
       var flag = section.querySelector('.vms-collapsible-flag');
       var body = section.querySelector('.vms-collapsible-body');
@@ -549,7 +587,7 @@
         }
         return {
           ok: true,
-          refreshRequired: !!(payload.data && payload.data.refresh_required),
+          derivedState: payload.data && payload.data.derived_state ? payload.data.derived_state : null,
           message: payload.data && payload.data.message ? String(payload.data.message) : 'Saved.'
         };
       } catch (error) {
@@ -570,6 +608,12 @@
       }
       resetSectionBaseline(section, true);
       var successFeedback = section.querySelector('[data-vms-section-feedback]');
+      if (String(section.dataset.sectionKey || '') === 'basics' && !applyAuthoritativeDerivedState(result.derivedState)) {
+        setCollapsed(section, false);
+        setSectionStatus(section, 'Derived checks unavailable', 'failed');
+        if (successFeedback) successFeedback.textContent = 'Event Details were saved, but authoritative Holiday and availability results could not refresh. Reload this Event Plan before relying on those checks.';
+        return false;
+      }
       if (sectionTransientDirty(section.querySelector('.vms-collapsible-body'))) {
         setCollapsed(section, false);
         setSectionStatus(section, 'Unsaved action input', 'dirty');
@@ -578,12 +622,6 @@
       }
       setSectionStatus(section, 'Saved', 'saved');
       if (successFeedback) successFeedback.textContent = result.message || 'Saved.';
-      if (result.refreshRequired) {
-        var reloadKey = target ? String(target.dataset.sectionKey || '') : String(section.dataset.sectionKey || '');
-        suppressBeforeUnload = true;
-        window.location.assign(persistRequestedSection(reloadKey));
-        return true;
-      }
       if (target) {
         await openSection(target, true);
         scrollSectionTargetIntoView(String(target.dataset.sectionKey || ''), target);

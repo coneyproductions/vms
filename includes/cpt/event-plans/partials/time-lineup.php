@@ -204,21 +204,7 @@
                             <div class="vms-lineup-row__aux">
                                 <div data-vms-schedule-date-status>
                                     <div data-vms-derived-authoritative>
-                                    <?php if ($event_date): ?>
-                                        <?php $ts = strtotime($event_date);
-                                        $nice = $ts ? date_i18n('M j, Y', $ts) : $event_date; ?>
-                                        <p class="description vms-lineup-row__aux-copy">
-                                            <?php
-                                            printf(
-                                                /* translators: %s: human-readable value used in this message. */
-                                                esc_html__('Availability for %s: [✓] Available, [✖] Not Available, [?] Unknown', 'backstage-venue-manager'),
-                                                esc_html($nice)
-                                            );
-                                            ?>
-                                        </p>
-                                    <?php else: ?>
-                                        <p class="description vms-lineup-row__aux-copy"><?php esc_html_e('Set the Event Date in Event Details, then save it to check vendor availability.', 'backstage-venue-manager'); ?></p>
-                                    <?php endif; ?>
+                                        <?php echo (string) ($authoritative_derived_state['schedule_date_html'] ?? ''); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped server-rendered fragment. ?>
                                     </div>
                                     <p class="description vms-lineup-row__aux-copy" data-vms-derived-unsaved hidden><?php esc_html_e('Save Event Details to check vendor availability.', 'backstage-venue-manager'); ?></p>
                                 </div>

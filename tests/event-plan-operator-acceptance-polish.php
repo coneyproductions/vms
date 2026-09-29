@@ -9,6 +9,7 @@ $titleJs = (string) file_get_contents($root . '/assets/js/vms-event-plan-title.j
 $schedule = (string) file_get_contents($root . '/includes/cpt/event-plans/partials/time-lineup.php');
 $compensation = (string) file_get_contents($root . '/includes/cpt/event-plans/partials/compensation.php');
 $compensationJs = (string) file_get_contents($root . '/assets/js/vms-event-plan-compensation.js');
+$lineupJs = (string) file_get_contents($root . '/assets/js/vms-lineup-schedule-admin.js');
 $css = (string) file_get_contents($root . '/assets/css/vms-admin.css');
 
 $assert = static function (bool $condition, string $message): void {
@@ -18,7 +19,10 @@ $assert = static function (bool $condition, string $message): void {
 };
 
 try {
-    $assert(strpos($eventPlans, "'refresh_required' => \$scope === 'basics' ? 1 : 0") !== false, 'Event Details save must request an authoritative refresh.');
+    $assert(strpos($eventPlans, "\$response['derived_state'] = \$this->build_event_plan_authoritative_derived_state(") !== false, 'Event Details save must return authoritative derived state.');
+    $assert(strpos($eventPlans, "'holiday_state' => \$holiday_state") !== false && strpos($eventPlans, "'schedule_date_label' => \$schedule_date_label") !== false, 'Authoritative response must distinguish Holiday and saved Schedule date state.');
+    $assert(strpos($eventPlans, "function_exists('bvmgr_get_venue_holiday_for_date')") !== false, 'Authoritative refresh must reuse the canonical Holiday helper.');
+    $assert(strpos($eventPlans, 'build_event_plan_supporting_vendor_options_response_payload') !== false, 'Authoritative refresh must reuse server-rendered vendor availability options.');
     $assert(strpos($eventPlans, 'data-vms-event-details-holiday') !== false, 'Holiday output must expose its authoritative derived-state container.');
     $assert(strpos($eventPlans, 'Save Event Details to run authoritative holiday checks.') !== false, 'Unsaved Event Details must explain that holiday checks require a save.');
     $assert(strpos($eventPlans, 'No holiday is configured for this venue on the selected date.') !== false, 'Saved dates with no holiday must retain an affirmative result.');
@@ -28,7 +32,9 @@ try {
     $assert(strpos($schedule, 'Save Event Details to check vendor availability.') !== false, 'Unsaved Event Date must direct the operator to save Event Details.');
     $assert(strpos($schedule, 'Set the Event Date to see vendor availability hints here.') === false, 'Stale initial-render availability copy must be removed.');
     $assert(strpos($shell, 'function updateEventDetailsDerivedState()') !== false, 'Workspace must invalidate derived Event Details and Schedule state while date/venue inputs are unsaved.');
-    $assert(strpos($shell, 'refreshRequired: !!(payload.data && payload.data.refresh_required)') !== false, 'Workspace must honor the authoritative refresh response.');
+    $assert(strpos($shell, 'function applyAuthoritativeDerivedState(state)') !== false, 'Workspace must apply authoritative derived state in place.');
+    $assert(strpos($shell, 'derivedState: payload.data && payload.data.derived_state') !== false, 'Workspace must consume the authoritative response payload.');
+    $assert(strpos($lineupJs, "vms:event-plan-derived-state-refreshed") !== false && strpos($lineupJs, 'replaceVendorSelectOptions') !== false, 'Lineup must refresh authoritative availability fragments while preserving selections.');
 
     $assert(strpos($titleJs, "if (!String(opt.value || '').trim()) return '';") !== false, 'The empty Primary Vendor option must never become a title preview.');
     $assert(strpos($titleJs, '(select Primary Vendor to preview)') === false, 'Title preview must not render the select placeholder.');

@@ -5093,12 +5093,134 @@ class BVMGR_Admin_Event_Plans
             ), 500);
         }
 
-        wp_send_json_success(array(
+        $response = array(
             'section' => $scope,
             'verified' => 1,
-            'refresh_required' => $scope === 'basics' ? 1 : 0,
             'message' => sprintf(__('%s saved.', 'backstage-venue-manager'), (string) ($registry[$scope]['label'] ?? __('Section', 'backstage-venue-manager'))),
-        ));
+        );
+        if ($scope === 'basics') {
+            $bundle = $this->get_event_plan_meta_bundle($post_id);
+            $response['derived_state'] = $this->build_event_plan_authoritative_derived_state(
+                $post_id,
+                (string) ($bundle['event_date'] ?? ''),
+                absint($bundle['venue_id'] ?? 0),
+                true,
+                absint($bundle['band_vendor_id'] ?? 0)
+            );
+        }
+
+        wp_send_json_success($response);
+    }
+
+    private function build_event_plan_authoritative_derived_state(
+        int $post_id,
+        string $event_date,
+        int $venue_id,
+        bool $include_vendor_options = false,
+        int $selected_primary_vendor_id = 0
+    ): array {
+        $post_id = absint($post_id);
+        $event_date = sanitize_text_field(trim($event_date));
+        $venue_id = absint($venue_id);
+        $holiday_state = 'insufficient';
+        $holiday_status = '';
+        $holiday_name = '';
+
+        if ($venue_id > 0 && $event_date !== '') {
+            $holiday = function_exists('bvmgr_get_venue_holiday_for_date')
+                ? bvmgr_get_venue_holiday_for_date($venue_id, $event_date)
+                : null;
+            if (is_array($holiday) && !empty($holiday)) {
+                $holiday_status = sanitize_key((string) ($holiday['status'] ?? 'open')) === 'closed' ? 'closed' : 'open';
+                $holiday_state = $holiday_status;
+                $holiday_name = sanitize_text_field((string) ($holiday['name'] ?? ''));
+            } else {
+                $holiday_state = 'clear';
+            }
+        }
+
+        $schedule_date_label = '';
+        if ($event_date !== '') {
+            $timestamp = strtotime($event_date);
+            $schedule_date_label = $timestamp ? date_i18n('M j, Y', $timestamp) : $event_date;
+        }
+
+        $state = array(
+            'post_id' => $post_id,
+            'event_date' => $event_date,
+            'venue_id' => $venue_id,
+            'venue_label' => $venue_id > 0 ? sanitize_text_field((string) get_the_title($venue_id)) : '',
+            'holiday_state' => $holiday_state,
+            'holiday_status' => $holiday_status,
+            'holiday_name' => $holiday_name,
+            'holiday_html' => $this->render_event_plan_authoritative_holiday_html($holiday_state, $holiday_status, $holiday_name),
+            'schedule_date_state' => $event_date !== '' ? 'ready' : 'insufficient',
+            'schedule_date_label' => $schedule_date_label,
+            'schedule_date_html' => $this->render_event_plan_authoritative_schedule_date_html($event_date, $schedule_date_label),
+        );
+
+        if ($include_vendor_options) {
+            $bands = get_posts(array(
+                'post_type' => 'vms_vendor',
+                'posts_per_page' => -1,
+                'orderby' => 'title',
+                'order' => 'ASC',
+                'no_found_rows' => true,
+                'update_post_term_cache' => false,
+            ));
+            $vendor_options = $this->build_event_plan_supporting_vendor_options_response_payload(
+                $post_id,
+                is_array($bands) ? $bands : array(),
+                $event_date,
+                $venue_id,
+                absint($selected_primary_vendor_id)
+            );
+            $state['vendor_options'] = array(
+                'primary_html' => is_string($vendor_options['primary_html'] ?? null) ? (string) $vendor_options['primary_html'] : '',
+                'supporting_html' => is_string($vendor_options['supporting_html'] ?? null) ? (string) $vendor_options['supporting_html'] : '',
+            );
+        }
+
+        return $state;
+    }
+
+    private function render_event_plan_authoritative_holiday_html(string $holiday_state, string $holiday_status, string $holiday_name): string
+    {
+        if ($holiday_state === 'insufficient') {
+            return '<p class="description vms-m0">' . esc_html__('Select a Venue and Event Date to see holiday status.', 'backstage-venue-manager') . '</p>';
+        }
+        if ($holiday_state === 'clear') {
+            return '<p class="description vms-m0">' . esc_html__('No holiday is configured for this venue on the selected date.', 'backstage-venue-manager') . '</p>'
+                . '<p class="description vms-mt-8 vms-mb-0">' . esc_html__('Holiday pay is role-dependent and will apply automatically once holidays are configured.', 'backstage-venue-manager') . '</p>';
+        }
+
+        $is_closed = $holiday_status === 'closed';
+        $html = '<p class="vms-m0 vms-mb-8"><span class="vms-ep-badge ' . ($is_closed ? 'vms-ep-badge--closed' : 'vms-ep-badge--open') . '">'
+            . ($is_closed ? esc_html__('CLOSED', 'backstage-venue-manager') : esc_html__('OPEN', 'backstage-venue-manager'))
+            . '</span>';
+        if ($holiday_name !== '') {
+            $html .= ' <strong class="vms-ml-8">' . esc_html($holiday_name) . '</strong>';
+        }
+        $html .= '</p>';
+        $html .= $is_closed
+            ? '<p class="description vms-m0">' . esc_html__('This venue is marked CLOSED on this holiday. This Event Plan cannot be marked READY or Published.', 'backstage-venue-manager') . '</p>'
+            : '<p class="description vms-m0">' . esc_html__('Holiday pay/hours are role-dependent and will be applied automatically (once holiday rules are configured).', 'backstage-venue-manager') . '</p>';
+        return $html;
+    }
+
+    private function render_event_plan_authoritative_schedule_date_html(string $event_date, string $schedule_date_label): string
+    {
+        if ($event_date === '') {
+            return '<p class="description vms-lineup-row__aux-copy">' . esc_html__('Set the Event Date in Event Details, then save it to check vendor availability.', 'backstage-venue-manager') . '</p>';
+        }
+
+        return '<p class="description vms-lineup-row__aux-copy">'
+            . sprintf(
+                /* translators: %s: saved Event Date. */
+                esc_html__('Availability for %s: [✓] Available, [✖] Not Available, [?] Unknown', 'backstage-venue-manager'),
+                esc_html($schedule_date_label !== '' ? $schedule_date_label : $event_date)
+            )
+            . '</p>';
     }
 
     private function event_plan_saved_workflow_request(int $post_id, string $action): array
@@ -9189,42 +9311,17 @@ class BVMGR_Admin_Event_Plans
         </p>
 
         <?php
-        // Holiday panel
-        $holiday = null;
-        if ($venue_id_effective > 0 && $event_date && function_exists('bvmgr_get_venue_holiday_for_date')) {
-            $holiday = bvmgr_get_venue_holiday_for_date($venue_id_effective, $event_date);
-        }
+        $authoritative_derived_state = $this->build_event_plan_authoritative_derived_state(
+            (int) $post->ID,
+            (string) $event_date,
+            (int) $venue_id_effective
+        );
 
         echo '<div class="vms-ep-basic-item vms-ep-basic-span">';
         echo '<h4>' . esc_html__('Holiday', 'backstage-venue-manager') . '</h4>';
         echo '<div class="vms-ep-holiday-card" data-vms-event-details-holiday>';
         echo '<div data-vms-derived-authoritative>';
-
-        if ($venue_id_effective <= 0 || !$event_date) {
-            echo '<p class="description vms-m0">' . esc_html__('Select a Venue and Event Date to see holiday status.', 'backstage-venue-manager') . '</p>';
-        } elseif (!$holiday) {
-            echo '<p class="description vms-m0">' . esc_html__('No holiday is configured for this venue on the selected date.', 'backstage-venue-manager') . '</p>';
-            echo '<p class="description vms-mt-8 vms-mb-0">' . esc_html__('Holiday pay is role-dependent and will apply automatically once holidays are configured.', 'backstage-venue-manager') . '</p>';
-        } else {
-            $badge_class = (($holiday['status'] ?? '') === 'closed') ? 'vms-ep-badge vms-ep-badge--closed' : 'vms-ep-badge vms-ep-badge--open';
-
-            echo '<p class="vms-m0 vms-mb-8">';
-            echo '<span class="' . esc_attr($badge_class) . '">';
-            echo (($holiday['status'] ?? '') === 'closed') ? esc_html__('CLOSED', 'backstage-venue-manager') : esc_html__('OPEN', 'backstage-venue-manager');
-            echo '</span>';
-
-            $name = trim((string)($holiday['name'] ?? ''));
-            if ($name !== '') {
-                echo ' <strong class="vms-ml-8">' . esc_html($name) . '</strong>';
-            }
-            echo '</p>';
-
-            if (($holiday['status'] ?? '') === 'closed') {
-                echo '<p class="description vms-m0">' . esc_html__('This venue is marked CLOSED on this holiday. This Event Plan cannot be marked READY or Published.', 'backstage-venue-manager') . '</p>';
-            } else {
-                echo '<p class="description vms-m0">' . esc_html__('Holiday pay/hours are role-dependent and will be applied automatically (once holiday rules are configured).', 'backstage-venue-manager') . '</p>';
-            }
-        }
+        echo (string) ($authoritative_derived_state['holiday_html'] ?? ''); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped server-rendered fragment.
 
         echo '</div>';
         echo '<p class="description vms-m0" data-vms-derived-unsaved hidden>' . esc_html__('Save Event Details to run authoritative holiday checks.', 'backstage-venue-manager') . '</p>';
