@@ -10821,19 +10821,23 @@ if (function_exists('bvmgr_add_admin_notice')) {
                         }
 
                         $published = false;
+                        $publish_queued = false;
                         $deferred_calendar_publish = function_exists('bvmgr_event_plan_deferred_calendar_publish_enabled')
                             ? bvmgr_event_plan_deferred_calendar_publish_enabled($post_id, 'publish_now')
                             : false;
 
                         if ($deferred_calendar_publish && function_exists('bvmgr_event_plan_schedule_deferred_calendar_publish')) {
-                                $published = bvmgr_event_plan_schedule_deferred_calendar_publish($post_id, 'publish_now');
-                                if ($published) {
-                                    $new_status = 'published';
-                                    bvmgr_add_admin_notice(__('Event Plan marked Published. Calendar sync has been queued so the editor request stays light.', 'backstage-venue-manager'), 'success');
-                                    bvmgr_add_admin_notice(__('The public calendar event will stay hidden until the linked TEC event is fully published and clickable. Use Re-sync to Calendar for an immediate manual sync if needed.', 'backstage-venue-manager'), 'info');
-                                }
-                            } else {
+                            $publish_queued = bvmgr_event_plan_schedule_deferred_calendar_publish($post_id, 'publish_now');
+                            if ($publish_queued) {
+                                $new_status = bvmgr_event_plan_status_after_deferred_calendar_publish_queue($current_status);
+                                bvmgr_add_admin_notice(__('Calendar publication queued. The Event Plan will remain Ready until the linked TEC event is confirmed Published.', 'backstage-venue-manager'), 'success');
+                            }
+                        } else {
                             $published = bvmgr_publish_event_to_calendar($post_id, $post);
+                            $verification = $published && function_exists('bvmgr_event_plan_verify_published_linked_tec_event')
+                                ? bvmgr_event_plan_verify_published_linked_tec_event($post_id)
+                                : array('ok' => $published);
+                            $published = $published && !empty($verification['ok']);
                             if ($published) {
                                 $new_status = 'published';
                                 bvmgr_add_admin_notice(__('Event published successfully.', 'backstage-venue-manager'), 'success');
@@ -10862,7 +10866,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                             } elseif (!($tec_id_for_ticketing > 0 && $mode_v2 !== '' && $mode_v2 !== 'none')) {
                                 bvmgr_add_admin_notice(__('Legacy Woo product auto-publish is retired. Use Ticketing Preview → Commit for all ticket/product creation and updates.', 'backstage-venue-manager'), 'warning');
                             }
-                        } else {
+                        } elseif (!$publish_queued) {
                             bvmgr_add_admin_notice(__('Failed to queue/publish event to calendar. Please check settings.', 'backstage-venue-manager'), 'error');
                         }
                         break;
@@ -14683,6 +14687,168 @@ if (function_exists('bvmgr_add_admin_notice')) {
             }
         }
 
+        if (!function_exists('bvmgr_event_plan_status_after_deferred_calendar_publish_queue')) {
+            function bvmgr_event_plan_status_after_deferred_calendar_publish_queue(string $current_status): string
+            {
+                return sanitize_key($current_status) === 'published' ? 'published' : 'ready';
+            }
+        }
+
+        if (!function_exists('bvmgr_event_plan_deferred_calendar_publish_stale_after')) {
+            function bvmgr_event_plan_deferred_calendar_publish_stale_after(): int
+            {
+                $default = 20 * MINUTE_IN_SECONDS;
+                return max(5 * MINUTE_IN_SECONDS, (int) apply_filters('vms_event_plan_deferred_calendar_publish_stale_after', $default));
+            }
+        }
+
+        if (!function_exists('bvmgr_event_plan_deferred_calendar_publish_record_failure')) {
+            function bvmgr_event_plan_deferred_calendar_publish_record_failure(int $post_id, string $code, string $message = '', array $context = array()): void
+            {
+                $post_id = absint($post_id);
+                if ($post_id <= 0) {
+                    return;
+                }
+
+                $code = sanitize_key($code);
+                if ($code === '') {
+                    $code = 'deferred_calendar_publish_failed';
+                }
+                $message = sanitize_text_field($message);
+                $failed_at = time();
+                $failure = array(
+                    'code' => $code,
+                    'message' => $message,
+                    'failed_at' => $failed_at,
+                    'queue_state' => sanitize_key((string) get_post_meta($post_id, '_vms_calendar_publish_queue_state', true)),
+                    'queued_at' => (int) get_post_meta($post_id, '_vms_calendar_publish_queued_at', true),
+                    'started_at' => (int) get_post_meta($post_id, '_vms_calendar_publish_started_at', true),
+                );
+                foreach ($context as $key => $value) {
+                    $key = sanitize_key((string) $key);
+                    if ($key === '' || is_array($value) || is_object($value)) {
+                        continue;
+                    }
+                    $failure[$key] = sanitize_text_field((string) $value);
+                }
+
+                update_post_meta($post_id, '_vms_calendar_publish_queue_state', 'failed');
+                update_post_meta($post_id, '_vms_calendar_publish_last_error', $code);
+                if ($message !== '') {
+                    update_post_meta($post_id, '_vms_calendar_publish_last_error_message', $message);
+                } else {
+                    delete_post_meta($post_id, '_vms_calendar_publish_last_error_message');
+                }
+                update_post_meta($post_id, '_vms_calendar_publish_failed_at', $failed_at);
+                update_post_meta($post_id, '_vms_calendar_publish_recovery_needed', '1');
+                update_post_meta($post_id, '_vms_calendar_publish_last_failure', $failure);
+            }
+        }
+
+        if (!function_exists('bvmgr_event_plan_deferred_calendar_publish_health')) {
+            function bvmgr_event_plan_deferred_calendar_publish_health(int $post_id, bool $persist_interrupted = false): array
+            {
+                $post_id = absint($post_id);
+                $hook = 'vms_event_plan_deferred_calendar_publish';
+                $recovery_hook = 'vms_event_plan_deferred_calendar_publish_recovery';
+                $args = array($post_id);
+                $queue_state = $post_id > 0 ? sanitize_key((string) get_post_meta($post_id, '_vms_calendar_publish_queue_state', true)) : '';
+                $queued_at = $post_id > 0 ? (int) get_post_meta($post_id, '_vms_calendar_publish_queued_at', true) : 0;
+                $started_at = $post_id > 0 ? (int) get_post_meta($post_id, '_vms_calendar_publish_started_at', true) : 0;
+                $worker_scheduled_at = $post_id > 0 ? wp_next_scheduled($hook, $args) : false;
+                $recovery_scheduled_at = $post_id > 0 ? wp_next_scheduled($recovery_hook, $args) : false;
+                $lock = ($post_id > 0 && function_exists('bvmgr_event_plan_perf_job_get_lock'))
+                    ? bvmgr_event_plan_perf_job_get_lock('calendar_publish', $post_id)
+                    : array();
+                $lock_state = sanitize_key((string) ($lock['state'] ?? ''));
+                $lock_updated_at = 0;
+                if (!empty($lock['updated_at_gmt'])) {
+                    $lock_updated_at = (int) strtotime((string) $lock['updated_at_gmt'] . ' UTC');
+                }
+
+                $now = time();
+                $stale_after = bvmgr_event_plan_deferred_calendar_publish_stale_after();
+                $lock_is_fresh = $lock_updated_at > 0 && ($now - $lock_updated_at) < $stale_after;
+                $valid_queued = $queue_state === 'queued' && $worker_scheduled_at !== false;
+                $valid_running = in_array($queue_state, array('queued', 'running'), true) && $lock_state === 'running' && $lock_is_fresh;
+                $anchor = $queue_state === 'running' ? $started_at : $queued_at;
+                $is_old_enough = $anchor <= 0 || ($now - $anchor) >= $stale_after;
+                $interrupted = in_array($queue_state, array('queued', 'running'), true)
+                    && !$valid_queued
+                    && !$valid_running
+                    && $is_old_enough;
+
+                $result = array(
+                    'queue_state' => $queue_state,
+                    'queued_at' => $queued_at,
+                    'started_at' => $started_at,
+                    'worker_scheduled_at' => $worker_scheduled_at === false ? 0 : (int) $worker_scheduled_at,
+                    'recovery_scheduled_at' => $recovery_scheduled_at === false ? 0 : (int) $recovery_scheduled_at,
+                    'lock_state' => $lock_state,
+                    'lock_updated_at' => $lock_updated_at,
+                    'valid_queued' => $valid_queued,
+                    'valid_running' => $valid_running,
+                    'interrupted' => $interrupted,
+                );
+
+                if ($interrupted && $persist_interrupted) {
+                    $code = $queue_state === 'running'
+                        ? 'interrupted_running_worker_lost'
+                        : 'interrupted_queued_worker_missing';
+                    if (function_exists('bvmgr_event_plan_perf_job_clear_lock')) {
+                        bvmgr_event_plan_perf_job_clear_lock('calendar_publish', $post_id);
+                    }
+                    bvmgr_event_plan_deferred_calendar_publish_record_failure(
+                        $post_id,
+                        $code,
+                        __('Calendar publication was interrupted after its worker became unavailable. It can be retried safely.', 'backstage-venue-manager'),
+                        array(
+                            'worker_scheduled_at' => $result['worker_scheduled_at'],
+                            'recovery_scheduled_at' => $result['recovery_scheduled_at'],
+                            'lock_state' => $lock_state,
+                        )
+                    );
+                    $result['persisted_failure'] = true;
+                }
+
+                return $result;
+            }
+        }
+
+        if (!function_exists('bvmgr_event_plan_schedule_deferred_calendar_publish_recovery')) {
+            function bvmgr_event_plan_schedule_deferred_calendar_publish_recovery(int $post_id, int $delay = 0, bool $replace = false): bool
+            {
+                $post_id = absint($post_id);
+                if ($post_id <= 0) {
+                    return false;
+                }
+
+                $hook = 'vms_event_plan_deferred_calendar_publish_recovery';
+                $args = array($post_id);
+                if ($replace) {
+                    wp_clear_scheduled_hook($hook, $args);
+                    if (wp_next_scheduled($hook, $args) !== false) {
+                        return false;
+                    }
+                }
+
+                $scheduled_at = wp_next_scheduled($hook, $args);
+                if ($scheduled_at !== false) {
+                    return true;
+                }
+
+                if ($delay <= 0) {
+                    $delay = bvmgr_event_plan_deferred_calendar_publish_stale_after() + (10 * MINUTE_IN_SECONDS);
+                }
+                $result = wp_schedule_single_event(time() + $delay, $hook, $args, true);
+                if (is_wp_error($result) || $result === false) {
+                    return false;
+                }
+
+                return wp_next_scheduled($hook, $args) !== false;
+            }
+        }
+
         if (!function_exists('bvmgr_event_plan_schedule_deferred_calendar_publish')) {
             function bvmgr_event_plan_schedule_deferred_calendar_publish(int $post_id, string $reason = 'publish_now'): bool
             {
@@ -14697,31 +14863,78 @@ if (function_exists('bvmgr_add_admin_notice')) {
 
                 $hook = 'vms_event_plan_deferred_calendar_publish';
                 $args = array($post_id);
-                $already_locked = function_exists('bvmgr_event_plan_perf_job_has_lock')
-                    ? bvmgr_event_plan_perf_job_has_lock('calendar_publish', $post_id)
-                    : false;
+                $queue_reason = sanitize_key($reason);
+                if ($queue_reason === '') {
+                    $queue_reason = 'publish_now';
+                }
 
-                $already_scheduled = (bool) wp_next_scheduled($hook, $args);
-                if (!$already_locked && !$already_scheduled) {
-                    wp_schedule_single_event(time() + 180, $hook, $args);
-                    if (function_exists('bvmgr_event_plan_perf_job_set_lock')) {
-                        bvmgr_event_plan_perf_job_set_lock('calendar_publish', $post_id, 'pending', 20 * MINUTE_IN_SECONDS);
+                $health = bvmgr_event_plan_deferred_calendar_publish_health($post_id, true);
+                $already_scheduled = !empty($health['valid_queued']);
+                $already_running = !empty($health['valid_running']);
+                if ($already_scheduled || $already_running) {
+                    $watchdog_ok = bvmgr_event_plan_schedule_deferred_calendar_publish_recovery($post_id);
+                    if (!$watchdog_ok) {
+                        update_post_meta($post_id, '_vms_calendar_publish_watchdog_error', 'recovery_schedule_failed');
+                        return false;
+                    }
+                    delete_post_meta($post_id, '_vms_calendar_publish_watchdog_error');
+                    return true;
+                }
+
+                $previous_failure = sanitize_key((string) get_post_meta($post_id, '_vms_calendar_publish_last_error', true));
+                $existing_worker_at = wp_next_scheduled($hook, $args);
+                $scheduled_now = false;
+                if ($existing_worker_at === false) {
+                    $schedule_result = wp_schedule_single_event(time() + 180, $hook, $args, true);
+                    $existing_worker_at = wp_next_scheduled($hook, $args);
+                    $scheduled_now = !is_wp_error($schedule_result) && $schedule_result !== false && $existing_worker_at !== false;
+                    if (!$scheduled_now && $existing_worker_at === false) {
+                        $error_code = is_wp_error($schedule_result) ? $schedule_result->get_error_code() : 'wp_schedule_single_event_failed';
+                        $error_message = is_wp_error($schedule_result) ? $schedule_result->get_error_message() : __('WordPress did not accept the deferred calendar publication event.', 'backstage-venue-manager');
+                        bvmgr_event_plan_deferred_calendar_publish_record_failure($post_id, (string) $error_code, (string) $error_message);
+                        return false;
                     }
                 }
 
-                $queue_reason = sanitize_key($reason);
-                $queue_meta_skipped = false;
-                $existing_queue_state = sanitize_key((string) get_post_meta($post_id, '_vms_calendar_publish_queue_state', true));
-                $existing_queue_reason = sanitize_key((string) get_post_meta($post_id, '_vms_calendar_publish_queue_reason', true));
-                $existing_queued_at = (int) get_post_meta($post_id, '_vms_calendar_publish_queued_at', true);
-                if (($already_locked || $already_scheduled) && $existing_queue_state === 'queued' && $existing_queue_reason === $queue_reason && $existing_queued_at > 0) {
-                    $queue_meta_skipped = true;
-                } else {
-                    update_post_meta($post_id, '_vms_calendar_publish_queue_state', 'queued');
-                    update_post_meta($post_id, '_vms_calendar_publish_queued_at', time());
-                    update_post_meta($post_id, '_vms_calendar_publish_queue_reason', $queue_reason);
-                    delete_post_meta($post_id, '_vms_calendar_publish_last_error');
+                $watchdog_ok = bvmgr_event_plan_schedule_deferred_calendar_publish_recovery($post_id);
+                if (!$watchdog_ok) {
+                    if ($existing_worker_at !== false) {
+                        wp_unschedule_event((int) $existing_worker_at, $hook, $args, true);
+                        if (wp_next_scheduled($hook, $args) !== false) {
+                            wp_clear_scheduled_hook($hook, $args);
+                        }
+                    }
+                    bvmgr_event_plan_deferred_calendar_publish_record_failure(
+                        $post_id,
+                        'recovery_schedule_failed',
+                        __('Calendar publication could not be queued with interruption recovery.', 'backstage-venue-manager')
+                    );
+                    update_post_meta($post_id, '_vms_calendar_publish_watchdog_error', 'recovery_schedule_failed');
+                    return false;
                 }
+
+                if (function_exists('bvmgr_event_plan_perf_job_clear_lock')) {
+                    bvmgr_event_plan_perf_job_clear_lock('calendar_publish', $post_id);
+                }
+                if (function_exists('bvmgr_event_plan_perf_job_set_lock')) {
+                    bvmgr_event_plan_perf_job_set_lock('calendar_publish', $post_id, 'pending', 20 * MINUTE_IN_SECONDS);
+                }
+
+                $queued_at = time();
+                update_post_meta($post_id, '_vms_calendar_publish_queue_state', 'queued');
+                update_post_meta($post_id, '_vms_calendar_publish_queued_at', $queued_at);
+                update_post_meta($post_id, '_vms_calendar_publish_queue_reason', $queue_reason);
+                update_post_meta($post_id, '_vms_calendar_publish_worker_scheduled_at', (int) $existing_worker_at);
+                update_post_meta($post_id, '_vms_calendar_publish_attempt_count', max(0, (int) get_post_meta($post_id, '_vms_calendar_publish_attempt_count', true)) + 1);
+                if ($previous_failure !== '') {
+                    update_post_meta($post_id, '_vms_calendar_publish_last_recovered_at', $queued_at);
+                    update_post_meta($post_id, '_vms_calendar_publish_last_recovery_code', $previous_failure);
+                }
+                delete_post_meta($post_id, '_vms_calendar_publish_last_error');
+                delete_post_meta($post_id, '_vms_calendar_publish_last_error_message');
+                delete_post_meta($post_id, '_vms_calendar_publish_failed_at');
+                delete_post_meta($post_id, '_vms_calendar_publish_recovery_needed');
+                delete_post_meta($post_id, '_vms_calendar_publish_watchdog_error');
 
                 if (function_exists('bvmgr_event_plan_perf_log')) {
                     bvmgr_event_plan_perf_log(
@@ -14731,9 +14944,10 @@ if (function_exists('bvmgr_add_admin_notice')) {
                             'job_name' => 'calendar_publish',
                             'reason' => $reason,
                             'actor_user_id' => $actor_user_id,
-                            'already_locked' => $already_locked ? 1 : 0,
                             'already_scheduled' => $already_scheduled ? 1 : 0,
-                            'queue_meta_skipped' => $queue_meta_skipped ? 1 : 0,
+                            'already_running' => $already_running ? 1 : 0,
+                            'scheduled_now' => $scheduled_now ? 1 : 0,
+                            'worker_scheduled_at' => (int) $existing_worker_at,
                         )
                     );
                 }
@@ -14756,7 +14970,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 $lock = function_exists('bvmgr_event_plan_perf_job_get_lock')
                     ? bvmgr_event_plan_perf_job_get_lock('calendar_publish', $post_id)
                     : array();
-                if (($lock['state'] ?? '') === 'running') {
+                $health = bvmgr_event_plan_deferred_calendar_publish_health($post_id, false);
+                if (($lock['state'] ?? '') === 'running' && !empty($health['valid_running'])) {
                     if (function_exists('bvmgr_event_plan_perf_log')) {
                         bvmgr_event_plan_perf_log(
                             'vms_event_plan_deferred_calendar_publish',
@@ -14774,6 +14989,22 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     return;
                 }
 
+                if (!bvmgr_event_plan_schedule_deferred_calendar_publish_recovery(
+                    $post_id,
+                    bvmgr_event_plan_deferred_calendar_publish_stale_after() + MINUTE_IN_SECONDS,
+                    true
+                )) {
+                    bvmgr_event_plan_deferred_calendar_publish_record_failure(
+                        $post_id,
+                        'recovery_schedule_failed',
+                        __('Calendar publication could not start because interruption recovery was unavailable.', 'backstage-venue-manager')
+                    );
+                    if (function_exists('bvmgr_event_plan_perf_job_clear_lock')) {
+                        bvmgr_event_plan_perf_job_clear_lock('calendar_publish', $post_id);
+                    }
+                    return;
+                }
+
                 if (function_exists('bvmgr_event_plan_perf_job_set_lock')) {
                     bvmgr_event_plan_perf_job_set_lock('calendar_publish', $post_id, 'running', 20 * MINUTE_IN_SECONDS);
                 }
@@ -14781,14 +15012,30 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 try {
                     $post = get_post($post_id);
                     if (!$post || $post->post_type !== 'vms_event_plan') {
+                        bvmgr_event_plan_deferred_calendar_publish_record_failure($post_id, 'event_plan_missing', __('The Event Plan no longer exists.', 'backstage-venue-manager'));
+                        return;
+                    }
+
+                    $status_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status';
+                    $workflow_status = sanitize_key((string) get_post_meta($post_id, $status_key, true));
+                    if (!in_array($workflow_status, array('ready', 'published'), true)) {
+                        bvmgr_event_plan_deferred_calendar_publish_record_failure(
+                            $post_id,
+                            'workflow_status_not_publishable',
+                            __('Calendar publication stopped because the Event Plan is no longer Ready or Published.', 'backstage-venue-manager'),
+                            array('workflow_status' => $workflow_status)
+                        );
                         return;
                     }
 
                     if (function_exists('bvmgr_validate_event_plan')) {
                         $errors = bvmgr_validate_event_plan($post_id);
                         if (!empty($errors)) {
-                            update_post_meta($post_id, '_vms_calendar_publish_queue_state', 'failed');
-                            update_post_meta($post_id, '_vms_calendar_publish_last_error', implode(' ', array_map('sanitize_text_field', (array) $errors)));
+                            bvmgr_event_plan_deferred_calendar_publish_record_failure(
+                                $post_id,
+                                'event_plan_validation_failed',
+                                implode(' ', array_map('sanitize_text_field', (array) $errors))
+                            );
                             return;
                         }
                     }
@@ -14797,18 +15044,43 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     update_post_meta($post_id, '_vms_calendar_publish_started_at', time());
 
                     $ok = bvmgr_publish_event_to_calendar($post_id, $post);
-                    if ($ok) {
-                        update_post_meta($post_id, '_vms_calendar_publish_queue_state', 'complete');
-                        update_post_meta($post_id, '_vms_calendar_publish_completed_at', time());
-                        delete_post_meta($post_id, '_vms_calendar_publish_last_error');
-                    } else {
-                        update_post_meta($post_id, '_vms_calendar_publish_queue_state', 'failed');
-                        update_post_meta($post_id, '_vms_calendar_publish_last_error', 'deferred_calendar_publish_failed');
+                    if (!$ok) {
+                        bvmgr_event_plan_deferred_calendar_publish_record_failure(
+                            $post_id,
+                            'deferred_calendar_publish_failed',
+                            __('The Events Calendar did not complete the saved-state publication.', 'backstage-venue-manager')
+                        );
+                        return;
                     }
+
+                    $verification = bvmgr_event_plan_verify_published_linked_tec_event($post_id);
+                    if (empty($verification['ok'])) {
+                        bvmgr_event_plan_deferred_calendar_publish_record_failure(
+                            $post_id,
+                            sanitize_key((string) ($verification['code'] ?? 'linked_tec_not_published')),
+                            sanitize_text_field((string) ($verification['message'] ?? __('The linked calendar event was not Published.', 'backstage-venue-manager'))),
+                            array(
+                                'linked_tec_event_id' => absint($verification['tec_event_id'] ?? 0),
+                                'linked_tec_post_status' => sanitize_key((string) ($verification['post_status'] ?? '')),
+                            )
+                        );
+                        return;
+                    }
+
+                    update_post_meta($post_id, $status_key, 'published');
+                    update_post_meta($post_id, '_vms_calendar_publish_queue_state', 'complete');
+                    update_post_meta($post_id, '_vms_calendar_publish_completed_at', time());
+                    update_post_meta($post_id, '_vms_calendar_publish_published_tec_event_id', absint($verification['tec_event_id'] ?? 0));
+                    delete_post_meta($post_id, '_vms_calendar_publish_last_error');
+                    delete_post_meta($post_id, '_vms_calendar_publish_last_error_message');
+                    delete_post_meta($post_id, '_vms_calendar_publish_failed_at');
+                    delete_post_meta($post_id, '_vms_calendar_publish_recovery_needed');
+                    do_action('vms_event_plan_deferred_calendar_publish_completed', $post_id, absint($verification['tec_event_id'] ?? 0));
                 } finally {
                     if (function_exists('bvmgr_event_plan_perf_job_clear_lock')) {
                         bvmgr_event_plan_perf_job_clear_lock('calendar_publish', $post_id);
                     }
+                    wp_clear_scheduled_hook('vms_event_plan_deferred_calendar_publish_recovery', array($post_id));
                     if (function_exists('bvmgr_event_plan_perf_span_finish')) {
                         bvmgr_event_plan_perf_span_finish('vms_event_plan_deferred_calendar_publish', $post_id, $trace, array('job_name' => 'calendar_publish'));
                     }
@@ -14816,6 +15088,14 @@ if (function_exists('bvmgr_add_admin_notice')) {
             }
         }
         add_action('vms_event_plan_deferred_calendar_publish', 'bvmgr_event_plan_run_deferred_calendar_publish', 10, 1);
+
+        if (!function_exists('bvmgr_event_plan_recover_interrupted_deferred_calendar_publish')) {
+            function bvmgr_event_plan_recover_interrupted_deferred_calendar_publish(int $post_id): void
+            {
+                bvmgr_event_plan_deferred_calendar_publish_health(absint($post_id), true);
+            }
+        }
+        add_action('vms_event_plan_deferred_calendar_publish_recovery', 'bvmgr_event_plan_recover_interrupted_deferred_calendar_publish', 10, 1);
 
         // Later featured-image edits do not rebuild the TEC event payload, so mirror plan thumbnails directly.
 	        function bvmgr_event_plan_sync_linked_tec_featured_image(int $plan_id, int $tec_event_id = 0, string $source = ''): array
@@ -15032,6 +15312,72 @@ if (function_exists('bvmgr_add_admin_notice')) {
             return true;
         }
 
+        if (!function_exists('bvmgr_event_plan_find_recoverable_tec_event_id')) {
+            function bvmgr_event_plan_find_recoverable_tec_event_id(int $post_id): int
+            {
+                $post_id = absint($post_id);
+                if ($post_id <= 0) {
+                    return 0;
+                }
+
+                global $wpdb;
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Recovery-only lookup must bypass TEC query filters so an interrupted create can be adopted instead of duplicated.
+                $tec_event_id = $wpdb->get_var($wpdb->prepare(
+                    'SELECT p.ID FROM %i AS p INNER JOIN %i AS pm ON pm.post_id = p.ID WHERE p.post_type = %s AND p.post_status IN (%s, %s, %s, %s, %s) AND pm.meta_key = %s AND pm.meta_value = %s ORDER BY p.ID DESC LIMIT 1',
+                    $wpdb->posts,
+                    $wpdb->postmeta,
+                    'tribe_events',
+                    'publish',
+                    'future',
+                    'draft',
+                    'pending',
+                    'private',
+                    '_vms_event_plan_id',
+                    (string) $post_id
+                ));
+
+                return absint($tec_event_id);
+            }
+        }
+
+        if (!function_exists('bvmgr_event_plan_verify_published_linked_tec_event')) {
+            function bvmgr_event_plan_verify_published_linked_tec_event(int $post_id): array
+            {
+                $post_id = absint($post_id);
+                $tec_key_id = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'tec_event_id') ?: '_vms_tec_event_id') : '_vms_tec_event_id';
+                $tec_event_id = $post_id > 0 ? absint(get_post_meta($post_id, $tec_key_id, true)) : 0;
+                $tec_post = $tec_event_id > 0 ? get_post($tec_event_id) : null;
+
+                if (!$tec_post || $tec_post->post_type !== 'tribe_events') {
+                    return array(
+                        'ok' => false,
+                        'code' => 'linked_tec_event_missing',
+                        'message' => __('The linked TEC event could not be verified.', 'backstage-venue-manager'),
+                        'tec_event_id' => $tec_event_id,
+                        'post_status' => '',
+                    );
+                }
+
+                if ($tec_post->post_status !== 'publish') {
+                    return array(
+                        'ok' => false,
+                        'code' => 'linked_tec_event_not_published',
+                        'message' => __('The linked TEC event exists but is not Published.', 'backstage-venue-manager'),
+                        'tec_event_id' => $tec_event_id,
+                        'post_status' => sanitize_key((string) $tec_post->post_status),
+                    );
+                }
+
+                return array(
+                    'ok' => true,
+                    'code' => '',
+                    'message' => '',
+                    'tec_event_id' => $tec_event_id,
+                    'post_status' => 'publish',
+                );
+            }
+        }
+
         function bvmgr_publish_event_to_calendar(int $post_id, WP_Post $post): bool
         {
             $trace = function_exists('bvmgr_event_plan_perf_span_start')
@@ -15052,6 +15398,12 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 $tec_key_url = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'tec_event_url') ?: '_vms_tec_event_url') : '_vms_tec_event_url';
 
                 $existing_tec_id = (int) get_post_meta($post_id, $tec_key_id, true);
+                if ($existing_tec_id <= 0 && function_exists('bvmgr_event_plan_find_recoverable_tec_event_id')) {
+                    $existing_tec_id = bvmgr_event_plan_find_recoverable_tec_event_id($post_id);
+                    if ($existing_tec_id > 0) {
+                        update_post_meta($post_id, $tec_key_id, $existing_tec_id);
+                    }
+                }
                 $tec_event_id = 0;
                 $calendar_occurrence_changed = false;
                 $existing_event_was_closed = false;
@@ -15091,7 +15443,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                     if (
                         $existing_tec_post
                         && $existing_tec_post->post_type === 'tribe_events'
-                        && $existing_tec_post->post_status !== 'trash'
+                        && $existing_tec_post->post_status === 'publish'
                         && $sync_signature !== ''
                         && hash_equals($sync_signature, $last_signature)
                         && !$calendar_occurrence_changed
@@ -15121,6 +15473,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 if (function_exists('bvmgr_event_plan_backfill_tec_event_author')) {
                     bvmgr_event_plan_backfill_tec_event_author($post_id, $tec_event_id, 'vms_publish_event_to_calendar');
                 }
+
+                update_post_meta($tec_event_id, '_vms_event_plan_id', $post_id);
 
 				if (function_exists('bvmgr_tec_finalize_event_url_sync')) {
 					bvmgr_tec_finalize_event_url_sync($tec_event_id, $args);
@@ -15364,6 +15718,9 @@ if (function_exists('bvmgr_add_admin_notice')) {
             $args = array(
                 'post_title'       => $title,
                 'post_status'      => 'publish',
+                'meta_input'       => array(
+                    '_vms_event_plan_id' => $post_id,
+                ),
 
                 // TEC time handling: provide both date + time keys for best compatibility.
                 'EventStartDate'   => $start_date,
