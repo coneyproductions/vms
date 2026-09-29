@@ -82,6 +82,7 @@ try {
     $schedulePublish = $prefix . 'event_plan_schedule_deferred_calendar_publish';
     $queueStatus = $prefix . 'event_plan_status_after_deferred_calendar_publish_queue';
     $healthCheck = $prefix . 'event_plan_deferred_calendar_publish_health';
+    $staleAfter = $prefix . 'event_plan_deferred_calendar_publish_stale_after';
     $runWorker = $prefix . 'event_plan_run_deferred_calendar_publish';
     $recoverInterrupted = $prefix . 'event_plan_recover_interrupted_deferred_calendar_publish';
     $lockKey = $prefix . 'event_plan_perf_job_lock_key';
@@ -90,15 +91,17 @@ try {
     $assert(function_exists($schedulePublish), 'Deferred calendar publish scheduler is unavailable.');
     $assert(function_exists($queueStatus), 'Deferred calendar publish workflow-status helper is unavailable.');
     $assert(function_exists($healthCheck), 'Deferred calendar publish health helper is unavailable.');
+    $assert(function_exists($staleAfter), 'Deferred calendar publish stale threshold helper is unavailable.');
     $assert(function_exists($runWorker), 'Deferred calendar publish worker is unavailable.');
     $assert(false !== has_action('vms_event_plan_deferred_calendar_publish_recovery', $recoverInterrupted), 'Deferred calendar publish recovery hook is not registered.');
 
     $mirrorSource = file_get_contents(dirname(__DIR__) . '/includes/cpt/event-plans.php');
     $assert(is_string($mirrorSource) && $mirrorSource !== '', 'Unable to read the mirror Event Plan implementation.');
     $assert(strpos($mirrorSource, '$publish_queued = bvmgr_event_plan_schedule_deferred_calendar_publish') !== false, 'Mirror publish workflow should distinguish queued from published.');
-    $assert(strpos($mirrorSource, '$new_status = bvmgr_event_plan_status_after_deferred_calendar_publish_queue($current_status)') !== false, 'Mirror publish workflow should preserve Ready while deferred publication is queued.');
+    $assert(strpos($mirrorSource, '$new_status = bvmgr_event_plan_status_after_deferred_calendar_publish_queue($current_status, $post_id)') !== false, 'Mirror publish workflow should verify the linked TEC event before preserving Published.');
     $assert(strpos($mirrorSource, "add_action('vms_event_plan_deferred_calendar_publish_recovery', 'bvmgr_event_plan_recover_interrupted_deferred_calendar_publish'") !== false, 'Mirror implementation should register the recovery watchdog.');
     $assert(strpos($mirrorSource, "&& \$existing_tec_post->post_status === 'publish'") !== false, 'Mirror signature fast path should require an actually Published TEC event.');
+    $assert(strpos($mirrorSource, 'The original link was preserved for retry.') !== false, 'Mirror update failure should fail closed without creating another TEC event.');
 
     $vendorId = wp_insert_post(array(
         'post_type' => 'vms_vendor',
@@ -131,7 +134,7 @@ try {
         return $planId;
     };
 
-    $createTecEvent = static function (string $title, int $planId = 0) use ($registerPost): int {
+    $createTecEvent = static function (string $title, int $planId = 0, string $status = 'draft') use ($registerPost): int {
         $meta = array(
             '_EventStartDate' => '2027-06-12 19:00:00',
             '_EventEndDate' => '2027-06-12 22:00:00',
@@ -141,7 +144,7 @@ try {
         }
         $tecId = wp_insert_post(array(
             'post_type' => 'tribe_events',
-            'post_status' => 'draft',
+            'post_status' => $status,
             'post_title' => $title,
             'meta_input' => $meta,
         ), true);
@@ -153,6 +156,41 @@ try {
         }
         return $registerPost((int) $tecId);
     };
+
+    $countLinkedTecEvents = static function (int $planId): int {
+        global $wpdb;
+        return (int) $wpdb->get_var($wpdb->prepare(
+            'SELECT COUNT(DISTINCT p.ID) FROM %i AS p INNER JOIN %i AS pm ON pm.post_id = p.ID WHERE p.post_type = %s AND p.post_status <> %s AND pm.meta_key = %s AND pm.meta_value = %s',
+            $wpdb->posts,
+            $wpdb->postmeta,
+            'tribe_events',
+            'trash',
+            '_vms_event_plan_id',
+            (string) $planId
+        ));
+    };
+
+    // A Published plan may stay Published only while the exact linked TEC event is verifiably Published.
+    $publishedTecPlanId = $createPlan('Published TEC Resync Plan');
+    $publishedTecId = $createTecEvent('Published TEC Resync Event', $publishedTecPlanId, 'publish');
+    update_post_meta($publishedTecPlanId, '_vms_event_plan_status', 'published');
+    update_post_meta($publishedTecPlanId, '_vms_tec_event_id', $publishedTecId);
+    $assert($queueStatus('published', $publishedTecPlanId) === 'published', 'A verified Published TEC event may preserve the Event Plan Published status during resync.');
+
+    $draftTecPlanId = $createPlan('Draft TEC Recovery Plan');
+    $draftTecId = $createTecEvent('Draft TEC Recovery Event', $draftTecPlanId);
+    update_post_meta($draftTecPlanId, '_vms_event_plan_status', 'published');
+    update_post_meta($draftTecPlanId, '_vms_tec_event_id', $draftTecId);
+    $assert($schedulePublish($draftTecPlanId, 'publish_retry'), 'A previously Published plan with a Draft TEC event should queue recovery.');
+    update_post_meta($draftTecPlanId, '_vms_event_plan_status', $queueStatus('published', $draftTecPlanId));
+    $assert(get_post_meta($draftTecPlanId, '_vms_event_plan_status', true) === 'ready', 'A Draft linked TEC event must demote the queued Event Plan to Ready.');
+
+    $missingTecPlanId = $createPlan('Missing TEC Recovery Plan');
+    update_post_meta($missingTecPlanId, '_vms_event_plan_status', 'published');
+    update_post_meta($missingTecPlanId, '_vms_tec_event_id', 987654321);
+    $assert($schedulePublish($missingTecPlanId, 'publish_retry'), 'A previously Published plan with a missing TEC event should queue recovery.');
+    update_post_meta($missingTecPlanId, '_vms_event_plan_status', $queueStatus('published', $missingTecPlanId));
+    $assert(get_post_meta($missingTecPlanId, '_vms_event_plan_status', true) === 'ready', 'A missing linked TEC event must demote the queued Event Plan to Ready.');
 
     // Successful scheduling must be proven, remain idempotent, and leave workflow Ready.
     $successPlanId = $createPlan('Deferred Publish Success Plan');
@@ -166,8 +204,8 @@ try {
             . ', status ' . (string) get_post_status($recoverableTecId)
             . ', reverse meta ' . (int) get_post_meta($recoverableTecId, '_vms_event_plan_id', true)
     );
-    $assert($queueStatus('ready') === 'ready', 'A queued Ready plan must remain Ready.');
-    $assert($queueStatus('published') === 'published', 'A retry of an already Published plan must preserve Published.');
+    $assert($queueStatus('ready', $successPlanId) === 'ready', 'A queued Ready plan must remain Ready.');
+    $assert($queueStatus('published', $successPlanId) === 'ready', 'A Draft recovered TEC event must not preserve Published.');
     $assert($schedulePublish($successPlanId, 'publish_now'), 'Successful scheduling should return true.');
     $firstQueuedAt = (int) get_post_meta($successPlanId, '_vms_calendar_publish_queued_at', true);
     $firstAttempts = (int) get_post_meta($successPlanId, '_vms_calendar_publish_attempt_count', true);
@@ -185,6 +223,18 @@ try {
     $assert($countScheduled('vms_event_plan_deferred_calendar_publish', array($successPlanId)) === 1, 'Repeated queue requests must not duplicate publish workers.');
     $assert($countScheduled('vms_event_plan_deferred_calendar_publish_recovery', array($successPlanId)) === 1, 'Repeated queue requests must not duplicate recovery watchdogs.');
 
+    // A watchdog consumed before the stale threshold must re-arm for the same attempt.
+    $earlyWatchdogAttempt = (int) get_post_meta($successPlanId, '_vms_calendar_publish_attempt_count', true);
+    wp_clear_scheduled_hook('vms_event_plan_deferred_calendar_publish', array($successPlanId));
+    wp_clear_scheduled_hook('vms_event_plan_deferred_calendar_publish_recovery', array($successPlanId));
+    $recoverInterrupted($successPlanId);
+    $rearmedWatchdogAt = wp_next_scheduled('vms_event_plan_deferred_calendar_publish_recovery', array($successPlanId));
+    $assert($rearmedWatchdogAt !== false, 'An early watchdog must re-arm while queued work remains active.');
+    $assert((int) $rearmedWatchdogAt > time() + MINUTE_IN_SECONDS, 'An early watchdog should re-arm for a future stale check.');
+    $assert((int) $rearmedWatchdogAt <= $firstQueuedAt + $staleAfter() + (2 * MINUTE_IN_SECONDS), 'Re-arming should honor the original attempt stale window rather than restart it.');
+    $assert((int) get_post_meta($successPlanId, '_vms_calendar_publish_attempt_count', true) === $earlyWatchdogAttempt, 'Re-arming must stay on the current attempt.');
+    $assert((int) get_post_meta($successPlanId, '_vms_calendar_publish_watchdog_attempt', true) === $earlyWatchdogAttempt, 'The re-armed watchdog must be owned by the current attempt.');
+
     // Simulate WordPress consuming the worker event, then run the real worker.
     wp_clear_scheduled_hook('vms_event_plan_deferred_calendar_publish', array($successPlanId));
     $runWorker($successPlanId);
@@ -198,16 +248,7 @@ try {
             . ' and linked ID ' . (int) get_post_meta($successPlanId, '_vms_tec_event_id', true)
     );
     $assert((int) get_post_meta($successPlanId, '_vms_tec_event_id', true) === $recoverableTecId, 'The worker should recover the reverse-linked TEC event rather than create a duplicate.');
-    global $wpdb;
-    $linkedTecCount = (int) $wpdb->get_var($wpdb->prepare(
-        'SELECT COUNT(DISTINCT p.ID) FROM %i AS p INNER JOIN %i AS pm ON pm.post_id = p.ID WHERE p.post_type = %s AND p.post_status <> %s AND pm.meta_key = %s AND pm.meta_value = %s',
-        $wpdb->posts,
-        $wpdb->postmeta,
-        'tribe_events',
-        'trash',
-        '_vms_event_plan_id',
-        (string) $successPlanId
-    ));
+    $linkedTecCount = $countLinkedTecEvents($successPlanId);
     $assert($linkedTecCount === 1, 'Successful recovery should not duplicate the TEC event.');
     $assert(false === wp_next_scheduled('vms_event_plan_deferred_calendar_publish_recovery', array($successPlanId)), 'Successful completion should clear the recovery watchdog.');
 
@@ -262,6 +303,20 @@ try {
     $assert(get_post_meta($staleQueuedPlanId, '_vms_calendar_publish_last_error', true) === 'interrupted_queued_worker_missing', 'A stale queued lock should persist a recoverable interruption code.');
     $assert(!$hasLock('calendar_publish', $staleQueuedPlanId), 'Interrupted queued state should clear its stale lock.');
 
+    // A materially overdue cron row must not keep an old queued attempt healthy forever.
+    $overdueWorkerPlanId = $createPlan('Deferred Publish Overdue Worker Plan');
+    update_post_meta($overdueWorkerPlanId, '_vms_calendar_publish_queue_state', 'queued');
+    update_post_meta($overdueWorkerPlanId, '_vms_calendar_publish_queued_at', time() - ($staleAfter() + (2 * MINUTE_IN_SECONDS)));
+    $overdueWorkerAt = time() - ($staleAfter() + MINUTE_IN_SECONDS);
+    $overdueScheduleResult = wp_schedule_single_event($overdueWorkerAt, 'vms_event_plan_deferred_calendar_publish', array($overdueWorkerPlanId), true);
+    $assert(!is_wp_error($overdueScheduleResult) && $overdueScheduleResult !== false, 'Overdue worker fixture should be scheduled.');
+    $overdueHealth = $healthCheck($overdueWorkerPlanId, true);
+    $assert(empty($overdueHealth['valid_queued']), 'A worker overdue beyond the stale threshold must not be considered a valid queued worker.');
+    $assert(!empty($overdueHealth['worker_schedule_is_overdue']), 'Health metadata should identify a materially overdue worker.');
+    $assert(!empty($overdueHealth['interrupted']), 'An old queue with only an overdue worker should be recoverably interrupted.');
+    $assert(get_post_meta($overdueWorkerPlanId, '_vms_calendar_publish_queue_state', true) === 'failed', 'An overdue orphaned queue should persist failed state.');
+    $assert(false === wp_next_scheduled('vms_event_plan_deferred_calendar_publish', array($overdueWorkerPlanId)), 'Persisting an overdue interruption should remove the obsolete worker cron row.');
+
     // A worker that started and then lost its lock/cron event must not remain Running forever.
     $staleRunningPlanId = $createPlan('Deferred Publish Stale Running Plan');
     update_post_meta($staleRunningPlanId, '_vms_calendar_publish_queue_state', 'running');
@@ -279,6 +334,20 @@ try {
     $assert(get_post_meta($staleRunningPlanId, '_vms_calendar_publish_queue_state', true) === 'failed', 'A stale running worker should be changed to a recoverable failed state.');
     $assert(get_post_meta($staleRunningPlanId, '_vms_calendar_publish_last_error', true) === 'interrupted_running_worker_lost', 'A stale running worker should persist its interruption code.');
     $assert(get_post_meta($staleRunningPlanId, '_vms_calendar_publish_recovery_needed', true) === '1', 'A stale running worker should persist recovery-needed metadata.');
+
+    // A new retry must replace, not inherit, an obsolete watchdog from the interrupted attempt.
+    $oldAttempt = max(1, (int) get_post_meta($staleRunningPlanId, '_vms_calendar_publish_attempt_count', true));
+    update_post_meta($staleRunningPlanId, '_vms_calendar_publish_attempt_count', $oldAttempt);
+    update_post_meta($staleRunningPlanId, '_vms_calendar_publish_watchdog_attempt', $oldAttempt);
+    $obsoleteWatchdogAt = time() + MINUTE_IN_SECONDS;
+    $obsoleteWatchdogResult = wp_schedule_single_event($obsoleteWatchdogAt, 'vms_event_plan_deferred_calendar_publish_recovery', array($staleRunningPlanId), true);
+    $assert(!is_wp_error($obsoleteWatchdogResult) && $obsoleteWatchdogResult !== false, 'Obsolete watchdog fixture should be scheduled.');
+    $assert($schedulePublish($staleRunningPlanId, 'publish_retry'), 'Interrupted running work should create a new retry attempt.');
+    $replacementWatchdogAt = wp_next_scheduled('vms_event_plan_deferred_calendar_publish_recovery', array($staleRunningPlanId));
+    $newAttempt = (int) get_post_meta($staleRunningPlanId, '_vms_calendar_publish_attempt_count', true);
+    $assert($newAttempt === $oldAttempt + 1, 'A retry after interruption should increment the attempt exactly once.');
+    $assert($replacementWatchdogAt !== false && (int) $replacementWatchdogAt > $obsoleteWatchdogAt, 'A retry must replace a too-early obsolete watchdog.');
+    $assert((int) get_post_meta($staleRunningPlanId, '_vms_calendar_publish_watchdog_attempt', true) === $newAttempt, 'The replacement watchdog must belong to the new retry attempt.');
 
     // TEC can report an update ID while another filter prevents publication; the postcondition must catch that.
     $tecFailurePlanId = $createPlan('Deferred Publish TEC Failure Plan');
@@ -322,6 +391,38 @@ try {
     );
     $assert(get_post_meta($tecFailurePlanId, '_vms_event_plan_status', true) === 'published', 'Successful retry should transition the Event Plan to Published.');
     $assert((int) get_post_meta($tecFailurePlanId, '_vms_tec_event_id', true) === $tecFailureId, 'Successful retry should retain the same TEC event ID.');
+
+    // A failed update of a usable linked/recovered TEC event must fail closed without creating a duplicate.
+    $updateFailurePlanId = $createPlan('Deferred Publish Existing Update Failure Plan');
+    $updateFailureTecId = $createTecEvent('Existing TEC Update Failure Event', $updateFailurePlanId);
+    $linkedBeforeUpdateFailure = $countLinkedTecEvents($updateFailurePlanId);
+    $forceTecUpdateFailure = static function ($args, int $eventId) use ($updateFailureTecId) {
+        if ($eventId === $updateFailureTecId) {
+            return new WP_Error('forced_tec_update_failure', 'Forced existing TEC update failure.');
+        }
+        return $args;
+    };
+    add_filter('tribe_events_event_update_args', $forceTecUpdateFailure, PHP_INT_MAX, 2);
+    $assert($schedulePublish($updateFailurePlanId, 'publish_now'), 'Existing TEC update failure fixture should queue successfully.');
+    wp_clear_scheduled_hook('vms_event_plan_deferred_calendar_publish', array($updateFailurePlanId));
+    $runWorker($updateFailurePlanId);
+    remove_filter('tribe_events_event_update_args', $forceTecUpdateFailure, PHP_INT_MAX);
+    clean_post_cache($updateFailureTecId);
+    $assert(get_post_meta($updateFailurePlanId, '_vms_calendar_publish_queue_state', true) === 'failed', 'A failed existing TEC update should fail the deferred publication attempt.');
+    $assert((int) get_post_meta($updateFailurePlanId, '_vms_tec_event_id', true) === $updateFailureTecId, 'A failed update must preserve the recovered original TEC link.');
+    $assert((int) get_post_meta($updateFailurePlanId, '_vms_calendar_publish_last_tec_event_id', true) === $updateFailureTecId, 'A failed update should retain the affected TEC event ID in failure metadata.');
+    $assert(get_post_meta($updateFailurePlanId, '_vms_calendar_publish_last_tec_error', true) === 'tribe_update_event_failed', 'A failed update should retain a useful TEC failure code.');
+    $assert($countLinkedTecEvents($updateFailurePlanId) === $linkedBeforeUpdateFailure, 'A failed existing TEC update must not create another TEC event.');
+
+    $assert($schedulePublish($updateFailurePlanId, 'publish_retry'), 'A later retry should continue against the preserved TEC event.');
+    wp_clear_scheduled_hook('vms_event_plan_deferred_calendar_publish', array($updateFailurePlanId));
+    $runWorker($updateFailurePlanId);
+    clean_post_cache($updateFailureTecId);
+    $assert(get_post_meta($updateFailurePlanId, '_vms_calendar_publish_queue_state', true) === 'complete', 'A later retry against the original TEC event should complete.');
+    $assert((int) get_post_meta($updateFailurePlanId, '_vms_tec_event_id', true) === $updateFailureTecId, 'A successful retry must keep the original TEC event ID.');
+    $assert(get_post_status($updateFailureTecId) === 'publish', 'A successful retry should publish the original TEC event.');
+    $assert($countLinkedTecEvents($updateFailurePlanId) === $linkedBeforeUpdateFailure, 'A successful retry must not leave a duplicate TEC event.');
+    $assert(get_post_meta($updateFailurePlanId, '_vms_calendar_publish_last_tec_error', true) === '', 'Successful retry should clear the prior TEC update error metadata.');
 
     fwrite(STDOUT, "event plan deferred calendar publish stabilization: PASS\n");
 } catch (Throwable $e) {
