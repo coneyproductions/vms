@@ -342,6 +342,36 @@ if (!function_exists('bvmgr_event_plan_set_runtime_reopen_section_target')) {
     }
 }
 
+if (!function_exists('bvmgr_event_plan_handle_staffing_section_save_result')) {
+    function bvmgr_event_plan_handle_staffing_section_save_result(int $post_id, array $result): bool
+    {
+        if (!empty($result['ok']) && !empty($result['verified'])) {
+            return true;
+        }
+
+        $error = sanitize_key((string) ($result['error'] ?? 'database_error'));
+        $message = function_exists('bvmgr_staffing_lifecycle_message')
+            ? bvmgr_staffing_lifecycle_message($error)
+            : __('The Staffing section could not be saved. No staffing change was committed; please try again.', 'backstage-venue-manager');
+        $summary = $error === 'commit_outcome_unknown'
+            ? __('Staffing save outcome could not be confirmed. %s', 'backstage-venue-manager')
+            : __('Staffing changes were not saved. %s', 'backstage-venue-manager');
+        if (function_exists('bvmgr_add_admin_notice')) {
+            bvmgr_add_admin_notice(
+                sprintf(
+                    /* translators: %s: useful reason the atomic Staffing section save failed. */
+                    $summary,
+                    $message
+                ),
+                'error'
+            );
+        }
+        update_post_meta($post_id, '_vms_admin_scroll_to', 'vms_staff_assignments_present');
+        bvmgr_event_plan_set_runtime_reopen_section_target($post_id, 'staff');
+        return false;
+    }
+}
+
 if (!function_exists('bvmgr_event_plan_normalize_related_plan_ids')) {
     function bvmgr_event_plan_normalize_related_plan_ids($value): array
     {
@@ -10489,49 +10519,51 @@ if (function_exists('bvmgr_add_admin_notice')) {
                         );
                     }
 
-                    if ($staffing_matrix_dirty) {
-                        if (function_exists('bvmgr_staffing_save_event_roles_matrix')) {
-                            bvmgr_staffing_save_event_roles_matrix(
-                                (int) $post_id,
-                                is_array($staffing_headcounts) ? $staffing_headcounts : array(),
-                                is_array($staffing_raw_assignments) ? $staffing_raw_assignments : array(),
-                                is_array($staffing_time_modes) ? $staffing_time_modes : array(),
-                                is_array($staffing_shift_starts) ? $staffing_shift_starts : array(),
-                                is_array($staffing_shift_ends) ? $staffing_shift_ends : array(),
-                                is_array($staffing_start_anchor_keys) ? $staffing_start_anchor_keys : array(),
-                                is_array($staffing_start_offsets) ? $staffing_start_offsets : array(),
-                                is_array($staffing_end_anchor_keys) ? $staffing_end_anchor_keys : array(),
-                                is_array($staffing_end_offsets) ? $staffing_end_offsets : array(),
-                                is_array($staffing_duration_minutes) ? $staffing_duration_minutes : array(),
-                                (int) get_current_user_id(),
-                                $staffing_request_state
-                            );
-                        } else {
-                            $raw = is_array($staffing_raw_assignments) ? $staffing_raw_assignments : array();
-                            $clean = array();
-                            foreach ($raw as $term_id => $ids) {
-                                $term_id = absint($term_id);
-                                if ($term_id <= 0) continue;
-                                if (!is_array($ids)) $ids = array();
-                                $ids = array_map('absint', $ids);
-                                $ids = array_values(array_filter($ids, function ($v) {
-                                    return $v > 0;
-                                }));
-                                if (!empty($ids)) $clean[$term_id] = $ids;
-                            }
-                            if (!empty($clean)) update_post_meta($post_id, '_vms_staff_assignments', $clean);
-                            else delete_post_meta($post_id, '_vms_staff_assignments');
-                        }
-                    }
+                    $staffing_section_save_result = function_exists('bvmgr_staffing_save_event_plan_section')
+                        ? bvmgr_staffing_save_event_plan_section((int) $post_id, array(
+                            'headcounts' => is_array($staffing_headcounts) ? $staffing_headcounts : array(),
+                            'assignments' => is_array($staffing_raw_assignments) ? $staffing_raw_assignments : array(),
+                            'time_modes' => is_array($staffing_time_modes) ? $staffing_time_modes : array(),
+                            'shift_starts' => is_array($staffing_shift_starts) ? $staffing_shift_starts : array(),
+                            'shift_ends' => is_array($staffing_shift_ends) ? $staffing_shift_ends : array(),
+                            'start_anchor_keys' => is_array($staffing_start_anchor_keys) ? $staffing_start_anchor_keys : array(),
+                            'start_offset_minutes' => is_array($staffing_start_offsets) ? $staffing_start_offsets : array(),
+                            'end_anchor_keys' => is_array($staffing_end_anchor_keys) ? $staffing_end_anchor_keys : array(),
+                            'end_offset_minutes' => is_array($staffing_end_offsets) ? $staffing_end_offsets : array(),
+                            'duration_minutes' => is_array($staffing_duration_minutes) ? $staffing_duration_minutes : array(),
+                            'activation_thresholds' => is_array($staffing_activation_thresholds_clean) ? $staffing_activation_thresholds_clean : array(),
+                            'template_apply_now' => !empty($staffing_template_apply_now),
+                            'template_id' => (int) $staffing_template_selected_id,
+                            'template_mode' => (string) $staffing_template_apply_mode,
+                            'actor_user_id' => (int) $actor_user_id,
+                            'request_state' => $staffing_request_state,
+                        ))
+                        : array('ok' => false, 'error' => 'staffing_authority_unavailable', 'stage' => 'authority');
 
-                    if ($staffing_thresholds_dirty) {
-                        if (function_exists('bvmgr_staffing_set_event_role_activation_thresholds')) {
-                            bvmgr_staffing_set_event_role_activation_thresholds((int) $post_id, is_array($staffing_activation_thresholds_clean) ? $staffing_activation_thresholds_clean : array());
-                        } elseif (!empty($staffing_activation_thresholds_clean)) {
-                            update_post_meta($post_id, '_vms_staff_role_activation_thresholds', $staffing_activation_thresholds_clean);
-                        } else {
-                            delete_post_meta($post_id, '_vms_staff_role_activation_thresholds');
+                    if (!bvmgr_event_plan_handle_staffing_section_save_result((int) $post_id, $staffing_section_save_result)) {
+                        if (function_exists('bvmgr_event_plan_perf_span_finish')) {
+                            bvmgr_event_plan_perf_span_finish('event_plan_staffing_save', $post_id, $staffing_save_trace, array(
+                                'section' => 'staffing_save',
+                                'dirty_branch' => 'failed',
+                                'dirty_reason' => $staffing_dirty_reason,
+                                'error' => sanitize_key((string) ($staffing_section_save_result['error'] ?? 'database_error')),
+                                'stage' => sanitize_key((string) ($staffing_section_save_result['stage'] ?? 'unknown')),
+                            ));
+                            bvmgr_event_plan_perf_span_finish(
+                                'save_post_vms_event_plan_core',
+                                $post_id,
+                                $save_trace,
+                                array(
+                                    'create' => ($original_status === 'auto-draft') ? 1 : 0,
+                                    'update' => ($original_status === 'auto-draft') ? 0 : 1,
+                                    'old_status' => $original_status,
+                                    'new_status' => sanitize_key((string) get_post_status($post_id)),
+                                    'actor_user_id' => $actor_user_id,
+                                    'staffing_save' => 'failed',
+                                )
+                            );
                         }
+                        return;
                     }
 
                     $suppress_staffing_validation_notices = ($staffing_template_apply_now && $staffing_template_selected_id > 0 && $staffing_template_apply_mode === 'replace_all');
@@ -10583,8 +10615,10 @@ if (function_exists('bvmgr_add_admin_notice')) {
                             'error'
                         );
                     }
-                    if ($staffing_template_apply_requested && function_exists('bvmgr_staffing_apply_template_to_event')) {
-                        $template_apply_result = bvmgr_staffing_apply_template_to_event((int) $post_id, (int) $staffing_template_selected_id, (string) $staffing_template_apply_mode, (int) get_current_user_id());
+                    if ($staffing_template_apply_requested) {
+                        $template_apply_result = is_array($staffing_section_save_result['template'] ?? null)
+                            ? $staffing_section_save_result['template']
+                            : array();
                         if (!empty($template_apply_result['ok']) && function_exists('bvmgr_add_admin_notice')) {
                             bvmgr_add_admin_notice(
                                 sprintf(
@@ -10594,15 +10628,6 @@ if (function_exists('bvmgr_add_admin_notice')) {
                                     (int) ($template_apply_result['skipped'] ?? 0)
                                 ),
                                 'success'
-                            );
-                        } elseif (function_exists('bvmgr_add_admin_notice')) {
-                            bvmgr_add_admin_notice(
-                                sprintf(
-                                    /* translators: %s: staffing template apply failed. */
-                                    __('Staffing template apply failed: %s.', 'backstage-venue-manager'),
-                                    sanitize_text_field((string) ($template_apply_result['error'] ?? 'unknown_error'))
-                                ),
-                                'error'
                             );
                         }
                     }

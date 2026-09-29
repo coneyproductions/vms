@@ -3304,6 +3304,189 @@ if (!function_exists('bvmgr_staffing_assess_event_plan_save_request')) {
 	}
 }
 
+if (!function_exists('bvmgr_staffing_verify_event_plan_section_save')) {
+	function bvmgr_staffing_verify_event_plan_section_save(int $event_plan_id, array $request_state): array
+	{
+		$event_plan_id = absint($event_plan_id);
+		if ($event_plan_id <= 0) {
+			return array('ok' => false, 'error' => 'invalid_event_plan');
+		}
+
+		if (!empty($request_state['template_apply_requested'])) {
+			$template_id = absint($request_state['template_id'] ?? 0);
+			$applied_template_id = function_exists('bvmgr_staffing_get_event_applied_template_id')
+				? bvmgr_staffing_get_event_applied_template_id($event_plan_id)
+				: 0;
+			if ($template_id <= 0 || $applied_template_id !== $template_id) {
+				return array('ok' => false, 'error' => 'staffing_verification_failed', 'verification' => 'template');
+			}
+			return array('ok' => true, 'verified' => true);
+		}
+
+		if (!empty($request_state['matrix_dirty'])) {
+			$role_ids = is_array($request_state['role_ids'] ?? null) ? $request_state['role_ids'] : array();
+			$after_slots = bvmgr_staffing_get_event_slots($event_plan_id, true);
+			$current_signature = bvmgr_staffing_current_event_roles_matrix_signature($after_slots, $role_ids);
+			$desired_signature = is_array($request_state['desired_signature'] ?? null) ? $request_state['desired_signature'] : array();
+			if (wp_json_encode($current_signature) !== wp_json_encode($desired_signature)) {
+				return array('ok' => false, 'error' => 'staffing_verification_failed', 'verification' => 'matrix');
+			}
+		}
+
+		if (!empty($request_state['thresholds_dirty'])) {
+			$current_thresholds = function_exists('bvmgr_staffing_get_event_role_activation_thresholds')
+				? bvmgr_staffing_get_event_role_activation_thresholds($event_plan_id)
+				: array();
+			$desired_thresholds = is_array($request_state['desired_thresholds'] ?? null) ? $request_state['desired_thresholds'] : array();
+			if (wp_json_encode($current_thresholds) !== wp_json_encode($desired_thresholds)) {
+				return array('ok' => false, 'error' => 'staffing_verification_failed', 'verification' => 'thresholds');
+			}
+		}
+
+		return array('ok' => true, 'verified' => true);
+	}
+}
+
+if (!function_exists('bvmgr_staffing_save_event_plan_section')) {
+	/**
+	 * Persist the complete Event Plan Staffing section as one authority operation.
+	 *
+	 * Matrix, threshold, and template changes intentionally share the existing
+	 * Staffing transaction so a failure cannot leave a half-saved section.
+	 */
+	function bvmgr_staffing_save_event_plan_section(int $event_plan_id, array $input): array
+	{
+		$event_plan_id = absint($event_plan_id);
+		if ($event_plan_id <= 0) {
+			return array('ok' => false, 'error' => 'invalid_event_plan', 'stage' => 'request');
+		}
+		if (!function_exists('bvmgr_staffing_atomic')) {
+			return array('ok' => false, 'error' => 'staffing_authority_unavailable', 'stage' => 'authority');
+		}
+
+		$headcounts = is_array($input['headcounts'] ?? null) ? $input['headcounts'] : array();
+		$assignments = is_array($input['assignments'] ?? null) ? $input['assignments'] : array();
+		$time_modes = is_array($input['time_modes'] ?? null) ? $input['time_modes'] : array();
+		$shift_starts = is_array($input['shift_starts'] ?? null) ? $input['shift_starts'] : array();
+		$shift_ends = is_array($input['shift_ends'] ?? null) ? $input['shift_ends'] : array();
+		$start_anchor_keys = is_array($input['start_anchor_keys'] ?? null) ? $input['start_anchor_keys'] : array();
+		$start_offset_minutes = is_array($input['start_offset_minutes'] ?? null) ? $input['start_offset_minutes'] : array();
+		$end_anchor_keys = is_array($input['end_anchor_keys'] ?? null) ? $input['end_anchor_keys'] : array();
+		$end_offset_minutes = is_array($input['end_offset_minutes'] ?? null) ? $input['end_offset_minutes'] : array();
+		$duration_minutes = is_array($input['duration_minutes'] ?? null) ? $input['duration_minutes'] : array();
+		$activation_thresholds = is_array($input['activation_thresholds'] ?? null) ? $input['activation_thresholds'] : array();
+		$template_apply_now = !empty($input['template_apply_now']);
+		$template_id = absint($input['template_id'] ?? 0);
+		$template_mode = sanitize_key((string) ($input['template_mode'] ?? 'merge_missing'));
+		$actor_user_id = absint($input['actor_user_id'] ?? get_current_user_id());
+		$request_state = is_array($input['request_state'] ?? null) ? $input['request_state'] : array();
+		if (empty($request_state) && function_exists('bvmgr_staffing_assess_event_plan_save_request')) {
+			$request_state = bvmgr_staffing_assess_event_plan_save_request(
+				$event_plan_id,
+				$headcounts,
+				$assignments,
+				$time_modes,
+				$shift_starts,
+				$shift_ends,
+				$start_anchor_keys,
+				$start_offset_minutes,
+				$end_anchor_keys,
+				$end_offset_minutes,
+				$duration_minutes,
+				$activation_thresholds,
+				$template_apply_now,
+				$template_id,
+				$template_mode
+			);
+		}
+		if (empty($request_state)) {
+			return array('ok' => false, 'error' => 'invalid_request', 'stage' => 'request');
+		}
+		if (empty($request_state['has_staffing_change'])) {
+			return array('ok' => true, 'noop' => true, 'verified' => true, 'matrix' => array(), 'template' => array());
+		}
+
+		return bvmgr_staffing_atomic(static function () use (
+			$event_plan_id,
+			$headcounts,
+			$assignments,
+			$time_modes,
+			$shift_starts,
+			$shift_ends,
+			$start_anchor_keys,
+			$start_offset_minutes,
+			$end_anchor_keys,
+			$end_offset_minutes,
+			$duration_minutes,
+			$activation_thresholds,
+			$template_id,
+			$template_mode,
+			$actor_user_id,
+			$request_state
+		): array {
+			if (isset($GLOBALS['bvmgr_staffing_transaction']['plans']) && is_array($GLOBALS['bvmgr_staffing_transaction']['plans'])) {
+				$GLOBALS['bvmgr_staffing_transaction']['plans'][] = $event_plan_id;
+			}
+
+			$matrix_result = array('ok' => true, 'noop' => true);
+			if (!empty($request_state['matrix_dirty'])) {
+				if (!function_exists('bvmgr_staffing_save_event_roles_matrix')) {
+					return array('ok' => false, 'error' => 'staffing_authority_unavailable', 'stage' => 'matrix');
+				}
+				$matrix_result = bvmgr_staffing_save_event_roles_matrix(
+					$event_plan_id,
+					$headcounts,
+					$assignments,
+					$time_modes,
+					$shift_starts,
+					$shift_ends,
+					$start_anchor_keys,
+					$start_offset_minutes,
+					$end_anchor_keys,
+					$end_offset_minutes,
+					$duration_minutes,
+					$actor_user_id,
+					$request_state
+				);
+				if (empty($matrix_result['ok'])) {
+					return array_merge($matrix_result, array('ok' => false, 'stage' => 'matrix'));
+				}
+			}
+
+			if (!empty($request_state['thresholds_dirty'])) {
+				if (!function_exists('bvmgr_staffing_set_event_role_activation_thresholds')) {
+					return array('ok' => false, 'error' => 'staffing_authority_unavailable', 'stage' => 'thresholds');
+				}
+				bvmgr_staffing_set_event_role_activation_thresholds($event_plan_id, $activation_thresholds);
+			}
+
+			$template_result = array('ok' => true, 'noop' => true);
+			if (!empty($request_state['template_apply_requested'])) {
+				if (!function_exists('bvmgr_staffing_apply_template_to_event')) {
+					return array('ok' => false, 'error' => 'staffing_authority_unavailable', 'stage' => 'template');
+				}
+				$template_result = bvmgr_staffing_apply_template_to_event($event_plan_id, $template_id, $template_mode, $actor_user_id);
+				if (empty($template_result['ok'])) {
+					return array_merge($template_result, array('ok' => false, 'stage' => 'template'));
+				}
+			}
+
+			$verification = bvmgr_staffing_verify_event_plan_section_save($event_plan_id, $request_state);
+			if (empty($verification['ok'])) {
+				return array_merge($verification, array('ok' => false, 'stage' => 'verification'));
+			}
+
+			return array(
+				'ok' => true,
+				'noop' => false,
+				'verified' => true,
+				'matrix' => $matrix_result,
+				'template' => $template_result,
+			);
+		});
+	}
+}
+
 if (!function_exists('bvmgr_staffing_reconcile_existing_assignment_rows')) {
 	/**
 	 * Pick one deterministic assignment row per staff member and identify extras.

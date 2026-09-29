@@ -84,9 +84,23 @@ add_action('admin_post_vms_tasks_save_timing',static function(){
     catch (Throwable $e) { $result=new WP_Error('invalid_timing',$e->getMessage()); }
     bvmgr_tasks_admin_redirect_url_with_notice(bvmgr_tasks_detail_url($id),is_wp_error($result)?'error':'success',is_wp_error($result)?$result->get_error_message():'Task timing saved.');
 });
+function bvmgr_tasks_is_relevant_admin_screen(): bool
+{
+    $task_pages = array('vms-tasks', 'vms-task-templates', 'vms-checklist-templates', 'vms-task-settings', 'vms-my-tasks', 'vms-task-detail', 'vms-tasks-calendar');
+    $page = isset($_GET['page']) && is_scalar($_GET['page']) ? sanitize_key((string) wp_unslash($_GET['page'])) : '';
+    if (in_array($page, $task_pages, true)) return true;
+
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    $screen_id = is_object($screen) && isset($screen->id) ? sanitize_key((string) $screen->id) : '';
+    if ($screen_id === '') return false;
+    foreach ($task_pages as $task_page) {
+        if ($screen_id === $task_page || substr($screen_id, -strlen($task_page)) === $task_page) return true;
+    }
+    return false;
+}
 function bvmgr_tasks_upgrade_notice(): void
 {
-    if (!current_user_can('manage_options') || bvmgr_tasks_authority_ready()) return;
+    if (!bvmgr_tasks_is_relevant_admin_screen() || !current_user_can('manage_options') || bvmgr_tasks_authority_ready()) return;
     echo '<div class="notice notice-warning"><p>'.esc_html__('Staff Tasks requires an explicit reliability update before new changes. Existing task history remains available.','backstage-venue-manager').'</p><form method="post" action="'.esc_url(admin_url('admin-post.php')).'">';
     wp_nonce_field('bvmgr_tasks_upgrade'); echo '<input type="hidden" name="action" value="vms_tasks_upgrade"><button class="button">'.esc_html__('Update Staff Tasks reliability','backstage-venue-manager').'</button></form></div>';
 }
