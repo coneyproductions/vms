@@ -239,7 +239,7 @@
     }
 
     function controlDirty(el) {
-      if (!el || el.disabled || el.type === 'hidden') return false;
+      if (!el || el.disabled || (el.type === 'hidden' && el.dataset.vmsTransientActionControl !== '1')) return false;
       if (Object.prototype.hasOwnProperty.call(el.dataset, 'vmsInitialState')) {
         return readControlState(el) !== el.dataset.vmsInitialState;
       }
@@ -254,12 +254,27 @@
       return (el.value || '') !== (el.defaultValue || '');
     }
 
-    function sectionDirty(body) {
+    function isTransientActionControl(control) {
+      return !!control && control.dataset.vmsTransientActionControl === '1';
+    }
+
+    function sectionDirty(body, contract) {
+      if (!body) return false;
       var controls = body.querySelectorAll('input, select, textarea');
       for (var i = 0; i < controls.length; i++) {
+        if (contract === 'persisted' && isTransientActionControl(controls[i])) continue;
+        if (contract === 'transient' && !isTransientActionControl(controls[i])) continue;
         if (controlDirty(controls[i])) return true;
       }
       return false;
+    }
+
+    function sectionPersistedDirty(body) {
+      return sectionDirty(body, 'persisted');
+    }
+
+    function sectionTransientDirty(body) {
+      return sectionDirty(body, 'transient');
     }
 
     function setFlag(section) {
@@ -269,11 +284,12 @@
 
       var collapsed = section.classList.contains('is-collapsed');
       var dirty = sectionDirty(body);
+      var transientDirty = sectionTransientDirty(body);
       section.classList.toggle('is-dirty', dirty);
       var show = collapsed && dirty;
       flag.classList.toggle('is-visible', show);
       flag.hidden = !show;
-      setSectionStatus(section, dirty ? 'Unsaved changes' : 'Saved', dirty ? 'dirty' : 'saved');
+      setSectionStatus(section, transientDirty ? 'Unsaved action input' : (dirty ? 'Unsaved changes' : 'Saved'), dirty ? 'dirty' : 'saved');
     }
 
     function setSectionStatus(section, label, state) {
@@ -311,9 +327,10 @@
       setFlag(section);
     }
 
-    function resetSectionBaseline(section) {
+    function resetSectionBaseline(section, persistedOnly) {
       if (!section) return;
       section.querySelectorAll('input, select, textarea').forEach(function (control) {
+        if (persistedOnly && isTransientActionControl(control)) return;
         control.dataset.vmsInitialState = readControlState(control);
         if (control.matches('input[type="checkbox"],input[type="radio"]')) {
           control.defaultChecked = control.checked;
@@ -326,6 +343,11 @@
         }
       });
       setFlag(section);
+    }
+
+    function workflowActionConsumesTransient(submitter, section) {
+      if (!submitter || !section || String(section.dataset.sectionKey || '') !== 'cancellation') return false;
+      return ['mark_cancelled', 'create_rescheduled_draft', 'retry_cancellation_all'].indexOf(String(submitter.value || '')) !== -1;
     }
 
     function bindFlagWatchers(section, body) {
@@ -533,9 +555,15 @@
         setSectionStatus(section, 'Save failed', 'failed');
         return false;
       }
-      resetSectionBaseline(section);
-      setSectionStatus(section, 'Saved', 'saved');
+      resetSectionBaseline(section, true);
       var successFeedback = section.querySelector('[data-vms-section-feedback]');
+      if (sectionTransientDirty(section.querySelector('.vms-collapsible-body'))) {
+        setCollapsed(section, false);
+        setSectionStatus(section, 'Unsaved action input', 'dirty');
+        if (successFeedback) successFeedback.textContent = (result.message || 'Saved.') + ' Action-only cancellation input remains unsaved; run the guarded action or discard it before leaving this section.';
+        return false;
+      }
+      setSectionStatus(section, 'Saved', 'saved');
       if (successFeedback) successFeedback.textContent = result.message || 'Saved.';
       if (target) await openSection(target, true);
       return true;
@@ -804,6 +832,7 @@
       form.addEventListener('click', function (event) {
         var workflowSubmit = event.target.closest('button[type="submit"][name="vms_event_plan_action"]');
         if (!workflowSubmit || !activeSection || !sectionDirty(activeSection.querySelector('.vms-collapsible-body'))) return;
+        if (!sectionPersistedDirty(activeSection.querySelector('.vms-collapsible-body')) && workflowActionConsumesTransient(workflowSubmit, activeSection)) return;
         event.preventDefault();
         event.stopPropagation();
         var blockedStatus = statusRoot ? statusRoot.querySelector('[data-vms-workflow-status]') : null;
@@ -925,6 +954,7 @@
           && submitter.name === 'vms_event_plan_action'
           && activeSection
           && sectionDirty(activeSection.querySelector('.vms-collapsible-body'))
+          && (sectionPersistedDirty(activeSection.querySelector('.vms-collapsible-body')) || !workflowActionConsumesTransient(submitter, activeSection))
         ) {
           event.preventDefault();
           var blockedStatus = statusRoot ? statusRoot.querySelector('[data-vms-workflow-status]') : null;
@@ -953,7 +983,13 @@
           if (feedback) feedback.textContent = String(detail.message || 'Save failed.');
           return;
         }
-        resetSectionBaseline(section);
+        resetSectionBaseline(section, true);
+        if (sectionTransientDirty(section.querySelector('.vms-collapsible-body'))) {
+          setCollapsed(section, false);
+          setSectionStatus(section, 'Unsaved action input', 'dirty');
+          if (feedback) feedback.textContent = String(detail.message || 'Saved.') + ' Action-only cancellation input remains unsaved; run the guarded action or discard it before leaving this section.';
+          return;
+        }
         setSectionStatus(section, 'Saved', 'saved');
         if (feedback) feedback.textContent = String(detail.message || 'Saved.');
       });

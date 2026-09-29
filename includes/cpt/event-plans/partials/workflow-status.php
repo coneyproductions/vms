@@ -56,7 +56,7 @@
         <span class="description"><?php esc_html_e('Staff, secondary vendors, and lineup/supporting vendors receive the standard cancellation notice. The internal cancellation note above stays internal.', 'backstage-venue-manager'); ?></span>
     </p>
 
-    <input type="hidden" name="vms_cancel_auto_refund_confirmed" id="vms_cancel_auto_refund_confirmed" value="0" />
+    <input type="hidden" name="vms_cancel_auto_refund_confirmed" id="vms_cancel_auto_refund_confirmed" value="0" data-vms-transient-action-control="1" />
 
     <?php $this->render_cancellation_job_panel((int) $post->ID, (string) $plan_status); ?>
 
@@ -83,9 +83,10 @@
     ?>
 
     <hr />
+    <p class="description"><strong><?php esc_html_e('Action-only inputs:', 'backstage-venue-manager'); ?></strong> <?php esc_html_e('Replacement date and refund confirmations are used only by the guarded cancellation action. Save Changes does not save them as Event Plan settings; run the action or discard them before leaving this section.', 'backstage-venue-manager'); ?></p>
     <p>
         <label for="vms_reschedule_event_date"><strong><?php esc_html_e('Replacement date', 'backstage-venue-manager'); ?></strong></label><br>
-        <input type="date" id="vms_reschedule_event_date" name="vms_reschedule_event_date" value="<?php echo esc_attr($reschedule_date_value); ?>" />
+        <input type="date" id="vms_reschedule_event_date" name="vms_reschedule_event_date" value="<?php echo esc_attr($reschedule_date_value); ?>" data-vms-transient-action-control="1" />
     </p>
 
     <?php if ($plan_status !== 'cancelled') : ?>
