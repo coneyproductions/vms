@@ -2191,12 +2191,21 @@ body.post-type-vms_event_plan .vms-cancel-job-step__actions {
 body.post-type-vms_event_plan .vms-tax-bypass-inline {
   margin-top: 10px;
   max-width: 980px;
-  padding: 12px 14px;
+  padding: 8px 12px;
   border: 1px solid #efd59a;
   border-left: var(--vms-notice-border-left) solid var(--vms-notice-warning-border);
   border-radius: var(--vms-notice-radius);
   background: var(--vms-notice-warning-bg);
   color: var(--vms-notice-warning-text);
+}
+
+body.post-type-vms_event_plan .vms-tax-bypass-inline > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+body.post-type-vms_event_plan .vms-tax-bypass-inline[open] > summary {
+  margin-bottom: 8px;
 }
 
 body.post-type-vms_event_plan .vms-tax-bypass-inline.has-active-bypass {
@@ -4488,6 +4497,30 @@ body.post-type-vms_event_plan .vms-ep-basic-grid h4 {
 
 body.post-type-vms_event_plan .vms-ep-basic-grid .vms-ep-holiday-card {
   margin-top: 8px;
+}
+
+body.post-type-vms_event_plan .vms-ep-title-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding-top: 2px;
+}
+
+body.post-type-vms_event_plan .vms-ep-title-control__heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+body.post-type-vms_event_plan .vms-ep-title-control__heading strong {
+  font-size: 12px;
+  color: #50575e;
+}
+
+body.post-type-vms_event_plan .vms-ep-title-control .description {
+  flex-basis: 100%;
+  margin: 0;
 }
 
 body.post-type-vms_event_plan .vms-ep-status-current {
@@ -6928,16 +6961,18 @@ body.post-type-vms_event_plan .vms-ep-card--blue .vms-ep-ol {
 
 body.post-type-vms_event_plan .vms-ep-pay-sections {
   grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
-  gap: 14px;
+  gap: 10px;
   max-width: 980px;
 }
 
 body.post-type-vms_event_plan .vms-ep-pay-section {
-  padding: 14px;
+  align-self: start;
+  height: auto;
+  padding: 12px;
 }
 
 body.post-type-vms_event_plan .vms-ep-pay-section__header {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 body.post-type-vms_event_plan .vms-ep-pay-section__header h4 {
@@ -7008,11 +7043,12 @@ body.post-type-vms_event_plan .vms-ep-draft-pay-grid .vms-comp-field--bonus-max 
 
 body.post-type-vms_event_plan .vms-ep-agent-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 8px 10px;
 }
 
 body.post-type-vms_event_plan .vms-ep-agent-grid .vms-comp-field {
-  min-height: 88px;
+  min-height: 0;
+  margin-bottom: 0;
 }
 
 body.post-type-vms_event_plan #vms-agent-fee-summary {

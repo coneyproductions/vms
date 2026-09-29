@@ -5096,6 +5096,7 @@ class BVMGR_Admin_Event_Plans
         wp_send_json_success(array(
             'section' => $scope,
             'verified' => 1,
+            'refresh_required' => $scope === 'basics' ? 1 : 0,
             'message' => sprintf(__('%s saved.', 'backstage-venue-manager'), (string) ($registry[$scope]['label'] ?? __('Section', 'backstage-venue-manager'))),
         ));
     }
@@ -9196,7 +9197,8 @@ class BVMGR_Admin_Event_Plans
 
         echo '<div class="vms-ep-basic-item vms-ep-basic-span">';
         echo '<h4>' . esc_html__('Holiday', 'backstage-venue-manager') . '</h4>';
-        echo '<div class="vms-ep-holiday-card">';
+        echo '<div class="vms-ep-holiday-card" data-vms-event-details-holiday>';
+        echo '<div data-vms-derived-authoritative>';
 
         if ($venue_id_effective <= 0 || !$event_date) {
             echo '<p class="description vms-m0">' . esc_html__('Select a Venue and Event Date to see holiday status.', 'backstage-venue-manager') . '</p>';
@@ -9223,6 +9225,9 @@ class BVMGR_Admin_Event_Plans
                 echo '<p class="description vms-m0">' . esc_html__('Holiday pay/hours are role-dependent and will be applied automatically (once holiday rules are configured).', 'backstage-venue-manager') . '</p>';
             }
         }
+
+        echo '</div>';
+        echo '<p class="description vms-m0" data-vms-derived-unsaved hidden>' . esc_html__('Save Event Details to run authoritative holiday checks.', 'backstage-venue-manager') . '</p>';
 
         // ---------------------------------
         // Compute "default pay" for this venue/date

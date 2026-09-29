@@ -319,17 +319,17 @@
                                 <?php endforeach; ?>
                             </select>
                         </p>
-                        <p class="vms-comp-field vms-comp-field--final-payment-days">
+                        <p class="vms-comp-field vms-comp-field--final-payment-days" data-vms-final-payment-timing="days_after">
                             <label for="vms_final_payment_days_after"><strong><?php esc_html_e('Days After Event', 'backstage-venue-manager'); ?></strong></label><br />
                             <input type="text" inputmode="numeric" autocomplete="off" id="vms_final_payment_days_after" name="vms_final_payment_days_after" class="vms-ep-input-sm" value="<?php echo esc_attr($final_payment_days_after); ?>" placeholder="<?php esc_attr_e('Example: 7', 'backstage-venue-manager'); ?>" />
                             <span class="description vms-comp-field-help"><?php esc_html_e('Used when Expected Final Payment is N days after event.', 'backstage-venue-manager'); ?></span>
                         </p>
-                        <p class="vms-comp-field vms-comp-field--final-payment-date">
+                        <p class="vms-comp-field vms-comp-field--final-payment-date" data-vms-final-payment-timing="fixed_date">
                             <label for="vms_final_payment_date"><strong><?php esc_html_e('Specific Pay Date', 'backstage-venue-manager'); ?></strong></label><br />
                             <input type="date" id="vms_final_payment_date" name="vms_final_payment_date" class="vms-ep-input-sm" value="<?php echo esc_attr($final_payment_date); ?>" />
                             <span class="description vms-comp-field-help"><?php esc_html_e('Used when Expected Final Payment is Specific date.', 'backstage-venue-manager'); ?></span>
                         </p>
-                        <p class="vms-comp-field vms-comp-field--final-payment-custom">
+                        <p class="vms-comp-field vms-comp-field--final-payment-custom" data-vms-final-payment-timing="custom">
                             <label for="vms_final_payment_custom_text"><strong><?php esc_html_e('Custom Timing', 'backstage-venue-manager'); ?></strong></label><br />
                             <input type="text" id="vms_final_payment_custom_text" name="vms_final_payment_custom_text" class="regular-text" value="<?php echo esc_attr($final_payment_custom_text); ?>" placeholder="<?php esc_attr_e('Example: after settlement is approved', 'backstage-venue-manager'); ?>" />
                         </p>
@@ -341,7 +341,7 @@
                                 <?php endforeach; ?>
                             </select>
                         </p>
-                        <p class="vms-comp-field vms-comp-field--final-payment-method-other">
+                        <p class="vms-comp-field vms-comp-field--final-payment-method-other" data-vms-final-payment-method="other">
                             <label for="vms_final_payment_method_other"><strong><?php esc_html_e('Other Method', 'backstage-venue-manager'); ?></strong></label><br />
                             <input type="text" id="vms_final_payment_method_other" name="vms_final_payment_method_other" class="regular-text" value="<?php echo esc_attr($final_payment_method_other); ?>" placeholder="<?php esc_attr_e('Describe payment method', 'backstage-venue-manager'); ?>" />
                         </p>

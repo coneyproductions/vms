@@ -1,4 +1,35 @@
 (function () {
+  function initFinalPaymentConditionalFields() {
+    var timing = document.getElementById('vms_final_payment_timing');
+    var method = document.getElementById('vms_final_payment_method');
+    if (!timing || !method) return false;
+
+    function setConditionalState(selector, attributeName, selectedValue) {
+      document.querySelectorAll(selector).forEach(function (field) {
+        var requiredValue = field.getAttribute(attributeName);
+        var visible = String(selectedValue || '') === String(requiredValue || '');
+        field.hidden = !visible;
+        field.setAttribute('aria-hidden', visible ? 'false' : 'true');
+        field.querySelectorAll('input, select, textarea').forEach(function (control) {
+          control.disabled = !visible;
+        });
+      });
+    }
+
+    function update() {
+      setConditionalState('[data-vms-final-payment-timing]', 'data-vms-final-payment-timing', timing.value);
+      setConditionalState('[data-vms-final-payment-method]', 'data-vms-final-payment-method', method.value);
+    }
+
+    if (timing.dataset.vmsFinalPaymentConditionalBound !== '1') {
+      timing.dataset.vmsFinalPaymentConditionalBound = '1';
+      timing.addEventListener('change', update);
+      method.addEventListener('change', update);
+    }
+    update();
+    return true;
+  }
+
   function initVenueCompDefaults() {
     var postForm = document.getElementById('post');
     var venueSel = document.getElementById('vms_venue_id');
@@ -1091,6 +1122,7 @@
   }
 
   function initCompensationRefresh() {
+    initFinalPaymentConditionalFields();
     initVenueCompDefaults();
     initCompOptionsRefresh();
     initCompensationState();

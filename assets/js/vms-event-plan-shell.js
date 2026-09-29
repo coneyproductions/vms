@@ -114,6 +114,7 @@
     var lastTouchedSectionKey = '';
     var requestedSectionHandled = false;
     var editableSectionOrder = ['basics', 'schedule', 'compensation', 'secondary_vendors', 'staff', 'ticketing_v2', 'cancellation'];
+    var continuationSectionOrder = ['basics', 'schedule', 'compensation', 'secondary_vendors', 'staff', 'ticketing_v2', 'readiness_details'];
     var editableSectionKeys = new Set(editableSectionOrder);
     var activeSection = null;
     var pendingSwitchSection = null;
@@ -277,6 +278,18 @@
       return sectionDirty(body, 'transient');
     }
 
+    function updateEventDetailsDerivedState() {
+      var eventDate = document.getElementById('vms_event_date');
+      var venue = document.getElementById('vms_venue_id');
+      var hasUnsavedInputs = controlDirty(eventDate) || controlDirty(venue);
+      document.querySelectorAll('[data-vms-event-details-holiday], [data-vms-schedule-date-status]').forEach(function (container) {
+        var authoritative = container.querySelector('[data-vms-derived-authoritative]');
+        var unsaved = container.querySelector('[data-vms-derived-unsaved]');
+        if (authoritative) authoritative.hidden = hasUnsavedInputs;
+        if (unsaved) unsaved.hidden = !hasUnsavedInputs;
+      });
+    }
+
     function setFlag(section) {
       var flag = section.querySelector('.vms-collapsible-flag');
       var body = section.querySelector('.vms-collapsible-body');
@@ -359,11 +372,14 @@
         control.dataset.vmsCollapseBound = '1';
         control.addEventListener('input', function () {
           setFlag(section);
+          if (String(section.dataset.sectionKey || '') === 'basics') updateEventDetailsDerivedState();
         });
         control.addEventListener('change', function () {
           setFlag(section);
+          if (String(section.dataset.sectionKey || '') === 'basics') updateEventDetailsDerivedState();
         });
       });
+      if (String(section.dataset.sectionKey || '') === 'basics') updateEventDetailsDerivedState();
     }
 
     async function loadLazySection(section) {
@@ -442,19 +458,12 @@
       }
     }
 
-    function getEditableSections() {
-      return editableSectionOrder.map(function (key) {
-        return form.querySelector('.vms-collapsible-section[data-section-key="' + cssEscapeValue(key) + '"]');
-      }).filter(function (section) {
-        return !!section;
-      });
-    }
-
-    function nextEditableSection(section) {
-      var sections = getEditableSections();
-      var index = sections.indexOf(section);
-      if (index < 0 || !sections.length) return null;
-      return sections[(index + 1) % sections.length];
+    function nextWorkflowSection(section) {
+      var currentKey = section ? String(section.dataset.sectionKey || '') : '';
+      var index = continuationSectionOrder.indexOf(currentKey);
+      var nextKey = index >= 0 ? continuationSectionOrder[index + 1] : '';
+      if (!nextKey) return null;
+      return form.querySelector('.vms-collapsible-section[data-section-key="' + cssEscapeValue(nextKey) + '"]');
     }
 
     function waitForSpecialSave(sectionKey, trigger) {
@@ -538,7 +547,11 @@
             if (!ticketingResult.ok) return ticketingResult;
           }
         }
-        return { ok: true, message: payload.data && payload.data.message ? String(payload.data.message) : 'Saved.' };
+        return {
+          ok: true,
+          refreshRequired: !!(payload.data && payload.data.refresh_required),
+          message: payload.data && payload.data.message ? String(payload.data.message) : 'Saved.'
+        };
       } catch (error) {
         return { ok: false, message: error && error.message ? error.message : 'Save failed.' };
       } finally {
@@ -565,7 +578,16 @@
       }
       setSectionStatus(section, 'Saved', 'saved');
       if (successFeedback) successFeedback.textContent = result.message || 'Saved.';
-      if (target) await openSection(target, true);
+      if (result.refreshRequired) {
+        var reloadKey = target ? String(target.dataset.sectionKey || '') : String(section.dataset.sectionKey || '');
+        suppressBeforeUnload = true;
+        window.location.assign(persistRequestedSection(reloadKey));
+        return true;
+      }
+      if (target) {
+        await openSection(target, true);
+        scrollSectionTargetIntoView(String(target.dataset.sectionKey || ''), target);
+      }
       return true;
     }
 
@@ -652,10 +674,14 @@
       section.dataset.vmsWorkspaceActions = '1';
       var actions = document.createElement('div');
       actions.className = 'vms-ep-section-actions';
+      var continueButton = continuationSectionOrder.indexOf(key) !== -1 && key !== 'readiness_details'
+        ? '<button type="button" class="button button-primary" data-vms-section-action="next">Save &amp; Continue</button>'
+        : '';
+      var saveButtonClass = continueButton ? 'button button-secondary' : 'button button-primary';
       actions.innerHTML =
         '<div class="vms-ep-section-actions__buttons">' +
-          '<button type="button" class="button button-primary" data-vms-section-action="save">Save Changes</button>' +
-          '<button type="button" class="button button-secondary" data-vms-section-action="next">Save &amp; Next</button>' +
+          continueButton +
+          '<button type="button" class="' + saveButtonClass + '" data-vms-section-action="save">Save Changes</button>' +
           '<button type="button" class="button" data-vms-section-action="discard">Discard Changes</button>' +
         '</div>' +
         '<div class="vms-ep-section-actions__state"><strong data-vms-section-status data-state="saved">Saved</strong><span class="description" data-vms-section-feedback aria-live="polite"></span></div>';
@@ -883,7 +909,7 @@
           if (sectionActionName === 'save') {
             saveAndMaybeOpen(actionSection, null);
           } else if (sectionActionName === 'next') {
-            saveAndMaybeOpen(actionSection, nextEditableSection(actionSection));
+            saveAndMaybeOpen(actionSection, nextWorkflowSection(actionSection));
           } else if (sectionActionName === 'discard') {
             suppressBeforeUnload = true;
             window.location.reload();

@@ -239,6 +239,7 @@ try {
         "setSectionStatus(section, 'Saving…', 'saving')",
         "setSectionStatus(section, 'Save failed', 'failed')",
         'await openSection(target, true)',
+        'Save &amp; Continue',
         "window.addEventListener('beforeunload'",
     ) as $marker) {
         $assert(strpos($shell, $marker) !== false, 'Workspace shell is missing acceptance marker: ' . $marker);
@@ -247,7 +248,7 @@ try {
     $assert(strpos($shell, 'resetSectionBaseline(section, true)') !== false, 'Successful section saves must reset only persisted-control baselines.');
     $assert(strpos($shell, 'sectionTransientDirty') !== false && strpos($shell, 'Unsaved action input') !== false, 'Transient cancellation action intent must remain visibly dirty after Save Changes.');
     $assert(strpos($shell, 'workflowActionConsumesTransient') !== false && strpos($shell, "'mark_cancelled', 'create_rescheduled_draft', 'retry_cancellation_all'") !== false, 'Guarded Cancellation actions must be able to consume transient inputs.');
-    $assert(strpos($shell, 'if (target) await openSection(target, true)') !== false && strpos($shell, 'Action-only cancellation input remains unsaved') !== false, 'Save & Next must stop before navigation when transient action intent remains.');
+    $assert(strpos($shell, 'await openSection(target, true)') !== false && strpos($shell, 'Action-only cancellation input remains unsaved') !== false, 'Save & Continue must stop before navigation when transient action intent remains.');
     $assert(substr_count($shell, "workflowParams.set('action', 'vms_event_plan_workflow_action')") === 1, 'Workflow actions must use the dedicated saved-state endpoint.');
     $assert(strpos($eventPlans, 'event_plan_saved_workflow_request') !== false, 'Workflow endpoint must rebuild its request from saved state.');
     $assert(strpos($eventPlans, "array('mark_ready', 'publish_now', 'retry_publish')") !== false, 'Saved-state workflow endpoint must expose non-destructive actions without bypassing cancellation safeguards.');

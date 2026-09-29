@@ -83,8 +83,8 @@ try {
 		'document.querySelector(\'h1.editor-post-title__input\')',
 		'wp.data.dispatch(\'core/editor\').editPost({',
 		'Primary Vendor changed. Update the title to match the selected Primary Vendor?',
-		'(auto-title disabled)',
-		'(select Primary Vendor to preview)',
+		"if (!String(opt.value || '').trim()) return '';",
+		"getWpTitle() || renderedTitle || 'Untitled Event Plan'",
 		'postForm.dataset.vmsTitleSyncBound === \'1\'',
 	) as $requiredTitleMarker) {
 		$assert(strpos($titleAssetSource, $requiredTitleMarker) !== false, 'Title asset should own the migrated title-sync marker: ' . $requiredTitleMarker);

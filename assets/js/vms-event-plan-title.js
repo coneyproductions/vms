@@ -14,6 +14,8 @@
     var autoTitle = document.querySelector('input[name="vms_auto_title"]');
     var previewEl = document.getElementById('vms_title_preview_text');
     var lockNote = document.getElementById('vms_title_lock_note');
+    var missingVendorNote = document.getElementById('vms_title_missing_vendor_note');
+    var renderedTitle = previewEl ? String(previewEl.textContent || '').trim() : '';
     var wpTitleInput =
       document.getElementById('title') ||
       document.querySelector('textarea.editor-post-title__input') ||
@@ -30,6 +32,7 @@
       if (!bandSel) return '';
       var opt = bandSel.options[bandSel.selectedIndex];
       if (!opt) return '';
+      if (!String(opt.value || '').trim()) return '';
 
       var raw = String(opt.getAttribute('data-vendor-title') || '').trim();
       if (raw) return raw;
@@ -49,14 +52,15 @@
 
     function updatePreview() {
       var isAuto = autoTitle ? autoTitle.checked : true;
+      var title = buildTitle();
       setLockNote(!isAuto);
+      if (missingVendorNote) missingVendorNote.hidden = !!title;
       if (!previewEl) return;
       if (!isAuto) {
-        previewEl.textContent = '(auto-title disabled)';
+        previewEl.textContent = getWpTitle() || renderedTitle || 'Untitled Event Plan';
         return;
       }
-      var title = buildTitle();
-      previewEl.textContent = title || '(select Primary Vendor to preview)';
+      previewEl.textContent = title || getWpTitle() || renderedTitle || 'Untitled Event Plan';
     }
 
     var lastBuilt = buildTitle();
