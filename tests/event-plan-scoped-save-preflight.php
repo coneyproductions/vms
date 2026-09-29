@@ -58,6 +58,40 @@ try {
         $result = $method->invoke($controller, $postId, $scope, $filtered);
         return is_array($result) ? $result : array();
     };
+    $saveWholeForm = static function (int $postId, array $request) use ($controller): void {
+        $savedPost = $_POST;
+        $post = get_post($postId);
+        if (!$post instanceof WP_Post) {
+            throw new RuntimeException('Whole-form Event Plan fixture is unavailable.');
+        }
+        $request['post_ID'] = $postId;
+        $request['original_post_status'] = (string) $post->post_status;
+        $request['vms_secondary_vendors_module_detached'] = '1';
+        $request['vms_staffing_lazy_unloaded'] = '1';
+        $request['bvmgr_event_plan_details_nonce'] = wp_create_nonce('bvmgr_save_event_plan_details');
+        $_POST = wp_slash($request);
+        $GLOBALS['bvmgr_event_plan_request_cache_generation'] = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0)) + 1;
+        try {
+            $controller->save_event_plan_meta($postId, $post);
+        } finally {
+            $_POST = $savedPost;
+            $GLOBALS['bvmgr_event_plan_request_cache_generation'] = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0)) + 1;
+        }
+    };
+    $compensationRequest = static function (array $overrides = array()): array {
+        return array_merge(array(
+            'vms_auto_comp_venue' => '1',
+            'vms_comp_structure' => 'flat_fee',
+            'vms_flat_fee_amount' => '1200',
+            'vms_commission_percent' => '',
+            'vms_commission_mode' => 'artist_fee',
+            'vms_deposit_amount' => '',
+            'vms_deposit_status' => 'not_required',
+            'vms_deposit_treatment' => 'creditable',
+            'vms_final_payment_timing' => 'not_set',
+            'vms_final_payment_method' => 'not_set',
+        ), $overrides);
+    };
 
     $publishedPlanId = $createPlan('Scoped occurrence lock fixture');
     update_post_meta($publishedPlanId, '_vms_event_date', '2026-10-10');
@@ -210,6 +244,44 @@ try {
     $assert(!empty($validCompResult['ok']) && !empty($validCompResult['verified']), 'Valid Compensation request did not pass postcondition verification.');
     $assert((string) get_post_meta($validPlanId, '_vms_attendance_bonus_step_size', true) === '10', 'Canonical valid Attendance Bonus step size did not persist.');
     $assert((string) get_post_meta($validPlanId, '_vms_event_date', true) === '2026-11-02', 'Compensation save crossed into Event Details fields.');
+    $assert((string) get_post_meta($validPlanId, '_vms_auto_comp', true) === '1', 'Never-stored automatic compensation did not retain its enabled semantic default.');
+
+    $autoCompEnabledPlanId = $createPlan('Scoped automatic compensation enabled fixture');
+    update_post_meta($autoCompEnabledPlanId, '_vms_auto_comp', '1');
+    update_post_meta($autoCompEnabledPlanId, '_vms_auto_comp_venue', '1');
+    $preserveEnabledResult = $saveSection($autoCompEnabledPlanId, 'compensation', $compensationRequest());
+    $assert(!empty($preserveEnabledResult['ok']) && !empty($preserveEnabledResult['verified']), 'Scoped Compensation verification failed while preserving enabled automatic compensation.');
+    $assert((string) get_post_meta($autoCompEnabledPlanId, '_vms_auto_comp', true) === '1', 'Absent automatic-compensation input cleared an enabled state.');
+
+    $autoCompDisabledPlanId = $createPlan('Scoped automatic compensation disabled fixture');
+    update_post_meta($autoCompDisabledPlanId, '_vms_auto_comp', '0');
+    update_post_meta($autoCompDisabledPlanId, '_vms_auto_comp_venue', '1');
+    $preserveDisabledResult = $saveSection($autoCompDisabledPlanId, 'compensation', $compensationRequest());
+    $assert(!empty($preserveDisabledResult['ok']) && !empty($preserveDisabledResult['verified']), 'Scoped Compensation verification failed while preserving disabled automatic compensation.');
+    $assert((string) get_post_meta($autoCompDisabledPlanId, '_vms_auto_comp', true) === '0', 'Absent automatic-compensation input enabled a disabled state.');
+
+    $explicitDisableResult = $saveSection($autoCompEnabledPlanId, 'compensation', $compensationRequest(array('vms_auto_comp' => '0')));
+    $assert(!empty($explicitDisableResult['ok']) && (string) get_post_meta($autoCompEnabledPlanId, '_vms_auto_comp', true) === '0', 'Explicit zero did not disable automatic compensation.');
+    $explicitEnableResult = $saveSection($autoCompDisabledPlanId, 'compensation', $compensationRequest(array('vms_auto_comp' => '1')));
+    $assert(!empty($explicitEnableResult['ok']) && (string) get_post_meta($autoCompDisabledPlanId, '_vms_auto_comp', true) === '1', 'Explicit one did not enable automatic compensation.');
+
+    update_post_meta($autoCompDisabledPlanId, '_vms_auto_comp_venue', '1');
+    $venueAbsentRequest = $compensationRequest();
+    unset($venueAbsentRequest['vms_auto_comp_venue']);
+    $venueAbsentResult = $saveSection($autoCompDisabledPlanId, 'compensation', $venueAbsentRequest);
+    $assert(!empty($venueAbsentResult['ok']) && (string) get_post_meta($autoCompDisabledPlanId, '_vms_auto_comp_venue', true) === '0', 'Absent venue automatic-compensation checkbox no longer disables that rendered checkbox setting.');
+    $venuePresentResult = $saveSection($autoCompDisabledPlanId, 'compensation', $compensationRequest());
+    $assert(!empty($venuePresentResult['ok']) && (string) get_post_meta($autoCompDisabledPlanId, '_vms_auto_comp_venue', true) === '1', 'Present venue automatic-compensation checkbox no longer enables that setting.');
+
+    $wholeFormPlanId = $createPlan('Whole-form automatic compensation fixture');
+    update_post_meta($wholeFormPlanId, '_vms_auto_comp', '1');
+    update_post_meta($wholeFormPlanId, '_vms_event_date', '2026-12-01');
+    $wholeFormRequest = $compensationRequest(array(
+        'vms_event_date' => '2026-12-01',
+        'vms_venue_id' => '0',
+    ));
+    $saveWholeForm($wholeFormPlanId, $wholeFormRequest);
+    $assert((string) get_post_meta($wholeFormPlanId, '_vms_auto_comp', true) === '1', 'Whole-form save without automatic-compensation input cleared the stored state.');
 
     fwrite(STDOUT, 'PASS: ' . $assertions . " scoped Event Plan preflight assertions.\n");
 } finally {

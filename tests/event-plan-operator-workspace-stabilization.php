@@ -6,6 +6,7 @@ $eventPlans = (string) file_get_contents($root . '/includes/cpt/event-plans.php'
 $shell = (string) file_get_contents($root . '/assets/js/vms-event-plan-shell.js');
 $secondary = (string) file_get_contents($root . '/assets/js/vms-event-plan-secondary-vendors.js');
 $ticketing = (string) file_get_contents($root . '/assets/admin-ticketing.js');
+$compensation = (string) file_get_contents($root . '/includes/cpt/event-plans/partials/compensation.php');
 $workspaceStatus = (string) file_get_contents($root . '/includes/cpt/event-plans/partials/workspace-status.php');
 $workflow = (string) file_get_contents($root . '/includes/cpt/event-plans/partials/workflow-status.php');
 
@@ -63,6 +64,8 @@ eval($extractFunction($eventPlans, 'bvmgr_event_plan_section_registry'));
 eval($extractFunction($eventPlans, 'bvmgr_event_plan_normalize_save_scope'));
 eval($extractFunction($eventPlans, 'bvmgr_event_plan_filter_section_request'));
 eval($extractFunction($eventPlans, 'bvmgr_event_plan_scoped_save_comparable_value'));
+eval($extractFunction($eventPlans, 'bvmgr_event_plan_normalize_explicit_boolean'));
+eval($extractFunction($eventPlans, 'bvmgr_event_plan_resolve_auto_comp_value'));
 eval($extractFunction($eventPlans, 'bvmgr_event_plan_normalize_attendance_bonus_step_request'));
 eval($extractFunction($eventPlans, 'bvmgr_event_plan_preflight_scoped_save_request'));
 eval($extractFunction($eventPlans, 'bvmgr_event_plan_verify_scoped_save_postcondition'));
@@ -139,6 +142,18 @@ try {
     $preflightPosition = strpos($eventPlans, 'bvmgr_event_plan_preflight_scoped_save_request($section_save_scope, $request)');
     $firstWriterPosition = strpos($eventPlans, '$original_status =', $preflightPosition);
     $assert($preflightPosition !== false && $firstWriterPosition !== false && $preflightPosition < $firstWriterPosition, 'Scoped validation must run before writer-side state capture and mutation.');
+
+    $GLOBALS['vms_workspace_test_meta'][601]['_vms_auto_comp'] = '1';
+    $assert(bvmgr_event_plan_resolve_auto_comp_value(601, array()) === '1', 'Absent automatic-compensation input must preserve enabled state.');
+    $GLOBALS['vms_workspace_test_meta'][601]['_vms_auto_comp'] = '0';
+    $assert(bvmgr_event_plan_resolve_auto_comp_value(601, array()) === '0', 'Absent automatic-compensation input must preserve disabled state.');
+    $assert(bvmgr_event_plan_resolve_auto_comp_value(602, array()) === '1', 'Never-stored automatic-compensation state must retain its enabled semantic default.');
+    $assert(bvmgr_event_plan_resolve_auto_comp_value(601, array('vms_auto_comp' => '0')) === '0', 'Explicit zero must disable automatic compensation.');
+    $assert(bvmgr_event_plan_resolve_auto_comp_value(601, array('vms_auto_comp' => '1')) === '1', 'Explicit one must enable automatic compensation.');
+    $assert(bvmgr_event_plan_resolve_auto_comp_value(601, array('vms_auto_comp' => 'off')) === '0', 'Explicit off must disable automatic compensation.');
+    $assert(strpos($eventPlans, 'name="vms_auto_comp"') === false && strpos($compensation, 'name="vms_auto_comp"') === false, 'The current Event Plan UI must not imply an absent automatic-compensation checkbox submission.');
+    $assert(strpos($compensation, 'name="vms_auto_comp_venue"') !== false, 'The rendered venue automatic-compensation checkbox must remain intact.');
+    $assert(strpos($eventPlans, "\$save_compensation_scope && \$auto_comp === '1' && function_exists('bvmgr_maybe_apply_band_comp_defaults_to_plan')") !== false, 'Preserved enabled automatic compensation must retain its canonical behavior.');
 
     $planId = 501;
     $GLOBALS['vms_workspace_test_meta'][$planId] = array(

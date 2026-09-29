@@ -453,6 +453,49 @@ if (!function_exists('bvmgr_event_plan_scoped_save_comparable_value')) {
     }
 }
 
+if (!function_exists('bvmgr_event_plan_normalize_explicit_boolean')) {
+    /**
+     * Normalize an explicitly supplied boolean-like request value to post-meta form.
+     *
+     * @param mixed $value
+     */
+    function bvmgr_event_plan_normalize_explicit_boolean($value): string
+    {
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+        if (is_numeric($value)) {
+            return (float) $value !== 0.0 ? '1' : '0';
+        }
+        if (!is_scalar($value)) {
+            return '0';
+        }
+
+        $value = strtolower(trim((string) $value));
+        return in_array($value, array('1', 'true', 'yes', 'on'), true) ? '1' : '0';
+    }
+}
+
+if (!function_exists('bvmgr_event_plan_resolve_auto_comp_value')) {
+    /**
+     * Resolve automatic-compensation state without treating an absent legacy UI
+     * field as an explicit request to disable it.
+     */
+    function bvmgr_event_plan_resolve_auto_comp_value(int $post_id, array $request): string
+    {
+        if (array_key_exists('vms_auto_comp', $request)) {
+            return bvmgr_event_plan_normalize_explicit_boolean($request['vms_auto_comp']);
+        }
+
+        $stored = get_post_meta($post_id, '_vms_auto_comp', true);
+        if ($stored === '' || $stored === null) {
+            return '1';
+        }
+
+        return bvmgr_event_plan_normalize_explicit_boolean($stored);
+    }
+}
+
 if (!function_exists('bvmgr_event_plan_normalize_attendance_bonus_step_request')) {
     /**
      * Normalize the attendance-bonus fields used by both scoped validation and
@@ -10965,9 +11008,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 $auto_title = (!$section_scoped_save || $section_save_scope === 'basics')
                     ? (isset($request['vms_auto_title']) ? '1' : '0')
                     : ((string) get_post_meta($post_id, '_vms_auto_title', true) ?: '0');
-                $auto_comp = $save_compensation_scope
-                    ? (isset($request['vms_auto_comp']) ? '1' : '0')
-                    : ((string) get_post_meta($post_id, '_vms_auto_comp', true) ?: '1');
+                $auto_comp = bvmgr_event_plan_resolve_auto_comp_value($post_id, $request);
                 $auto_comp_venue = $save_compensation_scope
                     ? (isset($request['vms_auto_comp_venue']) ? '1' : '0')
                     : ((string) get_post_meta($post_id, '_vms_auto_comp_venue', true) ?: '1');
