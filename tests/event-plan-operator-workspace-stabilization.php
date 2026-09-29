@@ -12,6 +12,13 @@ $workflow = (string) file_get_contents($root . '/includes/cpt/event-plans/partia
 function __($text, $domain = null): string { return (string) $text; }
 function sanitize_key($value): string { return strtolower((string) preg_replace('/[^a-z0-9_\-]/i', '', (string) $value)); }
 function sanitize_text_field($value): string { return trim(strip_tags((string) $value)); }
+function esc_url_raw($value, $protocols = null): string {
+    unset($protocols);
+    $value = trim((string) $value);
+    return filter_var($value, FILTER_VALIDATE_URL) && preg_match('/^https?:\/\//i', $value) ? $value : '';
+}
+function bvmgr_event_plan_sanitize_external_ticket_url($value): string { return esc_url_raw($value); }
+function bvmgr_event_plan_sanitize_external_event_producer_website($value): string { return esc_url_raw($value); }
 
 $GLOBALS['vms_workspace_test_meta'] = array();
 function get_post_meta($postId, $key, $single = false) {
@@ -56,6 +63,8 @@ eval($extractFunction($eventPlans, 'bvmgr_event_plan_section_registry'));
 eval($extractFunction($eventPlans, 'bvmgr_event_plan_normalize_save_scope'));
 eval($extractFunction($eventPlans, 'bvmgr_event_plan_filter_section_request'));
 eval($extractFunction($eventPlans, 'bvmgr_event_plan_scoped_save_comparable_value'));
+eval($extractFunction($eventPlans, 'bvmgr_event_plan_normalize_attendance_bonus_step_request'));
+eval($extractFunction($eventPlans, 'bvmgr_event_plan_preflight_scoped_save_request'));
 eval($extractFunction($eventPlans, 'bvmgr_event_plan_verify_scoped_save_postcondition'));
 
 $assert = static function (bool $condition, string $message): void {
@@ -103,6 +112,33 @@ try {
     $assert(isset($compRequest['vms_comp_structure']) && !isset($compRequest['vms_staff_assignments']) && !isset($compRequest['vms_event_date']), 'Compensation scope must discard Staffing and Event Details mutations.');
     $basicsRequest = bvmgr_event_plan_filter_section_request('basics', $crossSectionRequest);
     $assert(isset($basicsRequest['vms_event_date']) && !isset($basicsRequest['vms_start_time']) && !isset($basicsRequest['vms_comp_structure']), 'Event Details scope must discard Schedule and Compensation mutations.');
+
+    $invalidTicketPreflight = bvmgr_event_plan_preflight_scoped_save_request('ticketing_v2', array(
+        'vms_ticketing_sales_mode' => 'external',
+        'vms_external_ticket_url' => 'javascript:alert(1)',
+        'vms_external_ticket_provider' => 'Changed provider',
+    ));
+    $assert(empty($invalidTicketPreflight['ok']) && strpos((string) $invalidTicketPreflight['message'], 'external ticket URL') !== false, 'Ticketing must reject an invalid external URL before the writer runs.');
+    $validTicketPreflight = bvmgr_event_plan_preflight_scoped_save_request('ticketing_v2', array(
+        'vms_external_ticket_url' => 'https://tickets.example.test/show',
+        'vms_external_event_producer_website' => 'https://producer.example.test/',
+    ));
+    $assert(!empty($validTicketPreflight['ok']) && ($validTicketPreflight['normalized']['external_ticket_url'] ?? '') === 'https://tickets.example.test/show', 'Valid Ticketing URLs must reach the writer in canonical form.');
+    $invalidCompPreflight = bvmgr_event_plan_preflight_scoped_save_request('compensation', array(
+        'vms_comp_structure' => 'attendance_bonus',
+        'vms_attendance_bonus_mode' => 'step',
+        'vms_attendance_bonus_step_size' => '0',
+    ));
+    $assert(empty($invalidCompPreflight['ok']) && strpos((string) $invalidCompPreflight['message'], 'Step Size') !== false, 'Compensation must reject an invalid Attendance Bonus step size before the writer runs.');
+    $validCompPreflight = bvmgr_event_plan_preflight_scoped_save_request('compensation', array(
+        'vms_comp_structure' => 'attendance_bonus',
+        'vms_attendance_bonus_mode' => 'step',
+        'vms_attendance_bonus_step_size' => '10.9',
+    ));
+    $assert(!empty($validCompPreflight['ok']) && ($validCompPreflight['normalized']['attendance_bonus']['step_size'] ?? 0) === 10, 'Valid Compensation step size must reuse the writer canonicalization.');
+    $preflightPosition = strpos($eventPlans, 'bvmgr_event_plan_preflight_scoped_save_request($section_save_scope, $request)');
+    $firstWriterPosition = strpos($eventPlans, '$original_status =', $preflightPosition);
+    $assert($preflightPosition !== false && $firstWriterPosition !== false && $preflightPosition < $firstWriterPosition, 'Scoped validation must run before writer-side state capture and mutation.');
 
     $planId = 501;
     $GLOBALS['vms_workspace_test_meta'][$planId] = array(
