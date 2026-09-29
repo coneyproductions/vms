@@ -824,7 +824,9 @@
                 if (meta && typeof payload.data.summary_meta === 'string') {
                     meta.textContent = payload.data.summary_meta;
                 }
-                if (typeof window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION === 'function') {
+                if (typeof window.BVMGR_EVENT_PLAN_CANONICALIZE_EDIT_URL === 'function') {
+                    window.BVMGR_EVENT_PLAN_CANONICALIZE_EDIT_URL(payload.data.canonical_edit_url, 'secondary_vendors');
+                } else if (typeof window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION === 'function') {
                     window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION('secondary_vendors');
                 }
                 if (typeof window.BVMGR_EVENT_PLAN_INIT_COLLAPSIBLE_SECTION === 'function') {

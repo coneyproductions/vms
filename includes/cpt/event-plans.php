@@ -5006,6 +5006,7 @@ class BVMGR_Admin_Event_Plans
         $payload = $this->build_event_plan_secondary_vendors_save_response_payload($post_id);
         wp_send_json_success(array(
             'html' => (string) ($payload['html'] ?? ''),
+            'canonical_edit_url' => bvmgr_event_plan_admin_edit_url($post_id),
             'has_data' => !empty($payload['has_data']) ? 1 : 0,
             'summary_meta' => (string) ($payload['summary_meta'] ?? ''),
             'module_owner' => (string) ($payload['module_owner'] ?? $this->get_event_plan_section_module_owner('secondary_vendors')),
@@ -5096,6 +5097,7 @@ class BVMGR_Admin_Event_Plans
         $response = array(
             'section' => $scope,
             'verified' => 1,
+            'canonical_edit_url' => bvmgr_event_plan_admin_edit_url($post_id),
             'message' => sprintf(__('%s saved.', 'backstage-venue-manager'), (string) ($registry[$scope]['label'] ?? __('Section', 'backstage-venue-manager'))),
         );
         if ($scope === 'basics') {

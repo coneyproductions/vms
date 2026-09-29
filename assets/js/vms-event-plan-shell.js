@@ -179,6 +179,47 @@
       return nextUrl.toString();
     }
 
+    function canonicalizePersistedEventPlanUrl(canonicalEditUrl, sectionKey) {
+      var canonicalUrl;
+      var currentUrl;
+      try {
+        currentUrl = new URL(window.location.href);
+        canonicalUrl = new URL(String(canonicalEditUrl || ''), currentUrl.toString());
+      } catch (e) {
+        return false;
+      }
+
+      var canonicalPath = String(canonicalUrl.pathname || '').split('/').pop();
+      var currentPath = String(currentUrl.pathname || '').split('/').pop();
+      var canonicalPostId = parseInt(String(canonicalUrl.searchParams.get('post') || '0'), 10) || 0;
+      var currentPostId = parseInt(String(currentUrl.searchParams.get('post') || '0'), 10) || 0;
+      var canonicalValid = canonicalUrl.origin === currentUrl.origin
+        && canonicalPath === 'post.php'
+        && canonicalPostId === postId
+        && String(canonicalUrl.searchParams.get('action') || '') === 'edit';
+      var currentIsNew = currentPath === 'post-new.php'
+        && String(currentUrl.searchParams.get('post_type') || '') === 'vms_event_plan';
+      var currentIsCanonical = currentPath === 'post.php'
+        && currentPostId === postId
+        && String(currentUrl.searchParams.get('action') || '') === 'edit';
+      if (!canonicalValid || (!currentIsNew && !currentIsCanonical)) {
+        return false;
+      }
+
+      var nextUrl = currentIsNew ? canonicalUrl : currentUrl;
+      var normalized = normalizeRequestedSectionKey(sectionKey);
+      if (normalized) {
+        nextUrl.searchParams.set('vms_ep_load_section', normalized);
+        var anchorId = resolveAnchorIdForSection(normalized);
+        nextUrl.hash = anchorId ? ('#' + anchorId) : '';
+      }
+      if (!window.history || typeof window.history.replaceState !== 'function') {
+        return false;
+      }
+      window.history.replaceState(window.history.state || {}, '', nextUrl.toString());
+      return true;
+    }
+
     function resolveSectionKeyFromNode(node) {
       if (!node || !node.closest) {
         return '';
@@ -587,6 +628,7 @@
         }
         return {
           ok: true,
+          canonicalEditUrl: payload.data && payload.data.canonical_edit_url ? String(payload.data.canonical_edit_url) : '',
           derivedState: payload.data && payload.data.derived_state ? payload.data.derived_state : null,
           message: payload.data && payload.data.message ? String(payload.data.message) : 'Saved.'
         };
@@ -606,6 +648,8 @@
         setSectionStatus(section, 'Save failed', 'failed');
         return false;
       }
+      var savedSectionKey = String(section.dataset.sectionKey || '');
+      canonicalizePersistedEventPlanUrl(result.canonicalEditUrl, savedSectionKey);
       resetSectionBaseline(section, true);
       var successFeedback = section.querySelector('[data-vms-section-feedback]');
       if (String(section.dataset.sectionKey || '') === 'basics' && !applyAuthoritativeDerivedState(result.derivedState)) {
@@ -624,6 +668,8 @@
       if (successFeedback) successFeedback.textContent = result.message || 'Saved.';
       if (target) {
         await openSection(target, true);
+        var targetSectionKey = String(target.dataset.sectionKey || '');
+        canonicalizePersistedEventPlanUrl(result.canonicalEditUrl, targetSectionKey);
         scrollSectionTargetIntoView(String(target.dataset.sectionKey || ''), target);
       }
       return true;
@@ -885,6 +931,7 @@
     window.BVMGR_EVENT_PLAN_INIT_COLLAPSIBLE_SECTION = initExistingSection;
     window.BVMGR_EVENT_PLAN_INIT_COLLAPSIBLE_SECTIONS = initCollapsibleSections;
     window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION = persistRequestedSection;
+    window.BVMGR_EVENT_PLAN_CANONICALIZE_EDIT_URL = canonicalizePersistedEventPlanUrl;
     window.BVMGR_EVENT_PLAN_REVEAL_REQUESTED_SECTION = revealRequestedSection;
 
     shellController = {

@@ -103,6 +103,7 @@ async function exerciseUrl(url, target) {
   };
   const factory = new Function(
     'saveSection',
+    'canonicalizePersistedEventPlanUrl',
     'resetSectionBaseline',
     'sectionTransientDirty',
     'setCollapsed',
@@ -113,7 +114,13 @@ async function exerciseUrl(url, target) {
     saveAndMaybeOpenSource + '\nreturn saveAndMaybeOpen;'
   );
   const saveAndMaybeOpen = factory(
-    async () => ({ ok: true, message: 'Event Details saved.', derivedState }),
+    async () => ({
+      ok: true,
+      message: 'Event Details saved.',
+      canonicalEditUrl: 'https://example.test/wp-admin/post.php?post=77&action=edit',
+      derivedState,
+    }),
+    () => true,
     () => {},
     () => false,
     () => {},
