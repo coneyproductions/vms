@@ -408,7 +408,7 @@
 	                            <label for="vms_commission_percent"><strong><?php esc_html_e('Agent Fee %', 'backstage-venue-manager'); ?></strong></label>
 	                            <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('Tracked as its own expense, separate from vendor pay.', 'backstage-venue-manager'), __('Agent Fee percentage help', 'backstage-venue-manager')); ?>
 	                        </span><br />
-	                        <input type="text" inputmode="decimal" autocomplete="off" id="vms_commission_percent" name="vms_commission_percent" class="vms-ep-input-sm" value="<?php echo esc_attr($commission_percent); ?>" placeholder="<?php esc_attr_e('0', 'backstage-venue-manager'); ?>" /> %
+	                        <input type="text" inputmode="decimal" autocomplete="off" id="vms_commission_percent" name="vms_commission_percent" class="vms-ep-input-sm" value="<?php echo esc_attr($commission_percent); ?>" placeholder="<?php esc_attr_e('0', 'backstage-venue-manager'); ?>" />
 	                    </p>
 	                    <p class="vms-comp-field vms-comp-field--agent-basis">
 	                        <label for="vms_commission_mode"><strong><?php esc_html_e('Basis', 'backstage-venue-manager'); ?></strong></label><br />
@@ -418,7 +418,7 @@
 	                        </select>
 	                    </p>
 	                </div>
-	                <div id="vms-agent-fee-summary" class="vms-ep-card vms-ep-card--gray vms-mt-10"></div>
+	                <div id="vms-agent-fee-summary" class="vms-ep-card vms-ep-card--gray vms-mt-10" hidden></div>
 	            </div>
 	        </div>
 	        <div id="vms-attendance-bonus-preview" class="vms-attendance-preview<?php echo $vms_is_attendance_bonus ? '' : ' vms-hidden'; ?>" data-vms-tour="event-plan.attendance-preview">

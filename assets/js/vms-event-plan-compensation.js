@@ -889,10 +889,12 @@
       const baseLabel = cur === 'attendance_bonus' ? 'Base pay' : 'Flat fee';
 
       if (pct === null || pct <= 0) {
-        agentFeeSummary.textContent = 'No agent fee is currently set for this event.';
+        agentFeeSummary.textContent = '';
+        agentFeeSummary.hidden = true;
         return;
       }
 
+      agentFeeSummary.hidden = false;
       if (mode === 'gross') {
         agentFeeSummary.textContent = `Agent fee is set to ${formatPct(pct)} and will be based on gross / settlement, so it is not included in the guaranteed expense total yet.`;
         return;
@@ -1118,6 +1120,11 @@
 
     if (ack) ack.addEventListener('change', render);
     if (lowAck) lowAck.addEventListener('change', render);
+    if (fCommissionPercent) {
+      fCommissionPercent.addEventListener('input', renderAgentFeeSummary);
+      fCommissionPercent.addEventListener('change', renderAgentFeeSummary);
+    }
+    if (fCommissionMode) fCommissionMode.addEventListener('change', renderAgentFeeSummary);
 
     document.addEventListener('vms_comp_options_updated', () => {
       lastPaySig = payStateSignature();

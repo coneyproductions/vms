@@ -5,6 +5,7 @@ $root = dirname(__DIR__);
 $compensation = (string) file_get_contents($root . '/includes/cpt/event-plans/partials/compensation.php');
 $helpers = (string) file_get_contents($root . '/includes/helpers.php');
 $helpJs = (string) file_get_contents($root . '/assets/admin-help-tooltips.js');
+$compensationJs = (string) file_get_contents($root . '/assets/js/vms-event-plan-compensation.js');
 $css = (string) file_get_contents($root . '/assets/css/vms-admin.css');
 
 $assert = static function (bool $condition, string $message): void {
@@ -82,6 +83,32 @@ try {
         $assert(strpos($compensation, 'data-vms-final-payment-timing="' . $timing . '"') !== false, 'Conditional final-payment timing must remain intact: ' . $timing);
     }
     $assert(strpos($compensation, 'data-vms-final-payment-method="other"') !== false, 'Conditional Other Method field must remain intact.');
+
+    $assert(
+        preg_match('/id="vms_commission_percent"[^>]*\/>\s*%/', $compensation) !== 1,
+        'Agent Fee input must not render a redundant literal percent suffix.'
+    );
+    $assert(
+        strpos($compensation, 'id="vms-agent-fee-summary" class="vms-ep-card vms-ep-card--gray vms-mt-10" hidden') !== false,
+        'Agent Fee summary must begin hidden so an empty card consumes no layout space.'
+    );
+    $assert(strpos($compensationJs, "agentFeeSummary.textContent = '';\n        agentFeeSummary.hidden = true;") !== false, 'Blank or zero Agent Fee must clear and hide its summary.');
+    $assert(strpos($compensationJs, 'agentFeeSummary.hidden = false;') !== false, 'Positive Agent Fee must reveal its calculated summary.');
+    $assert(strpos($compensationJs, 'No agent fee is currently set for this event.') === false, 'Zero Agent Fee must not render a permanent empty-state summary.');
+    foreach (array(
+        "fCommissionPercent.addEventListener('input', renderAgentFeeSummary);",
+        "fCommissionPercent.addEventListener('change', renderAgentFeeSummary);",
+        "fCommissionMode.addEventListener('change', renderAgentFeeSummary);",
+    ) as $agentFeeBinding) {
+        $assert(strpos($compensationJs, $agentFeeBinding) !== false, 'Agent Fee summary must refresh immediately through: ' . $agentFeeBinding);
+    }
+    foreach (array(
+        'will be based on gross / settlement',
+        'will be added on top once',
+        'Guaranteed expense total:',
+    ) as $positiveSummaryMarker) {
+        $assert(strpos($compensationJs, $positiveSummaryMarker) !== false, 'Positive Agent Fee summary must preserve useful messaging: ' . $positiveSummaryMarker);
+    }
 
     fwrite(STDOUT, "event plan compensation progressive disclosure: PASS\n");
 } catch (Throwable $e) {
