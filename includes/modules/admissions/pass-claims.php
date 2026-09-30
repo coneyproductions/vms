@@ -475,6 +475,23 @@ if (!function_exists('bvmgr_pass_claims_export_url')) {
 	}
 }
 
+if (!function_exists('bvmgr_pass_claims_print_url')) {
+	function bvmgr_pass_claims_print_url(int $token_id): string
+	{
+		if ($token_id <= 0) {
+			return '';
+		}
+		$url = add_query_arg(
+			array(
+				'action' => 'vms_pass_print',
+				'token_id' => $token_id,
+			),
+			admin_url('admin-post.php')
+		);
+		return (string) wp_nonce_url($url, 'bvmgr_pass_print_' . $token_id);
+	}
+}
+
 if (!function_exists('bvmgr_pass_claims_reports_export_url')) {
 	function bvmgr_pass_claims_reports_export_url(string $scope = 'source'): string
 	{
@@ -1450,6 +1467,100 @@ if (!function_exists('bvmgr_pass_claims_handle_resend_email')) {
 }
 add_action('admin_post_vms_pass_resend_email', 'bvmgr_pass_claims_handle_resend_email');
 
+if (!function_exists('bvmgr_pass_claims_handle_print')) {
+	function bvmgr_pass_claims_handle_print(): void
+	{
+		if (!current_user_can(bvmgr_pass_claims_capability())) {
+			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
+		}
+
+		$token_id = isset($_REQUEST['token_id']) ? absint((string) $_REQUEST['token_id']) : 0;
+		$nonce = (isset($_REQUEST['_wpnonce']) && !is_array($_REQUEST['_wpnonce']))
+			? sanitize_text_field(wp_unslash((string) $_REQUEST['_wpnonce']))
+			: '';
+		if ($token_id <= 0 || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_pass_print_' . $token_id))) {
+			wp_die(esc_html__('Invalid request nonce.', 'backstage-venue-manager'));
+		}
+
+		$token_row = bvmgr_pass_claims_get_token_by_id($token_id);
+		if (!is_array($token_row)) {
+			wp_die(esc_html__('Guest Pass not found.', 'backstage-venue-manager'));
+		}
+		$status = sanitize_key((string) ($token_row['status'] ?? ''));
+		if ($status !== 'unclaimed') {
+			wp_die(esc_html__('Only unclaimed Guest Passes can be printed from this screen.', 'backstage-venue-manager'));
+		}
+
+		$claim_url = bvmgr_pass_claims_build_claim_url($token_row);
+		$qr_url = bvmgr_pass_claims_qr_image_url($claim_url);
+		if ($claim_url === '' || $qr_url === '') {
+			wp_die(esc_html__('Could not build the Guest Pass claim QR code.', 'backstage-venue-manager'));
+		}
+
+		$batch = bvmgr_pass_claims_get_batch_by_id((int) ($token_row['batch_id'] ?? 0));
+		$batch_name = is_array($batch) ? trim((string) ($batch['batch_name'] ?? '')) : '';
+		$admissions = is_array($batch) ? max(1, (int) ($batch['admissions_per_link'] ?? 1)) : 1;
+		$site_name = trim((string) get_bloginfo('name'));
+		if ($site_name === '') {
+			$site_name = __('Guest Pass', 'backstage-venue-manager');
+		}
+
+		if (!headers_sent()) {
+			nocache_headers();
+			header('Content-Type: text/html; charset=' . get_option('blog_charset'));
+			header('X-Content-Type-Options: nosniff');
+		}
+
+		echo '<!doctype html><html><head><meta charset="' . esc_attr((string) get_option('blog_charset')) . '">';
+		echo '<meta name="viewport" content="width=device-width, initial-scale=1">';
+		echo '<title>' . esc_html__('Print Guest Pass', 'backstage-venue-manager') . '</title>';
+		echo '<style>
+			@page{margin:.5in}
+			*{box-sizing:border-box}
+			body{margin:0;background:#f2f2f2;color:#111;font-family:Arial,Helvetica,sans-serif}
+			.sheet{max-width:6.5in;margin:32px auto;background:#fff;border:1px solid #d9d9d9;padding:.55in;text-align:center}
+			.venue{font-size:18px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+			h1{font-size:38px;line-height:1.05;margin:18px 0 8px}
+			.gift{font-size:22px;font-weight:700;margin:0 0 18px}
+			.instructions{font-size:17px;line-height:1.45;margin:0 auto 18px;max-width:4.8in}
+			.qr{display:block;width:2.55in;height:2.55in;margin:18px auto}
+			.meta{margin:18px 0 0;font-size:15px;line-height:1.5}
+			.batch{font-weight:700}
+			.url{margin:18px auto 0;max-width:5.2in;font-size:10px;line-height:1.35;color:#555;word-break:break-all}
+			.actions{max-width:6.5in;margin:0 auto 32px;text-align:center}
+			.actions button{font:inherit;font-weight:700;padding:10px 18px;margin:0 5px;cursor:pointer}
+			@media print{
+				body{background:#fff}
+				.sheet{margin:0 auto;border:0;padding:.25in}
+				.actions{display:none!important}
+			}
+		</style></head><body>';
+		echo '<main class="sheet">';
+		echo '<div class="venue">' . esc_html($site_name) . '</div>';
+		echo '<h1>' . esc_html__('GUEST PASS', 'backstage-venue-manager') . '</h1>';
+		echo '<p class="gift">' . esc_html__('A gift for you!', 'backstage-venue-manager') . '</p>';
+		echo '<p class="instructions">' . esc_html__('Scan this QR code with your phone to view eligible events and claim your Guest Pass.', 'backstage-venue-manager') . '</p>';
+		echo '<img class="qr" src="' . esc_attr($qr_url) . '" alt="' . esc_attr__('Guest Pass claim QR code', 'backstage-venue-manager') . '">';
+		echo '<div class="meta">';
+		if ($admissions > 1) {
+			/* translators: %d: maximum number of people admitted by the Guest Pass. */
+			echo '<div>' . esc_html(sprintf(__('Admits up to %d people', 'backstage-venue-manager'), $admissions)) . '</div>';
+		}
+		echo '<div>' . esc_html__('One-time use', 'backstage-venue-manager') . '</div>';
+		if ($batch_name !== '') {
+			echo '<div class="batch">' . esc_html($batch_name) . '</div>';
+		}
+		echo '</div>';
+		echo '<div class="url">' . esc_html($claim_url) . '</div>';
+		echo '</main>';
+		echo '<div class="actions"><button type="button" onclick="window.print()">' . esc_html__('Print Guest Pass', 'backstage-venue-manager') . '</button>';
+		echo '<button type="button" onclick="window.close()">' . esc_html__('Close', 'backstage-venue-manager') . '</button></div>';
+		echo '</body></html>';
+		exit;
+	}
+}
+add_action('admin_post_vms_pass_print', 'bvmgr_pass_claims_handle_print');
+
 
 if (!function_exists('bvmgr_pass_claims_handle_export_csv')) {
 	function bvmgr_pass_claims_handle_export_csv(): void
@@ -2181,6 +2292,10 @@ if (!function_exists('bvmgr_pass_claims_render_preview_summary')) {
 						echo '<a class="button button-small" href="' . esc_url($resend_url) . '">' . esc_html__('Resend Email', 'backstage-venue-manager') . '</a>';
 					}
 				} elseif ($status === 'unclaimed' && $token_id > 0) {
+					$print_url = bvmgr_pass_claims_print_url($token_id);
+					if ($print_url !== '') {
+						echo '<a class="button button-small" href="' . esc_url($print_url) . '" target="_blank" rel="noopener">' . esc_html__('Print', 'backstage-venue-manager') . '</a> ';
+					}
 					$void_url = add_query_arg(
 						array(
 							'action' => 'vms_pass_token_status',
