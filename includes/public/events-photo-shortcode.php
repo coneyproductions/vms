@@ -145,10 +145,12 @@ if (!function_exists('bvmgr_events_photo_cta_context')) {
         $event_url = trim((string) ($event['public_url'] ?? ''));
 		$ticket_url = trim((string) ($event['ticket_url'] ?? ''));
 		$is_external = !empty($event['ticket_is_external']);
-        $label = __('Get Tickets', 'backstage-venue-manager');
+		$label = $ticket_url !== ''
+			? ($is_external ? __('Buy Tickets', 'backstage-venue-manager') : __('Get Tickets', 'backstage-venue-manager'))
+			: __('View Details', 'backstage-venue-manager');
 		$url = $ticket_url !== '' ? $ticket_url : $event_url;
-		if ($is_external) {
-			$label = __('Buy Tickets', 'backstage-venue-manager');
+		if ($ticket_url === '') {
+			$is_external = false;
 		}
 
         $replacement = isset($overlay['replacement']) && is_array($overlay['replacement']) ? $overlay['replacement'] : array();

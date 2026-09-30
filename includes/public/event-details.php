@@ -555,6 +555,8 @@ if (!function_exists('bvmgr_event_details_context')) {
             'questions_url' => (string) apply_filters('vms_event_details_questions_url', home_url('/questions/'), $event_id, $plan_id),
             'tickets_url' => (string) ($ticket_destination['url'] ?? $event_url),
             'ticket_is_external' => !empty($ticket_destination['is_external']),
+			'ticket_has_public_offering' => !empty($ticket_destination['eligible']),
+			'ticket_state' => (string) ($ticket_destination['state'] ?? (!empty($ticket_destination['is_external']) ? 'external' : 'native')),
             'ticket_provider' => (string) ($ticket_destination['provider'] ?? ''),
             'event_relationship' => (string) ($ticket_destination['relationship'] ?? 'serenade_range_produced'),
             'external_event_producer' => (string) ($ticket_destination['producer'] ?? ''),
@@ -832,11 +834,18 @@ if (!function_exists('bvmgr_event_details_parse_schema_price')) {
 if (!function_exists('bvmgr_event_details_ticket_context')) {
     function bvmgr_event_details_ticket_context(int $event_id, int $plan_id = 0): array
     {
+		$public_ticket_state = ($plan_id > 0 && function_exists('bvmgr_event_plan_get_public_ticket_state'))
+			? bvmgr_event_plan_get_public_ticket_state($plan_id)
+			: array('eligible' => true, 'is_external' => false);
+		if ($plan_id > 0 && empty($public_ticket_state['eligible'])) {
+			return array('label' => '', 'min_price' => null, 'free_labels' => array(), 'has_public_offering' => false);
+		}
+
         if (function_exists('bvmgr_tec_is_cancelled_event') && bvmgr_tec_is_cancelled_event($event_id)) {
-            return array('label' => __('Ticket sales are closed for this cancelled event.', 'backstage-venue-manager'), 'min_price' => null, 'free_labels' => array());
+            return array('label' => __('Ticket sales are closed for this cancelled event.', 'backstage-venue-manager'), 'min_price' => null, 'free_labels' => array(), 'has_public_offering' => true);
         }
 
-		if ($plan_id > 0 && function_exists('bvmgr_event_plan_is_externally_ticketed') && bvmgr_event_plan_is_externally_ticketed($plan_id)) {
+		if (!empty($public_ticket_state['is_external'])) {
 			$provider = function_exists('bvmgr_event_plan_get_external_ticket_provider')
 				? bvmgr_event_plan_get_external_ticket_provider($plan_id, true)
 				: __('external ticket provider', 'backstage-venue-manager');
@@ -847,14 +856,15 @@ if (!function_exists('bvmgr_event_details_ticket_context')) {
 				'free_labels' => array(),
 				'is_external' => true,
 				'provider' => $provider,
+				'has_public_offering' => true,
 			);
 		}
 
         $prices = array();
         $free_labels = array();
 
-        if ($plan_id > 0 && function_exists('bvmgr_ticketing_v2_get_config')) {
-            $cfg = bvmgr_ticketing_v2_get_config($plan_id);
+        if ($plan_id > 0 && function_exists('bvmgr_ticketing_v2_get_saved_config')) {
+            $cfg = bvmgr_ticketing_v2_get_saved_config($plan_id);
             $tickets = (isset($cfg['tickets']) && is_array($cfg['tickets'])) ? $cfg['tickets'] : array();
             foreach ($tickets as $row) {
                 if (!is_array($row)) {
@@ -905,6 +915,7 @@ if (!function_exists('bvmgr_event_details_ticket_context')) {
             'label' => $label,
             'min_price' => $min_price,
             'free_labels' => $free_labels,
+			'has_public_offering' => true,
         );
     }
 }
@@ -1170,6 +1181,10 @@ if (!function_exists('bvmgr_event_details_clean_tec_offers_schema')) {
     function bvmgr_event_details_clean_tec_offers_schema(array $event, array $ctx, int $event_id): array
     {
         $is_cancelled = sanitize_key((string) ($ctx['status'] ?? 'scheduled')) === 'cancelled';
+		if (array_key_exists('ticket_has_public_offering', $ctx) && empty($ctx['ticket_has_public_offering'])) {
+			unset($event['offers']);
+			return $event;
+		}
 		if (!empty($ctx['ticket_is_external'])) {
 			$ticket_url = trim((string) ($ctx['tickets_url'] ?? ''));
 			if ($ticket_url === '') {

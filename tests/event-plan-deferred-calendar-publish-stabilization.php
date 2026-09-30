@@ -93,6 +93,7 @@ try {
     $assert(function_exists($healthCheck), 'Deferred calendar publish health helper is unavailable.');
     $assert(function_exists($staleAfter), 'Deferred calendar publish stale threshold helper is unavailable.');
     $assert(function_exists($runWorker), 'Deferred calendar publish worker is unavailable.');
+	$assert(function_exists('bvmgr_event_plan_workflow_success_payload'), 'Workflow success response helper is unavailable.');
     $assert(false !== has_action('vms_event_plan_deferred_calendar_publish_recovery', $recoverInterrupted), 'Deferred calendar publish recovery hook is not registered.');
 
     $mirrorSource = file_get_contents(dirname(__DIR__) . '/includes/cpt/event-plans.php');
@@ -113,7 +114,17 @@ try {
     }
     $vendorId = $registerPost((int) $vendorId);
 
-    $createPlan = static function (string $title) use ($registerPost, $trackPlan, $vendorId): int {
+	$venueId = wp_insert_post(array(
+		'post_type' => 'vms_venue',
+		'post_status' => 'publish',
+		'post_title' => 'Deferred Publish Venue',
+	), true);
+	if (is_wp_error($venueId) || (int) $venueId <= 0) {
+		throw new RuntimeException('Failed to create the deferred publish venue fixture.');
+	}
+	$venueId = $registerPost((int) $venueId);
+
+    $createPlan = static function (string $title) use ($registerPost, $trackPlan, $vendorId, $venueId): int {
         $planId = wp_insert_post(array(
             'post_type' => 'vms_event_plan',
             'post_status' => 'publish',
@@ -129,6 +140,7 @@ try {
         update_post_meta($planId, '_vms_start_time', '19:00');
         update_post_meta($planId, '_vms_end_time', '22:00');
         update_post_meta($planId, '_vms_band_vendor_id', $vendorId);
+		update_post_meta($planId, '_vms_venue_id', $venueId);
         update_post_meta($planId, '_vms_comp_structure', 'flat_fee');
         update_post_meta($planId, '_vms_flat_fee_amount', '500.00');
         return $planId;
@@ -212,6 +224,11 @@ try {
     $assert($firstQueuedAt > 0, 'Successful scheduling should persist a queued timestamp.');
     $assert(get_post_meta($successPlanId, '_vms_calendar_publish_queue_state', true) === 'queued', 'Successful scheduling should persist queued state.');
     $assert(get_post_meta($successPlanId, '_vms_event_plan_status', true) === 'ready', 'Queuing alone must not mark the Event Plan Published.');
+	$queuedWorkspaceStatus = bvmgr_event_plan_workspace_status($successPlanId);
+	$queuedResponse = bvmgr_event_plan_workflow_success_payload('publish_now', $queuedWorkspaceStatus);
+	$assert(($queuedResponse['state'] ?? '') === 'queued', 'The immediate Publish Now response must report queued state.');
+	$assert(stripos((string) ($queuedResponse['message'] ?? ''), 'queued') !== false, 'The immediate Publish Now response must explicitly say publication is queued.');
+	$assert(stripos((string) ($queuedResponse['message'] ?? ''), 'remain Ready') !== false, 'The queued response must explain that the Event Plan remains Ready until publication is confirmed.');
     $assert(false !== wp_next_scheduled('vms_event_plan_deferred_calendar_publish', array($successPlanId)), 'Successful scheduling should prove a publish worker exists.');
     $assert(false !== wp_next_scheduled('vms_event_plan_deferred_calendar_publish_recovery', array($successPlanId)), 'Successful scheduling should prove a recovery watchdog exists.');
     $assert($countScheduled('vms_event_plan_deferred_calendar_publish', array($successPlanId)) === 1, 'Successful scheduling should create exactly one publish worker.');
@@ -239,8 +256,17 @@ try {
     wp_clear_scheduled_hook('vms_event_plan_deferred_calendar_publish', array($successPlanId));
     $runWorker($successPlanId);
     clean_post_cache($recoverableTecId);
-    $assert(get_post_meta($successPlanId, '_vms_calendar_publish_queue_state', true) === 'complete', 'A successful worker should complete the queue.');
+    $assert(
+		get_post_meta($successPlanId, '_vms_calendar_publish_queue_state', true) === 'complete',
+		'A successful worker should complete the queue; got state ' . (string) get_post_meta($successPlanId, '_vms_calendar_publish_queue_state', true)
+			. ', error ' . (string) get_post_meta($successPlanId, '_vms_calendar_publish_last_error', true)
+			. ', message ' . (string) get_post_meta($successPlanId, '_vms_calendar_publish_last_error_message', true)
+			. ', TEC status ' . (string) get_post_status($recoverableTecId)
+	);
     $assert(get_post_meta($successPlanId, '_vms_event_plan_status', true) === 'published', 'A successful verified worker should transition the Event Plan to Published.');
+	$publishedWorkspaceStatus = bvmgr_event_plan_workspace_status($successPlanId);
+	$publishedResponse = bvmgr_event_plan_workflow_success_payload('publish_now', $publishedWorkspaceStatus);
+	$assert(($publishedResponse['state'] ?? '') === 'published', 'The response helper must report Published only after the verified worker completes.');
     $assert(
         get_post_status($recoverableTecId) === 'publish',
         'A successful worker should leave the linked TEC event Published; got ' . (string) get_post_status($recoverableTecId)

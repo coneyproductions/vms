@@ -1187,6 +1187,8 @@ if (!function_exists('bvmgr_get_calendar_events')) {
 				'public_url' => $public_url,
 				'ticket_url' => $ticket_url !== '' ? $ticket_url : null,
 				'ticket_is_external' => !empty($ticket_destination['is_external']),
+				'ticket_eligible' => !empty($ticket_destination['eligible']),
+				'ticket_state' => (string) ($ticket_destination['state'] ?? (!empty($ticket_destination['is_external']) ? 'external' : 'native')),
 				'image_url' => $image_url,
 				'excerpt' => $excerpt,
 				'vendor_groups' => $vendor_groups,

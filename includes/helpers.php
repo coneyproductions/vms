@@ -4609,28 +4609,72 @@ function bvmgr_event_plan_get_external_event_producer_website(int $event_plan_id
 }
 
 /**
- * Return the canonical public purchase destination for the current context.
- * The caller supplies its unchanged native destination; external mode overrides it.
+ * Return the canonical public ticket-offering state for an Event Plan.
  *
- * @return array{mode:string,is_external:bool,url:string,provider:string,relationship:string,producer:string,producer_website:string}
+ * Unsaved editor defaults are intentionally excluded. A native offering exists
+ * only when the linked TEC event has at least one Published ticket product.
+ *
+ * @return array{state:string,eligible:bool,mode:string,is_external:bool,product_ids:int[],provider:string,relationship:string,producer:string,producer_website:string}
  */
-function bvmgr_event_plan_get_ticket_destination(int $event_plan_id, string $native_url = ''): array
+function bvmgr_event_plan_get_public_ticket_state(int $event_plan_id): array
 {
-	$is_external = bvmgr_event_plan_is_externally_ticketed($event_plan_id);
-	$url = $is_external ? bvmgr_event_plan_get_external_ticket_url($event_plan_id) : trim($native_url);
-	if ($url !== '' && function_exists('esc_url_raw')) {
-		$url = (string) esc_url_raw($url, array('http', 'https'));
+	$event_plan_id = absint($event_plan_id);
+	$is_external = $event_plan_id > 0 && bvmgr_event_plan_is_externally_ticketed($event_plan_id);
+	$external_url = $is_external ? bvmgr_event_plan_get_external_ticket_url($event_plan_id) : '';
+	$eligible = $is_external && $external_url !== '';
+	$product_ids = array();
+
+	if (!$is_external && $event_plan_id > 0) {
+		$tec_event_id = function_exists('bvmgr_ticketing_b_get_linked_tec_event_id')
+			? absint(bvmgr_ticketing_b_get_linked_tec_event_id($event_plan_id))
+			: absint(get_post_meta($event_plan_id, '_vms_tec_event_id', true));
+		$candidates = array();
+		if ($tec_event_id > 0 && function_exists('bvmgr_ticketing_b_get_event_ticket_products')) {
+			$candidates = (array) bvmgr_ticketing_b_get_event_ticket_products($tec_event_id);
+		} elseif ($tec_event_id > 0 && function_exists('bvmgr_get_ticket_product_ids_for_event')) {
+			$candidates = (array) bvmgr_get_ticket_product_ids_for_event($tec_event_id);
+		}
+
+		foreach (array_values(array_unique(array_filter(array_map('absint', $candidates)))) as $product_id) {
+			if (get_post_type($product_id) === 'product' && get_post_status($product_id) === 'publish') {
+				$product_ids[] = $product_id;
+			}
+		}
+		$eligible = !empty($product_ids);
 	}
 
 	return array(
+		'state' => $eligible ? ($is_external ? 'external' : 'native') : 'none',
+		'eligible' => $eligible,
 		'mode' => $is_external ? 'external' : 'serenade_range',
 		'is_external' => $is_external,
-		'url' => $url,
+		'product_ids' => $product_ids,
 		'provider' => $is_external ? bvmgr_event_plan_get_external_ticket_provider($event_plan_id, true) : '',
 		'relationship' => bvmgr_event_plan_get_relationship($event_plan_id),
 		'producer' => bvmgr_event_plan_get_external_event_producer($event_plan_id),
 		'producer_website' => bvmgr_event_plan_get_external_event_producer_website($event_plan_id),
 	);
+}
+
+/**
+ * Return the canonical public purchase destination for the current context.
+ * The caller supplies its unchanged native destination; external mode overrides it.
+ *
+ * @return array{state:string,eligible:bool,mode:string,is_external:bool,url:string,product_ids:int[],provider:string,relationship:string,producer:string,producer_website:string}
+ */
+function bvmgr_event_plan_get_ticket_destination(int $event_plan_id, string $native_url = ''): array
+{
+	$state = bvmgr_event_plan_get_public_ticket_state($event_plan_id);
+	$url = '';
+	if (!empty($state['eligible'])) {
+		$url = !empty($state['is_external']) ? bvmgr_event_plan_get_external_ticket_url($event_plan_id) : trim($native_url);
+	}
+	if ($url !== '' && function_exists('esc_url_raw')) {
+		$url = (string) esc_url_raw($url, array('http', 'https'));
+	}
+
+	$state['url'] = $url;
+	return $state;
 }
 
 /**

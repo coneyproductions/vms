@@ -11,6 +11,47 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+
+if (!function_exists('bvmgr_event_plan_workflow_success_payload')) {
+    /**
+     * Build the truthful client response for a completed workflow request.
+     *
+     * Deferred publication is a queued success, not a Published result. The
+     * worker remains solely responsible for reporting the eventual Published
+     * state after it verifies the linked TEC event.
+     *
+     * @param array<string,mixed> $status
+     * @return array{message:string,reload:int,state:string}
+     */
+    function bvmgr_event_plan_workflow_success_payload(string $action, array $status = array()): array
+    {
+        $action = sanitize_key($action);
+        if ($action === 'publish_now') {
+            $published = sanitize_key((string) ($status['calendar_key'] ?? '')) === 'published';
+            return array(
+                'message' => $published
+                    ? __('Calendar publication completed.', 'backstage-venue-manager')
+                    : __('Calendar publication queued. This Event Plan will remain Ready until the linked event is confirmed Published.', 'backstage-venue-manager'),
+                'reload' => 1,
+                'state' => $published ? 'published' : 'queued',
+            );
+        }
+
+        if ($action === 'retry_publish') {
+            return array(
+                'message' => __('Calendar publication retry queued.', 'backstage-venue-manager'),
+                'reload' => 1,
+                'state' => 'queued',
+            );
+        }
+
+        return array(
+            'message' => __('Event Plan marked Ready.', 'backstage-venue-manager'),
+            'reload' => 1,
+            'state' => 'ready',
+        );
+    }
+}
  
 /**
  * Secondary Vendor Qualification (V1)
@@ -5732,7 +5773,7 @@ class BVMGR_Admin_Event_Plans
             $status_key = function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'status') ?: '_vms_event_plan_status') : '_vms_event_plan_status';
             $current_status = sanitize_key((string) get_post_meta($post_id, $status_key, true));
             update_post_meta($post_id, $status_key, bvmgr_event_plan_status_after_deferred_calendar_publish_queue($current_status, $post_id));
-            wp_send_json_success(array('message' => __('Calendar publication retry queued.', 'backstage-venue-manager'), 'reload' => 1));
+            wp_send_json_success(bvmgr_event_plan_workflow_success_payload('retry_publish'));
         }
 
         if ($workflow_action === 'mark_ready') {
@@ -5794,7 +5835,7 @@ class BVMGR_Admin_Event_Plans
             ), 409);
         }
 
-        wp_send_json_success(array('message' => __('Workflow action completed.', 'backstage-venue-manager'), 'reload' => 1));
+        wp_send_json_success(bvmgr_event_plan_workflow_success_payload($workflow_action, $status));
     }
 
     private function event_plan_ticket_ui_override_meta_keys(): array
