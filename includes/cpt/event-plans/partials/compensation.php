@@ -13,23 +13,11 @@
         ) ? '1' : '0';
     ?>"><?php esc_html_e('Primary Vendor Compensation', 'backstage-venue-manager'); ?></h4>
 
-    <div class="vms-ep-card vms-ep-card--blue">
-        <strong><?php esc_html_e('How this works:', 'backstage-venue-manager'); ?></strong>
-        <ol class="vms-ep-ol">
-            <li><strong><?php esc_html_e('Draft Pay', 'backstage-venue-manager'); ?></strong> <?php esc_html_e('is what you’re editing.', 'backstage-venue-manager'); ?></li>
-            <li><strong><?php esc_html_e('Locked Pay', 'backstage-venue-manager'); ?></strong> <?php esc_html_e('(Used for payout) is the agreed terms for THIS event.', 'backstage-venue-manager'); ?></li>
-            <li><?php esc_html_e('Use the buttons to fill Draft Pay, review/edit, then lock it to protect this event from future default changes.', 'backstage-venue-manager'); ?></li>
-        </ol>
-    </div>
-
-    
-
     <?php $vms_comp_ack_html = $this->capture_event_plan_partial('comp-ack', get_defined_vars()); ?>
 
 	    <?php
 	        $vms_is_attendance_bonus = ((string) $comp_structure === 'attendance_bonus');
 	        $vms_flat_fee_label = $vms_is_attendance_bonus ? __('Base Pay', 'backstage-venue-manager') : __('Flat Fee Amount', 'backstage-venue-manager');
-	        $vms_flat_fee_help = $vms_is_attendance_bonus ? __('The guaranteed amount for this event before attendance bonuses.', 'backstage-venue-manager') : '';
 	        $vms_comp_has_data = (
 	            ((string) $comp_structure !== 'flat_fee')
 	            || ((string) $flat_fee_amount !== '')
@@ -51,11 +39,17 @@
 	        );
 	    ?>
     <div class="vms-ep-card vms-ep-card--white vms-ep-card--comp" data-vms-section-has-data="<?php echo $vms_comp_has_data ? '1' : '0'; ?>">
-        <strong><?php esc_html_e('Compensation Options', 'backstage-venue-manager'); ?></strong>
-
-        <p class="description vms-mt-6">
-            <?php esc_html_e('Load Draft Pay from a tile, review it, then lock it for this event.', 'backstage-venue-manager'); ?>
-        </p>
+        <div class="vms-ep-comp-heading">
+            <strong><?php esc_html_e('Compensation Options', 'backstage-venue-manager'); ?></strong>
+            <?php
+            if (function_exists('bvmgr_help_icon')) {
+                bvmgr_help_icon(
+                    __('Load Draft Pay from a tile, review it, then lock it for this event. Draft Pay is what you are editing; Locked Pay is the agreed payout source for this event. Locking reviewed Draft Pay protects this event from later default changes.', 'backstage-venue-manager'),
+                    __('Compensation Options help', 'backstage-venue-manager')
+                );
+            }
+            ?>
+        </div>
 
         <div id="vms-comp-options" data-nonce="<?php echo esc_attr($comp_options_nonce); ?>">
             <?php echo $this->render_event_plan_compensation_options_response_html($comp_opts, (int) $current_pkg_id, (string) $selected_opt); ?>
@@ -122,8 +116,15 @@
             <span id="vms-venue-defaults-hint" class="description"></span>
         </p>
 
-        <strong class="vms-ep-draft-pay-title"><?php esc_html_e('Draft Pay (Editable)', 'backstage-venue-manager'); ?></strong>
-        <p class="description vms-mt-6"><?php esc_html_e('These fields stay editable even after you load a default or package.', 'backstage-venue-manager'); ?></p>
+        <div class="vms-ep-draft-pay-title">
+            <strong><?php esc_html_e('Draft Pay (Editable)', 'backstage-venue-manager'); ?></strong>
+            <?php
+            if (function_exists('bvmgr_help_icon')) {
+                $vms_draft_pay_help = __('These fields stay editable even after you load a default or package. When comparable guarantees are available, tile colors progress from lower guaranteed pay to higher guaranteed pay.', 'backstage-venue-manager');
+                bvmgr_help_icon($vms_draft_pay_help, __('Draft Pay help', 'backstage-venue-manager'));
+            }
+            ?>
+        </div>
 
                 <div class="vms-comp-tiles" id="vms-comp-tiles" role="radiogroup" aria-label="<?php esc_attr_e('Compensation Structure', 'backstage-venue-manager'); ?>">
             <?php
@@ -182,15 +183,13 @@
                 </button>
             <?php endforeach; ?>
         </div>
-        <?php if ($vms_struct_scale_ref_max > 0): ?>
-            <p class="description vms-comp-structure-scale-legend"><?php esc_html_e('Color scale: lower guaranteed pay -> higher guaranteed pay.', 'backstage-venue-manager'); ?></p>
-        <?php endif; ?>
-
 	        <div class="vms-ep-pay-sections">
 	            <div class="vms-ep-pay-section vms-ep-pay-section--vendor">
 	                <div class="vms-ep-pay-section__header">
-	                    <h4><?php esc_html_e('Vendor Pay', 'backstage-venue-manager'); ?></h4>
-	                    <p class="description"><?php esc_html_e('What the vendor is paid for this event.', 'backstage-venue-manager'); ?></p>
+	                    <h4>
+	                        <?php esc_html_e('Vendor Pay', 'backstage-venue-manager'); ?>
+	                        <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('What the vendor is paid for this event.', 'backstage-venue-manager'), __('Vendor Pay help', 'backstage-venue-manager')); ?>
+	                    </h4>
 	                </div>
 	                <div class="vms-ep-draft-pay-grid">
 	                    <p class="vms-comp-structure-select vms-comp-field--structure">
@@ -203,9 +202,13 @@
 	                        </select>
 	                    </p>
 	                    <p class="vms-comp-field vms-comp-field--base" data-show-when="flat_fee,flat_fee_door_split,attendance_bonus">
-	                        <label for="vms_flat_fee_amount"><strong><span id="vms_flat_fee_amount_label_text"><?php echo esc_html($vms_flat_fee_label); ?></span></strong></label><br />
+	                        <span class="vms-comp-field-label">
+	                            <label for="vms_flat_fee_amount"><strong><span id="vms_flat_fee_amount_label_text"><?php echo esc_html($vms_flat_fee_label); ?></span></strong></label>
+	                            <span id="vms_flat_fee_amount_help" class="<?php echo $vms_is_attendance_bonus ? '' : 'vms-hidden'; ?>">
+	                                <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('The guaranteed amount for this event before attendance bonuses.', 'backstage-venue-manager'), __('Base Pay help', 'backstage-venue-manager')); ?>
+	                            </span>
+	                        </span><br />
 	                        <input type="text" inputmode="decimal" autocomplete="off" id="vms_flat_fee_amount" name="vms_flat_fee_amount" class="vms-ep-input-sm" value="<?php echo esc_attr($flat_fee_amount); ?>" placeholder="<?php esc_attr_e('0.00', 'backstage-venue-manager'); ?>" />
-	                        <span id="vms_flat_fee_amount_help" class="description vms-comp-field-help<?php echo $vms_is_attendance_bonus ? '' : ' vms-hidden'; ?>"><?php echo esc_html($vms_flat_fee_help); ?></span>
 	                    </p>
 	                    <p class="vms-comp-field vms-comp-field--door" data-show-when="door_split,flat_fee_door_split">
 	                        <label for="vms_door_split_percent"><strong><?php esc_html_e('Door Split %', 'backstage-venue-manager'); ?></strong></label><br />
@@ -220,42 +223,56 @@
 	                        </select>
 	                    </p>
 	                    <p class="vms-comp-field vms-comp-field--bonus-start" data-show-when="attendance_bonus">
-	                        <label for="vms_attendance_bonus_start_count"><strong><?php esc_html_e('Starts After', 'backstage-venue-manager'); ?></strong></label><br />
+	                        <span class="vms-comp-field-label">
+	                            <label for="vms_attendance_bonus_start_count"><strong><?php esc_html_e('Starts After', 'backstage-venue-manager'); ?></strong></label>
+	                            <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('No attendance bonus is earned until attendance goes above this number.', 'backstage-venue-manager'), __('Attendance bonus starting count help', 'backstage-venue-manager')); ?>
+	                        </span><br />
 	                        <input type="text" inputmode="numeric" autocomplete="off" id="vms_attendance_bonus_start_count" name="vms_attendance_bonus_start_count" class="vms-ep-input-sm" value="<?php echo esc_attr($attendance_bonus_start_count); ?>" placeholder="<?php esc_attr_e('0', 'backstage-venue-manager'); ?>" />
-	                        <span class="description vms-comp-field-help"><?php esc_html_e('No attendance bonus is earned until attendance goes above this number.', 'backstage-venue-manager'); ?></span>
 	                    </p>
 	                    <p class="vms-comp-field vms-comp-field--bonus-step-size" data-show-when="attendance_bonus" data-show-when-mode="step">
-	                        <label for="vms_attendance_bonus_step_size"><strong><?php esc_html_e('Step Size', 'backstage-venue-manager'); ?></strong></label><br />
+	                        <span class="vms-comp-field-label">
+	                            <label for="vms_attendance_bonus_step_size"><strong><?php esc_html_e('Step Size', 'backstage-venue-manager'); ?></strong></label>
+	                            <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('How many additional tickets are needed to earn each bonus step.', 'backstage-venue-manager'), __('Attendance bonus step size help', 'backstage-venue-manager')); ?>
+	                        </span><br />
 	                        <input type="text" inputmode="numeric" autocomplete="off" id="vms_attendance_bonus_step_size" name="vms_attendance_bonus_step_size" class="vms-ep-input-sm" value="<?php echo esc_attr($attendance_bonus_step_size); ?>" placeholder="<?php esc_attr_e('0', 'backstage-venue-manager'); ?>" />
-	                        <span class="description vms-comp-field-help"><?php esc_html_e('How many additional tickets are needed to earn each bonus step.', 'backstage-venue-manager'); ?></span>
 	                    </p>
 	                    <p class="vms-comp-field vms-comp-field--bonus-step-bonus" data-show-when="attendance_bonus" data-show-when-mode="step">
-	                        <label for="vms_attendance_bonus_step_bonus"><strong><?php esc_html_e('Bonus Per Step', 'backstage-venue-manager'); ?></strong></label><br />
+	                        <span class="vms-comp-field-label">
+	                            <label for="vms_attendance_bonus_step_bonus"><strong><?php esc_html_e('Bonus Per Step', 'backstage-venue-manager'); ?></strong></label>
+	                            <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('The amount added each time a step is reached.', 'backstage-venue-manager'), __('Attendance bonus amount help', 'backstage-venue-manager')); ?>
+	                        </span><br />
 	                        <input type="text" inputmode="decimal" autocomplete="off" id="vms_attendance_bonus_step_bonus" name="vms_attendance_bonus_step_bonus" class="vms-ep-input-sm" value="<?php echo esc_attr($attendance_bonus_step_bonus); ?>" placeholder="<?php esc_attr_e('0.00', 'backstage-venue-manager'); ?>" />
-	                        <span class="description vms-comp-field-help"><?php esc_html_e('The amount added each time a step is reached.', 'backstage-venue-manager'); ?></span>
 	                    </p>
 	                    <p class="vms-comp-field vms-comp-field--bonus-rate" data-show-when="attendance_bonus" data-show-when-mode="continuous">
-	                        <label for="vms_attendance_bonus_per_ticket_rate"><strong><?php esc_html_e('Bonus Per Ticket', 'backstage-venue-manager'); ?></strong></label><br />
+	                        <span class="vms-comp-field-label">
+	                            <label for="vms_attendance_bonus_per_ticket_rate"><strong><?php esc_html_e('Bonus Per Ticket', 'backstage-venue-manager'); ?></strong></label>
+	                            <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('The amount added for each ticket above the starting count.', 'backstage-venue-manager'), __('Attendance bonus per-ticket help', 'backstage-venue-manager')); ?>
+	                        </span><br />
 	                        <input type="text" inputmode="decimal" autocomplete="off" id="vms_attendance_bonus_per_ticket_rate" name="vms_attendance_bonus_per_ticket_rate" class="vms-ep-input-sm" value="<?php echo esc_attr($attendance_bonus_per_ticket_rate); ?>" placeholder="<?php esc_attr_e('0.00', 'backstage-venue-manager'); ?>" />
-	                        <span class="description vms-comp-field-help"><?php esc_html_e('The amount added for each ticket above the starting count.', 'backstage-venue-manager'); ?></span>
 	                    </p>
 	                    <p class="vms-comp-field vms-comp-field--bonus-max" data-show-when="attendance_bonus">
-	                        <label for="vms_attendance_bonus_max_bonus"><strong><?php esc_html_e('Bonus Cap', 'backstage-venue-manager'); ?></strong></label><br />
+	                        <span class="vms-comp-field-label">
+	                            <label for="vms_attendance_bonus_max_bonus"><strong><?php esc_html_e('Bonus Cap', 'backstage-venue-manager'); ?></strong></label>
+	                            <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('Optional cap on the total attendance bonus. Leave blank for no cap.', 'backstage-venue-manager'), __('Attendance bonus cap help', 'backstage-venue-manager')); ?>
+	                        </span><br />
 	                        <input type="text" inputmode="decimal" autocomplete="off" id="vms_attendance_bonus_max_bonus" name="vms_attendance_bonus_max_bonus" class="vms-ep-input-sm" value="<?php echo esc_attr($attendance_bonus_max_bonus); ?>" placeholder="<?php esc_attr_e('Optional', 'backstage-venue-manager'); ?>" />
-	                        <span class="description vms-comp-field-help"><?php esc_html_e('Optional cap on the total attendance bonus. Leave blank for no cap.', 'backstage-venue-manager'); ?></span>
 	                    </p>
 	                </div>
 	            </div>
                 <div class="vms-ep-pay-section vms-ep-pay-section--deposit">
                     <div class="vms-ep-pay-section__header">
-                        <h4><?php esc_html_e('Deposit / Advance', 'backstage-venue-manager'); ?></h4>
-                        <p class="description"><?php esc_html_e('Optional event-level deposit terms. These are separate from final pay and are included in Locked Pay snapshots for agreement packets.', 'backstage-venue-manager'); ?></p>
+                        <h4>
+                            <?php esc_html_e('Deposit / Advance', 'backstage-venue-manager'); ?>
+                            <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('Optional event-level deposit terms. These are separate from final pay and are included in Locked Pay snapshots for agreement packets.', 'backstage-venue-manager'), __('Deposit and advance help', 'backstage-venue-manager')); ?>
+                        </h4>
                     </div>
                     <div class="vms-ep-agent-grid">
                         <p class="vms-comp-field vms-comp-field--deposit-amount">
-                            <label for="vms_deposit_amount"><strong><?php esc_html_e('Deposit Amount', 'backstage-venue-manager'); ?></strong></label><br />
+                            <span class="vms-comp-field-label">
+                                <label for="vms_deposit_amount"><strong><?php esc_html_e('Deposit Amount', 'backstage-venue-manager'); ?></strong></label>
+                                <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('Leave blank when no deposit is required.', 'backstage-venue-manager'), __('Deposit Amount help', 'backstage-venue-manager')); ?>
+                            </span><br />
                             <input type="text" inputmode="decimal" autocomplete="off" id="vms_deposit_amount" name="vms_deposit_amount" class="vms-ep-input-sm" value="<?php echo esc_attr($deposit_amount); ?>" placeholder="<?php esc_attr_e('0.00', 'backstage-venue-manager'); ?>" />
-                            <span class="description vms-comp-field-help"><?php esc_html_e('Leave blank when no deposit is required.', 'backstage-venue-manager'); ?></span>
                         </p>
                         <p class="vms-comp-field vms-comp-field--deposit-status">
                             <label for="vms_deposit_status"><strong><?php esc_html_e('Status', 'backstage-venue-manager'); ?></strong></label><br />
@@ -282,9 +299,11 @@
                             <input type="date" id="vms_deposit_paid_date" name="vms_deposit_paid_date" class="vms-ep-input-sm" value="<?php echo esc_attr($deposit_paid_date); ?>" />
                         </p>
                         <p class="vms-comp-field vms-comp-field--deposit-notes" data-vms-deposit-details>
-                            <label for="vms_deposit_notes"><strong><?php esc_html_e('Deposit Notes', 'backstage-venue-manager'); ?></strong></label><br />
+                            <span class="vms-comp-field-label">
+                                <label for="vms_deposit_notes"><strong><?php esc_html_e('Deposit Notes', 'backstage-venue-manager'); ?></strong></label>
+                                <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('Use this for plain-English details such as refund deadline, crediting rule, or special agreement context.', 'backstage-venue-manager'), __('Deposit Notes help', 'backstage-venue-manager')); ?>
+                            </span><br />
                             <textarea id="vms_deposit_notes" name="vms_deposit_notes" rows="2" class="large-text" placeholder="<?php esc_attr_e('Optional agreement wording or internal note.', 'backstage-venue-manager'); ?>"><?php echo esc_textarea($deposit_notes); ?></textarea>
-                            <span class="description vms-comp-field-help"><?php esc_html_e('Use this for plain-English details such as refund deadline, crediting rule, or special agreement context.', 'backstage-venue-manager'); ?></span>
                         </p>
                     </div>
                     <?php
@@ -307,8 +326,10 @@
                 </div>
                 <div class="vms-ep-pay-section vms-ep-pay-section--final-payment">
                     <div class="vms-ep-pay-section__header">
-                        <h4><?php esc_html_e('Final Payment', 'backstage-venue-manager'); ?></h4>
-                        <p class="description"><?php esc_html_e('When and how the remaining vendor payment is expected to be paid. These terms are captured in agreement snapshots.', 'backstage-venue-manager'); ?></p>
+                        <h4>
+                            <?php esc_html_e('Final Payment', 'backstage-venue-manager'); ?>
+                            <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('When and how the remaining vendor payment is expected to be paid. These terms are captured in agreement snapshots.', 'backstage-venue-manager'), __('Final Payment help', 'backstage-venue-manager')); ?>
+                        </h4>
                     </div>
                     <div class="vms-ep-agent-grid">
                         <p class="vms-comp-field vms-comp-field--final-payment-timing">
@@ -320,17 +341,24 @@
                             </select>
                         </p>
                         <p class="vms-comp-field vms-comp-field--final-payment-days" data-vms-final-payment-timing="days_after">
-                            <label for="vms_final_payment_days_after"><strong><?php esc_html_e('Days After Event', 'backstage-venue-manager'); ?></strong></label><br />
+                            <span class="vms-comp-field-label">
+                                <label for="vms_final_payment_days_after"><strong><?php esc_html_e('Days After Event', 'backstage-venue-manager'); ?></strong></label>
+                                <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('Used when Expected Final Payment is N days after event.', 'backstage-venue-manager'), __('Days After Event help', 'backstage-venue-manager')); ?>
+                            </span><br />
                             <input type="text" inputmode="numeric" autocomplete="off" id="vms_final_payment_days_after" name="vms_final_payment_days_after" class="vms-ep-input-sm" value="<?php echo esc_attr($final_payment_days_after); ?>" placeholder="<?php esc_attr_e('Example: 7', 'backstage-venue-manager'); ?>" />
-                            <span class="description vms-comp-field-help"><?php esc_html_e('Used when Expected Final Payment is N days after event.', 'backstage-venue-manager'); ?></span>
                         </p>
                         <p class="vms-comp-field vms-comp-field--final-payment-date" data-vms-final-payment-timing="fixed_date">
-                            <label for="vms_final_payment_date"><strong><?php esc_html_e('Specific Pay Date', 'backstage-venue-manager'); ?></strong></label><br />
+                            <span class="vms-comp-field-label">
+                                <label for="vms_final_payment_date"><strong><?php esc_html_e('Specific Pay Date', 'backstage-venue-manager'); ?></strong></label>
+                                <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('Used when Expected Final Payment is Specific date.', 'backstage-venue-manager'), __('Specific Pay Date help', 'backstage-venue-manager')); ?>
+                            </span><br />
                             <input type="date" id="vms_final_payment_date" name="vms_final_payment_date" class="vms-ep-input-sm" value="<?php echo esc_attr($final_payment_date); ?>" />
-                            <span class="description vms-comp-field-help"><?php esc_html_e('Used when Expected Final Payment is Specific date.', 'backstage-venue-manager'); ?></span>
                         </p>
                         <p class="vms-comp-field vms-comp-field--final-payment-custom" data-vms-final-payment-timing="custom">
-                            <label for="vms_final_payment_custom_text"><strong><?php esc_html_e('Custom Timing', 'backstage-venue-manager'); ?></strong></label><br />
+                            <span class="vms-comp-field-label">
+                                <label for="vms_final_payment_custom_text"><strong><?php esc_html_e('Custom Timing', 'backstage-venue-manager'); ?></strong></label>
+                                <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('Used when Expected Final Payment is Custom timing.', 'backstage-venue-manager'), __('Custom Timing help', 'backstage-venue-manager')); ?>
+                            </span><br />
                             <input type="text" id="vms_final_payment_custom_text" name="vms_final_payment_custom_text" class="regular-text" value="<?php echo esc_attr($final_payment_custom_text); ?>" placeholder="<?php esc_attr_e('Example: after settlement is approved', 'backstage-venue-manager'); ?>" />
                         </p>
                         <p class="vms-comp-field vms-comp-field--final-payment-method">
@@ -342,7 +370,10 @@
                             </select>
                         </p>
                         <p class="vms-comp-field vms-comp-field--final-payment-method-other" data-vms-final-payment-method="other">
-                            <label for="vms_final_payment_method_other"><strong><?php esc_html_e('Other Method', 'backstage-venue-manager'); ?></strong></label><br />
+                            <span class="vms-comp-field-label">
+                                <label for="vms_final_payment_method_other"><strong><?php esc_html_e('Other Method', 'backstage-venue-manager'); ?></strong></label>
+                                <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('Used when Payment Method is Other.', 'backstage-venue-manager'), __('Other Method help', 'backstage-venue-manager')); ?>
+                            </span><br />
                             <input type="text" id="vms_final_payment_method_other" name="vms_final_payment_method_other" class="regular-text" value="<?php echo esc_attr($final_payment_method_other); ?>" placeholder="<?php esc_attr_e('Describe payment method', 'backstage-venue-manager'); ?>" />
                         </p>
                     </div>
@@ -366,14 +397,18 @@
                 </div>
 	            <div class="vms-ep-pay-section vms-ep-pay-section--agent" data-show-when="flat_fee,flat_fee_door_split,attendance_bonus">
 	                <div class="vms-ep-pay-section__header">
-	                    <h4><?php esc_html_e('Agent Fee', 'backstage-venue-manager'); ?></h4>
-	                    <p class="description"><?php esc_html_e('Separate event expense. Blank or 0 means none for this event.', 'backstage-venue-manager'); ?></p>
+	                    <h4>
+	                        <?php esc_html_e('Agent Fee', 'backstage-venue-manager'); ?>
+	                        <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('Separate event expense. Blank or 0 means none for this event.', 'backstage-venue-manager'), __('Agent Fee help', 'backstage-venue-manager')); ?>
+	                    </h4>
 	                </div>
 	                <div class="vms-ep-agent-grid">
 	                    <p class="vms-comp-field vms-comp-field--agent-pct">
-	                        <label for="vms_commission_percent"><strong><?php esc_html_e('Agent Fee %', 'backstage-venue-manager'); ?></strong></label><br />
+	                        <span class="vms-comp-field-label">
+	                            <label for="vms_commission_percent"><strong><?php esc_html_e('Agent Fee %', 'backstage-venue-manager'); ?></strong></label>
+	                            <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('Tracked as its own expense, separate from vendor pay.', 'backstage-venue-manager'), __('Agent Fee percentage help', 'backstage-venue-manager')); ?>
+	                        </span><br />
 	                        <input type="text" inputmode="decimal" autocomplete="off" id="vms_commission_percent" name="vms_commission_percent" class="vms-ep-input-sm" value="<?php echo esc_attr($commission_percent); ?>" placeholder="<?php esc_attr_e('0', 'backstage-venue-manager'); ?>" /> %
-	                        <span class="description vms-comp-field-help"><?php esc_html_e('Tracked as its own expense, separate from vendor pay.', 'backstage-venue-manager'); ?></span>
 	                    </p>
 	                    <p class="vms-comp-field vms-comp-field--agent-basis">
 	                        <label for="vms_commission_mode"><strong><?php esc_html_e('Basis', 'backstage-venue-manager'); ?></strong></label><br />

@@ -3747,7 +3747,8 @@ body.post-type-vms_event_plan .vms-comp-opt-tile.vms-comp-opt-tile--scale-5 .vms
 }
 
 body.post-type-vms_event_plan .vms-ep-draft-pay-title {
-  display: block;
+  display: flex;
+  align-items: center;
   margin-top: 10px;
 }
 
@@ -6992,11 +6993,24 @@ body.post-type-vms_event_plan .vms-ep-pay-section__header {
 }
 
 body.post-type-vms_event_plan .vms-ep-pay-section__header h4 {
+  display: flex;
+  align-items: center;
+  margin: 0;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #0f3b66;
+}
+
+body.post-type-vms_event_plan .vms-ep-comp-heading,
+body.post-type-vms_event_plan .vms-comp-field-label {
+  display: flex;
+  align-items: center;
+}
+
+body.post-type-vms_event_plan .vms-comp-field-label {
+  min-height: 18px;
 }
 
 body.post-type-vms_event_plan .vms-ep-pay-section__header .description {
