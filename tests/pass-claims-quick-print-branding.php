@@ -98,6 +98,6 @@ $assert($branding['logo_url'] === '', 'Logo without usable dimensions should fal
 $source = file_get_contents(dirname(__DIR__) . '/includes/modules/admissions/pass-claims.php');
 $assert(is_string($source) && str_contains($source, 'if ((string) $branding[\'logo_url\'] !== \'\')'), 'Print page should conditionally render the logo');
 $assert(is_string($source) && str_contains($source, '<div class="venue">'), 'Print page should retain the site-name fallback');
-$assert(is_string($source) && str_contains($source, 'max-width:3in;max-height:.9in;width:auto;height:auto'), 'Print page should constrain the logo without stretching');
+$assert(is_string($source) && str_contains($source, 'max-width:4.75in;max-height:2in;width:auto;height:auto'), 'Print page should constrain the logo without stretching');
 
 fwrite(STDOUT, 'PASS: ' . $checks . " Guest Pass Quick Print branding checks\n");
