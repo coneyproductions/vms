@@ -419,7 +419,7 @@ if (!function_exists('bvmgr_pass_claims_get_tokens')) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Batch-scoped pass-token lists join plugin-owned token, batch, claim, and admissions tables with prepared identifiers and bounds so admin maintenance reflects immediate writes.
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
-					'SELECT t.*, b.batch_name, c.first_name, c.last_name, c.phone, c.email, c.event_plan_id, e.admission_emailed_at
+					'SELECT t.*, b.batch_name, b.value_type, c.first_name, c.last_name, c.phone, c.email, c.event_plan_id, e.admission_emailed_at
 					 FROM %i t
 					 LEFT JOIN %i b ON b.id = t.batch_id
 					 LEFT JOIN %i c ON c.id = t.claim_id
@@ -440,7 +440,7 @@ if (!function_exists('bvmgr_pass_claims_get_tokens')) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Global pass-token lists join plugin-owned token, batch, claim, and admissions tables with prepared identifiers and bounds so admin maintenance reflects immediate writes.
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
-					'SELECT t.*, b.batch_name, c.first_name, c.last_name, c.phone, c.email, c.event_plan_id, e.admission_emailed_at
+					'SELECT t.*, b.batch_name, b.value_type, c.first_name, c.last_name, c.phone, c.email, c.event_plan_id, e.admission_emailed_at
 					 FROM %i t
 					 LEFT JOIN %i b ON b.id = t.batch_id
 					 LEFT JOIN %i c ON c.id = t.claim_id
@@ -1498,6 +1498,10 @@ if (!function_exists('bvmgr_pass_claims_handle_print')) {
 		}
 
 		$batch = bvmgr_pass_claims_get_batch_by_id((int) ($token_row['batch_id'] ?? 0));
+		$value_type = is_array($batch) ? sanitize_key((string) ($batch['value_type'] ?? '')) : '';
+		if ($value_type !== 'free') {
+			wp_die(esc_html__('Quick Print is currently available only for complimentary Guest Passes.', 'backstage-venue-manager'));
+		}
 		$batch_name = is_array($batch) ? trim((string) ($batch['batch_name'] ?? '')) : '';
 		$admissions = is_array($batch) ? max(1, (int) ($batch['admissions_per_link'] ?? 1)) : 1;
 		$site_name = trim((string) get_bloginfo('name'));
@@ -2292,9 +2296,12 @@ if (!function_exists('bvmgr_pass_claims_render_preview_summary')) {
 						echo '<a class="button button-small" href="' . esc_url($resend_url) . '">' . esc_html__('Resend Email', 'backstage-venue-manager') . '</a>';
 					}
 				} elseif ($status === 'unclaimed' && $token_id > 0) {
-					$print_url = bvmgr_pass_claims_print_url($token_id);
-					if ($print_url !== '') {
-						echo '<a class="button button-small" href="' . esc_url($print_url) . '" target="_blank" rel="noopener">' . esc_html__('Print', 'backstage-venue-manager') . '</a> ';
+					$value_type = sanitize_key((string) ($token_row['value_type'] ?? ''));
+					if ($value_type === 'free') {
+						$print_url = bvmgr_pass_claims_print_url($token_id);
+						if ($print_url !== '') {
+							echo '<a class="button button-small" href="' . esc_url($print_url) . '" target="_blank" rel="noopener">' . esc_html__('Print', 'backstage-venue-manager') . '</a> ';
+						}
 					}
 					$void_url = add_query_arg(
 						array(
