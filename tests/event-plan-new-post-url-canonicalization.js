@@ -128,6 +128,7 @@ async function exerciseSaveAndContinue() {
     'setSectionStatus',
     'applyAuthoritativeDerivedState',
     'applyLockPayState',
+    'applyCanonicalReadinessState',
     'openAndFocusSection',
     saveAndMaybeOpenSource + '\nreturn saveAndMaybeOpen;'
   );
@@ -144,6 +145,7 @@ async function exerciseSaveAndContinue() {
     () => {},
     () => {},
     (state) => { derivedRefreshes += 1; return state.post_id === 77; },
+    () => true,
     () => true,
     async (target) => { opened = target; scrolled = target.dataset.sectionKey; return true; }
   );

@@ -16,12 +16,12 @@
         <span><strong><?php esc_html_e('TEC', 'backstage-venue-manager'); ?>:</strong> <?php echo esc_html((string) ($workspace_status['tec_label'] ?? '')); ?></span>
         <span><strong><?php esc_html_e('Ticketing', 'backstage-venue-manager'); ?>:</strong> <?php echo esc_html((string) ($workspace_status['ticketing_label'] ?? '')); ?></span>
         <span><strong><?php esc_html_e('Staffing', 'backstage-venue-manager'); ?>:</strong> <?php echo esc_html((string) ($workspace_status['staffing_label'] ?? '')); ?></span>
-        <span><strong><?php esc_html_e('Readiness', 'backstage-venue-manager'); ?>:</strong> <?php
+        <span><strong><?php esc_html_e('Readiness', 'backstage-venue-manager'); ?>:</strong> <span data-vms-workspace-readiness-count><?php
             printf(
                 esc_html(_n('%d blocking issue', '%d blocking issues', (int) ($workspace_status['blocking_issue_count'] ?? 0), 'backstage-venue-manager')),
                 (int) ($workspace_status['blocking_issue_count'] ?? 0)
             );
-        ?></span>
+        ?></span></span>
     </div>
 
     <?php if (!empty($workspace_status['last_error_message']) && ($workspace_status['calendar_key'] ?? '') === 'failed') : ?>

@@ -472,6 +472,26 @@
       setFlag(section);
     }
 
+    function applyCanonicalReadinessState(state) {
+      if (!state || typeof state !== 'object') return false;
+      var count = parseInt(String(state.blocking_issue_count), 10);
+      var label = String(state.blocking_issue_label || '').trim();
+      if (!Number.isFinite(count) || count < 0 || !label) return false;
+
+      var workspaceCount = statusRoot ? statusRoot.querySelector('[data-vms-workspace-readiness-count]') : null;
+      if (workspaceCount) workspaceCount.textContent = label;
+
+      var readinessSection = form.querySelector('.vms-collapsible-section[data-section-key="readiness_details"]');
+      if (readinessSection) {
+        var readinessCount = readinessSection.querySelector('[data-vms-readiness-blocking-meta]');
+        if (readinessCount) readinessCount.textContent = label;
+        if (readinessSection.dataset.vmsLazySection !== undefined) {
+          readinessSection.dataset.vmsLazyLoaded = '0';
+        }
+      }
+      return true;
+    }
+
     function workflowActionConsumesTransient(submitter, section) {
       if (!submitter || !section || String(section.dataset.sectionKey || '') !== 'cancellation') return false;
       return ['mark_cancelled', 'create_rescheduled_draft', 'retry_cancellation_all'].indexOf(String(submitter.value || '')) !== -1;
@@ -666,6 +686,7 @@
           canonicalEditUrl: payload.data && payload.data.canonical_edit_url ? String(payload.data.canonical_edit_url) : '',
           derivedState: payload.data && payload.data.derived_state ? payload.data.derived_state : null,
           lockPayState: payload.data && payload.data.lock_pay_state ? payload.data.lock_pay_state : null,
+          readinessState: payload.data && payload.data.readiness_state ? payload.data.readiness_state : null,
           message: payload.data && payload.data.message ? String(payload.data.message) : 'Saved.'
         };
       } catch (error) {
@@ -689,6 +710,7 @@
       resetSectionBaseline(section, true);
       var successFeedback = section.querySelector('[data-vms-section-feedback]');
       applyLockPayState(result.lockPayState);
+      applyCanonicalReadinessState(result.readinessState);
       if (String(section.dataset.sectionKey || '') === 'basics' && !applyAuthoritativeDerivedState(result.derivedState)) {
         setCollapsed(section, false);
         setSectionStatus(section, 'Derived checks unavailable', 'failed');
@@ -1139,6 +1161,11 @@
         }
         setSectionStatus(section, 'Saved', 'saved');
         if (feedback) feedback.textContent = String(detail.message || 'Saved.');
+      });
+      document.addEventListener('vms:event-plan-control-baseline-refreshed', function (event) {
+        var control = event && event.detail ? event.detail.control : null;
+        var section = control && control.closest ? control.closest('.vms-collapsible-section[data-section-key]') : null;
+        if (section) setFlag(section);
       });
     }
 

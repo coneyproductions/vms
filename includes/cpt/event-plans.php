@@ -1008,6 +1008,29 @@ if (!function_exists('bvmgr_event_plan_mark_ready_blocker_message')) {
     }
 }
 
+if (!function_exists('bvmgr_event_plan_readiness_response_state')) {
+    /**
+     * Return the canonical saved-state readiness payload used after scoped saves.
+     */
+    function bvmgr_event_plan_readiness_response_state(int $post_id): array
+    {
+        $blockers = function_exists('bvmgr_event_plan_mark_ready_blockers')
+            ? bvmgr_event_plan_mark_ready_blockers($post_id)
+            : array();
+        $count = count($blockers);
+
+        return array(
+            'blocking_issue_count' => $count,
+            'blocking_issue_label' => sprintf(
+                /* translators: %d: number of blocking readiness issues. */
+                _n('%d blocking issue', '%d blocking issues', $count, 'backstage-venue-manager'),
+                $count
+            ),
+            'blockers' => $blockers,
+        );
+    }
+}
+
 if (!function_exists('bvmgr_event_plan_workspace_status')) {
     /**
      * Return the compact, saved-state status used by the operator workspace.
@@ -5360,6 +5383,62 @@ class BVMGR_Admin_Event_Plans
         ));
     }
 
+    private function snapshot_event_plan_schedule_save_state(int $post_id): array
+    {
+        $lineup_meta_key = function_exists('bvmgr_lineup_schedule_meta_key')
+            ? bvmgr_lineup_schedule_meta_key('lineup_entries_v1', '_vms_lineup_entries_v1')
+            : '_vms_lineup_entries_v1';
+        $band_meta_key = function_exists('bvmgr_lineup_schedule_meta_key')
+            ? bvmgr_lineup_schedule_meta_key('band_vendor_id', '_vms_band_vendor_id')
+            : '_vms_band_vendor_id';
+        $primary_entry_meta_key = function_exists('bvmgr_lineup_schedule_meta_key')
+            ? bvmgr_lineup_schedule_meta_key('lineup_primary_entry_id', '_vms_lineup_primary_entry_id')
+            : '_vms_lineup_primary_entry_id';
+        $vendor_index_meta_key = function_exists('bvmgr_lineup_schedule_meta_key')
+            ? bvmgr_lineup_schedule_meta_key('lineup_entry_vendor_id', '_vms_lineup_entry_vendor_id')
+            : '_vms_lineup_entry_vendor_id';
+        $integrity_meta_keys = array(
+            function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'integrity_issue') ?: '_vms_integrity_issue') : '_vms_integrity_issue',
+            function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'integrity_vendor_id') ?: '_vms_integrity_vendor_id') : '_vms_integrity_vendor_id',
+            function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'integrity_vendor_title') ?: '_vms_integrity_vendor_title') : '_vms_integrity_vendor_title',
+            function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'integrity_ts') ?: '_vms_integrity_ts') : '_vms_integrity_ts',
+            function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'integrity_venue_id') ?: '_vms_integrity_venue_id') : '_vms_integrity_venue_id',
+            function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'integrity_venue_title') ?: '_vms_integrity_venue_title') : '_vms_integrity_venue_title',
+        );
+        $snapshot = array();
+
+        $meta_keys = array_merge(
+            array('_vms_start_time', '_vms_end_time', $band_meta_key, $lineup_meta_key, $primary_entry_meta_key, $vendor_index_meta_key),
+            $integrity_meta_keys
+        );
+        foreach ($meta_keys as $meta_key) {
+            $meta_key = (string) $meta_key;
+            $snapshot[$meta_key] = get_post_meta($post_id, $meta_key, false);
+        }
+
+        return $snapshot;
+    }
+
+    private function restore_event_plan_schedule_save_state(int $post_id, array $snapshot): bool
+    {
+        foreach ($snapshot as $meta_key => $values) {
+            delete_post_meta($post_id, (string) $meta_key);
+            foreach ((array) $values as $value) {
+                if (add_post_meta($post_id, (string) $meta_key, $value, false) === false) {
+                    return false;
+                }
+            }
+        }
+
+        foreach ($snapshot as $meta_key => $values) {
+            if (maybe_serialize(array_values(get_post_meta($post_id, (string) $meta_key, false))) !== maybe_serialize(array_values((array) $values))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /**
      * Run the existing Event Plan save authority with a bounded, verified request.
      */
@@ -5388,12 +5467,28 @@ class BVMGR_Admin_Event_Plans
         );
         $_POST = wp_slash($request);
         $GLOBALS['bvmgr_event_plan_request_cache_generation'] = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0)) + 1;
+        $schedule_snapshot = $scope === 'schedule'
+            ? $this->snapshot_event_plan_schedule_save_state($post_id)
+            : array();
 
         try {
             $this->save_event_plan_meta($post_id, $post);
             $result = isset($GLOBALS['bvmgr_event_plan_scoped_save_result']) && is_array($GLOBALS['bvmgr_event_plan_scoped_save_result'])
                 ? $GLOBALS['bvmgr_event_plan_scoped_save_result']
                 : array('ok' => false, 'scope' => $scope, 'code' => 'save_result_missing');
+            $failure_code = sanitize_key((string) ($result['code'] ?? ''));
+            $schedule_recovery_needed = $scope === 'schedule' && in_array(
+                $failure_code,
+                array('section_save_postcondition_failed', 'section_save_incomplete', 'save_result_missing'),
+                true
+            );
+            if ($schedule_recovery_needed) {
+                $rolled_back = $this->restore_event_plan_schedule_save_state($post_id, $schedule_snapshot);
+                $result['recovery'] = $rolled_back ? 'rolled_back' : 'reload_required';
+                $result['message'] = $rolled_back
+                    ? __('Schedule & Lineup could not be verified, so all Schedule values were restored to their state before this save. Review the section and try again.', 'backstage-venue-manager')
+                    : __('Schedule & Lineup could not be verified and its prior state could not be restored completely. Reload the Event Plan to review the authoritative saved values before retrying.', 'backstage-venue-manager');
+            }
         } finally {
             $_POST = $previous_post;
             $GLOBALS['bvmgr_event_plan_request_cache_generation'] = max(0, (int) ($GLOBALS['bvmgr_event_plan_request_cache_generation'] ?? 0)) + 1;
@@ -5428,10 +5523,14 @@ class BVMGR_Admin_Event_Plans
         $scoped_request = bvmgr_event_plan_filter_section_request($scope, $request);
         $result = $this->run_event_plan_scoped_save($post_id, $scope, $scoped_request);
         if (empty($result['ok']) || empty($result['verified'])) {
-            wp_send_json_error(array(
+            $error_response = array(
                 'code' => sanitize_key((string) ($result['code'] ?? $result['error'] ?? 'section_save_failed')),
                 'message' => sanitize_text_field((string) ($result['message'] ?? __('The section was not saved. Review the fields and try again.', 'backstage-venue-manager'))),
-            ), 500);
+            );
+            if (!empty($result['recovery'])) {
+                $error_response['recovery'] = sanitize_key((string) $result['recovery']);
+            }
+            wp_send_json_error($error_response, 500);
         }
 
         $response = array(
@@ -5440,6 +5539,11 @@ class BVMGR_Admin_Event_Plans
             'canonical_edit_url' => bvmgr_event_plan_admin_edit_url($post_id),
             'message' => sprintf(__('%s saved.', 'backstage-venue-manager'), (string) ($registry[$scope]['label'] ?? __('Section', 'backstage-venue-manager'))),
         );
+        // Ticketing Save Config has a second, isolated authority that completes
+        // after this scoped response. Leave its readiness refresh to Ticketing.
+        if ($scope !== 'ticketing_v2') {
+            $response['readiness_state'] = bvmgr_event_plan_readiness_response_state($post_id);
+        }
         if ($scope === 'basics') {
             $bundle = $this->get_event_plan_meta_bundle($post_id);
             $response['derived_state'] = $this->build_event_plan_authoritative_derived_state(
@@ -10083,7 +10187,7 @@ class BVMGR_Admin_Event_Plans
 	                /* translators: %d: number of readiness warnings. */
 	                $vms_readiness_warning_meta = sprintf(_n('%d warning', '%d warnings', count($vms_readiness_warning_items), 'backstage-venue-manager'), count($vms_readiness_warning_items));
 	                ?>
-	                <span class="vms-collapsible-meta"><?php echo esc_html($vms_readiness_blocking_meta . ' • ' . $vms_readiness_warning_meta); ?></span>
+	                <span class="vms-collapsible-meta"><span data-vms-readiness-blocking-meta><?php echo esc_html($vms_readiness_blocking_meta); ?></span><?php echo esc_html(' • ' . $vms_readiness_warning_meta); ?></span>
                 <span class="vms-collapsible-flag" aria-hidden="true" hidden><?php esc_html_e('Changed', 'backstage-venue-manager'); ?></span>
             </button>
             <div class="vms-collapsible-body" hidden>
@@ -10492,7 +10596,9 @@ class BVMGR_Admin_Event_Plans
             $section_save_expected['labels']['_vms_start_time'] = __('Start Time', 'backstage-venue-manager');
             $section_save_expected['meta']['_vms_end_time'] = $end_time;
             $section_save_expected['labels']['_vms_end_time'] = __('End Time', 'backstage-venue-manager');
-            $section_save_expected['meta']['_vms_band_vendor_id'] = $effective_band_id > 0 ? $effective_band_id : '';
+            // The canonical lineup writer stores an intentionally empty Primary
+            // Vendor as numeric zero. Readiness still treats zero as missing.
+            $section_save_expected['meta']['_vms_band_vendor_id'] = $effective_band_id;
             $section_save_expected['labels']['_vms_band_vendor_id'] = __('Primary Vendor', 'backstage-venue-manager');
         }
 

@@ -185,6 +185,19 @@
       option.setAttribute('data-tax-bypass-reason', active ? reason || '' : '');
     }
 
+    function establishRenderedBypassBaseline() {
+      [bypassUntil, bypassReason].forEach(function (control) {
+        if (!control) return;
+        control.dataset.vmsInitialState = String(control.value || '');
+        control.defaultValue = String(control.value || '');
+        try {
+          document.dispatchEvent(new CustomEvent('vms:event-plan-control-baseline-refreshed', {
+            detail: { control: control }
+          }));
+        } catch (error) {}
+      });
+    }
+
     function render() {
       var option = getSelectedOption();
       var taxOk;
@@ -405,6 +418,7 @@
 
     bandSel.addEventListener('change', render);
     render();
+    establishRenderedBypassBaseline();
     return true;
   }
 
