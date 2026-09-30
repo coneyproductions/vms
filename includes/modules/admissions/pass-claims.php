@@ -164,6 +164,46 @@ if (!function_exists('bvmgr_pass_claims_claim_qr_image_url')) {
 	}
 }
 
+if (!function_exists('bvmgr_pass_claims_print_branding')) {
+	function bvmgr_pass_claims_print_branding(): array
+	{
+		$site_name = trim((string) get_bloginfo('name'));
+		if ($site_name === '') {
+			$site_name = __('Guest Pass', 'backstage-venue-manager');
+		}
+
+		$branding = array(
+			'site_name' => $site_name,
+			'logo_url' => '',
+			'logo_width' => 0,
+			'logo_height' => 0,
+			'logo_size' => '',
+		);
+		$logo_id = absint(get_theme_mod('custom_logo', 0));
+		if ($logo_id <= 0 || !wp_attachment_is_image($logo_id)) {
+			return $branding;
+		}
+
+		$logo = wp_get_attachment_image_src($logo_id, 'medium_large');
+		if (!is_array($logo)) {
+			return $branding;
+		}
+
+		$logo_url = esc_url_raw((string) ($logo[0] ?? ''), array('http', 'https'));
+		$logo_width = (int) ($logo[1] ?? 0);
+		$logo_height = (int) ($logo[2] ?? 0);
+		if ($logo_url === '' || $logo_width <= 0 || $logo_height <= 0) {
+			return $branding;
+		}
+
+		$branding['logo_url'] = $logo_url;
+		$branding['logo_width'] = $logo_width;
+		$branding['logo_height'] = $logo_height;
+		$branding['logo_size'] = 'medium_large';
+		return $branding;
+	}
+}
+
 if (!function_exists('bvmgr_pass_claims_parse_local_datetime')) {
 	function bvmgr_pass_claims_parse_local_datetime(string $raw): string
 	{
@@ -1515,10 +1555,8 @@ if (!function_exists('bvmgr_pass_claims_handle_print')) {
 		}
 		$batch_name = is_array($batch) ? trim((string) ($batch['batch_name'] ?? '')) : '';
 		$admissions = is_array($batch) ? max(1, (int) ($batch['admissions_per_link'] ?? 1)) : 1;
-		$site_name = trim((string) get_bloginfo('name'));
-		if ($site_name === '') {
-			$site_name = __('Guest Pass', 'backstage-venue-manager');
-		}
+		$branding = bvmgr_pass_claims_print_branding();
+		$site_name = (string) $branding['site_name'];
 
 		if (!headers_sent()) {
 			nocache_headers();
@@ -1535,6 +1573,7 @@ if (!function_exists('bvmgr_pass_claims_handle_print')) {
 			body{margin:0;background:#f2f2f2;color:#111;font-family:Arial,Helvetica,sans-serif}
 			.sheet{max-width:6.5in;margin:32px auto;background:#fff;border:1px solid #d9d9d9;padding:.55in;text-align:center}
 			.venue{font-size:18px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+			.logo{display:block;max-width:3in;max-height:.9in;width:auto;height:auto;margin:0 auto}
 			h1{font-size:38px;line-height:1.05;margin:18px 0 8px}
 			.gift{font-size:22px;font-weight:700;margin:0 0 18px}
 			.instructions{font-size:17px;line-height:1.45;margin:0 auto 18px;max-width:4.8in}
@@ -1551,7 +1590,11 @@ if (!function_exists('bvmgr_pass_claims_handle_print')) {
 			}
 		</style></head><body>';
 		echo '<main class="sheet">';
-		echo '<div class="venue">' . esc_html($site_name) . '</div>';
+		if ((string) $branding['logo_url'] !== '') {
+			echo '<img class="logo" src="' . esc_url((string) $branding['logo_url']) . '" alt="' . esc_attr($site_name) . '" width="' . esc_attr((string) $branding['logo_width']) . '" height="' . esc_attr((string) $branding['logo_height']) . '">';
+		} else {
+			echo '<div class="venue">' . esc_html($site_name) . '</div>';
+		}
 		echo '<h1>' . esc_html__('GUEST PASS', 'backstage-venue-manager') . '</h1>';
 		echo '<p class="gift">' . esc_html__('A gift for you!', 'backstage-venue-manager') . '</p>';
 		echo '<p class="instructions">' . esc_html__('Scan this QR code with your phone to view eligible events and claim your Guest Pass.', 'backstage-venue-manager') . '</p>';
