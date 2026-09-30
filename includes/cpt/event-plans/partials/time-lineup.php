@@ -9,7 +9,7 @@
         <div class="vms-ep-basic-item">
             <label for="vms_start_time"><strong><?php esc_html_e('Event Start / End', 'backstage-venue-manager'); ?></strong></label><br />
             <div class="vms-ep-time-row">
-                <select id="vms_start_time" name="vms_start_time" class="vms-ep-time-select"<?php echo !empty($occurrence_locked) ? ' disabled aria-disabled="true"' : ''; ?>>
+                <select id="vms_start_time" name="vms_start_time" class="vms-ep-time-select" data-vms-persisted-state="<?php echo esc_attr((string) $start_time_persisted_state); ?>"<?php echo !empty($occurrence_locked) ? ' disabled aria-disabled="true"' : ''; ?>>
                     <?php foreach ($vms_time_options as $time_value => $time_label) : ?>
                         <option value="<?php echo esc_attr($time_value); ?>" <?php selected($start_time_current, (string) $time_value); ?>>
                             <?php echo esc_html((string) $time_label); ?>
@@ -17,7 +17,7 @@
                     <?php endforeach; ?>
                 </select>
                 <span class="vms-ep-time-sep"><?php esc_html_e('to', 'backstage-venue-manager'); ?></span>
-                <select id="vms_end_time" name="vms_end_time" class="vms-ep-time-select"<?php echo !empty($occurrence_locked) ? ' disabled aria-disabled="true"' : ''; ?>>
+                <select id="vms_end_time" name="vms_end_time" class="vms-ep-time-select" data-vms-persisted-state="<?php echo esc_attr((string) $end_time_persisted_state); ?>"<?php echo !empty($occurrence_locked) ? ' disabled aria-disabled="true"' : ''; ?>>
                     <?php foreach ($vms_time_options as $time_value => $time_label) : ?>
                         <option value="<?php echo esc_attr($time_value); ?>" <?php selected($end_time_current, (string) $time_value); ?>>
                             <?php echo esc_html((string) $time_label); ?>

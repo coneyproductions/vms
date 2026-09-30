@@ -277,6 +277,13 @@
       return String(el.value || '');
     }
 
+    function initialControlState(el) {
+      if (el && Object.prototype.hasOwnProperty.call(el.dataset, 'vmsPersistedState')) {
+        return String(el.dataset.vmsPersistedState || '');
+      }
+      return readControlState(el);
+    }
+
     function isLazySectionUnloaded(section) {
       return !!section
         && section.dataset.vmsLazySection !== undefined
@@ -458,6 +465,9 @@
         } else {
           control.defaultValue = control.value || '';
         }
+        if (Object.prototype.hasOwnProperty.call(control.dataset, 'vmsPersistedState')) {
+          control.dataset.vmsPersistedState = control.dataset.vmsInitialState;
+        }
       });
       setFlag(section);
     }
@@ -470,7 +480,7 @@
     function bindFlagWatchers(section, body) {
       body.querySelectorAll('input, select, textarea').forEach(function (control) {
         if (!Object.prototype.hasOwnProperty.call(control.dataset, 'vmsInitialState')) {
-          control.dataset.vmsInitialState = readControlState(control);
+          control.dataset.vmsInitialState = initialControlState(control);
         }
         if (control.dataset.vmsCollapseBound === '1') return;
         control.dataset.vmsCollapseBound = '1';

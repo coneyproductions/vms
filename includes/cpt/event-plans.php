@@ -8881,8 +8881,10 @@ class BVMGR_Admin_Event_Plans
         // Load core meta
         // ----------------------------
         $event_date     = (string) get_post_meta($post->ID, '_vms_event_date', true);
-        $start_time     = (string) get_post_meta($post->ID, '_vms_start_time', true);
-        $end_time       = (string) get_post_meta($post->ID, '_vms_end_time', true);
+        $start_time_saved = (string) get_post_meta($post->ID, '_vms_start_time', true);
+        $end_time_saved = (string) get_post_meta($post->ID, '_vms_end_time', true);
+        $start_time     = $start_time_saved;
+        $end_time       = $end_time_saved;
         $occurrence_locked = function_exists('bvmgr_event_occurrence_is_published')
             && bvmgr_event_occurrence_is_published((int) $post->ID);
 
@@ -9326,6 +9328,8 @@ class BVMGR_Admin_Event_Plans
         }
         $start_time_current = $vms_time_current((string) $start_time);
         $end_time_current = $vms_time_current((string) $end_time);
+        $start_time_persisted_state = $vms_time_current($start_time_saved);
+        $end_time_persisted_state = $vms_time_current($end_time_saved);
         if ($start_time_current !== '' && !isset($vms_time_options[$start_time_current])) {
             $vms_time_options[$start_time_current] = date_i18n('g:ia', strtotime('2000-01-01 ' . $start_time_current . ':00'));
         }
@@ -9709,7 +9713,7 @@ class BVMGR_Admin_Event_Plans
                 );
             }
             ?><br />
-            <select id="vms_venue_id" name="vms_venue_id" class="vms-ep-select-md" required>
+            <select id="vms_venue_id" name="vms_venue_id" class="vms-ep-select-md" data-vms-persisted-state="<?php echo esc_attr($venue_id_saved > 0 ? (string) $venue_id_saved : ''); ?>" required>
                 <option value=""><?php esc_html_e('-- Select a Venue --', 'backstage-venue-manager'); ?></option>
                 <?php foreach ($venues as $venue): ?>
                     <option value="<?php echo esc_attr($venue->ID); ?>" <?php selected($venue_id_effective, $venue->ID); ?>>
