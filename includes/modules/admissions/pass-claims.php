@@ -1573,7 +1573,7 @@ if (!function_exists('bvmgr_pass_claims_handle_print')) {
 			body{margin:0;background:#f2f2f2;color:#111;font-family:Arial,Helvetica,sans-serif}
 			.sheet{max-width:6.5in;margin:32px auto;background:#fff;border:1px solid #d9d9d9;padding:.55in;text-align:center}
 			.venue{font-size:18px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-			.logo{display:block;max-width:3in;max-height:.9in;width:auto;height:auto;margin:0 auto}
+			.logo{display:block;max-width:4.75in;max-height:2in;width:auto;height:auto;margin:0 auto}
 			h1{font-size:38px;line-height:1.05;margin:18px 0 8px}
 			.gift{font-size:22px;font-weight:700;margin:0 0 18px}
 			.instructions{font-size:17px;line-height:1.45;margin:0 auto 18px;max-width:4.8in}
