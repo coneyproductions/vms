@@ -21,7 +21,7 @@ $secondary_vendor_boot_summary = isset($vms_readiness_detail_context['secondary_
     : array();
 ?>
 <div class="vms-ep-card vms-ep-card--white vms-ep-card--readiness-details">
-    <p class="description"><?php echo esc_html((string) ($vms_readiness_detail_context['status_label'] ?? __('No blocking publish warnings', 'backstage-venue-manager'))); ?></p>
+    <p class="description"><?php echo esc_html((string) ($vms_readiness_detail_context['status_label'] ?? __('No Mark Ready blockers', 'backstage-venue-manager'))); ?></p>
 
     <?php if (!empty($summary_rows)) : ?>
         <ul class="vms-ep-inline-list">
@@ -46,7 +46,7 @@ $secondary_vendor_boot_summary = isset($vms_readiness_detail_context['secondary_
         </div>
     <?php else : ?>
         <div class="notice notice-success inline vms-notice">
-            <p><?php esc_html_e('No blocking or vendor-warning details are currently flagged in this summary view.', 'backstage-venue-manager'); ?></p>
+            <p><?php esc_html_e('No Mark Ready blockers or vendor-warning details are currently flagged in this summary view.', 'backstage-venue-manager'); ?></p>
         </div>
     <?php endif; ?>
 

@@ -1,7 +1,15 @@
 <?php defined('ABSPATH') || exit; ?>
-<div class="vms-ep-basic-item vms-ep-basic-span vms-ep-title-control">
+<div class="vms-ep-basic-item vms-ep-basic-item--secondary vms-ep-title-control">
     <div class="vms-ep-title-control__heading">
         <strong><?php esc_html_e('Event title', 'backstage-venue-manager'); ?></strong>
+        <?php
+        if (function_exists('bvmgr_help_icon')) {
+            bvmgr_help_icon(
+                __('Automatic titles follow the selected Primary Vendor. Turn this off when the WordPress title should remain custom; changing the Primary Vendor will then ask before replacing it.', 'backstage-venue-manager'),
+                __('Automatic title help', 'backstage-venue-manager')
+            );
+        }
+        ?>
         <span id="vms_title_preview_text"><?php echo esc_html(get_the_title($post->ID)); ?></span>
     </div>
     <p class="vms-m0">

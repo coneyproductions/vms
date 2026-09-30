@@ -394,7 +394,7 @@ try {
 	unset($allReadyDoc);
 	$allReadySuccessNotice = $allReadyXpath->query('//*[@id="root"]/div/div[@class="notice notice-success inline vms-notice"]')->item(0);
 	$assert($allReadySuccessNotice instanceof DOMElement, 'Readiness all-ready renderer should preserve the success notice wrapper.');
-	$assert(trim((string) $allReadySuccessNotice->textContent) === 'No blocking or vendor-warning details are currently flagged in this summary view.', 'Readiness all-ready renderer should preserve the exact all-ready notice text.');
+	$assert(trim((string) $allReadySuccessNotice->textContent) === 'No Mark Ready blockers or vendor-warning details are currently flagged in this summary view.', 'Readiness all-ready renderer should preserve the exact all-ready notice text.');
 	$assert($allReadyXpath->query('//*[@id="root"]/div/div[@class="notice notice-success inline vms-notice"]/ul')->length === 0, 'Readiness all-ready renderer should not emit a warning-item list.');
 	$allReadyParagraphs = $allReadyXpath->query('//*[@id="root"]//p[@class="description"]');
 	$assert($allReadyParagraphs instanceof DOMNodeList && $allReadyParagraphs->length === 4, 'Readiness all-ready renderer should preserve the description-paragraph inventory.');

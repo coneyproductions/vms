@@ -753,6 +753,261 @@ if (!function_exists('bvmgr_event_plan_verify_scoped_save_postcondition')) {
     }
 }
 
+if (!function_exists('bvmgr_event_plan_classify_validation_blockers')) {
+    /**
+     * Add stable operator labels/codes to the canonical validation messages.
+     *
+     * The validation messages remain authoritative; this function only adds
+     * presentation metadata for the workspace and saved-state workflow API.
+     *
+     * @param array<int,string> $errors
+     * @return array<int,array{code:string,label:string,message:string,kind:string}>
+     */
+    function bvmgr_event_plan_classify_validation_blockers(array $errors): array
+    {
+        $known = array(
+            __('Event date is required.', 'backstage-venue-manager') => array('missing_event_date', __('Event Date', 'backstage-venue-manager'), 'readiness'),
+            __('A Venue is required before marking this event Ready.', 'backstage-venue-manager') => array('missing_venue', __('Venue', 'backstage-venue-manager'), 'readiness'),
+            __('The selected Venue no longer exists. Select a valid Venue before marking Ready.', 'backstage-venue-manager') => array('invalid_venue', __('Venue', 'backstage-venue-manager'), 'integrity'),
+            __('Start time and end time are required.', 'backstage-venue-manager') => array('missing_start_end_time', __('Start and End Time', 'backstage-venue-manager'), 'readiness'),
+            __('Start time or end time is not a valid time.', 'backstage-venue-manager') => array('invalid_start_end_time', __('Start and End Time', 'backstage-venue-manager'), 'readiness'),
+            __('End time must be after start time.', 'backstage-venue-manager') => array('invalid_time_range', __('Start and End Time', 'backstage-venue-manager'), 'readiness'),
+            __('External Ticketing requires a complete http:// or https:// ticket purchase URL before this Event Plan can be marked Ready or published.', 'backstage-venue-manager') => array('missing_external_ticket_url', __('External Ticket URL', 'backstage-venue-manager'), 'readiness'),
+            __('Flat fee amount is required for this compensation structure.', 'backstage-venue-manager') => array('missing_flat_fee', __('Vendor Pay', 'backstage-venue-manager'), 'readiness'),
+            __('Flat fee amount must be a positive number.', 'backstage-venue-manager') => array('invalid_flat_fee', __('Vendor Pay', 'backstage-venue-manager'), 'readiness'),
+            __('Base Pay is required for Base + Attendance Bonus.', 'backstage-venue-manager') => array('missing_base_pay', __('Base Pay', 'backstage-venue-manager'), 'readiness'),
+            __('Bonus Style is required for Base + Attendance Bonus.', 'backstage-venue-manager') => array('missing_bonus_style', __('Bonus Style', 'backstage-venue-manager'), 'readiness'),
+            __('Bonus Starts After is required for Base + Attendance Bonus.', 'backstage-venue-manager') => array('missing_bonus_start', __('Bonus Starts After', 'backstage-venue-manager'), 'readiness'),
+            __('Step Size is required for step attendance bonus mode.', 'backstage-venue-manager') => array('missing_bonus_step_size', __('Step Size', 'backstage-venue-manager'), 'readiness'),
+            __('Bonus Per Step is required for step attendance bonus mode.', 'backstage-venue-manager') => array('missing_bonus_per_step', __('Bonus Per Step', 'backstage-venue-manager'), 'readiness'),
+            __('Bonus Per Ticket is required for continuous attendance bonus mode.', 'backstage-venue-manager') => array('missing_bonus_per_ticket', __('Bonus Per Ticket', 'backstage-venue-manager'), 'readiness'),
+            __('Door split percentage is required for this compensation structure.', 'backstage-venue-manager') => array('missing_door_split', __('Door Split', 'backstage-venue-manager'), 'readiness'),
+            __('A Primary Vendor must be selected before marking this event Ready.', 'backstage-venue-manager') => array('missing_primary_vendor', __('Primary Vendor', 'backstage-venue-manager'), 'readiness'),
+            __('Selected Primary Vendor no longer exists (it was deleted). Select a new Primary Vendor before marking Ready.', 'backstage-venue-manager') => array('invalid_primary_vendor', __('Primary Vendor', 'backstage-venue-manager'), 'integrity'),
+        );
+
+        $blockers = array();
+        foreach (array_values($errors) as $index => $error) {
+            $message = sanitize_text_field((string) $error);
+            if ($message === '') {
+                continue;
+            }
+
+            $definition = $known[$message] ?? array(
+                'readiness_validation_' . ($index + 1),
+                $message,
+                'readiness',
+            );
+            $blockers[] = array(
+                'code' => sanitize_key((string) $definition[0]),
+                'label' => sanitize_text_field((string) $definition[1]),
+                'message' => $message,
+                'kind' => sanitize_key((string) $definition[2]) === 'integrity' ? 'integrity' : 'readiness',
+            );
+        }
+
+        return $blockers;
+    }
+}
+
+if (!function_exists('bvmgr_event_plan_compensation_readiness_evaluation')) {
+    /**
+     * Evaluate the compensation acknowledgment gates used by saved-state actions.
+     *
+     * @param array<string,mixed> $actual
+     * @param array<string,mixed> $default
+     * @return array{has_default:bool,differs:bool,selected_guarantee:float,guarantee_max:float,requires_low_guarantee_ack:bool}
+     */
+    function bvmgr_event_plan_compensation_readiness_evaluation(array $actual, array $default, float $guarantee_max): array
+    {
+        $actual_structure = sanitize_key((string) ($actual['structure'] ?? ''));
+        $default_structure = sanitize_key((string) ($default['structure'] ?? ''));
+        $has_default = !empty($default['has_default']) && $default_structure !== '';
+        $differs = $has_default && $default_structure !== $actual_structure;
+
+        foreach (array('flat_fee_amount', 'door_split_percent') as $field) {
+            if ($has_default && array_key_exists($field, $default) && $default[$field] !== null && $default[$field] !== ($actual[$field] ?? null)) {
+                $differs = true;
+            }
+        }
+
+        if ($has_default && ($default_structure === 'attendance_bonus' || $actual_structure === 'attendance_bonus')) {
+            if ((string) ($default['attendance_bonus_mode'] ?? '') !== '' && sanitize_key((string) $default['attendance_bonus_mode']) !== sanitize_key((string) ($actual['attendance_bonus_mode'] ?? ''))) {
+                $differs = true;
+            }
+            foreach (array('attendance_bonus_start_count', 'attendance_bonus_step_size', 'attendance_bonus_step_bonus', 'attendance_bonus_per_ticket_rate', 'attendance_bonus_max_bonus') as $field) {
+                if (array_key_exists($field, $default) && $default[$field] !== null && $default[$field] !== ($actual[$field] ?? null)) {
+                    $differs = true;
+                }
+            }
+        }
+
+        $guarantee_max = max(0.0, $guarantee_max);
+        $selected_guarantee = $actual_structure === 'door_split'
+            ? 0.0
+            : max(0.0, (float) ($actual['flat_fee_amount'] ?? 0.0));
+
+        return array(
+            'has_default' => $has_default,
+            'differs' => $differs,
+            'selected_guarantee' => $selected_guarantee,
+            'guarantee_max' => $guarantee_max,
+            'requires_low_guarantee_ack' => $guarantee_max > 0 && $selected_guarantee < $guarantee_max,
+        );
+    }
+}
+
+if (!function_exists('bvmgr_event_plan_saved_compensation_readiness_blockers')) {
+    /**
+     * Resolve the saved-state compensation gates enforced by Mark Ready.
+     *
+     * @return array<int,array{code:string,label:string,message:string,kind:string}>
+     */
+    function bvmgr_event_plan_saved_compensation_readiness_blockers(int $post_id): array
+    {
+        $post_id = absint($post_id);
+        if ($post_id <= 0) {
+            return array();
+        }
+
+        $normalize_number = static function ($value) {
+            if ($value === '' || $value === null) {
+                return null;
+            }
+            return is_numeric($value) ? (float) $value : null;
+        };
+
+        $structure = sanitize_key((string) get_post_meta($post_id, '_vms_comp_structure', true));
+        if ($structure === '') {
+            $structure = 'flat_fee';
+        }
+        $actual = array(
+            'structure' => $structure,
+            'flat_fee_amount' => $normalize_number(get_post_meta($post_id, '_vms_flat_fee_amount', true)),
+            'door_split_percent' => $normalize_number(get_post_meta($post_id, '_vms_door_split_percent', true)),
+            'attendance_bonus_mode' => sanitize_key((string) get_post_meta($post_id, '_vms_attendance_bonus_mode', true)),
+            'attendance_bonus_start_count' => $normalize_number(get_post_meta($post_id, '_vms_attendance_bonus_start_count', true)),
+            'attendance_bonus_step_size' => $normalize_number(get_post_meta($post_id, '_vms_attendance_bonus_step_size', true)),
+            'attendance_bonus_step_bonus' => $normalize_number(get_post_meta($post_id, '_vms_attendance_bonus_step_bonus', true)),
+            'attendance_bonus_per_ticket_rate' => $normalize_number(get_post_meta($post_id, '_vms_attendance_bonus_per_ticket_rate', true)),
+            'attendance_bonus_max_bonus' => $normalize_number(get_post_meta($post_id, '_vms_attendance_bonus_max_bonus', true)),
+        );
+
+        $venue_id = absint(get_post_meta($post_id, '_vms_venue_id', true));
+        $event_date = sanitize_text_field((string) get_post_meta($post_id, '_vms_event_date', true));
+        $vendor_id = absint(get_post_meta($post_id, '_vms_band_vendor_id', true));
+        $has_pay_ack = (string) get_post_meta($post_id, '_vms_pay_override_ack', true) === '1';
+        $has_low_ack = $has_pay_ack || (string) get_post_meta(
+            $post_id,
+            function_exists('bvmgr_meta_key') ? (bvmgr_meta_key('event_plan', 'low_guarantee_ack') ?: '_vms_low_guarantee_ack') : '_vms_low_guarantee_ack',
+            true
+        ) === '1';
+
+        $default = function_exists('bvmgr_get_event_plan_effective_comp_default')
+            ? (array) bvmgr_get_event_plan_effective_comp_default($venue_id, $event_date)
+            : array();
+        foreach (array('flat_fee_amount', 'door_split_percent', 'attendance_bonus_start_count', 'attendance_bonus_step_size', 'attendance_bonus_step_bonus', 'attendance_bonus_per_ticket_rate', 'attendance_bonus_max_bonus') as $field) {
+            if (array_key_exists($field, $default)) {
+                $default[$field] = $normalize_number($default[$field]);
+            }
+        }
+        $options = function_exists('bvmgr_get_event_plan_comp_options')
+            ? (array) bvmgr_get_event_plan_comp_options($venue_id, $event_date, $vendor_id)
+            : array();
+        $evaluation = bvmgr_event_plan_compensation_readiness_evaluation($actual, $default, (float) ($options['max_guarantee'] ?? 0.0));
+
+        $blockers = array();
+        if ($evaluation['has_default'] && $evaluation['differs'] && !$has_pay_ack) {
+            $blockers[] = array(
+                'code' => 'pay_override_ack_required',
+                'label' => __('Draft Pay acknowledgment', 'backstage-venue-manager'),
+                'message' => __('Draft Pay differs from the effective venue or holiday default. Acknowledge the difference in Compensation before marking Ready.', 'backstage-venue-manager'),
+                'kind' => 'readiness',
+            );
+        }
+
+        if ($evaluation['requires_low_guarantee_ack'] && !$has_low_ack) {
+            $blockers[] = array(
+                'code' => 'low_guarantee_ack_required',
+                'label' => __('Low guarantee acknowledgment', 'backstage-venue-manager'),
+                'message' => __('Draft Pay is below the highest available guarantee. Acknowledge that choice in Compensation before marking Ready.', 'backstage-venue-manager'),
+                'kind' => 'readiness',
+            );
+        }
+
+        return $blockers;
+    }
+}
+
+if (!function_exists('bvmgr_event_plan_mark_ready_blockers')) {
+    /**
+     * Return the canonical saved-state blockers for Mark Ready.
+     *
+     * @return array<int,array{code:string,label:string,message:string,kind:string}>
+     */
+    function bvmgr_event_plan_mark_ready_blockers(int $post_id): array
+    {
+        $errors = function_exists('bvmgr_validate_event_plan')
+            ? (array) bvmgr_validate_event_plan($post_id, false)
+            : array(__('Event Plan validation is unavailable.', 'backstage-venue-manager'));
+        $blockers = bvmgr_event_plan_classify_validation_blockers($errors);
+        $blockers = array_merge($blockers, bvmgr_event_plan_saved_compensation_readiness_blockers($post_id));
+
+        $unique = array();
+        foreach ($blockers as $blocker) {
+            if (!is_array($blocker)) {
+                continue;
+            }
+            $code = sanitize_key((string) ($blocker['code'] ?? ''));
+            $message = sanitize_text_field((string) ($blocker['message'] ?? ''));
+            if ($code === '' || $message === '' || isset($unique[$code])) {
+                continue;
+            }
+            $unique[$code] = array(
+                'code' => $code,
+                'label' => sanitize_text_field((string) ($blocker['label'] ?? $message)),
+                'message' => $message,
+                'kind' => sanitize_key((string) ($blocker['kind'] ?? 'readiness')) === 'integrity' ? 'integrity' : 'readiness',
+            );
+        }
+
+        return array_values($unique);
+    }
+}
+
+if (!function_exists('bvmgr_event_plan_mark_ready_blocker_message')) {
+    /** @param array<int,array<string,string>> $blockers */
+    function bvmgr_event_plan_mark_ready_blocker_message(array $blockers): string
+    {
+        $missing = array();
+        $fixes = array();
+        foreach ($blockers as $blocker) {
+            $code = sanitize_key((string) ($blocker['code'] ?? ''));
+            $label = sanitize_text_field((string) ($blocker['label'] ?? ''));
+            $message = sanitize_text_field((string) ($blocker['message'] ?? ''));
+            if (strpos($code, 'missing_') === 0 && $label !== '') {
+                $missing[] = $label;
+            } elseif ($message !== '') {
+                $fixes[] = $message;
+            }
+        }
+
+        $message = __('Can\'t mark Ready yet.', 'backstage-venue-manager');
+        if (!empty($missing)) {
+            $message .= ' ' . sprintf(
+                /* translators: %s: comma-separated Event Plan fields. */
+                __('Missing: %s.', 'backstage-venue-manager'),
+                implode(', ', array_values(array_unique($missing)))
+            );
+        }
+        if (!empty($fixes)) {
+            $message .= ' ' . implode(' ', array_values(array_unique($fixes)));
+        }
+
+        return $message;
+    }
+}
+
 if (!function_exists('bvmgr_event_plan_workspace_status')) {
     /**
      * Return the compact, saved-state status used by the operator workspace.
@@ -4413,6 +4668,9 @@ class BVMGR_Admin_Event_Plans
                 $secondary_missing = isset($secondary_vendor_boot_summary['secondary_missing']) && is_array($secondary_vendor_boot_summary['secondary_missing']) ? $secondary_vendor_boot_summary['secondary_missing'] : array();
                 $secondary_mismatch = isset($secondary_vendor_boot_summary['secondary_mismatch']) && is_array($secondary_vendor_boot_summary['secondary_mismatch']) ? $secondary_vendor_boot_summary['secondary_mismatch'] : array();
                 $secondary_unqualified = isset($secondary_vendor_boot_summary['secondary_unqualified']) && is_array($secondary_vendor_boot_summary['secondary_unqualified']) ? $secondary_vendor_boot_summary['secondary_unqualified'] : array();
+                $mark_ready_blockers = function_exists('bvmgr_event_plan_mark_ready_blockers')
+                    ? bvmgr_event_plan_mark_ready_blockers($plan_id)
+                    : array();
 
                 $summary = array(
                     'linked_tec_present' => !empty($linked_tec_summary['linked_tec_id']) ? 1 : 0,
@@ -4424,8 +4682,12 @@ class BVMGR_Admin_Event_Plans
                     'primary_vendor_assigned' => absint($bundle['band_vendor_id'] ?? 0) > 0 ? 1 : 0,
                     'secondary_vendor_count' => count((array) ($bundle['secondary_vendor_ids'] ?? array())),
                     'secondary_vendor_warning_count' => count($secondary_missing) + count($secondary_mismatch) + count($secondary_unqualified),
-                    'publish_blocking_warning' => !empty($integrity_summary['has_missing_vendor_issue']) ? 1 : 0,
-                    'blocking_issue_count' => !empty($integrity_summary['has_missing_vendor_issue']) ? 1 : 0,
+                    'publish_blocking_warning' => !empty($mark_ready_blockers) ? 1 : 0,
+                    'blocking_issue_count' => count($mark_ready_blockers),
+                    'mark_ready_blockers' => $mark_ready_blockers,
+                    'mark_ready_blocker_codes' => array_values(array_filter(array_map(static function ($blocker): string {
+                        return is_array($blocker) ? sanitize_key((string) ($blocker['code'] ?? '')) : '';
+                    }, $mark_ready_blockers))),
                     'integrity_issue' => sanitize_key((string) ($integrity_summary['integrity_issue'] ?? 'none')),
                 );
 
@@ -4506,8 +4768,21 @@ class BVMGR_Admin_Event_Plans
             : array();
 
         $warning_items = array();
+        $has_mark_ready_integrity_blocker = false;
+        foreach ((array) ($readiness_boot_summary['mark_ready_blockers'] ?? array()) as $mark_ready_blocker) {
+            if (!is_array($mark_ready_blocker)) {
+                continue;
+            }
+            if (sanitize_key((string) ($mark_ready_blocker['kind'] ?? '')) === 'integrity') {
+                $has_mark_ready_integrity_blocker = true;
+            }
+            $blocker_message = sanitize_text_field((string) ($mark_ready_blocker['message'] ?? ''));
+            if ($blocker_message !== '') {
+                $warning_items[] = $blocker_message;
+            }
+        }
         $integrity_issue = sanitize_key((string) ($integrity_summary['integrity_issue'] ?? 'none'));
-        if (!empty($integrity_summary['has_missing_vendor_issue'])) {
+        if (!empty($integrity_summary['has_missing_vendor_issue']) && !$has_mark_ready_integrity_blocker) {
             $warning_items[] = $this->get_event_plan_integrity_issue_label($integrity_issue);
         }
         if (!empty($secondary_missing)) {
@@ -4522,6 +4797,7 @@ class BVMGR_Admin_Event_Plans
             /* translators: %d: number of items described in this message. */
             $warning_items[] = sprintf(_n('%d selected secondary vendor needs profile qualification fixes.', '%d selected secondary vendors need profile qualification fixes.', count($secondary_unqualified), 'backstage-venue-manager'), count($secondary_unqualified));
         }
+        $warning_items = array_values(array_unique(array_filter(array_map('sanitize_text_field', $warning_items))));
 
         $linked_tec_label = !empty($linked_tec_summary['linked_tec_id'])
             ? sprintf(
@@ -4533,7 +4809,7 @@ class BVMGR_Admin_Event_Plans
 
         $summary_rows = array(
             array(
-                'label' => __('Publish-blocking warnings', 'backstage-venue-manager'),
+                'label' => __('Mark Ready blockers', 'backstage-venue-manager'),
                 'value' => absint($readiness_boot_summary['blocking_issue_count'] ?? 0),
                 'state' => !empty($readiness_boot_summary['publish_blocking_warning']) ? 'warning' : 'ok',
             ),
@@ -4560,7 +4836,7 @@ class BVMGR_Admin_Event_Plans
         return array(
             'summary_rows' => $summary_rows,
             'warning_items' => $warning_items,
-            'status_label' => !empty($readiness_boot_summary['publish_blocking_warning']) ? __('Blocking warnings present', 'backstage-venue-manager') : __('No blocking publish warnings', 'backstage-venue-manager'),
+            'status_label' => !empty($readiness_boot_summary['publish_blocking_warning']) ? __('Mark Ready blockers need attention', 'backstage-venue-manager') : __('No Mark Ready blockers', 'backstage-venue-manager'),
             'secondary_vendor_type_name' => (string) ($secondary_vendor_boot_summary['secondary_type_name'] ?? ''),
             'integrity_issue_label' => $this->get_event_plan_integrity_issue_label($integrity_issue),
             'linked_tec_status_label' => $linked_tec_label,
@@ -4620,7 +4896,7 @@ class BVMGR_Admin_Event_Plans
             'integrity_summary' => $integrity_summary,
             'summary_rows' => isset($summary_context['summary_rows']) && is_array($summary_context['summary_rows']) ? $summary_context['summary_rows'] : array(),
             'warning_items' => isset($summary_context['warning_items']) && is_array($summary_context['warning_items']) ? $summary_context['warning_items'] : array(),
-            'status_label' => (string) ($summary_context['status_label'] ?? __('No blocking publish warnings', 'backstage-venue-manager')),
+            'status_label' => (string) ($summary_context['status_label'] ?? __('No Mark Ready blockers', 'backstage-venue-manager')),
             'secondary_vendor_type_name' => (string) ($summary_context['secondary_vendor_type_name'] ?? ''),
             'integrity_issue_label' => (string) ($summary_context['integrity_issue_label'] ?? ''),
             'linked_tec_status_label' => (string) ($summary_context['linked_tec_status_label'] ?? ''),
@@ -4662,7 +4938,7 @@ class BVMGR_Admin_Event_Plans
             ? $detail_context['add_on_summary']
             : array();
         $html = '<div class="vms-ep-card vms-ep-card--white vms-ep-card--readiness-details">';
-        $html .= '<p class="description">' . esc_html((string) ($detail_context['status_label'] ?? __('No blocking publish warnings', 'backstage-venue-manager'))) . '</p>';
+        $html .= '<p class="description">' . esc_html((string) ($detail_context['status_label'] ?? __('No Mark Ready blockers', 'backstage-venue-manager'))) . '</p>';
         $html .= $this->render_event_plan_readiness_details_summary_rows_html($summary_rows);
         $html .= $this->render_event_plan_readiness_details_warning_notice_html($warning_items);
         $html .= '<p class="description">' . $this->render_event_plan_readiness_details_linked_tec_text($linked_tec_summary) . '</p>';
@@ -4714,7 +4990,7 @@ class BVMGR_Admin_Event_Plans
 
         if (empty($warning_texts)) {
             return '<div class="notice notice-success inline vms-notice"><p>'
-                . esc_html__('No blocking or vendor-warning details are currently flagged in this summary view.', 'backstage-venue-manager')
+                . esc_html__('No Mark Ready blockers or vendor-warning details are currently flagged in this summary view.', 'backstage-venue-manager')
                 . '</p></div>';
         }
 
@@ -5355,6 +5631,27 @@ class BVMGR_Admin_Event_Plans
             wp_send_json_success(array('message' => __('Calendar publication retry queued.', 'backstage-venue-manager'), 'reload' => 1));
         }
 
+        if ($workflow_action === 'mark_ready') {
+            $blockers = function_exists('bvmgr_event_plan_mark_ready_blockers')
+                ? bvmgr_event_plan_mark_ready_blockers($post_id)
+                : array();
+            if (!empty($blockers)) {
+                $has_integrity_blocker = false;
+                foreach ($blockers as $blocker) {
+                    if (is_array($blocker) && sanitize_key((string) ($blocker['kind'] ?? '')) === 'integrity') {
+                        $has_integrity_blocker = true;
+                        break;
+                    }
+                }
+                wp_send_json_error(array(
+                    'code' => $has_integrity_blocker ? 'mark_ready_integrity_blocked' : 'mark_ready_incomplete',
+                    'kind' => $has_integrity_blocker ? 'integrity' : 'readiness',
+                    'message' => bvmgr_event_plan_mark_ready_blocker_message($blockers),
+                    'blockers' => $blockers,
+                ), 409);
+            }
+        }
+
         $result = $this->run_event_plan_scoped_save($post_id, 'workflow', $this->event_plan_saved_workflow_request($post_id, $workflow_action));
         if (empty($result['ok'])) {
             wp_send_json_error(array('message' => sanitize_text_field((string) ($result['message'] ?? __('Workflow action failed.', 'backstage-venue-manager')))), 500);
@@ -5368,7 +5665,29 @@ class BVMGR_Admin_Event_Plans
             $ok = !empty($status['publishing']) || $status['calendar_key'] === 'published';
         }
         if (!$ok) {
-            wp_send_json_error(array('message' => __('The saved-state workflow action was blocked. Review the readiness and section status above.', 'backstage-venue-manager')), 409);
+            $blockers = $workflow_action === 'mark_ready' && function_exists('bvmgr_event_plan_mark_ready_blockers')
+                ? bvmgr_event_plan_mark_ready_blockers($post_id)
+                : array();
+            if (!empty($blockers)) {
+                $has_integrity_blocker = false;
+                foreach ($blockers as $blocker) {
+                    if (is_array($blocker) && sanitize_key((string) ($blocker['kind'] ?? '')) === 'integrity') {
+                        $has_integrity_blocker = true;
+                        break;
+                    }
+                }
+                wp_send_json_error(array(
+                    'code' => $has_integrity_blocker ? 'mark_ready_integrity_blocked' : 'mark_ready_blocked',
+                    'kind' => $has_integrity_blocker ? 'integrity' : 'readiness',
+                    'message' => bvmgr_event_plan_mark_ready_blocker_message($blockers),
+                    'blockers' => $blockers,
+                ), 409);
+            }
+            wp_send_json_error(array(
+                'code' => 'workflow_integrity_failure',
+                'kind' => 'integrity',
+                'message' => __('The saved-state workflow action did not complete because the persisted workflow state failed its integrity check. Reload the Event Plan and try again.', 'backstage-venue-manager'),
+            ), 409);
         }
 
         wp_send_json_success(array('message' => __('Workflow action completed.', 'backstage-venue-manager'), 'reload' => 1));
@@ -9365,8 +9684,9 @@ class BVMGR_Admin_Event_Plans
             data-vms-lazy-error-label="<?php echo esc_attr__('Unable to load this editor section right now. Refresh and try again.', 'backstage-venue-manager'); ?>"
         >
         <p class="vms-ep-basic-item">
-            <label for="vms_event_date"><strong><?php esc_html_e('Event Date', 'backstage-venue-manager'); ?></strong></label><br />
-            <input type="date" id="vms_event_date" name="vms_event_date" value="<?php echo esc_attr($event_date); ?>"<?php echo $occurrence_locked ? ' disabled aria-disabled="true"' : ''; ?> />
+            <label for="vms_event_date"><strong><?php esc_html_e('Event Date', 'backstage-venue-manager'); ?></strong></label>
+            <span class="vms-ep-required"><?php esc_html_e('Required', 'backstage-venue-manager'); ?></span><br />
+            <input type="date" id="vms_event_date" name="vms_event_date" value="<?php echo esc_attr($event_date); ?>" required<?php echo $occurrence_locked ? ' disabled aria-disabled="true"' : ''; ?> />
             <?php if ($occurrence_locked) : ?>
                 <br /><span class="description"><?php esc_html_e('Published event dates are protected. Use the controlled change below.', 'backstage-venue-manager'); ?></span>
             <?php endif; ?>
@@ -9379,7 +9699,16 @@ class BVMGR_Admin_Event_Plans
         <?php endif; ?>
 
         <p class="vms-ep-basic-item">
-            <label for="vms_venue_id"><strong><?php esc_html_e('Venue', 'backstage-venue-manager'); ?></strong></label><br />
+            <label for="vms_venue_id"><strong><?php esc_html_e('Venue', 'backstage-venue-manager'); ?></strong></label>
+            <span class="vms-ep-required"><?php esc_html_e('Required', 'backstage-venue-manager'); ?></span>
+            <?php
+            if (function_exists('bvmgr_help_icon')) {
+                bvmgr_help_icon(
+                    __('The Venue scopes this Event Plan to the correct operating calendar, holiday rules, compensation defaults, staffing context, and publication destination.', 'backstage-venue-manager'),
+                    __('Venue help', 'backstage-venue-manager')
+                );
+            }
+            ?><br />
             <select id="vms_venue_id" name="vms_venue_id" class="vms-ep-select-md" required>
                 <option value=""><?php esc_html_e('-- Select a Venue --', 'backstage-venue-manager'); ?></option>
                 <?php foreach ($venues as $venue): ?>
@@ -9388,7 +9717,6 @@ class BVMGR_Admin_Event_Plans
                     </option>
                 <?php endforeach; ?>
             </select>
-            <br /><span class="description"><?php esc_html_e('Required. This scopes the event plan to a specific venue.', 'backstage-venue-manager'); ?></span>
         </p>
 
         <?php
@@ -9398,7 +9726,7 @@ class BVMGR_Admin_Event_Plans
             (int) $venue_id_effective
         );
 
-        echo '<div class="vms-ep-basic-item vms-ep-basic-span">';
+        echo '<div class="vms-ep-basic-item vms-ep-basic-item--secondary">';
         echo '<h4>' . esc_html__('Holiday', 'backstage-venue-manager') . '</h4>';
         echo '<div class="vms-ep-holiday-card" data-vms-event-details-holiday>';
         echo '<div data-vms-derived-authoritative>';
@@ -9695,7 +10023,7 @@ class BVMGR_Admin_Event_Plans
     } ?>
     <div class="vms-ep-card vms-ep-card--white vms-ep-card--readiness-summary" data-vms-collapsible-break="1">
         <h4><?php esc_html_e('Readiness Summary', 'backstage-venue-manager'); ?></h4>
-        <p class="description"><?php echo esc_html((string) ($vms_readiness_summary_context['status_label'] ?? __('No blocking publish warnings', 'backstage-venue-manager'))); ?></p>
+        <p class="description"><?php echo esc_html((string) ($vms_readiness_summary_context['status_label'] ?? __('No Mark Ready blockers', 'backstage-venue-manager'))); ?></p>
         <?php if (!empty($vms_readiness_summary_rows)) : ?>
             <ul class="vms-ep-inline-list">
                 <?php foreach ($vms_readiness_summary_rows as $vms_readiness_row) : ?>
@@ -10494,10 +10822,6 @@ class BVMGR_Admin_Event_Plans
 	                );
 
                 // Low-guarantee acknowledgment (based on the highest guaranteed option available).
-                $selected_guarantee = ($actual['structure'] === 'door_split')
-                    ? 0.0
-                    : max(0.0, (float) ($actual['flat_fee_amount'] ?? 0.0));
-
                 $guarantee_max = 0.0;
 	                if (function_exists('bvmgr_get_event_plan_comp_options')) {
 	                    $venue_for_opts = isset($request['vms_venue_id']) ? absint($request['vms_venue_id']) : 0;
@@ -10507,8 +10831,6 @@ class BVMGR_Admin_Event_Plans
 	                    $guarantee_max = isset($opts['max_guarantee']) ? (float) $opts['max_guarantee'] : 0.0;
 	                }
                 if ($guarantee_max < 0) $guarantee_max = 0.0;
-
-                $requires_low_guarantee_ack = ($guarantee_max > 0 && $selected_guarantee < $guarantee_max);
 
 	                $default = array(
 	                    'source' => '',
@@ -10561,39 +10883,13 @@ class BVMGR_Admin_Event_Plans
 	                    $has_default = (!empty($resolved_default['has_default']) && $default['structure'] !== '');
 	                }
 
-                $differs = false;
-
-	                if ($has_default) {
-	                    if ($default['structure'] !== '' && $actual['structure'] !== '' && $default['structure'] !== $actual['structure']) {
-	                        $differs = true;
-	                    }
-	                    if ($default['flat_fee_amount'] !== null && $default['flat_fee_amount'] !== $actual['flat_fee_amount']) {
-	                        $differs = true;
-	                    }
-	                    if ($default['door_split_percent'] !== null && $default['door_split_percent'] !== $actual['door_split_percent']) {
-	                        $differs = true;
-	                    }
-	                    if (($default['structure'] === 'attendance_bonus' || $actual['structure'] === 'attendance_bonus')) {
-	                        if ($default['attendance_bonus_mode'] !== '' && $default['attendance_bonus_mode'] !== $actual['attendance_bonus_mode']) {
-	                            $differs = true;
-	                        }
-	                        if ($default['attendance_bonus_start_count'] !== null && $default['attendance_bonus_start_count'] !== $actual['attendance_bonus_start_count']) {
-	                            $differs = true;
-	                        }
-	                        if ($default['attendance_bonus_step_size'] !== null && $default['attendance_bonus_step_size'] !== $actual['attendance_bonus_step_size']) {
-	                            $differs = true;
-	                        }
-	                        if ($default['attendance_bonus_step_bonus'] !== null && $default['attendance_bonus_step_bonus'] !== $actual['attendance_bonus_step_bonus']) {
-	                            $differs = true;
-	                        }
-	                        if ($default['attendance_bonus_per_ticket_rate'] !== null && $default['attendance_bonus_per_ticket_rate'] !== $actual['attendance_bonus_per_ticket_rate']) {
-	                            $differs = true;
-	                        }
-	                        if ($default['attendance_bonus_max_bonus'] !== null && $default['attendance_bonus_max_bonus'] !== $actual['attendance_bonus_max_bonus']) {
-	                            $differs = true;
-	                        }
-	                    }
-	                }
+                $default['has_default'] = $has_default;
+                $compensation_readiness = bvmgr_event_plan_compensation_readiness_evaluation($actual, $default, $guarantee_max);
+                $has_default = $compensation_readiness['has_default'];
+                $differs = $compensation_readiness['differs'];
+                $selected_guarantee = $compensation_readiness['selected_guarantee'];
+                $guarantee_max = $compensation_readiness['guarantee_max'];
+                $requires_low_guarantee_ack = $compensation_readiness['requires_low_guarantee_ack'];
 
                 // Enforce acknowledgment if mismatch
                 if ($evaluate_compensation_rules && $has_default && $differs && !$ack) {
@@ -12881,15 +13177,25 @@ if (function_exists('bvmgr_add_admin_notice')) {
             return false;
         }
 
-        function bvmgr_validate_event_plan(int $post_id): array
+        function bvmgr_validate_event_plan(int $post_id, bool $emit_notices = true): array
         {
             $errors = array();
 
             $event_date = (string) get_post_meta($post_id, '_vms_event_date', true);
             $start_time = (string) get_post_meta($post_id, '_vms_start_time', true);
             $end_time   = (string) get_post_meta($post_id, '_vms_end_time', true);
+            $venue_id   = (int) get_post_meta($post_id, '_vms_venue_id', true);
 
             if ($event_date === '') $errors[] = __('Event date is required.', 'backstage-venue-manager');
+
+            if ($venue_id <= 0) {
+                $errors[] = __('A Venue is required before marking this event Ready.', 'backstage-venue-manager');
+            } else {
+                $venue_post = get_post($venue_id);
+                if (!$venue_post || $venue_post->post_type !== 'vms_venue' || $venue_post->post_status === 'trash') {
+                    $errors[] = __('The selected Venue no longer exists. Select a valid Venue before marking Ready.', 'backstage-venue-manager');
+                }
+            }
 
             if ($start_time === '' || $end_time === '') {
                 $errors[] = __('Start time and end time are required.', 'backstage-venue-manager');
@@ -13017,7 +13323,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                 $missing = function_exists('bvmgr_vendor_tax_profile_missing_items') ? (array) bvmgr_vendor_tax_profile_missing_items($band_id) : array();
                 if (!empty($missing)) {
                     if (function_exists('bvmgr_tax_bypass_is_active') && bvmgr_tax_bypass_is_active($band_id)) {
-                        if (function_exists('bvmgr_add_admin_notice')) {
+                        if ($emit_notices && function_exists('bvmgr_add_admin_notice')) {
                             bvmgr_add_admin_notice(
                                 sprintf(
                                     /* translators: 1: primary vendor name, 2: bypass expiration date. */
@@ -13029,7 +13335,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                             );
                         }
                     } else {
-                        if (function_exists('bvmgr_add_admin_notice')) {
+                        if ($emit_notices && function_exists('bvmgr_add_admin_notice')) {
                             $vendor_name = get_the_title($band_id);
                             bvmgr_add_admin_notice(
                                 sprintf(
@@ -13057,7 +13363,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                         $missing = function_exists('bvmgr_vendor_tax_profile_missing_items') ? (array) bvmgr_vendor_tax_profile_missing_items($sid) : array();
                         if (!empty($missing)) {
                             if (function_exists('bvmgr_tax_bypass_is_active') && bvmgr_tax_bypass_is_active($sid)) {
-                                if (function_exists('bvmgr_add_admin_notice')) {
+                                if ($emit_notices && function_exists('bvmgr_add_admin_notice')) {
                                     bvmgr_add_admin_notice(
                                         sprintf(
                                             /* translators: 1: vendor or staff name, 2: bypass expiration date. */
@@ -13070,7 +13376,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                                     );
                                 }
                             } else {
-                                if (function_exists('bvmgr_add_admin_notice')) {
+                                if ($emit_notices && function_exists('bvmgr_add_admin_notice')) {
                                     $staff_name = get_the_title($sid);
                                     bvmgr_add_admin_notice(
                                         sprintf(
@@ -13092,7 +13398,6 @@ if (function_exists('bvmgr_add_admin_notice')) {
             // Venue closure guard for Ready/Publish:
             // - explicit Holiday CLOSED blocks
             // - Season Dates open-window rules are enforced when configured
-            $venue_id = (int) get_post_meta($post_id, '_vms_venue_id', true);
             $venue_closed_context = array();
             if ($venue_id > 0 && $event_date && function_exists('bvmgr_event_plan_is_venue_closed_for_event_date') && bvmgr_event_plan_is_venue_closed_for_event_date($venue_id, $event_date, $venue_closed_context)) {
                 $reason = sanitize_key((string) ($venue_closed_context['reason'] ?? ''));

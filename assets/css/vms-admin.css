@@ -4456,14 +4456,29 @@ body.post-type-vms_event_plan .vms-collapsible-flag.is-visible {
 
 body.post-type-vms_event_plan .vms-ep-basic-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px 16px;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 8px 14px;
   align-items: start;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 body.post-type-vms_event_plan .vms-ep-basic-item {
   margin: 0;
+}
+
+body.post-type-vms_event_plan .vms-ep-basic-item--secondary {
+  align-self: start;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+body.post-type-vms_event_plan .vms-ep-required {
+  display: inline-block;
+  margin-left: 6px;
+  color: #646970;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 body.post-type-vms_event_plan .vms-ep-time-row {
@@ -4496,15 +4511,16 @@ body.post-type-vms_event_plan .vms-ep-basic-grid h4 {
 }
 
 body.post-type-vms_event_plan .vms-ep-basic-grid .vms-ep-holiday-card {
-  margin-top: 8px;
+  margin-top: 4px;
+  max-width: none;
+  padding: 8px 10px;
 }
 
 body.post-type-vms_event_plan .vms-ep-title-control {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px 14px;
-  padding-top: 2px;
+  gap: 4px 10px;
 }
 
 body.post-type-vms_event_plan .vms-ep-title-control__heading {
