@@ -92,13 +92,23 @@ function conditionalField(attribute, value) {
 }
 const timing = select('day_of_event');
 const method = select('check');
+const depositStatus = select('not_required');
 const days = conditionalField('data-vms-final-payment-timing', 'days_after');
 const fixed = conditionalField('data-vms-final-payment-timing', 'fixed_date');
 const custom = conditionalField('data-vms-final-payment-timing', 'custom');
 const other = conditionalField('data-vms-final-payment-method', 'other');
+const depositTreatment = conditionalField('data-vms-deposit-details', '');
 const compDocument = {
-  getElementById(id) { return id === 'vms_final_payment_timing' ? timing : method; },
-  querySelectorAll(selector) { return selector.includes('timing') ? [days, fixed, custom] : [other]; },
+  getElementById(id) {
+    if (id === 'vms_final_payment_timing') return timing;
+    if (id === 'vms_final_payment_method') return method;
+    return depositStatus;
+  },
+  querySelectorAll(selector) {
+    if (selector.includes('timing')) return [days, fixed, custom];
+    if (selector.includes('method')) return [other];
+    return [depositTreatment];
+  },
 };
 const conditionalFactory = new Function(
   'document',
@@ -109,6 +119,9 @@ assert.equal(initConditional(), true, 'Conditional final-payment controller init
 assert.equal(days.hidden, true, 'Days After is hidden for day-of-event timing.');
 assert.equal(days.control.disabled, true, 'Irrelevant Days After input is disabled.');
 assert.equal(other.hidden, true, 'Other Method is hidden for check payments.');
+assert.equal(depositTreatment.hidden, true, 'Deposit details hide when no deposit is required.');
+assert.equal(depositTreatment.control.disabled, false, 'Hidden deposit details retain the existing submission contract.');
+assert.equal(depositTreatment.control.value, 'preserve me', 'Hiding deposit details preserves their browser values.');
 timing.value = 'days_after';
 timing.listeners.change();
 assert.equal(days.hidden, false, 'Days After is shown for N-days timing.');
@@ -122,5 +135,10 @@ method.value = 'other';
 method.listeners.change();
 assert.equal(other.hidden, false, 'Other Method shows only for Other.');
 assert.equal(other.control.disabled, false, 'Other Method becomes submit-capable when relevant.');
+depositStatus.value = 'unpaid';
+depositStatus.listeners.change();
+assert.equal(depositTreatment.hidden, false, 'Deposit details show when a deposit status is selected.');
+assert.equal(depositTreatment.control.disabled, false, 'Visible deposit details are submit-capable.');
+assert.equal(depositTreatment.control.value, 'preserve me', 'Revealing deposit details restores the preserved value.');
 
 console.log('event plan operator acceptance polish browser contracts: PASS');

@@ -141,26 +141,37 @@
       return normalized ? String(sectionAnchorMap[normalized] || '') : '';
     }
 
-    function scrollSectionTargetIntoView(key, fallbackNode) {
-      var anchorId = resolveAnchorIdForSection(key);
-      var target = anchorId ? document.getElementById(anchorId) : null;
-      var node = target || fallbackNode || null;
-      if (!node) {
-        return;
-      }
-
-      window.setTimeout(function () {
-        try {
-          node.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        } catch (e) {
-          try {
-            node.scrollIntoView();
-          } catch (err) {}
+    function waitForSectionLayout() {
+      return new Promise(function (resolve) {
+        if (typeof window.requestAnimationFrame !== 'function') {
+          window.setTimeout(resolve, 0);
+          return;
         }
-      }, 120);
+        window.requestAnimationFrame(function () {
+          window.requestAnimationFrame(resolve);
+        });
+      });
+    }
+
+    function scrollSectionWrapperIntoWorkingPosition(section) {
+      if (!section) return;
+      var adminBar = document.getElementById('wpadminbar');
+      var offset = 16;
+      if (adminBar && typeof adminBar.getBoundingClientRect === 'function') {
+        offset += Math.max(0, Number(adminBar.getBoundingClientRect().height || 0));
+      }
+      if (typeof section.getBoundingClientRect === 'function' && typeof window.scrollTo === 'function') {
+        var top = Number(section.getBoundingClientRect().top || 0) + Number(window.pageYOffset || 0) - offset;
+        try {
+          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+          return;
+        } catch (e) {}
+      }
+      try {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (e) {
+        try { section.scrollIntoView(); } catch (err) {}
+      }
     }
 
     function persistRequestedSection(sectionKey) {
@@ -366,6 +377,20 @@
       document.dispatchEvent(new CustomEvent('vms:event-plan-derived-state-refreshed', {
         detail: state
       }));
+      return true;
+    }
+
+    function applyLockPayState(state) {
+      if (!state || typeof state !== 'object' || typeof state.html !== 'string' || state.html === '') {
+        return false;
+      }
+      var current = document.querySelector('[data-vms-lock-pay-actions]');
+      if (!current) return true;
+      var template = document.createElement('template');
+      template.innerHTML = String(state.html).trim();
+      var replacement = template.content ? template.content.firstElementChild : template.firstElementChild;
+      if (!replacement) return false;
+      current.replaceWith(replacement);
       return true;
     }
 
@@ -630,6 +655,7 @@
           ok: true,
           canonicalEditUrl: payload.data && payload.data.canonical_edit_url ? String(payload.data.canonical_edit_url) : '',
           derivedState: payload.data && payload.data.derived_state ? payload.data.derived_state : null,
+          lockPayState: payload.data && payload.data.lock_pay_state ? payload.data.lock_pay_state : null,
           message: payload.data && payload.data.message ? String(payload.data.message) : 'Saved.'
         };
       } catch (error) {
@@ -652,6 +678,7 @@
       canonicalizePersistedEventPlanUrl(result.canonicalEditUrl, savedSectionKey);
       resetSectionBaseline(section, true);
       var successFeedback = section.querySelector('[data-vms-section-feedback]');
+      applyLockPayState(result.lockPayState);
       if (String(section.dataset.sectionKey || '') === 'basics' && !applyAuthoritativeDerivedState(result.derivedState)) {
         setCollapsed(section, false);
         setSectionStatus(section, 'Derived checks unavailable', 'failed');
@@ -667,10 +694,9 @@
       setSectionStatus(section, 'Saved', 'saved');
       if (successFeedback) successFeedback.textContent = result.message || 'Saved.';
       if (target) {
-        await openSection(target, true);
+        await openAndFocusSection(target, true);
         var targetSectionKey = String(target.dataset.sectionKey || '');
         canonicalizePersistedEventPlanUrl(result.canonicalEditUrl, targetSectionKey);
-        scrollSectionTargetIntoView(String(target.dataset.sectionKey || ''), target);
       }
       return true;
     }
@@ -749,6 +775,15 @@
       return true;
     }
 
+    async function openAndFocusSection(section, force) {
+      var opened = await openSection(section, force);
+      if (!opened) return false;
+      persistRequestedSection(String(section.dataset.sectionKey || ''));
+      await waitForSectionLayout();
+      scrollSectionWrapperIntoWorkingPosition(section);
+      return true;
+    }
+
     function ensureSectionActions(section) {
       if (!section) return;
       var key = String(section.dataset.sectionKey || '');
@@ -805,21 +840,7 @@
       requestedSectionHandled = true;
       initExistingSection(section);
 
-      function reveal() {
-        openSection(section, true);
-        scrollSectionTargetIntoView(key, section);
-      }
-
-      if (section.dataset.vmsLazySection !== undefined && section.dataset.vmsLazyLoaded !== '1') {
-        loadLazySection(section).then(function (loaded) {
-          if (loaded) {
-            reveal();
-          }
-        });
-        return;
-      }
-
-      reveal();
+      openAndFocusSection(section, true);
     }
 
     function initExistingSection(section) {
@@ -933,6 +954,11 @@
     window.BVMGR_EVENT_PLAN_PERSIST_REQUESTED_SECTION = persistRequestedSection;
     window.BVMGR_EVENT_PLAN_CANONICALIZE_EDIT_URL = canonicalizePersistedEventPlanUrl;
     window.BVMGR_EVENT_PLAN_REVEAL_REQUESTED_SECTION = revealRequestedSection;
+    window.BVMGR_EVENT_PLAN_OPEN_AND_FOCUS_SECTION = function (sectionKey, force) {
+      var key = normalizeRequestedSectionKey(sectionKey);
+      var section = key ? form.querySelector('.vms-collapsible-section[data-section-key="' + cssEscapeValue(key) + '"]') : null;
+      return openAndFocusSection(section, !!force);
+    };
 
     shellController = {
       initCollapsibleSections: initCollapsibleSections
@@ -981,7 +1007,7 @@
           var requestedSection = requestedKey
             ? form.querySelector('.vms-collapsible-section[data-section-key="' + cssEscapeValue(requestedKey) + '"]')
             : null;
-          if (requestedSection) openSection(requestedSection, false);
+          if (requestedSection) openAndFocusSection(requestedSection, false);
           return;
         }
 
@@ -1053,7 +1079,7 @@
           return;
         }
         if (editableSectionKeys.has(String(section.dataset.sectionKey || ''))) {
-          openSection(section, false);
+          openAndFocusSection(section, false);
         } else {
           setCollapsed(section, !collapsed);
         }

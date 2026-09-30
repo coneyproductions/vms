@@ -114,7 +114,7 @@
 	                            <input type="hidden" name="vms_clear_lineup_primary_vendor" value="0" id="vms-clear-lineup-primary-vendor-intent" />
 
 	                            <div class="vms-lineup-row__fields vms-lineup-row__fields--primary">
-	                                <p class="vms-lineup-field vms-lineup-field--vendor">
+	                                <div class="vms-lineup-field vms-lineup-field--vendor">
 	                                    <label class="vms-lineup-field__label" for="vms_band_vendor_id"><strong><?php esc_html_e('Primary Vendor', 'backstage-venue-manager'); ?></strong></label>
                                     <select id="vms_band_vendor_id" name="vms_band_vendor_id" class="vms-ep-select-md" data-lineup-primary-vendor-select>
                                         <?php $render_primary_vendor_select_options($selected_band_id); ?>
@@ -139,8 +139,15 @@
 	                                                <?php esc_html_e('Edit vendor profile', 'backstage-venue-manager'); ?>
                                             </a>
                                         <?php endif; ?>
-                                    </span>
-                                </p>
+	                                    </span>
+                                    <div class="vms-lineup-field--availability" data-vms-schedule-date-status>
+                                        <strong class="vms-lineup-field__label"><?php esc_html_e('Primary Vendor availability', 'backstage-venue-manager'); ?></strong>
+                                        <div data-vms-derived-authoritative>
+                                            <?php echo (string) ($authoritative_derived_state['schedule_date_html'] ?? ''); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped server-rendered fragment. ?>
+                                        </div>
+                                        <p class="description vms-lineup-row__aux-copy" data-vms-derived-unsaved hidden><?php esc_html_e('Save Event Details to check vendor availability.', 'backstage-venue-manager'); ?></p>
+                                    </div>
+                                </div>
                                 <p class="vms-lineup-field vms-lineup-field--name">
                                     <label class="vms-lineup-field__label"><strong><?php esc_html_e('Public name override', 'backstage-venue-manager'); ?></strong></label>
                                     <input type="text" name="vms_lineup_entries[primary][public_name_override]" value="<?php echo esc_attr((string) ($lineup_primary_entry['public_name_override'] ?? '')); ?>" class="regular-text" />
@@ -202,12 +209,6 @@
                             </div>
 
                             <div class="vms-lineup-row__aux">
-                                <div data-vms-schedule-date-status>
-                                    <div data-vms-derived-authoritative>
-                                        <?php echo (string) ($authoritative_derived_state['schedule_date_html'] ?? ''); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped server-rendered fragment. ?>
-                                    </div>
-                                    <p class="description vms-lineup-row__aux-copy" data-vms-derived-unsaved hidden><?php esc_html_e('Save Event Details to check vendor availability.', 'backstage-venue-manager'); ?></p>
-                                </div>
                                 <div id="vms-tax-status"></div>
 
                                 <?php

@@ -1446,6 +1446,18 @@ body.vms-admin #vms-lineup-schedule-section .vms-lineup-field__actions {
   margin-top: 4px;
 }
 
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-field--availability {
+  display: grid;
+  gap: 3px;
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px solid #dfe7ef;
+}
+
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-field--availability p {
+  margin: 0;
+}
+
 body.vms-admin #vms-lineup-schedule-section .vms-lineup-field--vendor {
   grid-column: span 4;
 }

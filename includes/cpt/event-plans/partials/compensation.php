@@ -265,7 +265,7 @@
                                 <?php endforeach; ?>
                             </select>
                         </p>
-                        <p class="vms-comp-field vms-comp-field--deposit-treatment">
+                        <p class="vms-comp-field vms-comp-field--deposit-treatment" data-vms-deposit-details>
                             <label for="vms_deposit_treatment"><strong><?php esc_html_e('Treatment', 'backstage-venue-manager'); ?></strong></label><br />
                             <select id="vms_deposit_treatment" name="vms_deposit_treatment" class="vms-ep-input-sm">
                                 <?php foreach ((array) $deposit_treatment_options as $value => $label): ?>
@@ -273,15 +273,15 @@
                                 <?php endforeach; ?>
                             </select>
                         </p>
-                        <p class="vms-comp-field vms-comp-field--deposit-due">
+                        <p class="vms-comp-field vms-comp-field--deposit-due" data-vms-deposit-details>
                             <label for="vms_deposit_due_date"><strong><?php esc_html_e('Due Date', 'backstage-venue-manager'); ?></strong></label><br />
                             <input type="date" id="vms_deposit_due_date" name="vms_deposit_due_date" class="vms-ep-input-sm" value="<?php echo esc_attr($deposit_due_date); ?>" />
                         </p>
-                        <p class="vms-comp-field vms-comp-field--deposit-paid">
+                        <p class="vms-comp-field vms-comp-field--deposit-paid" data-vms-deposit-details>
                             <label for="vms_deposit_paid_date"><strong><?php esc_html_e('Paid Date', 'backstage-venue-manager'); ?></strong></label><br />
                             <input type="date" id="vms_deposit_paid_date" name="vms_deposit_paid_date" class="vms-ep-input-sm" value="<?php echo esc_attr($deposit_paid_date); ?>" />
                         </p>
-                        <p class="vms-comp-field vms-comp-field--deposit-notes">
+                        <p class="vms-comp-field vms-comp-field--deposit-notes" data-vms-deposit-details>
                             <label for="vms_deposit_notes"><strong><?php esc_html_e('Deposit Notes', 'backstage-venue-manager'); ?></strong></label><br />
                             <textarea id="vms_deposit_notes" name="vms_deposit_notes" rows="2" class="large-text" placeholder="<?php esc_attr_e('Optional agreement wording or internal note.', 'backstage-venue-manager'); ?>"><?php echo esc_textarea($deposit_notes); ?></textarea>
                             <span class="description vms-comp-field-help"><?php esc_html_e('Use this for plain-English details such as refund deadline, crediting rule, or special agreement context.', 'backstage-venue-manager'); ?></span>
@@ -428,32 +428,11 @@
 
     <?php if (!empty($vms_comp_ack_html)) echo $vms_comp_ack_html; ?>
 
-    <div class="vms-ep-lock-actions<?php echo $lock_pay_enabled ? '' : ' is-disabled'; ?>">
-        <p class="vms-mt-10">
-            <button
-                type="submit"
-                name="vms_event_plan_action"
-                value="lock_draft_pay"
-                class="button button-primary"
-                <?php disabled(!$lock_pay_enabled); ?>
-                aria-disabled="<?php echo $lock_pay_enabled ? 'false' : 'true'; ?>">
-                🔒 <?php esc_html_e('Lock Draft Pay for This Event', 'backstage-venue-manager'); ?>
-            </button>
-        </p>
-        <?php if (!$lock_pay_enabled): ?>
-            <p class="description vms-ep-lock-actions__helper">
-                <?php esc_html_e('Save basic event details first to enable pay locking.', 'backstage-venue-manager'); ?>
-            </p>
-            <p class="vms-mt-8 vms-mb-0">
-                <button type="button" class="button button-secondary" data-vms-open-section="basics">
-                    <?php esc_html_e('Open Event Details', 'backstage-venue-manager'); ?>
-                </button>
-            </p>
-        <?php endif; ?>
-        <p class="description vms-mt-neg-4">
-            <?php esc_html_e('Locks the current Draft Pay for this event so later default changes do not alter payout.', 'backstage-venue-manager'); ?>
-        </p>
-    </div>
+    <?php
+    echo function_exists('bvmgr_event_plan_render_lock_pay_actions_html')
+        ? bvmgr_event_plan_render_lock_pay_actions_html((array) $lock_pay_basics_state) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared renderer escapes all dynamic values.
+        : '';
+    ?>
 </div>
 
 <div data-vms-collapsible-break="1" hidden aria-hidden="true"></div>

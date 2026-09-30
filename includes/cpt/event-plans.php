@@ -453,6 +453,70 @@ if (!function_exists('bvmgr_event_plan_scoped_save_comparable_value')) {
     }
 }
 
+if (!function_exists('bvmgr_event_plan_render_lock_pay_actions_html')) {
+    /**
+     * Render the pay-lock action from the canonical saved-basics readiness state.
+     */
+    function bvmgr_event_plan_render_lock_pay_actions_html(array $state): string
+    {
+        $enabled = !empty($state['ok']);
+        $missing = array_values(array_filter(array_map('sanitize_text_field', (array) ($state['missing'] ?? array()))));
+        $missing_keys = array_values(array_unique(array_filter(array_map('sanitize_key', (array) ($state['missing_keys'] ?? array())))));
+        $needs_basics = (bool) array_intersect($missing_keys, array('date', 'venue'));
+        $needs_schedule = (bool) array_intersect($missing_keys, array('start_time', 'end_time', 'primary_vendor'));
+
+        ob_start();
+        ?>
+        <div class="vms-ep-lock-actions<?php echo $enabled ? '' : ' is-disabled'; ?>" data-vms-lock-pay-actions>
+            <p class="vms-mt-10">
+                <button
+                    type="submit"
+                    name="vms_event_plan_action"
+                    value="lock_draft_pay"
+                    class="button button-primary"
+                    <?php disabled(!$enabled); ?>
+                    aria-disabled="<?php echo $enabled ? 'false' : 'true'; ?>">
+                    🔒 <?php esc_html_e('Lock Draft Pay for This Event', 'backstage-venue-manager'); ?>
+                </button>
+            </p>
+            <?php if (!$enabled): ?>
+                <p class="description vms-ep-lock-actions__helper">
+                    <?php
+                    echo esc_html(
+                        !empty($missing)
+                            ? sprintf(
+                                /* translators: %s: comma-separated list of missing Event Plan fields. */
+                                __('Missing saved details: %s.', 'backstage-venue-manager'),
+                                implode(', ', $missing)
+                            )
+                            : __('Save the required Event Plan details to enable pay locking.', 'backstage-venue-manager')
+                    );
+                    ?>
+                </p>
+                <?php if ($needs_basics || $needs_schedule): ?>
+                    <p class="vms-ep-lock-actions__navigation vms-mt-8 vms-mb-0">
+                        <?php if ($needs_basics): ?>
+                            <button type="button" class="button button-secondary" data-vms-open-section="basics">
+                                <?php esc_html_e('Open Event Details', 'backstage-venue-manager'); ?>
+                            </button>
+                        <?php endif; ?>
+                        <?php if ($needs_schedule): ?>
+                            <button type="button" class="button button-secondary" data-vms-open-section="schedule">
+                                <?php esc_html_e('Open Schedule & Lineup', 'backstage-venue-manager'); ?>
+                            </button>
+                        <?php endif; ?>
+                    </p>
+                <?php endif; ?>
+            <?php endif; ?>
+            <p class="description vms-mt-neg-4">
+                <?php esc_html_e('Locks the current Draft Pay for this event so later default changes do not alter payout.', 'backstage-venue-manager'); ?>
+            </p>
+        </div>
+        <?php
+        return (string) ob_get_clean();
+    }
+}
+
 if (!function_exists('bvmgr_event_plan_normalize_explicit_boolean')) {
     /**
      * Normalize an explicitly supplied boolean-like request value to post-meta form.
@@ -5110,6 +5174,15 @@ class BVMGR_Admin_Event_Plans
                 absint($bundle['band_vendor_id'] ?? 0)
             );
         }
+        if (in_array($scope, array('basics', 'schedule'), true)) {
+            $lock_pay_state = $this->get_lock_pay_basics_state($post_id);
+            $response['lock_pay_state'] = array(
+                'ok' => !empty($lock_pay_state['ok']) ? 1 : 0,
+                'missing' => array_values((array) ($lock_pay_state['missing'] ?? array())),
+                'missing_keys' => array_values((array) ($lock_pay_state['missing_keys'] ?? array())),
+                'html' => bvmgr_event_plan_render_lock_pay_actions_html($lock_pay_state),
+            );
+        }
 
         wp_send_json_success($response);
     }
@@ -6028,11 +6101,11 @@ class BVMGR_Admin_Event_Plans
     private function get_lock_pay_required_basics_labels(): array
     {
         return array(
-            __('Date', 'backstage-venue-manager'),
-            __('Venue', 'backstage-venue-manager'),
-            __('Start Time', 'backstage-venue-manager'),
-            __('End Time', 'backstage-venue-manager'),
-            __('Primary Vendor', 'backstage-venue-manager'),
+            'date' => __('Date', 'backstage-venue-manager'),
+            'venue' => __('Venue', 'backstage-venue-manager'),
+            'start_time' => __('Start Time', 'backstage-venue-manager'),
+            'end_time' => __('End Time', 'backstage-venue-manager'),
+            'primary_vendor' => __('Primary Vendor', 'backstage-venue-manager'),
         );
     }
 
@@ -6064,37 +6137,38 @@ class BVMGR_Admin_Event_Plans
             : (int) get_post_meta($post_id, '_vms_band_vendor_id', true);
 
         $missing = array();
+        $missing_keys = array();
         $labels = $this->get_lock_pay_required_basics_labels();
 
         if ($event_date === '') {
-            $missing[] = $labels[0];
+            $missing_keys[] = 'date';
         }
         if ($venue_id <= 0) {
-            $missing[] = $labels[1];
+            $missing_keys[] = 'venue';
         }
         if ($start_time === '') {
-            $missing[] = $labels[2];
+            $missing_keys[] = 'start_time';
         }
         if ($end_time === '') {
-            $missing[] = $labels[3];
+            $missing_keys[] = 'end_time';
         }
         if ($band_id <= 0) {
-            $missing[] = $labels[4];
+            $missing_keys[] = 'primary_vendor';
         }
 
         if ($venue_id > 0) {
             $venue_post = get_post($venue_id);
             if (!$venue_post || $venue_post->post_type !== 'vms_venue' || $venue_post->post_status === 'trash') {
-                $missing[] = $labels[1];
+                $missing_keys[] = 'venue';
             }
         }
 
         if ($band_id > 0 && function_exists('bvmgr_event_plan_vendor_exists') && !bvmgr_event_plan_vendor_exists($band_id)) {
-            $missing[] = $labels[4];
+            $missing_keys[] = 'primary_vendor';
         }
 
         if ($event_date !== '' && strtotime($event_date) === false) {
-            $missing[] = $labels[0];
+            $missing_keys[] = 'date';
         }
 
         $base_date = ($event_date !== '' && strtotime($event_date) !== false) ? $event_date : '2000-01-01';
@@ -6104,14 +6178,14 @@ class BVMGR_Admin_Event_Plans
         if ($start_time !== '') {
             $start_ts = strtotime($base_date . ' ' . $start_time);
             if ($start_ts === false) {
-                $missing[] = $labels[2];
+                $missing_keys[] = 'start_time';
             }
         }
 
         if ($end_time !== '') {
             $end_ts = strtotime($base_date . ' ' . $end_time);
             if ($end_ts === false) {
-                $missing[] = $labels[3];
+                $missing_keys[] = 'end_time';
             }
         }
 
@@ -6119,15 +6193,21 @@ class BVMGR_Admin_Event_Plans
             $bump = defined('DAY_IN_SECONDS') ? (int) DAY_IN_SECONDS : 86400;
             $end_ts += $bump;
             if ($end_ts <= $start_ts) {
-                $missing[] = $labels[3];
+                $missing_keys[] = 'end_time';
             }
         }
 
-        $missing = array_values(array_unique(array_filter(array_map('strval', $missing))));
+        $missing_keys = array_values(array_unique(array_filter(array_map('sanitize_key', $missing_keys))));
+        foreach ($missing_keys as $missing_key) {
+            if (isset($labels[$missing_key])) {
+                $missing[] = (string) $labels[$missing_key];
+            }
+        }
 
         return array(
-            'ok' => empty($missing),
+            'ok' => empty($missing_keys),
             'missing' => $missing,
+            'missing_keys' => $missing_keys,
             'values' => array(
                 'event_date' => $event_date,
                 'start_time' => $start_time,
@@ -8784,7 +8864,6 @@ class BVMGR_Admin_Event_Plans
         }
 
         $lock_pay_basics_state = $this->get_lock_pay_basics_state((int) $post->ID);
-        $lock_pay_enabled = !empty($lock_pay_basics_state['ok']);
 
         $comp_options_nonce = wp_create_nonce('bvmgr_comp_options');
         $comp_opts_trace = function_exists('bvmgr_event_plan_perf_span_start')

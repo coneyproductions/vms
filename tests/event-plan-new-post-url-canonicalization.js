@@ -127,8 +127,8 @@ async function exerciseSaveAndContinue() {
     'setCollapsed',
     'setSectionStatus',
     'applyAuthoritativeDerivedState',
-    'openSection',
-    'scrollSectionTargetIntoView',
+    'applyLockPayState',
+    'openAndFocusSection',
     saveAndMaybeOpenSource + '\nreturn saveAndMaybeOpen;'
   );
   const saveAndMaybeOpen = factory(
@@ -144,8 +144,8 @@ async function exerciseSaveAndContinue() {
     () => {},
     () => {},
     (state) => { derivedRefreshes += 1; return state.post_id === 77; },
-    async (target) => { opened = target; return true; },
-    (key) => { scrolled = key; }
+    () => true,
+    async (target) => { opened = target; scrolled = target.dataset.sectionKey; return true; }
   );
   const ok = await saveAndMaybeOpen(section, schedule);
   return { browser, ok, opened, schedule, scrolled, derivedRefreshes, feedback };

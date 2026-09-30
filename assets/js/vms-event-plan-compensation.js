@@ -2,6 +2,7 @@
   function initFinalPaymentConditionalFields() {
     var timing = document.getElementById('vms_final_payment_timing');
     var method = document.getElementById('vms_final_payment_method');
+    var depositStatus = document.getElementById('vms_deposit_status');
     if (!timing || !method) return false;
 
     function setConditionalState(selector, attributeName, selectedValue) {
@@ -19,12 +20,18 @@
     function update() {
       setConditionalState('[data-vms-final-payment-timing]', 'data-vms-final-payment-timing', timing.value);
       setConditionalState('[data-vms-final-payment-method]', 'data-vms-final-payment-method', method.value);
+      document.querySelectorAll('[data-vms-deposit-details]').forEach(function (field) {
+        var visible = !depositStatus || String(depositStatus.value || '') !== 'not_required';
+        field.hidden = !visible;
+        field.setAttribute('aria-hidden', visible ? 'false' : 'true');
+      });
     }
 
     if (timing.dataset.vmsFinalPaymentConditionalBound !== '1') {
       timing.dataset.vmsFinalPaymentConditionalBound = '1';
       timing.addEventListener('change', update);
       method.addEventListener('change', update);
+      if (depositStatus) depositStatus.addEventListener('change', update);
     }
     update();
     return true;

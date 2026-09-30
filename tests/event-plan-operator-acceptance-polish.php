@@ -53,7 +53,7 @@ try {
     $savePos = strpos($shell, '>Save Changes</button>', $continuePos);
     $discardPos = strpos($shell, '>Discard Changes</button>', $savePos);
     $assert($continuePos !== false && $savePos > $continuePos && $discardPos > $savePos, 'Section actions must order Save & Continue, Save Changes, then Discard Changes.');
-    $assert(strpos($shell, 'scrollSectionTargetIntoView(String(target.dataset.sectionKey') !== false, 'Successful Save & Continue and dirty Save & Open must scroll to the destination.');
+    $assert(strpos($shell, 'await openAndFocusSection(target, true);') !== false, 'Successful Save & Continue and dirty Save & Open must use the canonical open-and-focus path.');
 
     foreach (array('days_after', 'fixed_date', 'custom') as $timing) {
         $assert(strpos($compensation, 'data-vms-final-payment-timing="' . $timing . '"') !== false, 'Missing conditional final-payment timing field: ' . $timing);
@@ -61,6 +61,7 @@ try {
     $assert(strpos($compensation, 'data-vms-final-payment-method="other"') !== false, 'Other Method must be conditional.');
     $assert(strpos($compensationJs, 'function initFinalPaymentConditionalFields()') !== false, 'Conditional final-payment behavior must initialize.');
     $assert(strpos($compensationJs, 'control.disabled = !visible') !== false, 'Hidden final-payment controls must be disabled without clearing their browser values.');
+    $assert(strpos($css, '[data-vms-final-payment-timing][hidden]') !== false, 'Hidden final-payment wrappers must be removed from layout.');
     $assert(strpos($css, 'align-self: start;') !== false && strpos($css, 'min-height: 0;') !== false, 'Compensation cards and fields must remain content-height.');
 
     $assert(strpos($schedule, '<details id="vms-tax-bypass-inline"') !== false, 'Tax bypass controls must be collapsed in a disclosure.');

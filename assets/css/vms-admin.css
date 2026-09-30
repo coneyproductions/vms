@@ -7051,6 +7051,12 @@ body.post-type-vms_event_plan .vms-ep-agent-grid .vms-comp-field {
   margin-bottom: 0;
 }
 
+body.post-type-vms_event_plan [data-vms-final-payment-timing][hidden],
+body.post-type-vms_event_plan [data-vms-final-payment-method][hidden],
+body.post-type-vms_event_plan [data-vms-deposit-details][hidden] {
+  display: none !important;
+}
+
 body.post-type-vms_event_plan #vms-agent-fee-summary {
   margin-top: 12px;
   padding: 10px 12px;

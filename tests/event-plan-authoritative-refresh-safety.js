@@ -109,8 +109,8 @@ async function exerciseUrl(url, target) {
     'setCollapsed',
     'setSectionStatus',
     'applyAuthoritativeDerivedState',
-    'openSection',
-    'scrollSectionTargetIntoView',
+    'applyLockPayState',
+    'openAndFocusSection',
     saveAndMaybeOpenSource + '\nreturn saveAndMaybeOpen;'
   );
   const saveAndMaybeOpen = factory(
@@ -126,8 +126,8 @@ async function exerciseUrl(url, target) {
     () => {},
     () => {},
     (state) => state.post_id === 77,
-    async (destination) => { opened = destination; return true; },
-    (key) => { scrolled = key; }
+    () => true,
+    async (destination) => { opened = destination; scrolled = destination.dataset.sectionKey; return true; }
   );
   const ok = await saveAndMaybeOpen(section, target);
   return { ok, navigations, opened, scrolled, feedback: feedback.textContent };

@@ -356,6 +356,12 @@ if (!function_exists('bvmgr_event_command_center_health_tone')) {
         if ($health === 'needs-review') {
             return 'warning';
         }
+        if ($health === 'needs-setup') {
+            return 'warning';
+        }
+        if ($health === 'setup-in-progress') {
+            return 'muted';
+        }
         return 'good';
     }
 }
@@ -1312,6 +1318,7 @@ if (!function_exists('bvmgr_event_command_center_build_alerts')) {
         if (absint($header['venue_id'] ?? 0) <= 0) {
             $alerts[] = array(
                 'severity' => 'red',
+                'code' => 'setup_venue_missing',
                 'title' => __('Venue missing', 'backstage-venue-manager'),
                 'detail' => __('This Event Plan does not have a venue assigned yet.', 'backstage-venue-manager'),
                 'action_label' => __('Open Event Plan', 'backstage-venue-manager'),
@@ -1322,6 +1329,7 @@ if (!function_exists('bvmgr_event_command_center_build_alerts')) {
         if (trim((string) ($header['date_raw'] ?? '')) === '') {
             $alerts[] = array(
                 'severity' => 'red',
+                'code' => 'setup_date_missing',
                 'title' => __('Event date missing', 'backstage-venue-manager'),
                 'detail' => __('The event date is not set, so schedule views and readiness calculations are unreliable.', 'backstage-venue-manager'),
                 'action_label' => __('Open Event Plan', 'backstage-venue-manager'),
@@ -1332,6 +1340,7 @@ if (!function_exists('bvmgr_event_command_center_build_alerts')) {
         if (empty($lineup['primary'])) {
             $alerts[] = array(
                 'severity' => 'red',
+                'code' => 'setup_primary_missing',
                 'title' => __('Primary vendor missing', 'backstage-venue-manager'),
                 'detail' => __('This show does not currently have a primary lineup entry assigned.', 'backstage-venue-manager'),
                 'action_label' => __('Open Event Plan', 'backstage-venue-manager'),
@@ -1500,17 +1509,44 @@ if (!function_exists('bvmgr_event_command_center_build_alerts')) {
 }
 
 if (!function_exists('bvmgr_event_command_center_get_health')) {
-    function bvmgr_event_command_center_get_health(array $alerts): array
+    function bvmgr_event_command_center_get_health(array $alerts, int $plan_id = 0, array $header = array()): array
     {
         $red = 0;
         $yellow = 0;
+        $red_codes = array();
         foreach ($alerts as $alert) {
             $severity = sanitize_key((string) ($alert['severity'] ?? ''));
             if ($severity === 'red') {
                 $red++;
+                $red_codes[] = sanitize_key((string) ($alert['code'] ?? ''));
             } elseif ($severity === 'yellow') {
                 $yellow++;
             }
+        }
+
+        $workflow_status = sanitize_key((string) ($header['status'] ?? ''));
+        $post_status = $plan_id > 0 ? sanitize_key((string) get_post_status($plan_id)) : '';
+        $setup_codes = array('setup_venue_missing', 'setup_date_missing', 'setup_primary_missing');
+        $draft_setup = $red > 0
+            && $plan_id > 0
+            && in_array($post_status, array('auto-draft', 'draft'), true)
+            && !in_array($workflow_status, array('ready', 'published', 'confirmed'), true)
+            && empty(array_diff($red_codes, $setup_codes));
+        if ($draft_setup) {
+            $missing_setup_count = count(array_unique(array_filter($red_codes)));
+            if ($post_status === 'auto-draft' || $missing_setup_count >= count($setup_codes)) {
+                return array(
+                    'status' => 'setup-in-progress',
+                    'label' => __('Setup in progress', 'backstage-venue-manager'),
+                    'summary' => __('This new Event Plan is still waiting for its core setup details.', 'backstage-venue-manager'),
+                );
+            }
+            return array(
+                'status' => 'needs-setup',
+                'label' => __('Needs setup', 'backstage-venue-manager'),
+                /* translators: %d: number of missing core setup fields. */
+                'summary' => sprintf(_n('%d core setup item is still missing.', '%d core setup items are still missing.', $missing_setup_count, 'backstage-venue-manager'), $missing_setup_count),
+            );
         }
 
         if ($red > 0) {
@@ -1676,7 +1712,7 @@ if (!function_exists('bvmgr_event_command_center_build_payload')) {
             $notes = bvmgr_event_command_center_get_notes_snapshot($plan_id);
             $context = bvmgr_event_command_center_get_operational_context($plan_id);
             $alerts = bvmgr_event_command_center_build_alerts($plan_id, $header, $ticket, $lineup, $staffing, $marketing, $weather);
-            $health = bvmgr_event_command_center_get_health($alerts);
+            $health = bvmgr_event_command_center_get_health($alerts, $plan_id, $header);
             $timeline = bvmgr_event_command_center_get_timeline_rows($plan_id, $lineup, $staffing);
             $actions = bvmgr_event_command_center_get_next_actions($alerts);
             $activity = bvmgr_event_command_center_collect_activity($plan_id);
@@ -2185,7 +2221,7 @@ if (!function_exists('bvmgr_event_command_center_build_module_hub_payload')) {
             $checkpoint('command_center_module_hub_notes');
             $alerts = bvmgr_event_command_center_build_alerts($plan_id, $header, $ticket, $lineup, $staffing, $marketing, $weather);
             $checkpoint('command_center_module_hub_alerts');
-            $health = bvmgr_event_command_center_get_health($alerts);
+            $health = bvmgr_event_command_center_get_health($alerts, $plan_id, $header);
             $checkpoint('command_center_module_hub_health');
 
             return array(
@@ -2323,12 +2359,19 @@ if (!function_exists('bvmgr_event_command_center_build_module_hub_cards')) {
         }
 
         $lineup_warnings = count((array) ($lineup['warnings'] ?? array()));
-        $lineup_tone = empty($lineup['primary']) ? 'critical' : ($lineup_warnings > 0 ? 'warning' : 'good');
+        $health_status = sanitize_key((string) ($health['status'] ?? 'needs-review'));
+        $lineup_tone = empty($lineup['primary'])
+            ? ($health_status === 'setup-in-progress' ? 'muted' : ($health_status === 'needs-setup' ? 'warning' : 'critical'))
+            : ($lineup_warnings > 0 ? 'warning' : 'good');
         $supporting_count = count((array) ($lineup['supporting'] ?? array()));
         $secondary_count = count((array) ($lineup['secondary'] ?? array()));
 
-        $health_tone = bvmgr_event_command_center_health_tone((string) ($health['status'] ?? 'needs-review'));
-        $core_tone = $health_tone === 'critical' ? 'critical' : ((trim((string) ($header['date_raw'] ?? '')) === '' || absint($header['venue_id'] ?? 0) <= 0) ? 'warning' : 'good');
+        $health_tone = bvmgr_event_command_center_health_tone($health_status);
+        $core_tone = $health_tone === 'critical'
+            ? 'critical'
+            : ($health_status === 'setup-in-progress'
+                ? 'muted'
+                : ((trim((string) ($header['date_raw'] ?? '')) === '' || absint($header['venue_id'] ?? 0) <= 0) ? 'warning' : 'good'));
         $core_warning = '';
         foreach ($alerts as $alert) {
             if (!is_array($alert)) {
