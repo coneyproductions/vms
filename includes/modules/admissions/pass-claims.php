@@ -153,6 +153,17 @@ if (!function_exists('bvmgr_pass_claims_qr_image_url')) {
 	}
 }
 
+if (!function_exists('bvmgr_pass_claims_claim_qr_image_url')) {
+	function bvmgr_pass_claims_claim_qr_image_url(string $claim_url): string
+	{
+		if ($claim_url === '' || trim($claim_url) !== $claim_url) {
+			return '';
+		}
+		require_once __DIR__ . '/local-qr.php';
+		return \BVMGR\Admissions\Local_QR::claim_url_data_uri($claim_url, home_url('/'));
+	}
+}
+
 if (!function_exists('bvmgr_pass_claims_parse_local_datetime')) {
 	function bvmgr_pass_claims_parse_local_datetime(string $raw): string
 	{
@@ -1492,7 +1503,7 @@ if (!function_exists('bvmgr_pass_claims_handle_print')) {
 		}
 
 		$claim_url = bvmgr_pass_claims_build_claim_url($token_row);
-		$qr_url = bvmgr_pass_claims_qr_image_url($claim_url);
+		$qr_url = bvmgr_pass_claims_claim_qr_image_url($claim_url);
 		if ($claim_url === '' || $qr_url === '') {
 			wp_die(esc_html__('Could not build the Guest Pass claim QR code.', 'backstage-venue-manager'));
 		}
