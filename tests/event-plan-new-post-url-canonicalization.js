@@ -130,7 +130,11 @@ async function exerciseSaveAndContinue() {
     'applyLockPayState',
     'applyCanonicalReadinessState',
     'openAndFocusSection',
-    saveAndMaybeOpenSource + '\nreturn saveAndMaybeOpen;'
+    'beginTransition',
+    'endTransition',
+    'var transitionNavigationAllowed = false;\n' +
+      'var transitionNavigationSection = null;\n' +
+      saveAndMaybeOpenSource + '\nreturn saveAndMaybeOpen;'
   );
   const saveAndMaybeOpen = factory(
     async () => ({
@@ -147,7 +151,9 @@ async function exerciseSaveAndContinue() {
     (state) => { derivedRefreshes += 1; return state.post_id === 77; },
     () => true,
     () => true,
-    async (target) => { opened = target; scrolled = target.dataset.sectionKey; return true; }
+    async (target) => { opened = target; scrolled = target.dataset.sectionKey; return true; },
+    () => true,
+    () => {}
   );
   const ok = await saveAndMaybeOpen(section, schedule);
   return { browser, ok, opened, schedule, scrolled, derivedRefreshes, feedback };

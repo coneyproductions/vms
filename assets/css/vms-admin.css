@@ -4679,6 +4679,47 @@ body.post-type-vms_event_plan [data-vms-section-status][data-state="saving"] {
   margin-top: 18px;
 }
 
+.vms-ep-transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, .45);
+  cursor: wait;
+}
+
+.vms-ep-transition-overlay[hidden] {
+  display: none;
+}
+
+.vms-ep-transition-overlay__status {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: min(620px, 100%);
+  padding: 22px;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .25);
+}
+
+.vms-ep-transition-overlay__status .spinner {
+  float: none;
+  flex: 0 0 20px;
+  margin: 3px 0 0;
+}
+
+.vms-ep-transition-overlay__status h2 {
+  margin: 0 0 8px;
+}
+
+.vms-ep-transition-overlay__status p {
+  margin: 0;
+}
+
 body.post-type-vms_event_plan .vms-secondary-vendor-row {
   gap: 10px;
 }

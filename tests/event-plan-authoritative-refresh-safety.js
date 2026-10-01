@@ -112,7 +112,11 @@ async function exerciseUrl(url, target) {
     'applyLockPayState',
     'applyCanonicalReadinessState',
     'openAndFocusSection',
-    saveAndMaybeOpenSource + '\nreturn saveAndMaybeOpen;'
+    'beginTransition',
+    'endTransition',
+    'var transitionNavigationAllowed = false;\n' +
+      'var transitionNavigationSection = null;\n' +
+      saveAndMaybeOpenSource + '\nreturn saveAndMaybeOpen;'
   );
   const saveAndMaybeOpen = factory(
     async () => ({
@@ -129,7 +133,9 @@ async function exerciseUrl(url, target) {
     (state) => state.post_id === 77,
     () => true,
     () => true,
-    async (destination) => { opened = destination; scrolled = destination.dataset.sectionKey; return true; }
+    async (destination) => { opened = destination; scrolled = destination.dataset.sectionKey; return true; },
+    () => true,
+    () => {}
   );
   const ok = await saveAndMaybeOpen(section, target);
   return { ok, navigations, opened, scrolled, feedback: feedback.textContent };

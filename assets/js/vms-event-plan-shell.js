@@ -118,6 +118,9 @@
     var editableSectionKeys = new Set(editableSectionOrder);
     var activeSection = null;
     var pendingSwitchSection = null;
+    var transitionInFlight = false;
+    var transitionNavigationAllowed = false;
+    var transitionNavigationSection = null;
     var suppressBeforeUnload = false;
     var statusRoot = document.querySelector('[data-vms-workspace-status]');
     var sectionSaveUrl = statusRoot ? String(statusRoot.dataset.vmsSectionSaveUrl || '') : '';
@@ -600,6 +603,68 @@
       return form.querySelector('.vms-collapsible-section[data-section-key="' + cssEscapeValue(nextKey) + '"]');
     }
 
+    function sectionLabel(section, fallback) {
+      var label = section ? section.querySelector('.vms-collapsible-label') : null;
+      var value = label ? String(label.textContent || '').trim() : '';
+      return value || fallback;
+    }
+
+    function ensureTransitionOverlay() {
+      var overlay = document.getElementById('vms-event-plan-transition-overlay');
+      if (overlay) return overlay;
+      overlay = document.createElement('div');
+      overlay.id = 'vms-event-plan-transition-overlay';
+      overlay.className = 'vms-ep-transition-overlay';
+      overlay.hidden = true;
+      overlay.setAttribute('aria-busy', 'false');
+      overlay.innerHTML =
+        '<div class="vms-ep-transition-overlay__status" role="status" aria-live="assertive" aria-atomic="true">' +
+          '<span class="spinner is-active" aria-hidden="true"></span>' +
+          '<div>' +
+            '<h2 data-vms-transition-title></h2>' +
+            '<p data-vms-transition-copy></p>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(overlay);
+      return overlay;
+    }
+
+    function beginTransition(section, target) {
+      if (transitionInFlight) return false;
+      transitionInFlight = true;
+      transitionNavigationAllowed = false;
+      transitionNavigationSection = null;
+
+      var currentLabel = sectionLabel(section, 'section');
+      var targetLabel = target ? sectionLabel(target, 'the next section') : '';
+      var overlay = ensureTransitionOverlay();
+      overlay.querySelector('[data-vms-transition-title]').textContent = 'Saving ' + currentLabel + '…';
+      overlay.querySelector('[data-vms-transition-copy]').textContent = targetLabel
+        ? 'Your changes are being saved before ' + targetLabel + ' opens.'
+        : 'Please keep this page open while the section is saved.';
+      overlay.setAttribute('aria-busy', 'true');
+      overlay.hidden = false;
+      return true;
+    }
+
+    function endTransition() {
+      var overlay = document.getElementById('vms-event-plan-transition-overlay');
+      if (overlay) {
+        overlay.hidden = true;
+        overlay.setAttribute('aria-busy', 'false');
+      }
+      transitionNavigationAllowed = false;
+      transitionNavigationSection = null;
+      transitionInFlight = false;
+    }
+
+    function blockEventDuringTransition(event) {
+      if (!transitionInFlight) return false;
+      if (event && typeof event.preventDefault === 'function') event.preventDefault();
+      if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+      return true;
+    }
+
     function waitForSpecialSave(sectionKey, trigger) {
       return new Promise(function (resolve) {
         var settled = false;
@@ -697,40 +762,52 @@
     }
 
     async function saveAndMaybeOpen(section, target) {
-      var result = await saveSection(section);
-      if (!result.ok) {
-        var feedback = section.querySelector('[data-vms-section-feedback]');
-        if (feedback) feedback.textContent = result.message || 'Save failed.';
-        setCollapsed(section, false);
-        setSectionStatus(section, 'Save failed', 'failed');
-        return false;
+      if (!beginTransition(section, target)) return false;
+      try {
+        var result = await saveSection(section);
+        if (!result.ok) {
+          var feedback = section.querySelector('[data-vms-section-feedback]');
+          if (feedback) feedback.textContent = result.message || 'Save failed.';
+          setCollapsed(section, false);
+          setSectionStatus(section, 'Save failed', 'failed');
+          return false;
+        }
+        var savedSectionKey = String(section.dataset.sectionKey || '');
+        canonicalizePersistedEventPlanUrl(result.canonicalEditUrl, savedSectionKey);
+        resetSectionBaseline(section, true);
+        var successFeedback = section.querySelector('[data-vms-section-feedback]');
+        applyLockPayState(result.lockPayState);
+        applyCanonicalReadinessState(result.readinessState);
+        if (String(section.dataset.sectionKey || '') === 'basics' && !applyAuthoritativeDerivedState(result.derivedState)) {
+          setCollapsed(section, false);
+          setSectionStatus(section, 'Derived checks unavailable', 'failed');
+          if (successFeedback) successFeedback.textContent = 'Event Details were saved, but authoritative Holiday and availability results could not refresh. Reload this Event Plan before relying on those checks.';
+          return false;
+        }
+        if (sectionTransientDirty(section.querySelector('.vms-collapsible-body'))) {
+          setCollapsed(section, false);
+          setSectionStatus(section, 'Unsaved action input', 'dirty');
+          if (successFeedback) successFeedback.textContent = (result.message || 'Saved.') + ' Action-only cancellation input remains unsaved; run the guarded action or discard it before leaving this section.';
+          return false;
+        }
+        setSectionStatus(section, 'Saved', 'saved');
+        if (successFeedback) successFeedback.textContent = result.message || 'Saved.';
+        if (target) {
+          transitionNavigationSection = target;
+          transitionNavigationAllowed = true;
+          try {
+            await openAndFocusSection(target, true);
+          } finally {
+            transitionNavigationAllowed = false;
+            transitionNavigationSection = null;
+          }
+          var targetSectionKey = String(target.dataset.sectionKey || '');
+          canonicalizePersistedEventPlanUrl(result.canonicalEditUrl, targetSectionKey);
+        }
+        return true;
+      } finally {
+        endTransition();
       }
-      var savedSectionKey = String(section.dataset.sectionKey || '');
-      canonicalizePersistedEventPlanUrl(result.canonicalEditUrl, savedSectionKey);
-      resetSectionBaseline(section, true);
-      var successFeedback = section.querySelector('[data-vms-section-feedback]');
-      applyLockPayState(result.lockPayState);
-      applyCanonicalReadinessState(result.readinessState);
-      if (String(section.dataset.sectionKey || '') === 'basics' && !applyAuthoritativeDerivedState(result.derivedState)) {
-        setCollapsed(section, false);
-        setSectionStatus(section, 'Derived checks unavailable', 'failed');
-        if (successFeedback) successFeedback.textContent = 'Event Details were saved, but authoritative Holiday and availability results could not refresh. Reload this Event Plan before relying on those checks.';
-        return false;
-      }
-      if (sectionTransientDirty(section.querySelector('.vms-collapsible-body'))) {
-        setCollapsed(section, false);
-        setSectionStatus(section, 'Unsaved action input', 'dirty');
-        if (successFeedback) successFeedback.textContent = (result.message || 'Saved.') + ' Action-only cancellation input remains unsaved; run the guarded action or discard it before leaving this section.';
-        return false;
-      }
-      setSectionStatus(section, 'Saved', 'saved');
-      if (successFeedback) successFeedback.textContent = result.message || 'Saved.';
-      if (target) {
-        await openAndFocusSection(target, true);
-        var targetSectionKey = String(target.dataset.sectionKey || '');
-        canonicalizePersistedEventPlanUrl(result.canonicalEditUrl, targetSectionKey);
-      }
-      return true;
     }
 
     function ensureDirtyPrompt() {
@@ -752,6 +829,7 @@
         '</div>';
       document.body.appendChild(prompt);
       prompt.addEventListener('click', function (event) {
+        if (blockEventDuringTransition(event)) return;
         var choice = event.target.closest('[data-vms-dirty-choice]');
         if (!choice) return;
         var action = String(choice.dataset.vmsDirtyChoice || '');
@@ -781,6 +859,7 @@
     }
 
     function showDirtyPrompt(current, target) {
+      if (transitionInFlight) return false;
       var prompt = ensureDirtyPrompt();
       var targetLabel = target ? (target.querySelector('.vms-collapsible-label') || {}).textContent : 'the next section';
       var currentLabel = current ? (current.querySelector('.vms-collapsible-label') || {}).textContent : 'this section';
@@ -789,10 +868,15 @@
       prompt.querySelector('[data-vms-dirty-choice="discard"]').textContent = 'Discard Changes & Open ' + targetLabel;
       pendingSwitchSection = target;
       prompt.hidden = false;
+      return true;
     }
 
     async function openSection(section, force) {
       if (!section) return false;
+      if (transitionInFlight) {
+        if (!transitionNavigationAllowed || section !== transitionNavigationSection) return false;
+        transitionNavigationAllowed = false;
+      }
       if (activeSection && activeSection !== section && sectionDirty(activeSection.querySelector('.vms-collapsible-body')) && !force) {
         showDirtyPrompt(activeSection, section);
         return false;
@@ -1000,6 +1084,7 @@
       form.dataset.vmsCollapseDelegatedBound = '1';
       form.addEventListener('click', function (event) {
         var workflowSubmit = event.target.closest('button[type="submit"][name="vms_event_plan_action"]');
+        if (workflowSubmit && blockEventDuringTransition(event)) return;
         if (!workflowSubmit || !activeSection || !sectionDirty(activeSection.querySelector('.vms-collapsible-body'))) return;
         if (!sectionPersistedDirty(activeSection.querySelector('.vms-collapsible-body')) && workflowActionConsumesTransient(workflowSubmit, activeSection)) return;
         event.preventDefault();
@@ -1027,6 +1112,7 @@
         }
       }, true);
       form.addEventListener('click', function (event) {
+        if (blockEventDuringTransition(event)) return;
         var interactedKey = resolveSectionKeyFromNode(event.target);
         if (interactedKey) {
           lastTouchedSectionKey = interactedKey;
@@ -1117,6 +1203,7 @@
         }
       });
       form.addEventListener('submit', function (event) {
+        if (blockEventDuringTransition(event)) return;
         var submitter = event && event.submitter ? event.submitter : document.activeElement;
         if (
           submitter
