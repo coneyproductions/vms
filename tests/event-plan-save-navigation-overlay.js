@@ -4,6 +4,8 @@ const path = require('node:path');
 
 const shell = fs.readFileSync(path.resolve(__dirname, '../assets/js/vms-event-plan-shell.js'), 'utf8');
 const css = fs.readFileSync(path.resolve(__dirname, '../assets/css/vms-admin.css'), 'utf8');
+const adminUiAssets = fs.readFileSync(path.resolve(__dirname, '../includes/admin-ui/assets.php'), 'utf8');
+const timeLineup = fs.readFileSync(path.resolve(__dirname, '../includes/cpt/event-plans/partials/time-lineup.php'), 'utf8');
 
 function extractFunction(name) {
   const asyncStart = shell.indexOf('async function ' + name + '(');
@@ -23,6 +25,16 @@ function deferred() {
   let resolve;
   const promise = new Promise((done) => { resolve = done; });
   return { promise, resolve };
+}
+
+function createWindow() {
+  return {
+    location: {
+      href: 'https://serenaderange.local/wp-admin/post.php?post=123&action=edit',
+      assign() {},
+      reload() {},
+    },
+  };
 }
 
 function createDocument() {
@@ -52,11 +64,18 @@ function createDocument() {
   };
 }
 
-function createSection(key, label) {
-  const body = {};
+function createSection(key, label, controls = []) {
+  const body = {
+    querySelectorAll(selector) {
+      return selector === 'input, select, textarea' ? controls : [];
+    },
+  };
   const feedback = { textContent: '' };
   return {
     dataset: { sectionKey: key },
+    classList: {
+      contains(className) { return className === 'is-collapsed'; },
+    },
     querySelector(selector) {
       if (selector === '.vms-collapsible-label') return { textContent: label };
       if (selector === '.vms-collapsible-body') return body;
@@ -70,6 +89,7 @@ function createSection(key, label) {
 
 function createTransitionController(options = {}) {
   const document = createDocument();
+  const window = options.window || createWindow();
   const calls = [];
   const saveSection = options.saveSection || (async () => ({ ok: true, message: 'Saved.' }));
   const openAndFocusSection = options.openAndFocusSection || (async (section, force) => {
@@ -78,6 +98,7 @@ function createTransitionController(options = {}) {
   });
   const factory = new Function(
     'document',
+    'window',
     'saveSection',
     'setCollapsed',
     'setSectionStatus',
@@ -88,28 +109,45 @@ function createTransitionController(options = {}) {
     'applyAuthoritativeDerivedState',
     'sectionTransientDirty',
     'openAndFocusSection',
+    'nextWorkflowSection',
+    'form',
+    'initExistingSection',
+    'editableSectionKeys',
     'var transitionInFlight = false;\n' +
       'var transitionNavigationAllowed = false;\n' +
       'var transitionNavigationSection = null;\n' +
+      'var activeSection = null;\n' +
+      'var pendingSwitchSection = null;\n' +
+      'var suppressBeforeUnload = false;\n' +
       extractFunction('sectionLabel') + '\n' +
       extractFunction('ensureTransitionOverlay') + '\n' +
       extractFunction('beginTransition') + '\n' +
       extractFunction('endTransition') + '\n' +
       extractFunction('blockEventDuringTransition') + '\n' +
       extractFunction('saveAndMaybeOpen') + '\n' +
+      extractFunction('handleSectionActionClick') + '\n' +
+      extractFunction('handleDirtyPromptClick') + '\n' +
+      extractFunction('handleSectionToggleClick') + '\n' +
       'return {' +
         'saveAndMaybeOpen,' +
         'beginTransition,' +
         'endTransition,' +
         'blockEventDuringTransition,' +
+        'handleSectionActionClick,' +
+        'handleDirtyPromptClick,' +
+        'handleSectionToggleClick,' +
+        'setDirtyContext: function (current, target) { activeSection = current; pendingSwitchSection = target; },' +
+        'pendingSwitchSection: function () { return pendingSwitchSection; },' +
         'isTransitionInFlight: function () { return transitionInFlight; },' +
         'isTransitionNavigationAllowed: function () { return transitionNavigationAllowed; }' +
       '};'
   );
   const controller = factory(
     document,
+    window,
     async (section) => {
       calls.push(['save', section.dataset.sectionKey]);
+      if (options.onSave) options.onSave(document.transitionState());
       return saveSection(section);
     },
     (section, collapsed) => calls.push(['collapse', section.dataset.sectionKey, collapsed]),
@@ -120,9 +158,97 @@ function createTransitionController(options = {}) {
     () => true,
     () => true,
     () => false,
-    openAndFocusSection
+    openAndFocusSection,
+    options.nextWorkflowSection || (() => null),
+    options.form || { contains: () => true },
+    options.initExistingSection || (() => {}),
+    options.editableSectionKeys || new Set(['basics', 'schedule', 'compensation'])
   );
   return { controller, document, calls };
+}
+
+function createSectionActionEvent(action, section) {
+  const button = {
+    dataset: { vmsSectionAction: action },
+    closest(selector) {
+      return selector === '.vms-collapsible-section[data-section-key]' ? section : null;
+    },
+  };
+  return {
+    prevented: false,
+    target: {
+      closest(selector) {
+        return selector === '[data-vms-section-action]' ? button : null;
+      },
+    },
+    preventDefault() { this.prevented = true; },
+  };
+}
+
+function createDirtySaveEvent(prompt) {
+  const choice = {
+    dataset: { vmsDirtyChoice: 'save' },
+    closest(selector) {
+      if (selector === '#vms-event-plan-dirty-prompt') return prompt;
+      return null;
+    },
+  };
+  return {
+    target: {
+      closest(selector) {
+        return selector === '[data-vms-dirty-choice]' ? choice : null;
+      },
+    },
+  };
+}
+
+function createSectionToggleEvent(section) {
+  const toggle = {
+    closest(selector) {
+      return selector === '.vms-collapsible-section[data-section-key]' ? section : null;
+    },
+  };
+  return {
+    prevented: false,
+    target: {
+      closest(selector) {
+        return selector === '.vms-collapsible-toggle' ? toggle : null;
+      },
+    },
+    preventDefault() { this.prevented = true; },
+  };
+}
+
+function createPrimaryPerformerControl(initialValue, nextValue) {
+  const options = [initialValue, nextValue].map((value, index) => ({
+    value,
+    selected: index === 0,
+    defaultSelected: index === 0,
+  }));
+  return {
+    id: 'vms_band_vendor_id',
+    name: 'vms_band_vendor_id',
+    tagName: 'SELECT',
+    type: 'select-one',
+    disabled: false,
+    dataset: { vmsInitialState: initialValue },
+    options,
+    matches() { return false; },
+    select(value) {
+      options.forEach((option) => { option.selected = option.value === value; });
+    },
+  };
+}
+
+function createDirtyStateController() {
+  const factory = new Function(
+    extractFunction('readControlState') + '\n' +
+      extractFunction('controlDirty') + '\n' +
+      extractFunction('isTransientActionControl') + '\n' +
+      extractFunction('sectionDirty') + '\n' +
+      'return { controlDirty: controlDirty, sectionDirty: sectionDirty };'
+  );
+  return factory();
 }
 
 async function assertDuplicateSaveIsBlocked(description, target) {
@@ -142,10 +268,78 @@ async function assertDuplicateSaveIsBlocked(description, target) {
   assert.equal(fixture.controller.isTransitionInFlight(), false, description + ' releases the lock on completion.');
 }
 
+async function assertHandlerKeepsOverlayVisible(description, invokeHandler, expectedTargetKey) {
+  const save = deferred();
+  const current = createSection('schedule', 'Schedule');
+  const destination = createSection('compensation', 'Compensation');
+  const saveSnapshots = [];
+  const fixture = createTransitionController({
+    saveSection: () => save.promise,
+    nextWorkflowSection: () => destination,
+    onSave: (state) => saveSnapshots.push({ hidden: state.overlay.hidden, className: state.overlay.className }),
+  });
+  fixture.controller.setDirtyContext(current, destination);
+
+  const transition = invokeHandler(fixture, current, destination);
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(fixture.document.transitionState().overlay.hidden, false, description + ' makes the overlay visible through the actual click handler.');
+  assert.deepEqual(saveSnapshots, [{ hidden: false, className: 'vms-ep-transition-overlay' }], description + ' shows the rendered overlay before the save starts.');
+  assert.equal(fixture.controller.isTransitionInFlight(), true, description + ' keeps the interaction lock while the save is unresolved.');
+  assert.equal(fixture.calls.filter((call) => call[0] === 'save').length, 1, description + ' routes to exactly one save.');
+  assert.deepEqual(fixture.calls.filter((call) => call[0] === 'open'), [], description + ' does not navigate before the save resolves.');
+
+  save.resolve({ ok: true, message: 'Saved.' });
+  assert.equal(await transition, true, description + ' completes after the save resolves.');
+  const openCalls = fixture.calls.filter((call) => call[0] === 'open');
+  if (expectedTargetKey) {
+    assert.deepEqual(openCalls, [['open', expectedTargetKey, true]], description + ' opens the expected destination after saving.');
+  } else {
+    assert.deepEqual(openCalls, [], description + ' does not navigate after saving.');
+  }
+
+  assert.equal(fixture.document.transitionState().overlay.hidden, true, description + ' dismisses the overlay after completion.');
+  assert.equal(fixture.controller.isTransitionInFlight(), false, description + ' releases the interaction lock after dismissal.');
+}
+
 (async () => {
   await assertDuplicateSaveIsBlocked('Dirty Save & Open', true);
   await assertDuplicateSaveIsBlocked('Save & Continue', true);
   await assertDuplicateSaveIsBlocked('Plain Save Changes', false);
+
+  await assertHandlerKeepsOverlayVisible(
+    'Plain Save Changes',
+    (fixture, current) => fixture.controller.handleSectionActionClick(createSectionActionEvent('save', current)),
+    null
+  );
+  await assertHandlerKeepsOverlayVisible(
+    'Save & Continue',
+    (fixture, current) => fixture.controller.handleSectionActionClick(createSectionActionEvent('next', current)),
+    'compensation'
+  );
+  await assertHandlerKeepsOverlayVisible(
+    'Dirty Save & Open',
+    (fixture) => {
+      const prompt = { hidden: false };
+      return fixture.controller.handleDirtyPromptClick(createDirtySaveEvent(prompt));
+    },
+    'compensation'
+  );
+
+  const cleanHeaderCalls = [];
+  const cleanHeaderFixture = createTransitionController({
+    openAndFocusSection: async (section, force) => {
+      cleanHeaderCalls.push(['open', section.dataset.sectionKey, force]);
+      return true;
+    },
+  });
+  const cleanScheduleHeader = createSection('schedule', 'Schedule');
+  const cleanHeaderEvent = createSectionToggleEvent(cleanScheduleHeader);
+  assert.equal(cleanHeaderFixture.controller.handleSectionToggleClick(cleanHeaderEvent), true, 'The rendered Schedule header reaches the actual delegated toggle handler.');
+  assert.equal(cleanHeaderEvent.prevented, true, 'The actual Schedule header handler prevents native button behavior.');
+  assert.deepEqual(cleanHeaderCalls, [['open', 'schedule', false]], 'A section-header click routes to clean navigation rather than the save action handler.');
+  assert.equal(cleanHeaderFixture.calls.filter((call) => call[0] === 'save').length, 0, 'A clean section-header click does not claim to save the current section.');
+  assert.equal(cleanHeaderFixture.document.transitionState().overlay, null, 'A clean section-header click does not create a save overlay.');
 
   const navigation = deferred();
   let navigationCalls = 0;
@@ -196,7 +390,7 @@ async function assertDuplicateSaveIsBlocked(description, target) {
   }), true, 'Workflow and form events are blocked while the transition lock is active.');
   assert.equal(prevented, 1, 'Blocked actions have their default behavior prevented.');
   assert.equal(stopped, 1, 'Blocked actions do not propagate to another controller.');
-  contentFixture.controller.endTransition();
+  await contentFixture.controller.endTransition();
   assert.equal(contentFixture.controller.blockEventDuringTransition({}), false, 'Actions are admitted after the lock releases.');
 
   const plainFixture = createTransitionController();
@@ -206,7 +400,7 @@ async function assertDuplicateSaveIsBlocked(description, target) {
     'Please keep this page open while the section is saved.',
     'Plain saves use non-navigation progress copy.'
   );
-  plainFixture.controller.endTransition();
+  await plainFixture.controller.endTransition();
 
   const openSectionSource = extractFunction('openSection');
   const cleanNavigationCalls = [];
@@ -232,6 +426,67 @@ async function assertDuplicateSaveIsBlocked(description, target) {
         '}' +
       '};'
   );
+
+  assert.match(
+    timeLineup,
+    /<select id="vms_band_vendor_id" name="vms_band_vendor_id"/,
+    'The Primary Performer regression uses the real Event Plan control ID and name.'
+  );
+  const dirtyState = createDirtyStateController();
+  const primaryPerformer = createPrimaryPerformerControl('41', '77');
+  const basics = createSection('basics', 'Event Details', [primaryPerformer]);
+  const scheduleAfterPerformerChange = createSection('schedule', 'Schedule & Lineup');
+  assert.equal(dirtyState.sectionDirty(basics.body), false, 'Event Details starts clean before the Primary Performer changes.');
+  primaryPerformer.select('77');
+  assert.equal(dirtyState.controlDirty(primaryPerformer), true, 'The real Primary Performer select is recognized as dirty after selection changes.');
+  assert.equal(dirtyState.sectionDirty(basics.body), true, 'The active Event Details section becomes dirty from the Primary Performer change.');
+
+  const dirtyPromptCalls = [];
+  const dirtyNavigationCalls = [];
+  const dirtyNavigationController = cleanNavigationFactory(
+    basics,
+    dirtyState.sectionDirty,
+    (current, target) => dirtyPromptCalls.push([current.dataset.sectionKey, target.dataset.sectionKey]),
+    (section, collapsed) => dirtyNavigationCalls.push(['collapse', section.dataset.sectionKey, collapsed]),
+    () => false,
+    async () => true
+  );
+  const performerSave = deferred();
+  const performerSaveSnapshots = [];
+  const sharedNavigationCalls = [];
+  const performerFixture = createTransitionController({
+    saveSection: () => performerSave.promise,
+    onSave: (state) => performerSaveSnapshots.push({ hidden: state.overlay.hidden, busy: state.overlay.attributes['aria-busy'] }),
+    openAndFocusSection: async (section, force) => {
+      sharedNavigationCalls.push([section.dataset.sectionKey, force]);
+      return dirtyNavigationController.openSection(section, force);
+    },
+  });
+  const performerNavigationEvent = createSectionToggleEvent(scheduleAfterPerformerChange);
+  assert.equal(performerFixture.controller.handleSectionToggleClick(performerNavigationEvent), true, 'Clicking Schedule & Lineup reaches the shared section navigation handler.');
+  assert.equal(performerNavigationEvent.prevented, true, 'The Schedule & Lineup click is handled by the Event Plan shell.');
+  assert.deepEqual(dirtyPromptCalls, [['basics', 'schedule']], 'The dirty Primary Performer path opens the unsaved-changes prompt.');
+  assert.deepEqual(sharedNavigationCalls, [['schedule', false]], 'The dirty navigation attempt uses the shared navigation path without forcing the section open.');
+
+  performerFixture.controller.setDirtyContext(basics, scheduleAfterPerformerChange);
+  const performerPrompt = { hidden: false };
+  const performerTransition = performerFixture.controller.handleDirtyPromptClick(createDirtySaveEvent(performerPrompt));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(performerPrompt.hidden, true, 'Save & Open dismisses the dirty prompt as the transition begins.');
+  assert.equal(performerFixture.controller.isTransitionInFlight(), true, 'Save & Open acquires the transition lock for the Primary Performer path.');
+  assert.equal(performerFixture.document.transitionState().overlay.hidden, false, 'The overlay is visible while the Primary Performer save is pending.');
+  assert.deepEqual(performerSaveSnapshots, [{ hidden: false, busy: 'true' }], 'The overlay is shown before the Primary Performer save starts.');
+  assert.equal(performerFixture.calls.filter((call) => call[0] === 'save').length, 1, 'The Primary Performer path starts exactly one save.');
+  assert.deepEqual(sharedNavigationCalls, [['schedule', false]], 'Schedule does not open before the Primary Performer save succeeds.');
+
+  performerSave.resolve({ ok: true, message: 'Saved.' });
+  assert.equal(await performerTransition, true, 'The Primary Performer Save & Open transition succeeds.');
+  assert.deepEqual(sharedNavigationCalls, [
+    ['schedule', false],
+    ['schedule', true],
+  ], 'Schedule opens through the shared navigation path after the Primary Performer save succeeds.');
+  assert.equal(performerFixture.controller.isTransitionInFlight(), false, 'The Primary Performer transition releases its lock after navigation.');
+
   const currentCleanSection = createSection('schedule', 'Schedule');
   const cleanDestination = createSection('compensation', 'Compensation');
   const cleanNavigationController = cleanNavigationFactory(
@@ -257,10 +512,22 @@ async function assertDuplicateSaveIsBlocked(description, target) {
   assert.doesNotMatch(openSectionSource, /beginTransition/, 'Clean section navigation does not start the save overlay.');
   assert.match(openSectionSource, /!transitionNavigationAllowed \|\| section !== transitionNavigationSection/, 'Unowned navigation is rejected while a transition is active.');
   assert.match(shell, /function showDirtyPrompt[\s\S]*if \(transitionInFlight\) return false;/, 'The dirty prompt cannot reopen while locked.');
+  assert.match(shell, /prompt\.addEventListener\('click', handleDirtyPromptClick\)/, 'The dirty prompt is wired to the exercised save handler.');
+  assert.match(shell, /if \(handleSectionActionClick\(event\)\) return;/, 'Section action clicks are wired to the exercised save handler.');
+  assert.match(shell, /if \(handleSectionToggleClick\(event\)\) return;/, 'Rendered section headers are wired to the exercised clean-navigation handler.');
   assert.ok((shell.match(/blockEventDuringTransition\(event\)/g) || []).length >= 4, 'Dirty-prompt, click, workflow, and submit entry points share the transition guard.');
   assert.match(shell, /var workflowSubmit[\s\S]*workflowSubmit && blockEventDuringTransition\(event\)/, 'Native workflow submissions are blocked while locked.');
   assert.match(shell, /role="status" aria-live="assertive" aria-atomic="true"/, 'The overlay exposes accessible live status semantics.');
   assert.doesNotMatch(extractFunction('ensureTransitionOverlay'), /<button/, 'The in-flight overlay has no close button.');
+  assert.doesNotMatch(shell, /EP-OVERLAY-DIAG-1|overlayDiagnostic|recordOverlayDiagnostic|EP shell diagnostic/, 'Temporary browser diagnostic instrumentation is absent.');
+  assert.doesNotMatch(shell, /transitionMinimumVisibleMs/, 'The disproven arbitrary minimum-duration workaround is not retained.');
+  assert.match(adminUiAssets, /in_array\(\$environment, array\('local', 'development'\), true\)/, 'File-based shell cache busting is restricted to local/development environments.');
+  assert.match(adminUiAssets, /filemtime\(\$asset_path\)/, 'Local Event Plan asset URLs use deterministic file modification time cache busting.');
+  assert.match(adminUiAssets, /bvmgr_admin_ui_local_asset_version\('assets\/js\/vms-event-plan-shell\.js'\)/, 'The Event Plan shell uses the local/development file version helper.');
+  assert.match(adminUiAssets, /bvmgr_admin_ui_local_asset_version\('assets\/css\/vms-admin\.css'\)/, 'The Event Plan overlay CSS uses the local/development file version helper.');
+  assert.match(adminUiAssets, /registered\['bvmgr-admin'\]->ver = \$event_plan_admin_style_version/, 'The registered Event Plan admin stylesheet receives its file-based local version.');
+  assert.match(adminUiAssets, /-local-/, 'Local shell URLs use a neutral file-based version suffix.');
+  assert.doesNotMatch(adminUiAssets, /ep-overlay-diag/, 'The cache-busting version contains no diagnostic marker.');
   assert.match(css, /\.vms-ep-transition-overlay \{[\s\S]*position: fixed;[\s\S]*inset: 0;/, 'The overlay blocks the full viewport.');
   assert.match(css, /\.vms-ep-transition-overlay\[hidden\] \{\s*display: none;/, 'The overlay can be dismissed after success or failure.');
 

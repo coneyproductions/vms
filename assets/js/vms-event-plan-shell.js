@@ -810,6 +810,80 @@
       }
     }
 
+    function handleSectionActionClick(event) {
+      var sectionAction = event.target.closest('[data-vms-section-action]');
+      if (!sectionAction) return false;
+      var actionSection = sectionAction.closest('.vms-collapsible-section[data-section-key]');
+      if (!actionSection) return false;
+      event.preventDefault();
+      var sectionActionName = String(sectionAction.dataset.vmsSectionAction || '');
+      if (sectionActionName === 'save') {
+        return saveAndMaybeOpen(actionSection, null);
+      }
+      if (sectionActionName === 'next') {
+        return saveAndMaybeOpen(actionSection, nextWorkflowSection(actionSection));
+      }
+      if (sectionActionName === 'discard') {
+        suppressBeforeUnload = true;
+        window.location.reload();
+        return true;
+      }
+      return true;
+    }
+
+    function handleDirtyPromptClick(event) {
+      if (blockEventDuringTransition(event)) return true;
+      var choice = event.target.closest('[data-vms-dirty-choice]');
+      if (!choice) return false;
+      var prompt = choice.closest('#vms-event-plan-dirty-prompt');
+      if (!prompt) return false;
+      var action = String(choice.dataset.vmsDirtyChoice || '');
+      var current = activeSection;
+      var target = pendingSwitchSection;
+      if (action === 'stay') {
+        prompt.hidden = true;
+        pendingSwitchSection = null;
+        return true;
+      }
+      if (action === 'discard') {
+        var targetKey = target ? String(target.dataset.sectionKey || '') : '';
+        var nextUrl = new URL(window.location.href);
+        if (targetKey) nextUrl.searchParams.set('vms_ep_load_section', targetKey);
+        suppressBeforeUnload = true;
+        window.location.assign(nextUrl.toString());
+        return true;
+      }
+      if (action === 'save' && current) {
+        prompt.hidden = true;
+        return saveAndMaybeOpen(current, target).then(function (ok) {
+          if (ok) pendingSwitchSection = null;
+          return ok;
+        });
+      }
+      return true;
+    }
+
+    function handleSectionToggleClick(event) {
+      var button = event.target.closest('.vms-collapsible-toggle');
+      if (!button) return false;
+
+      var section = button.closest('.vms-collapsible-section[data-section-key]');
+      if (!section || !form.contains(section)) return false;
+      initExistingSection(section);
+      event.preventDefault();
+
+      var collapsed = section.classList.contains('is-collapsed');
+      if (!collapsed && editableSectionKeys.has(String(section.dataset.sectionKey || ''))) {
+        return true;
+      }
+      if (editableSectionKeys.has(String(section.dataset.sectionKey || ''))) {
+        openAndFocusSection(section, false);
+      } else {
+        setCollapsed(section, !collapsed);
+      }
+      return true;
+    }
+
     function ensureDirtyPrompt() {
       var prompt = document.getElementById('vms-event-plan-dirty-prompt');
       if (prompt) return prompt;
@@ -828,33 +902,7 @@
           '</div>' +
         '</div>';
       document.body.appendChild(prompt);
-      prompt.addEventListener('click', function (event) {
-        if (blockEventDuringTransition(event)) return;
-        var choice = event.target.closest('[data-vms-dirty-choice]');
-        if (!choice) return;
-        var action = String(choice.dataset.vmsDirtyChoice || '');
-        var current = activeSection;
-        var target = pendingSwitchSection;
-        if (action === 'stay') {
-          prompt.hidden = true;
-          pendingSwitchSection = null;
-          return;
-        }
-        if (action === 'discard') {
-          var targetKey = target ? String(target.dataset.sectionKey || '') : '';
-          var nextUrl = new URL(window.location.href);
-          if (targetKey) nextUrl.searchParams.set('vms_ep_load_section', targetKey);
-          suppressBeforeUnload = true;
-          window.location.assign(nextUrl.toString());
-          return;
-        }
-        if (action === 'save' && current) {
-          prompt.hidden = true;
-          saveAndMaybeOpen(current, target).then(function (ok) {
-            if (ok) pendingSwitchSection = null;
-          });
-        }
-      });
+      prompt.addEventListener('click', handleDirtyPromptClick);
       return prompt;
     }
 
@@ -877,7 +925,8 @@
         if (!transitionNavigationAllowed || section !== transitionNavigationSection) return false;
         transitionNavigationAllowed = false;
       }
-      if (activeSection && activeSection !== section && sectionDirty(activeSection.querySelector('.vms-collapsible-body')) && !force) {
+      var currentDirty = !!(activeSection && sectionDirty(activeSection.querySelector('.vms-collapsible-body')));
+      if (activeSection && activeSection !== section && currentDirty && !force) {
         showDirtyPrompt(activeSection, section);
         return false;
       }
@@ -1129,22 +1178,7 @@
           return;
         }
 
-        var sectionAction = event.target.closest('[data-vms-section-action]');
-        if (sectionAction) {
-          var actionSection = sectionAction.closest('.vms-collapsible-section[data-section-key]');
-          if (!actionSection) return;
-          event.preventDefault();
-          var sectionActionName = String(sectionAction.dataset.vmsSectionAction || '');
-          if (sectionActionName === 'save') {
-            saveAndMaybeOpen(actionSection, null);
-          } else if (sectionActionName === 'next') {
-            saveAndMaybeOpen(actionSection, nextWorkflowSection(actionSection));
-          } else if (sectionActionName === 'discard') {
-            suppressBeforeUnload = true;
-            window.location.reload();
-          }
-          return;
-        }
+        if (handleSectionActionClick(event)) return;
 
         var workflowButton = event.target.closest('[data-vms-workflow-action]');
         if (workflowButton) {
@@ -1184,23 +1218,7 @@
           return;
         }
 
-        var button = event.target.closest('.vms-collapsible-toggle');
-        if (!button) return;
-
-        var section = button.closest('.vms-collapsible-section[data-section-key]');
-        if (!section || !form.contains(section)) return;
-        initExistingSection(section);
-        event.preventDefault();
-
-        var collapsed = section.classList.contains('is-collapsed');
-        if (!collapsed && editableSectionKeys.has(String(section.dataset.sectionKey || ''))) {
-          return;
-        }
-        if (editableSectionKeys.has(String(section.dataset.sectionKey || ''))) {
-          openAndFocusSection(section, false);
-        } else {
-          setCollapsed(section, !collapsed);
-        }
+        if (handleSectionToggleClick(event)) return;
       });
       form.addEventListener('submit', function (event) {
         if (blockEventDuringTransition(event)) return;

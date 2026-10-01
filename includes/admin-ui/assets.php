@@ -2,6 +2,25 @@
 
 defined('ABSPATH') || exit;
 
+if (!function_exists('bvmgr_admin_ui_local_asset_version')) {
+	function bvmgr_admin_ui_local_asset_version(string $relative_path): string
+	{
+		$version = bvmgr_admin_ui_asset_version();
+		$environment = function_exists('wp_get_environment_type') ? (string) wp_get_environment_type() : 'production';
+		if (!in_array($environment, array('local', 'development'), true) || !defined('BVMGR_PLUGIN_PATH')) {
+			return $version;
+		}
+
+		$asset_path = rtrim((string) BVMGR_PLUGIN_PATH, '/\\') . '/' . ltrim($relative_path, '/\\');
+		if (!is_file($asset_path)) {
+			return $version;
+		}
+
+		$asset_mtime = filemtime($asset_path);
+		return $asset_mtime === false ? $version : $version . '-local-' . (string) $asset_mtime;
+	}
+}
+
 
 if (!function_exists('bvmgr_admin_ui_enqueue_global_menu_assets')) {
 	function bvmgr_admin_ui_enqueue_global_menu_assets(): void
@@ -49,11 +68,18 @@ if (!function_exists('bvmgr_admin_ui_enqueue_assets')) {
 			&& (string) ($screen->post_type ?? '') === 'vms_event_plan';
 
 		if ($is_event_plan_screen) {
+			$event_plan_shell_version = bvmgr_admin_ui_local_asset_version('assets/js/vms-event-plan-shell.js');
+			$event_plan_admin_style_version = bvmgr_admin_ui_local_asset_version('assets/css/vms-admin.css');
+			$registered_styles = wp_styles();
+			if (isset($registered_styles->registered['bvmgr-admin'])) {
+				$registered_styles->registered['bvmgr-admin']->ver = $event_plan_admin_style_version;
+			}
+
 			wp_enqueue_script(
 				'bvmgr-event-plan-shell',
 				BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-shell.js',
 				array(),
-				bvmgr_admin_ui_asset_version(),
+				$event_plan_shell_version,
 				true
 			);
 
