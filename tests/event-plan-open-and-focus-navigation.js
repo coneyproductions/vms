@@ -32,7 +32,7 @@ const openAndFocus = factory(
     return true;
   },
   (key) => calls.push(['persist', key]),
-  async () => calls.push(['layout']),
+  async (section) => calls.push(['layout', section.dataset.sectionKey]),
   (section) => calls.push(['scroll', section.dataset.sectionKey])
 );
 
@@ -45,14 +45,14 @@ const openAndFocus = factory(
     assert.deepEqual(calls, [
       ['open', key, true],
       ['persist', key],
-      ['layout'],
+      ['layout', key],
       ['scroll', key],
     ], key + ' follows the same open, settle, and scroll path.');
   }
 
-  assert.match(source, /await openAndFocusSection\(target, true\);/, 'Save & Continue and dirty Save & Open use open-and-focus.');
+  assert.match(source, /await openAndFocusDestination\(target, true\);/, 'Save & Continue and dirty Save & Open use the shared destination-aware open-and-focus path.');
   assert.match(source, /openAndFocusSection\(section, true\);/, 'Requested section reveal uses open-and-focus.');
-  assert.match(source, /if \(requestedSection\) openAndFocusSection\(requestedSection, false\);/, 'data-vms-open-section actions use open-and-focus.');
+  assert.match(source, /else if \(requestedSection\) \{\s*openAndFocusSection\(requestedSection, false\);/, 'data-vms-open-section actions use open-and-focus.');
   assert.match(source, /if \(isLazySectionUnloaded\(section\)\)[\s\S]*await loadLazySection\(section\)/, 'The shared open path waits for lazy section loading.');
   assert.doesNotMatch(source, /setTimeout\([^)]*scrollIntoView/, 'Section focus must not depend on the old fixed-delay scroll.');
 

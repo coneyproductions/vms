@@ -106,7 +106,11 @@ $findApplicationJsonScriptTags = static function (string $source, string $requir
 	$assert(strpos($shellAssetSource, 'window.setTimeout(function () {') !== false && strpos($shellAssetSource, '}, 150);') !== false, 'The shell asset should preserve the existing deferred scroll timing.');
 	$assert(strpos($shellAssetSource, "target.scrollIntoView({ behavior: 'smooth', block: 'start' });") !== false, 'The shell asset should preserve the existing scroll options.');
 	$assert(strpos($shellAssetSource, 'window.BVMGR_EVENT_PLAN_INIT_COLLAPSIBLE_SECTION = initExistingSection;') !== false, 'The shell asset should also own the migrated collapsible-section helper.');
-	$assert(strpos($shellAssetSource, 'focus(') === false, 'The generic scroll shell asset should not introduce focus behavior.');
+	$initScrollStart = strpos($shellAssetSource, 'function initScrollTarget()');
+	$initShellStart = strpos($shellAssetSource, 'function initShellController()', $initScrollStart === false ? 0 : $initScrollStart);
+	$assert($initScrollStart !== false && $initShellStart !== false, 'The generic scroll helper should remain identifiable inside the shell asset.');
+	$initScrollSource = substr($shellAssetSource, $initScrollStart, $initShellStart - $initScrollStart);
+	$assert(strpos($initScrollSource, 'focus(') === false, 'The generic scroll helper should not introduce focus behavior.');
 	foreach (array('ajaxurl', 'XMLHttpRequest', 'wp.apiFetch') as $forbiddenToken) {
 		$assert(strpos($shellAssetSource, $forbiddenToken) === false, 'The shell asset should remain passive and generic: ' . $forbiddenToken);
 	}

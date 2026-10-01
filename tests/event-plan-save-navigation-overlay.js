@@ -91,14 +91,16 @@ function createTransitionController(options = {}) {
   const document = createDocument();
   const window = options.window || createWindow();
   const calls = [];
+  const statusRoot = options.statusRoot || null;
   const saveSection = options.saveSection || (async () => ({ ok: true, message: 'Saved.' }));
-  const openAndFocusSection = options.openAndFocusSection || (async (section, force) => {
+  const openAndFocusDestination = options.openAndFocusSection || (async (section, force) => {
     calls.push(['open', section.dataset.sectionKey, force]);
     return true;
   });
   const factory = new Function(
     'document',
     'window',
+    'statusRoot',
     'saveSection',
     'setCollapsed',
     'setSectionStatus',
@@ -108,11 +110,13 @@ function createTransitionController(options = {}) {
     'applyCanonicalReadinessState',
     'applyAuthoritativeDerivedState',
     'sectionTransientDirty',
+    'openAndFocusDestination',
     'openAndFocusSection',
     'nextWorkflowSection',
     'form',
     'initExistingSection',
     'editableSectionKeys',
+    'resolveWorkflowPublishDestination',
     'var transitionInFlight = false;\n' +
       'var transitionNavigationAllowed = false;\n' +
       'var transitionNavigationSection = null;\n' +
@@ -145,6 +149,7 @@ function createTransitionController(options = {}) {
   const controller = factory(
     document,
     window,
+    statusRoot,
     async (section) => {
       calls.push(['save', section.dataset.sectionKey]);
       if (options.onSave) options.onSave(document.transitionState());
@@ -158,11 +163,13 @@ function createTransitionController(options = {}) {
     () => true,
     () => true,
     () => false,
-    openAndFocusSection,
+    openAndFocusDestination,
+    openAndFocusDestination,
     options.nextWorkflowSection || (() => null),
     options.form || { contains: () => true },
     options.initExistingSection || (() => {}),
-    options.editableSectionKeys || new Set(['basics', 'schedule', 'compensation'])
+    options.editableSectionKeys || new Set(['basics', 'schedule', 'compensation']),
+    () => statusRoot
   );
   return { controller, document, calls };
 }

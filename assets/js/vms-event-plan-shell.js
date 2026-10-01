@@ -108,13 +108,14 @@
       compensation: 'vms-compensation',
       cancellation: 'vms-cancellation',
       readiness_details: 'vms-readiness-details',
+      workflow_publish: 'vms-event-plan-workspace-status',
       ticketing_v2: 'vms_event_plan_ticketing_v2',
       advanced: 'vms_event_plan_advanced_controls'
     };
     var lastTouchedSectionKey = '';
     var requestedSectionHandled = false;
     var editableSectionOrder = ['basics', 'schedule', 'compensation', 'secondary_vendors', 'staff', 'ticketing_v2', 'cancellation'];
-    var continuationSectionOrder = ['basics', 'schedule', 'compensation', 'secondary_vendors', 'staff', 'ticketing_v2', 'readiness_details'];
+    var continuationSectionOrder = ['basics', 'schedule', 'compensation', 'secondary_vendors', 'staff', 'ticketing_v2', 'workflow_publish'];
     var editableSectionKeys = new Set(editableSectionOrder);
     var activeSection = null;
     var pendingSwitchSection = null;
@@ -144,14 +145,68 @@
       return normalized ? String(sectionAnchorMap[normalized] || '') : '';
     }
 
-    function waitForSectionLayout() {
+    function resolveWorkflowPublishDestination() {
+      return document.querySelector('[data-vms-workflow-publish-destination]') || statusRoot;
+    }
+
+    function resolveRequestedDestination(sectionKey) {
+      var normalized = normalizeRequestedSectionKey(sectionKey);
+      if (!normalized) return null;
+      if (normalized === 'workflow_publish') return resolveWorkflowPublishDestination();
+      return form.querySelector('.vms-collapsible-section[data-section-key="' + cssEscapeValue(normalized) + '"]');
+    }
+
+    function waitForEventPlanWorkspaceReady() {
+      if (document.readyState === 'complete') return Promise.resolve();
       return new Promise(function (resolve) {
-        if (typeof window.requestAnimationFrame !== 'function') {
-          window.setTimeout(resolve, 0);
-          return;
-        }
-        window.requestAnimationFrame(function () {
-          window.requestAnimationFrame(resolve);
+        window.addEventListener('load', resolve, { once: true });
+      });
+    }
+
+    function waitForSectionLayout(target) {
+      return waitForEventPlanWorkspaceReady().then(function () {
+        return new Promise(function (resolve) {
+          if (!target || typeof target.getBoundingClientRect !== 'function' || typeof window.requestAnimationFrame !== 'function') {
+            window.setTimeout(resolve, 0);
+            return;
+          }
+
+          var previousRect = null;
+          var stableFrames = 0;
+          var measuredFrames = 0;
+          var maxMeasuredFrames = 12;
+
+          function measureLayout() {
+            var rect = target.getBoundingClientRect();
+            var currentRect = {
+              top: Number(rect.top || 0),
+              left: Number(rect.left || 0),
+              width: Number(rect.width || 0),
+              height: Number(rect.height || 0)
+            };
+            measuredFrames += 1;
+
+            if (
+              previousRect
+              && Math.abs(previousRect.top - currentRect.top) < 0.5
+              && Math.abs(previousRect.left - currentRect.left) < 0.5
+              && Math.abs(previousRect.width - currentRect.width) < 0.5
+              && Math.abs(previousRect.height - currentRect.height) < 0.5
+            ) {
+              stableFrames += 1;
+            } else {
+              stableFrames = 0;
+            }
+            previousRect = currentRect;
+
+            if (stableFrames >= 2 || measuredFrames >= maxMeasuredFrames) {
+              resolve();
+              return;
+            }
+            window.requestAnimationFrame(measureLayout);
+          }
+
+          window.requestAnimationFrame(measureLayout);
         });
       });
     }
@@ -600,10 +655,13 @@
       var index = continuationSectionOrder.indexOf(currentKey);
       var nextKey = index >= 0 ? continuationSectionOrder[index + 1] : '';
       if (!nextKey) return null;
-      return form.querySelector('.vms-collapsible-section[data-section-key="' + cssEscapeValue(nextKey) + '"]');
+      return resolveRequestedDestination(nextKey);
     }
 
     function sectionLabel(section, fallback) {
+      if (section && section === resolveWorkflowPublishDestination()) {
+        return String(section.dataset.vmsWorkflowDestinationLabel || 'Workflow / Publish');
+      }
       var label = section ? section.querySelector('.vms-collapsible-label') : null;
       var value = label ? String(label.textContent || '').trim() : '';
       return value || fallback;
@@ -796,12 +854,12 @@
           transitionNavigationSection = target;
           transitionNavigationAllowed = true;
           try {
-            await openAndFocusSection(target, true);
+            await openAndFocusDestination(target, true);
           } finally {
             transitionNavigationAllowed = false;
             transitionNavigationSection = null;
           }
-          var targetSectionKey = String(target.dataset.sectionKey || '');
+          var targetSectionKey = target === statusRoot ? 'workflow_publish' : String(target.dataset.sectionKey || '');
           canonicalizePersistedEventPlanUrl(result.canonicalEditUrl, targetSectionKey);
         }
         return true;
@@ -909,8 +967,8 @@
     function showDirtyPrompt(current, target) {
       if (transitionInFlight) return false;
       var prompt = ensureDirtyPrompt();
-      var targetLabel = target ? (target.querySelector('.vms-collapsible-label') || {}).textContent : 'the next section';
-      var currentLabel = current ? (current.querySelector('.vms-collapsible-label') || {}).textContent : 'this section';
+      var targetLabel = sectionLabel(target, 'the next section');
+      var currentLabel = sectionLabel(current, 'this section');
       prompt.querySelector('[data-vms-dirty-copy]').textContent = currentLabel + ' has unsaved changes.';
       prompt.querySelector('[data-vms-dirty-choice="save"]').textContent = 'Save & Open ' + targetLabel;
       prompt.querySelector('[data-vms-dirty-choice="discard"]').textContent = 'Discard Changes & Open ' + targetLabel;
@@ -944,9 +1002,49 @@
       var opened = await openSection(section, force);
       if (!opened) return false;
       persistRequestedSection(String(section.dataset.sectionKey || ''));
-      await waitForSectionLayout();
+      await waitForSectionLayout(section);
       scrollSectionWrapperIntoWorkingPosition(section);
       return true;
+    }
+
+    async function openWorkflowPublish(force) {
+      var destination = resolveWorkflowPublishDestination();
+      if (!destination) return false;
+      if (transitionInFlight) {
+        if (!transitionNavigationAllowed || destination !== transitionNavigationSection) return false;
+        transitionNavigationAllowed = false;
+      }
+      var currentDirty = !!(activeSection && sectionDirty(activeSection.querySelector('.vms-collapsible-body')));
+      if (activeSection && currentDirty && !force) {
+        showDirtyPrompt(activeSection, destination);
+        return false;
+      }
+      if (activeSection) setCollapsed(activeSection, true);
+      lastTouchedSectionKey = 'workflow_publish';
+      return true;
+    }
+
+    async function openAndFocusWorkflowPublish(force) {
+      var opened = await openWorkflowPublish(force);
+      if (!opened) return false;
+      var destination = resolveWorkflowPublishDestination();
+      if (!destination) return false;
+      persistRequestedSection('workflow_publish');
+      await waitForSectionLayout(destination);
+      scrollSectionWrapperIntoWorkingPosition(destination);
+      var focusTarget = destination.querySelector('[data-vms-workflow-action]:not([disabled])')
+        || destination.querySelector('[data-vms-workflow-action]')
+        || destination;
+      if (focusTarget && typeof focusTarget.focus === 'function') {
+        try { focusTarget.focus({ preventScroll: true }); } catch (e) { try { focusTarget.focus(); } catch (err) {} }
+      }
+      return true;
+    }
+
+    function openAndFocusDestination(target, force) {
+      return target === resolveWorkflowPublishDestination()
+        ? openAndFocusWorkflowPublish(force)
+        : openAndFocusSection(target, force);
     }
 
     function ensureSectionActions(section) {
@@ -996,8 +1094,13 @@
         return;
       }
 
-      var selector = '.vms-collapsible-section[data-section-key="' + cssEscapeValue(key) + '"]';
-      var section = shellRoot.querySelector(selector);
+      if (key === 'workflow_publish') {
+        requestedSectionHandled = true;
+        openAndFocusWorkflowPublish(true);
+        return;
+      }
+
+      var section = resolveRequestedDestination(key);
       if (!section) {
         return;
       }
@@ -1121,9 +1224,11 @@
     window.BVMGR_EVENT_PLAN_REVEAL_REQUESTED_SECTION = revealRequestedSection;
     window.BVMGR_EVENT_PLAN_OPEN_AND_FOCUS_SECTION = function (sectionKey, force) {
       var key = normalizeRequestedSectionKey(sectionKey);
-      var section = key ? form.querySelector('.vms-collapsible-section[data-section-key="' + cssEscapeValue(key) + '"]') : null;
+      if (key === 'workflow_publish') return openAndFocusWorkflowPublish(!!force);
+      var section = resolveRequestedDestination(key);
       return openAndFocusSection(section, !!force);
     };
+    window.BVMGR_EVENT_PLAN_OPEN_AND_FOCUS_WORKFLOW_PUBLISH = openAndFocusWorkflowPublish;
 
     shellController = {
       initCollapsibleSections: initCollapsibleSections
@@ -1171,10 +1276,12 @@
         if (openSectionButton) {
           event.preventDefault();
           var requestedKey = normalizeRequestedSectionKey(openSectionButton.dataset.vmsOpenSection || '');
-          var requestedSection = requestedKey
-            ? form.querySelector('.vms-collapsible-section[data-section-key="' + cssEscapeValue(requestedKey) + '"]')
-            : null;
-          if (requestedSection) openAndFocusSection(requestedSection, false);
+          var requestedSection = resolveRequestedDestination(requestedKey);
+          if (requestedKey === 'workflow_publish') {
+            openAndFocusWorkflowPublish(false);
+          } else if (requestedSection) {
+            openAndFocusSection(requestedSection, false);
+          }
           return;
         }
 

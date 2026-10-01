@@ -140,6 +140,7 @@
     try {
       const anchorMap = {
         ticketing_v2: 'vms_event_plan_ticketing_v2',
+        workflow_publish: 'vms-event-plan-workspace-status',
       };
       const nextUrl = new URL(window.location.href);
       nextUrl.searchParams.set('vms_ep_load_section', normalized);
@@ -151,6 +152,13 @@
     } catch (e) {
       return window.location.href;
     }
+  }
+
+  function completeV2CommitNavigation() {
+    setV2Msg('Sync complete. Opening Workflow / Publish…', 'success');
+    setBusyTitle(false);
+    persistRequestedSectionTarget('workflow_publish');
+    safeReload(0);
   }
 
   function maybeFocusEventPlanTicketingArea() {
@@ -1944,7 +1952,7 @@
           renderV2(normalized);
         }
         clearV2PreviewState();
-        setV2Note('Config is saved. Preview is read-only; Commit creates or updates the calendar event, tickets, and add-ons.', 'info');
+        applyV2AuthoritativeConfigState(res.data || {});
         if (!quiet) setV2Msg('Config saved.', 'success');
         document.dispatchEvent(new CustomEvent('vms:event-plan-section-save-result', {
           detail: { section: 'ticketing_v2', ok: true }
@@ -1971,6 +1979,51 @@
       + (severity ? (' ' + severity) : '')
       + (noteType ? (' is-' + noteType) : '');
     try { v2ConfigNote.setAttribute('aria-live', 'polite'); } catch (e) {}
+  }
+
+  function applyV2AuthoritativeConfigState(state) {
+    if (!v2Editor) return;
+    const data = (state && typeof state === 'object') ? state : {};
+    const flag = (key, fallback) => Object.prototype.hasOwnProperty.call(data, key)
+      ? (data[key] === true || String(data[key]) === '1')
+      : fallback;
+    const configExists = flag('config_exists', String(v2Editor.dataset.configExists || '0') === '1');
+    const ticketingEffective = flag('ticketing_effective', String(v2Editor.dataset.ticketingEffective || '0') === '1');
+    const phaseBAvailable = flag('phase_b_available', String(v2Editor.dataset.phaseBAvailable || '0') === '1');
+    const externalTicketing = flag('external_ticketing', String(v2Editor.dataset.externalTicketing || '0') === '1');
+    const previewAvailable = flag('preview_available', ticketingEffective && phaseBAvailable && !externalTicketing);
+    const mode = ['none', 'read_only', 'vms_managed'].includes(String(data.config_mode || ''))
+      ? String(data.config_mode)
+      : String((v2ModeSel && v2ModeSel.value) || v2Editor.dataset.configMode || 'read_only');
+
+    v2Editor.dataset.configExists = configExists ? '1' : '0';
+    v2Editor.dataset.configMode = mode;
+    v2Editor.dataset.ticketingEffective = ticketingEffective ? '1' : '0';
+    v2Editor.dataset.phaseBAvailable = phaseBAvailable ? '1' : '0';
+    v2Editor.dataset.externalTicketing = externalTicketing ? '1' : '0';
+    v2Editor.dataset.previewAvailable = previewAvailable ? '1' : '0';
+    if (v2ModeSel && ['none', 'read_only', 'vms_managed'].includes(mode)) v2ModeSel.value = mode;
+    if (v2PreviewBtn) v2PreviewBtn.disabled = !previewAvailable;
+    if (v2CommitBtn) v2CommitBtn.disabled = true;
+
+    if (!configExists && !ticketingEffective) {
+      setV2Note('No saved Ticketing config exists, and Ticketing is disabled for this Event Plan. Turn on “Tickets for this event”, save the section, then save the config.', 'error');
+    } else if (!configExists) {
+      setV2Note('No saved Ticketing config for this plan yet. Review the draft settings below and click “Save config”, or apply a template.', 'info');
+    } else if (!ticketingEffective) {
+      setV2Note('Config is saved, but Ticketing is disabled for this Event Plan. Turn on “Tickets for this event” and save before Preview.', 'error');
+    } else if (externalTicketing) {
+      setV2Note('Config is saved. External Ticketing is active, so native Preview and Commit are not needed.', 'info');
+    } else if (!phaseBAvailable) {
+      setV2Note('Config is saved, but Preview requires Event Tickets, Event Tickets Plus, and WooCommerce.', 'error');
+    } else if (mode === 'read_only') {
+      setV2Note('Config is saved in Read-only mode. Preview is available; switch to VMS-managed and save before Commit.', 'info');
+    } else if (mode === 'none') {
+      setV2Note('Config is saved with Mode set to None. Preview is available; Commit requires VMS-managed mode.', 'info');
+    } else {
+      setV2Note('Config is saved. Preview is available; Commit remains locked until a successful, unblocked Preview.', 'info');
+    }
+    updateV2CommitEnabled(false);
   }
 
   function stripDefaultSuffix(label) {
@@ -4501,16 +4554,12 @@ if (d.tec_event_id) {
             });
         }
       }
-      if (!handledAutoDefault) {
-        setV2Note('No saved Ticketing config for this plan yet. Pick a template or click “Initialize from legacy add-ons”.', 'info');
-      }
+      if (!handledAutoDefault) applyV2AuthoritativeConfigState({ config_exists: 0 });
     } else {
-      const hasCommit = !!(initialSync && typeof initialSync === 'object' && initialSync.last_commit);
-      if (!hasCommit) {
-        setV2Note('Config is saved. Preview is read-only; Commit creates or updates the calendar event, tickets, and add-ons.', 'info');
-      } else {
-        setV2Note('', '');
-      }
+      applyV2AuthoritativeConfigState({
+        config_exists: 1,
+        config_mode: String(v2Editor.dataset.configMode || initialCfg.mode || 'read_only'),
+      });
     }
 
     if (!renderedInitialEditor) {
@@ -4706,6 +4755,7 @@ if (d.tec_event_id) {
         renderV2(normalized);
       }
       clearV2PreviewState();
+      applyV2AuthoritativeConfigState(res.data || {});
       if (!o.quiet) {
         const successMsg = (o.successMsg && String(o.successMsg).trim()) ? String(o.successMsg).trim() : 'Config saved.';
         setV2Msg(successMsg, 'success');
@@ -4752,7 +4802,7 @@ if (d.tec_event_id) {
           clearGuardrail(v2TemplateGuardrailWrap);
           try { sessionStorage.removeItem('vms_v2_suppress_auto_default_' + planId); } catch (e) {}
           clearV2PreviewState();
-          setV2Note('No saved Ticketing config for this plan yet. Pick a template or click “Initialize from legacy add-ons”.', 'info');
+          applyV2AuthoritativeConfigState({ config_exists: 0 });
           setV2Msg('Config cleared.', 'success');
           v2TplClearBtn.disabled = false;
         })
@@ -4781,7 +4831,7 @@ if (d.tec_event_id) {
           renderV2(normalized);
           clearGuardrail(v2TemplateGuardrailWrap);
           clearV2PreviewState();
-          setV2Note('Config is saved. Preview is read-only; Commit creates or updates the calendar event, tickets, and add-ons.', 'info');
+          applyV2AuthoritativeConfigState(res.data || { config_exists: 1 });
           setV2Msg('Initialized from legacy add-ons.', 'success');
           v2InitLegacyBtn.disabled = false;
         })
@@ -5029,10 +5079,7 @@ if (d.tec_event_id) {
             return;
           }
 
-          setV2Msg('Sync complete. Reloading…', 'success');
-          setBusyTitle(false);
-          persistRequestedSectionTarget('ticketing_v2');
-          safeReload(0);
+          completeV2CommitNavigation();
         })
         .catch((e) => {
           const err = getAjaxFailurePayload(e, 'Commit failed.');

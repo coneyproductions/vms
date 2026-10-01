@@ -93,7 +93,7 @@ refundConfirmation.value = refundConfirmation.dataset.vmsInitialState;
 assert.equal(contract.sectionDirty(body), false, 'Discard/revert must clear transient cancellation intent.');
 
 const transientGuard = shell.indexOf("if (sectionTransientDirty(section.querySelector('.vms-collapsible-body'))) {");
-const nextNavigation = shell.indexOf('await openAndFocusSection(target, true);', transientGuard);
+const nextNavigation = shell.indexOf('await openAndFocusDestination(target, true);', transientGuard);
 assert.ok(transientGuard >= 0 && nextNavigation > transientGuard, 'Save & Continue must test transient intent before navigation.');
 assert.ok(shell.includes('window.location.reload();'), 'Discard Changes must reload authoritative saved state.');
 

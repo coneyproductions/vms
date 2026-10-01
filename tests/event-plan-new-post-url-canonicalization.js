@@ -129,7 +129,8 @@ async function exerciseSaveAndContinue() {
     'applyAuthoritativeDerivedState',
     'applyLockPayState',
     'applyCanonicalReadinessState',
-    'openAndFocusSection',
+    'statusRoot',
+    'openAndFocusDestination',
     'beginTransition',
     'endTransition',
     'var transitionNavigationAllowed = false;\n' +
@@ -151,6 +152,7 @@ async function exerciseSaveAndContinue() {
     (state) => { derivedRefreshes += 1; return state.post_id === 77; },
     () => true,
     () => true,
+    null,
     async (target) => { opened = target; scrolled = target.dataset.sectionKey; return true; },
     () => true,
     () => {}

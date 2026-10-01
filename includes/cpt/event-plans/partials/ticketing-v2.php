@@ -171,12 +171,13 @@ if (function_exists('bvmgr_event_plan_perf_log')) {
 $v2_lookup_trace = function_exists('bvmgr_event_plan_perf_span_start')
     ? bvmgr_event_plan_perf_span_start('event_plan_ticketing_v2_lookup', $plan_id, array('section' => 'ticketing_v2_lookup', 'linked_tec_event_id' => $linked_tec_id))
     : '';
-$can_phase_b = function_exists('bvmgr_ticketing_b_is_event_tickets_woo_available')
-    ? bvmgr_ticketing_b_is_event_tickets_woo_available()
-    : false;
 $cfg_v2 = function_exists('bvmgr_ticketing_v2_get_admin_config')
     ? bvmgr_ticketing_v2_get_admin_config($plan_id)
     : (function_exists('bvmgr_ticketing_v2_get_config') ? bvmgr_ticketing_v2_get_config($plan_id) : array());
+$ticketing_admin_state = function_exists('bvmgr_ticketing_v2_get_admin_config_state')
+    ? bvmgr_ticketing_v2_get_admin_config_state($plan_id)
+    : array();
+$can_phase_b = !empty($ticketing_admin_state['phase_b_available']);
 $sync_v2 = function_exists('bvmgr_ticketing_v2_get_sync') ? bvmgr_ticketing_v2_get_sync($plan_id) : array();
 $mode_v2 = is_array($cfg_v2) ? (string) ($cfg_v2['mode'] ?? 'read_only') : 'read_only';
 $sync_map_v2 = (is_array($sync_v2) && !empty($sync_v2['map']) && is_array($sync_v2['map'])) ? $sync_v2['map'] : array();
@@ -189,9 +190,7 @@ if (is_array($sync_v2) && !empty($sync_v2['last_commit']) && is_array($sync_v2['
         $last_commit_at = wp_date('Y-m-d H:i', $last_commit_ts, wp_timezone());
     }
 }
-$cfg_v2_exists = (function_exists('metadata_exists') && function_exists('bvmgr_ticketing_v2_k'))
-    ? (metadata_exists('post', $plan_id, bvmgr_ticketing_v2_k('config')) ? '1' : '0')
-    : '0';
+$cfg_v2_exists = !empty($ticketing_admin_state['config_exists']) ? '1' : '0';
 $templates_v2 = function_exists('bvmgr_ticketing_v2_templates_get_all') ? bvmgr_ticketing_v2_templates_get_all() : array();
 $default_tpl_id = function_exists('bvmgr_ticketing_v2_get_default_template_id') ? bvmgr_ticketing_v2_get_default_template_id() : '';
 $default_tpl_name = '';
@@ -201,7 +200,7 @@ if ($default_tpl_id && !empty($templates_v2[$default_tpl_id]) && is_array($templ
 $settings = (array) get_option('vms_settings', array());
 $global_ticketing_default = !empty($settings['ticketing_enabled_default']);
 $ticketing_override = (string) get_post_meta($plan_id, '_vms_ticketing_enabled_override', true);
-$ticketing_effective = function_exists('bvmgr_event_plan_is_ticketing_enabled') ? bvmgr_event_plan_is_ticketing_enabled($plan_id) : $global_ticketing_default;
+$ticketing_effective = !empty($ticketing_admin_state['ticketing_effective']);
 $ticketing_global_label = $global_ticketing_default ? __('ON', 'backstage-venue-manager') : __('OFF', 'backstage-venue-manager');
 $ticket_ui_settings = (array) get_option('vms_settings', array());
 $ticket_ui_global_layout = isset($ticket_ui_settings['ticket_ui_layout']) ? sanitize_key((string) $ticket_ui_settings['ticket_ui_layout']) : 'classic';
@@ -243,7 +242,7 @@ $ticket_ui_sale_availability_display_override = sanitize_key((string) get_post_m
 if (!in_array($ticket_ui_sale_availability_display_override, array('', 'when_capped', 'low', 'hide'), true)) {
     $ticket_ui_sale_availability_display_override = '';
 }
-$preview_disabled = (!$ticketing_effective || !$can_phase_b);
+$preview_disabled = empty($ticketing_admin_state['preview_available']);
 $stats_computed_ts = (is_array($ticket_stats) && isset($ticket_stats['computed_at_gmt'])) ? absint($ticket_stats['computed_at_gmt']) : 0;
 $stats_stale_after_commit = ($last_commit_ts > 0 && $stats_computed_ts < $last_commit_ts);
 $recon_v2 = array();
@@ -478,7 +477,7 @@ if (function_exists('wp_enqueue_media')) {
         <?php endif; ?>
     </div>
 
-    <div id="vms-ticketing-v2-editor" data-initial-config="<?php echo esc_attr(wp_json_encode($cfg_v2)); ?>" data-initial-sync="<?php echo esc_attr(wp_json_encode($sync_v2)); ?>" data-tec-event-id="<?php echo (int) $linked_tec_id; ?>" data-plan-id="<?php echo (int) $plan_id; ?>" data-config-exists="<?php echo esc_attr($cfg_v2_exists); ?>" data-default-template-id="<?php echo esc_attr($default_tpl_id); ?>" data-default-template-name="<?php echo esc_attr($default_tpl_name); ?>" data-ticketing-effective="<?php echo $ticketing_effective ? 1 : 0; ?>" data-plan-image-id="<?php echo esc_attr((string) $plan_image_id); ?>" data-plan-image-url="<?php echo esc_attr($plan_image_url); ?>"></div>
+    <div id="vms-ticketing-v2-editor" data-initial-config="<?php echo esc_attr(wp_json_encode($cfg_v2)); ?>" data-initial-sync="<?php echo esc_attr(wp_json_encode($sync_v2)); ?>" data-tec-event-id="<?php echo (int) $linked_tec_id; ?>" data-plan-id="<?php echo (int) $plan_id; ?>" data-config-exists="<?php echo esc_attr($cfg_v2_exists); ?>" data-config-mode="<?php echo esc_attr((string) ($ticketing_admin_state['config_mode'] ?? $mode_v2)); ?>" data-default-template-id="<?php echo esc_attr($default_tpl_id); ?>" data-default-template-name="<?php echo esc_attr($default_tpl_name); ?>" data-ticketing-effective="<?php echo $ticketing_effective ? 1 : 0; ?>" data-phase-b-available="<?php echo $can_phase_b ? 1 : 0; ?>" data-external-ticketing="<?php echo !empty($ticketing_admin_state['external_ticketing']) ? 1 : 0; ?>" data-preview-available="<?php echo !$preview_disabled ? 1 : 0; ?>" data-plan-image-id="<?php echo esc_attr((string) $plan_image_id); ?>" data-plan-image-url="<?php echo esc_attr($plan_image_url); ?>"></div>
 
     <p>
         <button type="button" class="button button-secondary" id="vms-ticketing-v2-save-config-btn"><?php esc_html_e('Save config', 'backstage-venue-manager'); ?></button>

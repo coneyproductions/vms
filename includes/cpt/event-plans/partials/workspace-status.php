@@ -3,13 +3,17 @@
     id="vms-event-plan-workspace-status"
     class="vms-ep-workspace-status"
     data-vms-workspace-status
+    data-vms-workflow-publish-destination
+    data-vms-workflow-destination-label="<?php esc_attr_e('Workflow / Publish', 'backstage-venue-manager'); ?>"
     data-vms-workflow-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
     data-vms-workflow-nonce="<?php echo esc_attr(wp_create_nonce('bvmgr_event_plan_workflow_action')); ?>"
     data-vms-section-save-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
     data-vms-section-save-nonce="<?php echo esc_attr(wp_create_nonce('bvmgr_event_plan_section_save')); ?>"
     data-vms-plan-id="<?php echo (int) $post->ID; ?>"
     data-vms-calendar-state="<?php echo esc_attr((string) ($workspace_status['calendar_key'] ?? 'not_published')); ?>"
+    tabindex="-1"
 >
+    <h2 class="vms-ep-workspace-status__title"><?php esc_html_e('Workflow / Publish', 'backstage-venue-manager'); ?></h2>
     <div class="vms-ep-workspace-status__facts">
         <span><strong><?php esc_html_e('Plan', 'backstage-venue-manager'); ?>:</strong> <?php echo esc_html((string) ($workspace_status['workflow_label'] ?? '')); ?></span>
         <span><strong><?php esc_html_e('Calendar', 'backstage-venue-manager'); ?>:</strong> <?php echo esc_html((string) ($workspace_status['calendar_label'] ?? '')); ?></span>

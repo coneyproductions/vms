@@ -46,14 +46,14 @@ try {
     $assert(substr_count($schedule, "esc_html_e('Public lineup'") >= 2, 'Supporting rows and their template must label public visibility clearly.');
     $assert(substr_count($schedule, "esc_html_e('Vendor portal'") >= 2, 'Supporting rows and their template must label portal visibility clearly.');
 
-    $sequence = "['basics', 'schedule', 'compensation', 'secondary_vendors', 'staff', 'ticketing_v2', 'readiness_details']";
+    $sequence = "['basics', 'schedule', 'compensation', 'secondary_vendors', 'staff', 'ticketing_v2', 'workflow_publish']";
     $assert(strpos($shell, $sequence) !== false, 'Save & Continue must follow the requested guided sequence.');
     $assert(strpos($sequence, 'cancellation') === false, 'Cancellation must not be part of the guided sequence.');
     $continuePos = strpos($shell, 'Save &amp; Continue');
     $savePos = strpos($shell, '>Save Changes</button>', $continuePos);
     $discardPos = strpos($shell, '>Discard Changes</button>', $savePos);
     $assert($continuePos !== false && $savePos > $continuePos && $discardPos > $savePos, 'Section actions must order Save & Continue, Save Changes, then Discard Changes.');
-    $assert(strpos($shell, 'await openAndFocusSection(target, true);') !== false, 'Successful Save & Continue and dirty Save & Open must use the canonical open-and-focus path.');
+    $assert(strpos($shell, 'await openAndFocusDestination(target, true);') !== false, 'Successful Save & Continue and dirty Save & Open must use the canonical destination-aware open-and-focus path.');
 
     foreach (array('days_after', 'fixed_date', 'custom') as $timing) {
         $assert(strpos($compensation, 'data-vms-final-payment-timing="' . $timing . '"') !== false, 'Missing conditional final-payment timing field: ' . $timing);

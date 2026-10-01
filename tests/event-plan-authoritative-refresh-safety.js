@@ -111,7 +111,8 @@ async function exerciseUrl(url, target) {
     'applyAuthoritativeDerivedState',
     'applyLockPayState',
     'applyCanonicalReadinessState',
-    'openAndFocusSection',
+    'statusRoot',
+    'openAndFocusDestination',
     'beginTransition',
     'endTransition',
     'var transitionNavigationAllowed = false;\n' +
@@ -133,6 +134,7 @@ async function exerciseUrl(url, target) {
     (state) => state.post_id === 77,
     () => true,
     () => true,
+    null,
     async (destination) => { opened = destination; scrolled = destination.dataset.sectionKey; return true; },
     () => true,
     () => {}

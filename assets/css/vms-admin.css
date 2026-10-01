@@ -4575,6 +4575,17 @@ body.post-type-vms_event_plan .vms-ep-workspace-status[data-vms-calendar-state="
   border-left-color: #b32d2e;
 }
 
+body.post-type-vms_event_plan .vms-ep-workspace-status:focus {
+  outline: 2px solid #2271b1;
+  outline-offset: 2px;
+}
+
+body.post-type-vms_event_plan .vms-ep-workspace-status__title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 1.3;
+}
+
 body.post-type-vms_event_plan .vms-ep-workspace-status__facts {
   display: flex;
   flex-wrap: wrap;

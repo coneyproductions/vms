@@ -3215,6 +3215,34 @@ function bvmgr_ticketing_v2_get_saved_config(int $plan_id): array {
     return bvmgr_ticketing_v2_hydrate_legacy_primary_ticket_image(bvmgr_ticketing_v2_normalize_config($raw, $plan_id), $plan_id);
 }
 
+function bvmgr_ticketing_v2_get_admin_config_state(int $plan_id): array {
+    $plan_id = absint($plan_id);
+    $saved_config = $plan_id > 0 ? bvmgr_ticketing_v2_get_saved_config($plan_id) : array();
+    $config_exists = !empty($saved_config);
+    $effective_config = $config_exists ? $saved_config : bvmgr_ticketing_v2_get_config($plan_id);
+    $mode = sanitize_key((string) ($effective_config['mode'] ?? 'read_only'));
+    if (!in_array($mode, array('none', 'read_only', 'vms_managed'), true)) {
+        $mode = 'read_only';
+    }
+
+    $ticketing_effective = $plan_id > 0
+        && function_exists('bvmgr_event_plan_is_ticketing_enabled')
+        && bvmgr_event_plan_is_ticketing_enabled($plan_id);
+    $phase_b_available = bvmgr_ticketing_b_is_event_tickets_woo_available();
+    $external_ticketing = $plan_id > 0
+        && function_exists('bvmgr_event_plan_is_externally_ticketed')
+        && bvmgr_event_plan_is_externally_ticketed($plan_id);
+
+    return array(
+        'config_exists' => $config_exists ? 1 : 0,
+        'config_mode' => $mode,
+        'ticketing_effective' => $ticketing_effective ? 1 : 0,
+        'phase_b_available' => $phase_b_available ? 1 : 0,
+        'external_ticketing' => $external_ticketing ? 1 : 0,
+        'preview_available' => ($ticketing_effective && $phase_b_available && !$external_ticketing) ? 1 : 0,
+    );
+}
+
 function bvmgr_ticketing_v2_normalize_sales_window_value(string $value): string {
     $value = trim((string) $value);
     if ($value === '') {
@@ -12277,7 +12305,7 @@ function bvmgr_ticketing_v2_ajax_save_config(): void {
     $handler_elapsed_ms = (int) round((microtime(true) - $handler_entered_at) * 1000);
     $return_config = !empty($_POST['return_config']);
 
-    $response = array(
+    $response = array_merge(array(
         'config_hash' => $after_hash,
         'config_changed' => $config_changed,
         'had_saved_config' => $had_saved_config,
@@ -12290,7 +12318,7 @@ function bvmgr_ticketing_v2_ajax_save_config(): void {
         'raw_config_bytes' => $raw_config_bytes,
         'fast_response' => true,
         'minimal_response' => !$return_config,
-    );
+    ), bvmgr_ticketing_v2_get_admin_config_state($plan_id));
 
     if ($return_config) {
         $response['config'] = $cfg;

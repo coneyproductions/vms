@@ -70,9 +70,14 @@ if (!function_exists('bvmgr_admin_ui_enqueue_assets')) {
 		if ($is_event_plan_screen) {
 			$event_plan_shell_version = bvmgr_admin_ui_local_asset_version('assets/js/vms-event-plan-shell.js');
 			$event_plan_admin_style_version = bvmgr_admin_ui_local_asset_version('assets/css/vms-admin.css');
+			$event_plan_ticketing_version = bvmgr_admin_ui_local_asset_version('assets/admin-ticketing.js');
 			$registered_styles = wp_styles();
 			if (isset($registered_styles->registered['bvmgr-admin'])) {
 				$registered_styles->registered['bvmgr-admin']->ver = $event_plan_admin_style_version;
+			}
+			$registered_scripts = wp_scripts();
+			if (isset($registered_scripts->registered['bvmgr-admin-ticketing'])) {
+				$registered_scripts->registered['bvmgr-admin-ticketing']->ver = $event_plan_ticketing_version;
 			}
 
 			wp_enqueue_script(

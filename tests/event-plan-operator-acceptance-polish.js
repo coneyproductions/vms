@@ -52,10 +52,13 @@ const sectionMap = {};
 ['basics', 'schedule', 'compensation', 'secondary_vendors', 'staff', 'ticketing_v2', 'readiness_details', 'cancellation'].forEach((key) => {
   sectionMap[key] = { dataset: { sectionKey: key } };
 });
+const workflowPublish = { dataset: { vmsWorkflowDestinationLabel: 'Workflow / Publish' } };
 const navigationFactory = new Function(
   'form',
+  'statusRoot',
   'cssEscapeValue',
   'continuationSectionOrder',
+  'resolveRequestedDestination',
   extractFunction(shell, 'nextWorkflowSection') + '\nreturn nextWorkflowSection;'
 );
 const nextWorkflowSection = navigationFactory(
@@ -65,11 +68,13 @@ const nextWorkflowSection = navigationFactory(
       return match ? sectionMap[match[1]] || null : null;
     },
   },
+  workflowPublish,
   (value) => value,
-  ['basics', 'schedule', 'compensation', 'secondary_vendors', 'staff', 'ticketing_v2', 'readiness_details']
+  ['basics', 'schedule', 'compensation', 'secondary_vendors', 'staff', 'ticketing_v2', 'workflow_publish'],
+  (key) => key === 'workflow_publish' ? workflowPublish : sectionMap[key] || null
 );
 assert.equal(nextWorkflowSection(sectionMap.basics), sectionMap.schedule, 'Event Details continues to Schedule.');
-assert.equal(nextWorkflowSection(sectionMap.ticketing_v2), sectionMap.readiness_details, 'Ticketing continues to Readiness/Review.');
+assert.equal(nextWorkflowSection(sectionMap.ticketing_v2), workflowPublish, 'Ticketing continues to Workflow / Publish.');
 assert.equal(nextWorkflowSection(sectionMap.cancellation), null, 'Cancellation is excluded from normal continuation.');
 
 function select(value) {
