@@ -71,6 +71,7 @@ require_once __DIR__ . '/staffing-lifecycle.php';
 require_once __DIR__ . '/staffing-financial.php';
 require_once __DIR__ . '/staffing-lifecycle-ui.php';
 require_once __DIR__ . '/../db/staffing-lifecycle.php';
+require_once __DIR__ . '/../db/staffing-detached-history.php';
 
 if (defined('WP_CLI') && WP_CLI) {
 	require_once __DIR__ . '/cli/stale-check.php';

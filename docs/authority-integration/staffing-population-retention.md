@@ -57,6 +57,36 @@ than claiming these obsolete values can be reconstructed from current data.
   representable contract and tests first. Existing-plan canceled slots, terminal
   assignment history, audit-only references and trash are already supported.
 
+### Detached-history retirement
+
+`bvmgr_staffing_detached_history_preview()` and the explicitly administrator-run
+`bvmgr_staffing_retire_detached_history()` provide a narrow compatibility path
+for retained historical rows whose operational Event Plan/slot relationship no
+longer exists. This is maintenance only. It never runs during boot, activation,
+Event Plan deletion, or lifecycle migration, and it does not make arbitrary
+broken references acceptable to lifecycle preflight.
+
+Each eligible assignment, slot, or derived rollup is copied first into a distinct
+immutable `detached_history_archive` Staffing audit row in the same serializable
+transaction. The archive stores the source table/domain, primary and referenced
+identities, every original column and value, the exact source column definitions,
+null/empty distinctions, a deterministic SHA-256, batch/actor/time/reason data,
+source audit IDs where available, and its evidence classification. Only after
+the archive is read back and verified is the operational row removed. A failure
+rolls back both the archives and deletes; a repeated batch detects the archived
+source identities instead of creating a second history.
+
+Initial eligibility is deliberately conservative: Proposed assignments require a
+wholly absent Event Plan; Canceled assignments require a broken slot relationship
+and unambiguous historical Event Plan context; the Staff post must remain valid;
+and no actual-work or registered payroll/payment dependency may exist. Confirmed,
+unknown, worked, or paid records require separate review. Slots and derived
+rollups may retire only when every dependent assignment/slot is absent or retires
+in the same batch. Synthetic Event Plans, slots, status rewrites, and guessed
+relationship repairs remain prohibited. Retirement preserves history in audit;
+it is not deletion of historical evidence and is never described as a current
+Staffing assignment.
+
 ## September 6 population evidence
 
 Fresh Local inventory: 165 active slots across 55 absent plans, each with roles
