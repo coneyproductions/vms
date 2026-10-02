@@ -52,5 +52,9 @@ $source = (string) file_get_contents(dirname(__DIR__) . '/includes/admin/event-c
 foreach (array('setup_venue_missing', 'setup_date_missing', 'setup_primary_missing') as $code) {
     $assert(strpos($source, "'code' => '" . $code . "'") !== false, 'Missing setup alert code: ' . $code);
 }
+$moduleHubHelp = 'At-a-glance module summaries stay visible here while each heavy workspace can be managed without turning every Event Plan update into a full rebuild.';
+$assert(substr_count($source, $moduleHubHelp) === 1, 'Module Hub explanation should remain available exactly once as help text.');
+$assert(strpos($source, "bvmgr_help_icon(\n                __('" . $moduleHubHelp) !== false, 'Module Hub explanation should use the standard BVM help icon.');
+$assert(strpos($source, "echo '<p>' . esc_html__('" . $moduleHubHelp) === false, 'Module Hub explanation should not remain as permanent paragraph copy.');
 
 echo "Event Command Center new-plan health passed {$checks} assertions.\n";

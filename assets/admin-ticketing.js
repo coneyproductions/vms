@@ -170,14 +170,20 @@
 
     const ticketingBox = document.getElementById('vms_event_plan_ticketing_v2');
     if (!ticketingBox || ticketingBox.dataset.vmsTicketingFocusHandled === '1') return;
+
+    if (document.readyState !== 'complete') {
+      window.addEventListener('load', maybeFocusEventPlanTicketingArea, { once: true });
+      return;
+    }
+
+    if (typeof window.BVMGR_EVENT_PLAN_OPEN_AND_FOCUS_SECTION !== 'function') return;
     ticketingBox.dataset.vmsTicketingFocusHandled = '1';
 
-    window.setTimeout(() => {
-      try { ticketingBox.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { try { ticketingBox.scrollIntoView(); } catch (err) {} }
+    Promise.resolve(window.BVMGR_EVENT_PLAN_OPEN_AND_FOCUS_SECTION('ticketing_v2', true)).then(() => {
       const focusTarget = ticketingBox.querySelector('#vms-ticketing-v2-source .button, #vms-ticketing-v2-source select, #vms-ticketing-v2-source input, #vms-ticketing-v2-source textarea, #vms-ticketing-v2-source a');
       if (!focusTarget || typeof focusTarget.focus !== 'function') return;
       try { focusTarget.focus({ preventScroll: true }); } catch (e) { try { focusTarget.focus(); } catch (err) {} }
-    }, 150);
+    });
   }
 
   if (document.readyState === 'loading') {

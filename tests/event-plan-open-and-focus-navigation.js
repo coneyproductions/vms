@@ -36,6 +36,35 @@ const openAndFocus = factory(
   (section) => calls.push(['scroll', section.dataset.sectionKey])
 );
 
+function createPersistController(initialUrl, fullTicketingEditorPresent) {
+  const window = {
+    location: { href: initialUrl },
+    history: {
+      replaceState(state, title, nextUrl) {
+        window.location.href = String(nextUrl || '');
+      },
+    },
+  };
+  const document = {
+    getElementById(id) {
+      return id === 'vms-ticketing-v2-editor' && fullTicketingEditorPresent ? {} : null;
+    },
+  };
+  const persist = new Function(
+    'window',
+    'document',
+    'normalizeRequestedSectionKey',
+    'resolveAnchorIdForSection',
+    extractFunction('persistRequestedSection') + '\nreturn persistRequestedSection;'
+  )(
+    window,
+    document,
+    (key) => String(key || ''),
+    (key) => key === 'ticketing_v2' ? 'vms_event_plan_ticketing_v2' : 'vms-event-plan-' + key
+  );
+  return { persist, window };
+}
+
 (async () => {
   const destinations = ['basics', 'schedule', 'compensation', 'secondary_vendors', 'staff', 'ticketing_v2', 'readiness_details', 'cancellation'];
   for (const key of destinations) {
@@ -49,6 +78,55 @@ const openAndFocus = factory(
       ['scroll', key],
     ], key + ' follows the same open, settle, and scroll path.');
   }
+
+  const summaryController = createPersistController(
+    'https://serenaderange.local/wp-admin/post.php?post=16531&action=edit',
+    false
+  );
+  const summaryUrl = summaryController.persist('ticketing_v2');
+  assert.equal(
+    summaryUrl,
+    'https://serenaderange.local/wp-admin/post.php?post=16531&action=edit#vms_event_plan_ticketing_v2',
+    'Opening the Ticketing summary preserves its anchor without falsely recording the full-editor server trigger.'
+  );
+  assert.equal(
+    new URL(summaryController.window.location.href).searchParams.has('vms_ep_load_section'),
+    false,
+    'The Ticketing summary URL remains different from the full-editor loader URL.'
+  );
+
+  const staleSummaryController = createPersistController(
+    'https://serenaderange.local/wp-admin/post.php?post=16531&action=edit&vms_ep_load_section=ticketing_v2#vms_event_plan_ticketing_v2',
+    false
+  );
+  staleSummaryController.persist('ticketing_v2');
+  assert.equal(
+    new URL(staleSummaryController.window.location.href).searchParams.has('vms_ep_load_section'),
+    false,
+    'A summary-only document removes a stale Ticketing full-editor trigger from browser history.'
+  );
+
+  const fullEditorController = createPersistController(
+    'https://serenaderange.local/wp-admin/post.php?post=16531&action=edit&vms_ep_load_section=ticketing_v2',
+    true
+  );
+  fullEditorController.persist('ticketing_v2');
+  assert.equal(
+    new URL(fullEditorController.window.location.href).searchParams.get('vms_ep_load_section'),
+    'ticketing_v2',
+    'A genuinely rendered full Ticketing editor retains its server-render trigger.'
+  );
+
+  const scheduleController = createPersistController(
+    'https://serenaderange.local/wp-admin/post.php?post=16531&action=edit',
+    false
+  );
+  scheduleController.persist('schedule');
+  assert.equal(
+    new URL(scheduleController.window.location.href).searchParams.get('vms_ep_load_section'),
+    'schedule',
+    'Unrelated Event Plan sections retain normal requested-section persistence.'
+  );
 
   assert.match(source, /await openAndFocusDestination\(target, true\);/, 'Save & Continue and dirty Save & Open use the shared destination-aware open-and-focus path.');
   assert.match(source, /openAndFocusSection\(section, true\);/, 'Requested section reveal uses open-and-focus.');

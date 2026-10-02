@@ -239,7 +239,13 @@
       }
 
       var nextUrl = new URL(window.location.href);
-      nextUrl.searchParams.set('vms_ep_load_section', normalized);
+      var ticketingSummaryOnly = normalized === 'ticketing_v2'
+        && !document.getElementById('vms-ticketing-v2-editor');
+      if (ticketingSummaryOnly) {
+        nextUrl.searchParams.delete('vms_ep_load_section');
+      } else {
+        nextUrl.searchParams.set('vms_ep_load_section', normalized);
+      }
       var anchorId = resolveAnchorIdForSection(normalized);
       nextUrl.hash = anchorId ? ('#' + anchorId) : '';
       if (window.history && typeof window.history.replaceState === 'function') {

@@ -2524,8 +2524,14 @@ if (!function_exists('bvmgr_event_command_center_render_event_plan_module_hub_me
         echo '<div class="vms-ep-module-hub">';
         echo '<div class="vms-ep-module-hub__intro">';
         echo '<div>';
-        echo '<h3>' . esc_html__('Event Plan Module Hub', 'backstage-venue-manager') . '</h3>';
-        echo '<p>' . esc_html__('At-a-glance module summaries stay visible here while each heavy workspace can be managed without turning every Event Plan update into a full rebuild.', 'backstage-venue-manager') . '</p>';
+        echo '<h3>' . esc_html__('Event Plan Module Hub', 'backstage-venue-manager');
+        if (function_exists('bvmgr_help_icon')) {
+            bvmgr_help_icon(
+                __('At-a-glance module summaries stay visible here while each heavy workspace can be managed without turning every Event Plan update into a full rebuild.', 'backstage-venue-manager'),
+                __('Event Plan Module Hub help', 'backstage-venue-manager')
+            );
+        }
+        echo '</h3>';
         echo '</div>';
         echo '<div class="vms-ep-module-hub__intro-actions">';
         /* translators: %s: current command center health label. */

@@ -43,10 +43,13 @@ try {
 	$assert(strpos($ticketingAssetSource, "document.getElementById('vms_event_plan_ticketing_v2')") !== false, 'admin-ticketing.js should target the existing Event Plan ticketing wrapper.');
 	$assert(strpos($ticketingAssetSource, "ticketingBox.dataset.vmsTicketingFocusHandled === '1'") !== false, 'admin-ticketing.js should guard against duplicate ticketing-focus execution.');
 	$assert(strpos($ticketingAssetSource, "ticketingBox.querySelector('#vms-ticketing-v2-source .button, #vms-ticketing-v2-source select, #vms-ticketing-v2-source input, #vms-ticketing-v2-source textarea, #vms-ticketing-v2-source a')") !== false, 'admin-ticketing.js should preserve the existing ticketing focus target selector.');
-	$assert(strpos($ticketingAssetSource, "ticketingBox.scrollIntoView({ behavior: 'smooth', block: 'start' })") !== false, 'admin-ticketing.js should preserve the passive ticketing scroll behavior.');
+	$assert(strpos($ticketingAssetSource, "window.BVMGR_EVENT_PLAN_OPEN_AND_FOCUS_SECTION('ticketing_v2', true)") !== false, 'admin-ticketing.js should delegate post-load Ticketing positioning to the shared stable-layout focus path.');
+	$assert(strpos($ticketingAssetSource, "window.addEventListener('load', maybeFocusEventPlanTicketingArea, { once: true });") !== false, 'Ticketing focus should wait for the completed page layout.');
+	$assert(strpos($ticketingAssetSource, 'ticketingBox.scrollIntoView') === false, 'Ticketing focus should not compete with the shared offset-aware scroll path.');
 	$assert(strpos($ticketingAssetSource, "focusTarget.focus({ preventScroll: true })") !== false, 'admin-ticketing.js should preserve the deferred focus behavior.');
 	$assert(strpos($ticketingAssetSource, "document.addEventListener('DOMContentLoaded', maybeFocusEventPlanTicketingArea, { once: true });") !== false, 'admin-ticketing.js should initialize safely when DOM readiness is still pending.');
 	$assert(strpos($ticketingAssetSource, 'maybeFocusEventPlanTicketingArea();') !== false, 'admin-ticketing.js should run the migrated helper immediately when the DOM is already ready.');
+	$assert(strpos($eventPlansSource, "\$this->get_event_plan_admin_section_url(\$plan_id, 'ticketing_v2', 'vms_event_plan_ticketing_v2')") !== false, 'The full Ticketing editor loader URL must retain the Ticketing metabox fragment.');
 
 	$helperMatches = array();
 	preg_match('/function maybeFocusEventPlanTicketingArea\\(\\) \\{([\\s\\S]*?)\\n  \\}/', $ticketingAssetSource, $helperMatches);

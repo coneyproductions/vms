@@ -400,6 +400,18 @@
     justify-self: end !important;
     font-size: 20px !important;
   }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls.vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-side {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    column-gap: 12px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls.vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-note {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+  }
 }
 
 /* 0.2.24.623: Mobile qualified-ticket claim copy/layout simplification. */
