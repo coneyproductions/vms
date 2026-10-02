@@ -102,7 +102,7 @@ foreach (array_unique(array_merge(array_keys($baseline), array_keys($current))) 
 ksort($changes, SORT_STRING);
 
 $authority = array(
-	'runtime_authority' => '0ca4eb0e505f26e16348b20cbfd54243c241ad80',
+	'runtime_authority' => '1439daa5efa3840ef3bcc2c38399bab56652c0b0',
 	'frozen_manifest_commit' => '85a1a16',
 	'scope' => 'Certified unified source declaration and retained-literal authority. Generated deterministically from the frozen migration manifest plus the certified current runtime; historical migration certificates remain immutable.',
 	'symbol_changes' => $changes,
