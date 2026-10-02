@@ -4992,11 +4992,48 @@ class BVMGR_Admin_Event_Plans
         );
     }
 
+    private function build_event_plan_readiness_refresh_state(int $post_id, array $readiness_payload = array()): array
+    {
+        if (empty($readiness_payload)) {
+            unset($this->event_plan_admin_boot_cache[$post_id]);
+            $readiness_payload = $this->build_event_plan_readiness_details_response_payload($post_id);
+        }
+        $detail_context = isset($readiness_payload['detail_context']) && is_array($readiness_payload['detail_context'])
+            ? $readiness_payload['detail_context']
+            : array();
+        $readiness_boot_summary = isset($detail_context['readiness_boot_summary']) && is_array($detail_context['readiness_boot_summary'])
+            ? $detail_context['readiness_boot_summary']
+            : array();
+        $blocking_count = absint($readiness_boot_summary['blocking_issue_count'] ?? 0);
+        $warning_count = absint($readiness_boot_summary['secondary_vendor_warning_count'] ?? 0);
+        $state = bvmgr_event_plan_readiness_response_state($post_id);
+        $workspace_status = bvmgr_event_plan_workspace_status($post_id, array(
+            'blocking_issue_count' => $blocking_count,
+        ));
+        $workflow_status = sanitize_key((string) ($workspace_status['workflow_status'] ?? 'draft'));
+
+        $state['warning_count'] = $warning_count;
+        $state['warning_label'] = sprintf(
+            /* translators: %d: number of readiness warnings. */
+            _n('%d warning', '%d warnings', $warning_count, 'backstage-venue-manager'),
+            $warning_count
+        );
+        $state['has_details'] = ($blocking_count > 0 || $warning_count > 0) ? 1 : 0;
+        $state['details_html'] = is_string($readiness_payload['html'] ?? null) ? (string) $readiness_payload['html'] : '';
+        $state['workflow_status'] = $workflow_status;
+        $state['mark_ready_enabled'] = ($workflow_status === 'draft' && $blocking_count === 0) ? 1 : 0;
+        $state['publish_enabled'] = (
+            in_array($workflow_status, array('ready', 'published'), true)
+            && $blocking_count === 0
+            && empty($workspace_status['publishing'])
+            && empty($workspace_status['retry_allowed'])
+        ) ? 1 : 0;
+
+        return $state;
+    }
+
     private function render_event_plan_readiness_details_response_html(array $detail_context): string
     {
-        $summary_rows = isset($detail_context['summary_rows']) && is_array($detail_context['summary_rows'])
-            ? $detail_context['summary_rows']
-            : array();
         $warning_items = isset($detail_context['warning_items']) && is_array($detail_context['warning_items'])
             ? $detail_context['warning_items']
             : array();
@@ -5017,7 +5054,6 @@ class BVMGR_Admin_Event_Plans
             : array();
         $html = '<div class="vms-ep-card vms-ep-card--white vms-ep-card--readiness-details">';
         $html .= '<p class="description">' . esc_html((string) ($detail_context['status_label'] ?? __('No Mark Ready blockers', 'backstage-venue-manager'))) . '</p>';
-        $html .= $this->render_event_plan_readiness_details_summary_rows_html($summary_rows);
         $html .= $this->render_event_plan_readiness_details_warning_notice_html($warning_items);
         $html .= '<p class="description">' . $this->render_event_plan_readiness_details_linked_tec_text($linked_tec_summary) . '</p>';
         $html .= '<p class="description">' . $this->render_event_plan_readiness_details_ticketing_text($ticketing_summary, $add_on_summary) . '</p>';
@@ -5073,7 +5109,7 @@ class BVMGR_Admin_Event_Plans
         }
 
         $html = '<div class="notice notice-warning inline vms-notice vms-notice--warning"><p><strong>'
-            . esc_html__('Current warning details', 'backstage-venue-manager')
+            . esc_html__('Current readiness reasons', 'backstage-venue-manager')
             . '</strong></p><ul>';
         foreach ($warning_texts as $warning_text) {
             $html .= '<li>' . esc_html($warning_text) . '</li>';
@@ -5377,6 +5413,7 @@ class BVMGR_Admin_Event_Plans
                 wp_send_json_success(array(
                     'html' => $html,
                     'section' => $section,
+                    'readiness_state' => $this->build_event_plan_readiness_refresh_state($post_id, $readiness_payload),
                 ));
             }
 
@@ -5597,7 +5634,7 @@ class BVMGR_Admin_Event_Plans
         // Ticketing Save Config has a second, isolated authority that completes
         // after this scoped response. Leave its readiness refresh to Ticketing.
         if ($scope !== 'ticketing_v2') {
-            $response['readiness_state'] = bvmgr_event_plan_readiness_response_state($post_id);
+            $response['readiness_state'] = $this->build_event_plan_readiness_refresh_state($post_id);
         }
         if ($scope === 'basics') {
             $bundle = $this->get_event_plan_meta_bundle($post_id);
@@ -10184,6 +10221,16 @@ class BVMGR_Admin_Event_Plans
         $vms_readiness_warning_items = isset($vms_readiness_summary_context['warning_items']) && is_array($vms_readiness_summary_context['warning_items'])
             ? $vms_readiness_summary_context['warning_items']
             : array();
+        $vms_readiness_blocking_count = absint($readiness_boot_summary['blocking_issue_count'] ?? 0);
+        $vms_readiness_warning_count = absint($readiness_boot_summary['secondary_vendor_warning_count'] ?? 0);
+        $vms_readiness_has_details = $vms_readiness_blocking_count > 0 || $vms_readiness_warning_count > 0;
+        $vms_readiness_details_html = '';
+        if ($vms_readiness_has_details && !$vms_readiness_lazy_enabled) {
+            $vms_readiness_details_payload = $this->build_event_plan_readiness_details_response_payload((int) $post->ID);
+            $vms_readiness_details_html = is_string($vms_readiness_details_payload['html'] ?? null)
+                ? (string) $vms_readiness_details_payload['html']
+                : '';
+        }
     ?>
     <?php if (function_exists('bvmgr_event_plan_perf_memory_checkpoint')) {
         bvmgr_event_plan_perf_memory_checkpoint((int) $post->ID, 'readiness_summary_before', array(
@@ -10205,9 +10252,9 @@ class BVMGR_Admin_Event_Plans
                 <?php endforeach; ?>
             </ul>
         <?php endif; ?>
-        <?php if (!empty($vms_readiness_warning_items)) : ?>
+		<?php if ($vms_readiness_warning_count > 0) : ?>
 	            <?php /* translators: %d: number of readiness warnings. */ ?>
-	            <p class="description"><?php echo esc_html(sprintf(_n('%d warning needs attention. Expand Readiness details below for the full list.', '%d warnings need attention. Expand Readiness details below for the full list.', count($vms_readiness_warning_items), 'backstage-venue-manager'), count($vms_readiness_warning_items))); ?></p>
+	            <p class="description"><?php echo esc_html(sprintf(_n('%d warning needs attention. Expand Readiness details below for the full list.', '%d warnings need attention. Expand Readiness details below for the full list.', $vms_readiness_warning_count, 'backstage-venue-manager'), $vms_readiness_warning_count)); ?></p>
         <?php endif; ?>
     </div>
     <?php if (function_exists('bvmgr_event_plan_perf_memory_checkpoint')) {
@@ -10217,7 +10264,6 @@ class BVMGR_Admin_Event_Plans
             'payload_size_bytes' => absint($vms_readiness_summary_context['payload_size_bytes'] ?? 0),
         ), 'readiness_summary');
     } ?>
-    <?php if ($vms_readiness_lazy_enabled) : ?>
         <?php
             if (function_exists('bvmgr_event_plan_perf_log')) {
                 bvmgr_event_plan_perf_log('event_plan_readiness_details', (int) $post->ID, array(
@@ -10225,7 +10271,7 @@ class BVMGR_Admin_Event_Plans
                     'lazy_load' => 1,
                     'section' => 'readiness_details',
                     'blocking_issue_count' => absint($readiness_boot_summary['blocking_issue_count'] ?? 0),
-                    'warning_item_count' => count($vms_readiness_warning_items),
+                    'warning_item_count' => $vms_readiness_warning_count,
                 ));
             }
         ?>
@@ -10233,12 +10279,13 @@ class BVMGR_Admin_Event_Plans
             id="vms-readiness-details"
             class="vms-collapsible-section"
             data-section-key="readiness_details"
-            data-has-data="<?php echo (!empty($vms_readiness_warning_items) || !empty($readiness_boot_summary['publish_blocking_warning'])) ? '1' : '0'; ?>"
+            data-has-data="<?php echo $vms_readiness_has_details ? '1' : '0'; ?>"
             data-vms-lazy-section="readiness_details"
-            data-vms-lazy-loaded="0"
+            data-vms-lazy-loaded="<?php echo $vms_readiness_lazy_enabled ? '0' : '1'; ?>"
             data-vms-lazy-post-id="<?php echo (int) $post->ID; ?>"
             data-vms-lazy-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>"
             data-vms-lazy-nonce="<?php echo esc_attr(wp_create_nonce('bvmgr_event_plan_admin_section')); ?>"
+            <?php echo $vms_readiness_has_details ? '' : 'hidden'; ?>
         >
             <button type="button" class="vms-collapsible-toggle" aria-expanded="false">
                 <span class="vms-collapsible-chevron" aria-hidden="true"></span>
@@ -10247,18 +10294,21 @@ class BVMGR_Admin_Event_Plans
 	                /* translators: %d: number of blocking readiness issues. */
 	                $vms_readiness_blocking_meta = sprintf(_n('%d blocking issue', '%d blocking issues', absint($readiness_boot_summary['blocking_issue_count'] ?? 0), 'backstage-venue-manager'), absint($readiness_boot_summary['blocking_issue_count'] ?? 0));
 	                /* translators: %d: number of readiness warnings. */
-	                $vms_readiness_warning_meta = sprintf(_n('%d warning', '%d warnings', count($vms_readiness_warning_items), 'backstage-venue-manager'), count($vms_readiness_warning_items));
+	                $vms_readiness_warning_meta = sprintf(_n('%d warning', '%d warnings', $vms_readiness_warning_count, 'backstage-venue-manager'), $vms_readiness_warning_count);
 	                ?>
-	                <span class="vms-collapsible-meta"><span data-vms-readiness-blocking-meta><?php echo esc_html($vms_readiness_blocking_meta); ?></span><?php echo esc_html(' • ' . $vms_readiness_warning_meta); ?></span>
+	                <span class="vms-collapsible-meta"><span data-vms-readiness-blocking-meta><?php echo esc_html($vms_readiness_blocking_meta); ?></span><?php echo esc_html(' • '); ?><span data-vms-readiness-warning-meta><?php echo esc_html($vms_readiness_warning_meta); ?></span></span>
                 <span class="vms-collapsible-flag" aria-hidden="true" hidden><?php esc_html_e('Changed', 'backstage-venue-manager'); ?></span>
             </button>
             <div class="vms-collapsible-body" hidden>
-                <div class="vms-ep-card vms-ep-card--white">
-                    <p class="description"><?php esc_html_e('Expand this section to load detailed readiness reasons, vendor warning categories, and linked ticket/calendar status.', 'backstage-venue-manager'); ?></p>
-                </div>
+                <?php if ($vms_readiness_lazy_enabled) : ?>
+                    <div class="vms-ep-card vms-ep-card--white">
+                        <p class="description"><?php esc_html_e('Expand this section to load detailed readiness reasons, vendor warning categories, and linked ticket/calendar status.', 'backstage-venue-manager'); ?></p>
+                    </div>
+                <?php else : ?>
+                    <?php echo $vms_readiness_details_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- rendered by bounded escaping helpers above. ?>
+                <?php endif; ?>
             </div>
         </section>
-    <?php endif; ?>
 	    <?php
 	        $workspace_ticketing = $this->get_event_plan_ticketing_boot_summary((int) $post->ID);
 	        $workspace_ticket_mode = sanitize_key((string) ($workspace_ticketing['ticket_mode'] ?? 'read_only'));
@@ -12414,6 +12464,10 @@ if (function_exists('bvmgr_add_admin_notice')) {
                         break;
 
                     case 'mark_cancelled':
+                        if ($cancel_reason_code_post === '') {
+                            bvmgr_add_admin_notice(__('Choose a cancellation reason before marking this Event Plan cancelled.', 'backstage-venue-manager'), 'error');
+                            break;
+                        }
                         if ($replacement_date_requested !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $replacement_date_requested)) {
                             bvmgr_add_admin_notice(__('Enter a valid replacement date before cancelling with automatic reschedule.', 'backstage-venue-manager'), 'error');
                             break;

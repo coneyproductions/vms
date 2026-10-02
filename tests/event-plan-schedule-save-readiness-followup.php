@@ -154,7 +154,11 @@ try {
     $assert(strpos((string) ($failedResult['message'] ?? ''), 'restored') !== false, 'Schedule failure must give an explicit recovery result rather than claiming no values changed.');
 
     $eventPlansSource = (string) file_get_contents($pluginRoot . '/includes/cpt/event-plans.php');
-    $assert(strpos($eventPlansSource, "\$response['readiness_state'] = bvmgr_event_plan_readiness_response_state(\$post_id)") !== false, 'Verified non-Ticketing scoped-save responses must include canonical readiness state.');
+    $assert(strpos($eventPlansSource, "\$response['readiness_state'] = \$this->build_event_plan_readiness_refresh_state(\$post_id)") !== false, 'Verified non-Ticketing scoped-save responses must include complete canonical readiness state.');
+    $assert(strpos($eventPlansSource, 'unset($this->event_plan_admin_boot_cache[$post_id]);') !== false, 'Post-save readiness refresh must discard request-local pre-save boot data.');
+    foreach (array("'warning_count'", "'warning_label'", "'has_details'", "'details_html'", "'mark_ready_enabled'", "'publish_enabled'") as $refreshField) {
+        $assert(strpos($eventPlansSource, "\$state[" . $refreshField . "]") !== false, 'Complete readiness refresh is missing field ' . $refreshField . '.');
+    }
     $assert(strpos($eventPlansSource, "if (\$scope !== 'ticketing_v2')") !== false, 'Ticketing must retain its isolated two-stage save behavior without a premature readiness refresh.');
     $assert(strpos($eventPlansSource, "'ticketing_v2' => array(") !== false, 'Ticketing section ownership must remain present and unchanged.');
 

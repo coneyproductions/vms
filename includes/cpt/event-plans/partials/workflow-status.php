@@ -23,8 +23,8 @@
 
     <p>
         <label for="vms_cancel_reason_code"><strong><?php esc_html_e('Cancellation reason', 'backstage-venue-manager'); ?></strong></label><br>
-        <select name="vms_cancel_reason_code" id="vms_cancel_reason_code">
-            <option value="" <?php selected($cancel_reason_code, ''); ?>><?php esc_html_e('Select reason (optional)', 'backstage-venue-manager'); ?></option>
+        <select name="vms_cancel_reason_code" id="vms_cancel_reason_code" required>
+            <option value="" <?php selected($cancel_reason_code, ''); ?>><?php esc_html_e('Select reason (required)', 'backstage-venue-manager'); ?></option>
             <?php foreach ($cancel_reason_options as $reason_key => $reason_label) : ?>
                 <option value="<?php echo esc_attr((string) $reason_key); ?>" <?php selected($cancel_reason_code, (string) $reason_key); ?>>
                     <?php echo esc_html((string) $reason_label); ?>
@@ -83,7 +83,7 @@
     ?>
 
     <hr />
-    <p class="description"><strong><?php esc_html_e('Action-only inputs:', 'backstage-venue-manager'); ?></strong> <?php esc_html_e('Replacement date and refund confirmations are used only by the guarded cancellation action. Save Changes does not save them as Event Plan settings; run the action or discard them before leaving this section.', 'backstage-venue-manager'); ?></p>
+    <p class="description"><strong><?php esc_html_e('Action-only inputs:', 'backstage-venue-manager'); ?></strong> <?php esc_html_e('Mark Cancelled saves the Cancellation details above and uses the replacement date and refund confirmations below in one guarded action.', 'backstage-venue-manager'); ?></p>
     <p>
         <label for="vms_reschedule_event_date"><strong><?php esc_html_e('Replacement date', 'backstage-venue-manager'); ?></strong></label><br>
         <input type="date" id="vms_reschedule_event_date" name="vms_reschedule_event_date" value="<?php echo esc_attr($reschedule_date_value); ?>" data-vms-transient-action-control="1" />

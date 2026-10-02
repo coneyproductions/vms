@@ -128,6 +128,43 @@ function createPersistController(initialUrl, fullTicketingEditorPresent) {
     'Unrelated Event Plan sections retain normal requested-section persistence.'
   );
 
+  const readinessSection = {
+    dataset: { sectionKey: 'readiness_details', vmsLazySection: 'readiness_details', vmsLazyLoaded: '0' },
+    classList: { contains(name) { return name === 'is-collapsed'; } },
+  };
+  const readinessButton = {
+    closest(selector) {
+      return selector === '.vms-collapsible-section[data-section-key]' ? readinessSection : null;
+    },
+  };
+  const readinessCalls = [];
+  const toggleReadiness = new Function(
+    'form',
+    'initExistingSection',
+    'editableSectionKeys',
+    'openAndFocusSection',
+    'setCollapsed',
+    'isLazySectionUnloaded',
+    extractFunction('handleSectionToggleClick') + '\nreturn handleSectionToggleClick;'
+  )(
+    { contains(section) { return section === readinessSection; } },
+    () => readinessCalls.push('init'),
+    new Set(),
+    (section, force) => readinessCalls.push(['open-and-focus', section.dataset.sectionKey, force]),
+    () => readinessCalls.push('direct-toggle'),
+    (section) => section.dataset.vmsLazyLoaded !== '1'
+  );
+  const handled = toggleReadiness({
+    target: { closest(selector) { return selector === '.vms-collapsible-toggle' ? readinessButton : null; } },
+    preventDefault() { readinessCalls.push('prevented'); },
+  });
+  assert.equal(handled, true, 'Readiness disclosure click is handled.');
+  assert.deepEqual(
+    readinessCalls,
+    ['init', 'prevented', ['open-and-focus', 'readiness_details', false]],
+    'A collapsed lazy Readiness section uses the shared lazy-load/open/focus path instead of merely revealing its placeholder.'
+  );
+
   assert.match(source, /await openAndFocusDestination\(target, true\);/, 'Save & Continue and dirty Save & Open use the shared destination-aware open-and-focus path.');
   assert.match(source, /openAndFocusSection\(section, true\);/, 'Requested section reveal uses open-and-focus.');
   assert.match(source, /else if \(requestedSection\) \{\s*openAndFocusSection\(requestedSection, false\);/, 'data-vms-open-section actions use open-and-focus.');

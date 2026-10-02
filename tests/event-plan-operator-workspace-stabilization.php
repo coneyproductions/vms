@@ -248,14 +248,22 @@ try {
     $assert(strpos($shell, 'resetSectionBaseline(section, true)') !== false, 'Successful section saves must reset only persisted-control baselines.');
     $assert(strpos($shell, 'sectionTransientDirty') !== false && strpos($shell, 'Unsaved action input') !== false, 'Transient cancellation action intent must remain visibly dirty after Save Changes.');
     $assert(strpos($shell, 'workflowActionConsumesTransient') !== false && strpos($shell, "'mark_cancelled', 'create_rescheduled_draft', 'retry_cancellation_all'") !== false, 'Guarded Cancellation actions must be able to consume transient inputs.');
+    $assert(strpos($shell, 'workflowActionConsumesPersistedChanges') !== false, 'Mark Cancelled must be allowed to consume current persisted Cancellation inputs atomically.');
+    $assert(strpos($shell, "var saveButton = key === 'cancellation'") !== false, 'Cancellation must omit the separate generic Save Changes action.');
     $assert(strpos($shell, 'await openAndFocusDestination(target, true)') !== false && strpos($shell, 'Action-only cancellation input remains unsaved') !== false, 'Save & Continue must stop before navigation when transient action intent remains.');
     $assert(substr_count($shell, "workflowParams.set('action', 'vms_event_plan_workflow_action')") === 1, 'Workflow actions must use the dedicated saved-state endpoint.');
     $assert(strpos($eventPlans, 'event_plan_saved_workflow_request') !== false, 'Workflow endpoint must rebuild its request from saved state.');
     $assert(strpos($eventPlans, "array('mark_ready', 'publish_now', 'retry_publish')") !== false, 'Saved-state workflow endpoint must expose non-destructive actions without bypassing cancellation safeguards.');
     $assert(strpos($workspaceStatus, 'data-vms-open-section="cancellation"') !== false, 'Status header must route cancellation through its guarded section.');
     $assert(strpos($workflow, 'value="mark_cancelled"') !== false, 'Cancellation section must retain the canonical guarded transition.');
+    $assert(strpos($workflow, 'id="vms_cancel_reason_code" required') !== false && strpos($workflow, 'Select reason (required)') !== false, 'Cancellation reason must be required in the rendered action UI.');
     $assert(substr_count($workflow, 'data-vms-transient-action-control="1"') >= 2, 'Replacement date and refund confirmation must be marked as transient action controls.');
-    $assert(strpos($workflow, 'Save Changes does not save them as Event Plan settings') !== false, 'Cancellation UI must explain the transient action-only contract.');
+    $assert(strpos($workflow, 'Mark Cancelled saves the Cancellation details above') !== false, 'Cancellation UI must explain the atomic action contract.');
+    $cancelMetaWrite = strpos($eventPlans, 'update_post_meta($post_id, $k_cancel_policy, $cancel_policy_post);');
+    $cancelActionCase = strpos($eventPlans, "case 'mark_cancelled':", $cancelMetaWrite === false ? 0 : $cancelMetaWrite);
+    $cancelJobCreate = strpos($eventPlans, 'bvmgr_cancellation_create_job($post_id', $cancelActionCase === false ? 0 : $cancelActionCase);
+    $assert($cancelMetaWrite !== false && $cancelActionCase !== false && $cancelJobCreate !== false && $cancelMetaWrite < $cancelActionCase && $cancelActionCase < $cancelJobCreate, 'The native Mark Cancelled POST must persist Cancellation values before executing the guarded cancellation job.');
+    $assert(strpos($eventPlans, "if (\$cancel_reason_code_post === '') {", $cancelActionCase) !== false, 'Server-side Mark Cancelled must stop with an explicit error when the reason is missing.');
     $assert(strpos($eventPlans, "bvmgr_event_plan_schedule_deferred_calendar_publish(\$post_id, 'retry')") !== false, 'Retry Publishing must use the Phase A idempotent scheduler.');
 
     foreach (array('workflow_label', 'calendar_label', 'tec_label', 'ticketing_label', 'staffing_label', 'blocking_issue_count') as $statusField) {

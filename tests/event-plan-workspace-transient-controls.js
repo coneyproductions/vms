@@ -28,9 +28,12 @@ const factory = new Function(
     'sectionTransientDirty',
     'resetSectionBaseline',
     'workflowActionConsumesTransient',
+    'workflowActionConsumesPersistedChanges',
+    'validateCancellationMarkAction',
   ].map(extractFunction).join('\n') +
   '\nfunction setFlag() {}\n' +
-  'return { controlDirty, sectionDirty, sectionPersistedDirty, sectionTransientDirty, resetSectionBaseline, workflowActionConsumesTransient };'
+  'function setSectionStatus(section, label, state) { section.status = { label, state }; }\n' +
+  'return { controlDirty, sectionDirty, sectionPersistedDirty, sectionTransientDirty, resetSectionBaseline, workflowActionConsumesTransient, workflowActionConsumesPersistedChanges, validateCancellationMarkAction };'
 );
 
 const contract = factory();
@@ -85,6 +88,49 @@ assert.equal(
   'Guarded Mark Cancelled submission must consume transient intent.'
 );
 assert.equal(
+  contract.workflowActionConsumesPersistedChanges({ value: 'mark_cancelled' }, section),
+  true,
+  'Mark Cancelled must consume the current persisted Cancellation inputs in the same native submit.'
+);
+assert.equal(
+  contract.workflowActionConsumesPersistedChanges({ value: 'create_rescheduled_draft' }, section),
+  false,
+  'Other Cancellation actions retain the saved-state guard.'
+);
+
+const reason = {
+  value: '',
+  attributes: {},
+  focused: false,
+  setAttribute(name, value) { this.attributes[name] = value; },
+  removeAttribute(name) { delete this.attributes[name]; },
+  focus() { this.focused = true; },
+};
+const feedback = { textContent: '' };
+const markSection = {
+  dataset: { sectionKey: 'cancellation' },
+  querySelector(selector) {
+    if (selector === '#vms_cancel_reason_code') return reason;
+    if (selector === '[data-vms-section-feedback]') return feedback;
+    return null;
+  },
+};
+assert.equal(
+  contract.validateCancellationMarkAction({ value: 'mark_cancelled' }, markSection),
+  false,
+  'Mark Cancelled must stop with explicit feedback when the required reason is missing.'
+);
+assert.equal(reason.attributes['aria-invalid'], 'true', 'Missing cancellation reason is marked invalid.');
+assert.equal(reason.focused, true, 'Missing cancellation reason receives focus.');
+assert.match(feedback.textContent, /Choose a cancellation reason/, 'Missing reason receives actionable inline guidance.');
+reason.value = 'weather';
+assert.equal(
+  contract.validateCancellationMarkAction({ value: 'mark_cancelled' }, markSection),
+  true,
+  'A selected reason allows the atomic Mark Cancelled submit.'
+);
+assert.equal(reason.attributes['aria-invalid'], undefined, 'Valid cancellation reason clears invalid state.');
+assert.equal(
   contract.workflowActionConsumesTransient({ value: 'create_rescheduled_draft' }, section),
   true,
   'Guarded reschedule submission must consume the replacement date.'
@@ -104,5 +150,10 @@ const nextNavigation = shell.indexOf('await openAndFocusDestination(target, true
 assert.ok(transientGuard >= 0 && nextNavigation > transientGuard, 'Save & Continue must test transient intent before navigation.');
 assert.ok(shell.includes('window.location.reload();'), 'Discard Changes must reload authoritative saved state.');
 assert.match(shell, /dataset\.vmsIgnoreSectionDirty === '1'/, 'The shell uses a narrow section-dirty exclusion without reclassifying the control as transient.');
+assert.match(shell, /var saveButton = key === 'cancellation'\s*\? ''/, 'Cancellation omits the separate generic Save Changes action.');
+assert.match(shell, /workflowActionConsumesPersistedChanges\(workflowSubmit, activeSection\)/, 'The dirty-section click guard permits the atomic Mark Cancelled action.');
+assert.match(shell, /!workflowActionConsumesPersistedChanges\(submitter, activeSection\)/, 'The submit guard preserves the same atomic Cancellation exception.');
+assert.match(shell, /handleCancellationMarkSubmit\(event, submitter\)/, 'Mark Cancelled acquires the shared transition lock before native submission.');
+assert.match(shell, /Discard Changes<\/button>/, 'Cancellation retains Discard Changes.');
 
 console.log('event plan workspace transient controls: PASS');

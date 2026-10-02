@@ -33,8 +33,8 @@
     <?php endif; ?>
 
     <div class="vms-ep-workspace-status__actions">
-        <button type="button" class="button button-secondary" data-vms-workflow-action="mark_ready" <?php disabled((string) ($workspace_status['workflow_status'] ?? '') !== 'draft'); ?>><?php esc_html_e('Mark Ready', 'backstage-venue-manager'); ?></button>
-        <button type="button" class="button button-primary" data-vms-workflow-action="publish_now" <?php disabled(!in_array((string) ($workspace_status['workflow_status'] ?? ''), array('ready', 'published'), true) || !empty($workspace_status['publishing']) || !empty($workspace_status['retry_allowed'])); ?>><?php esc_html_e('Publish Event', 'backstage-venue-manager'); ?></button>
+        <button type="button" class="button button-secondary" data-vms-workflow-action="mark_ready" <?php disabled((string) ($workspace_status['workflow_status'] ?? '') !== 'draft' || !empty($workspace_status['blocking_issue_count'])); ?>><?php esc_html_e('Mark Ready', 'backstage-venue-manager'); ?></button>
+        <button type="button" class="button button-primary" data-vms-workflow-action="publish_now" <?php disabled(!in_array((string) ($workspace_status['workflow_status'] ?? ''), array('ready', 'published'), true) || !empty($workspace_status['blocking_issue_count']) || !empty($workspace_status['publishing']) || !empty($workspace_status['retry_allowed'])); ?>><?php esc_html_e('Publish Event', 'backstage-venue-manager'); ?></button>
         <?php if (!empty($workspace_status['retry_allowed'])) : ?>
             <button type="button" class="button button-primary" data-vms-workflow-action="retry_publish"><?php esc_html_e('Retry Publishing', 'backstage-venue-manager'); ?></button>
         <?php endif; ?>

@@ -612,25 +612,102 @@
       if (!state || typeof state !== 'object') return false;
       var count = parseInt(String(state.blocking_issue_count), 10);
       var label = String(state.blocking_issue_label || '').trim();
+      var warningCount = parseInt(String(state.warning_count === undefined ? 0 : state.warning_count), 10);
+      var warningLabel = String(state.warning_label || '').trim();
       if (!Number.isFinite(count) || count < 0 || !label) return false;
+      if (!Number.isFinite(warningCount) || warningCount < 0) return false;
+      if (!warningLabel) warningLabel = warningCount === 1 ? '1 warning' : String(warningCount) + ' warnings';
+      var hasDetails = state.has_details === undefined
+        ? (count > 0 || warningCount > 0)
+        : String(state.has_details) === '1';
 
       var workspaceCount = statusRoot ? statusRoot.querySelector('[data-vms-workspace-readiness-count]') : null;
       if (workspaceCount) workspaceCount.textContent = label;
+      var markReadyButton = statusRoot ? statusRoot.querySelector('[data-vms-workflow-action="mark_ready"]') : null;
+      var publishButton = statusRoot ? statusRoot.querySelector('[data-vms-workflow-action="publish_now"]') : null;
+      if (markReadyButton && state.mark_ready_enabled !== undefined) {
+        markReadyButton.disabled = String(state.mark_ready_enabled) !== '1';
+      }
+      if (publishButton && state.publish_enabled !== undefined) {
+        publishButton.disabled = String(state.publish_enabled) !== '1';
+      }
 
       var readinessSection = form.querySelector('.vms-collapsible-section[data-section-key="readiness_details"]');
       if (readinessSection) {
         var readinessCount = readinessSection.querySelector('[data-vms-readiness-blocking-meta]');
+        var readinessWarningCount = readinessSection.querySelector('[data-vms-readiness-warning-meta]');
+        var readinessBody = readinessSection.querySelector('.vms-collapsible-body');
         if (readinessCount) readinessCount.textContent = label;
-        if (readinessSection.dataset.vmsLazySection !== undefined) {
+        if (readinessWarningCount) readinessWarningCount.textContent = warningLabel;
+        readinessSection.dataset.hasData = hasDetails ? '1' : '0';
+        readinessSection.hidden = !hasDetails;
+        if (!hasDetails) {
+          setCollapsed(readinessSection, true);
+          if (readinessSection.dataset.vmsLazySection !== undefined) readinessSection.dataset.vmsLazyLoaded = '0';
+        } else if (readinessBody && typeof state.details_html === 'string' && state.details_html !== '') {
+          readinessBody.innerHTML = state.details_html;
+          readinessSection.dataset.vmsLazyLoaded = '1';
+          initExistingSection(readinessSection);
+        } else if (readinessSection.dataset.vmsLazySection !== undefined) {
           readinessSection.dataset.vmsLazyLoaded = '0';
         }
       }
       return true;
     }
 
+    async function refreshCanonicalReadinessState() {
+      var readinessSection = form.querySelector('.vms-collapsible-section[data-section-key="readiness_details"]');
+      if (!readinessSection) return false;
+      var lazyUrl = String(readinessSection.dataset.vmsLazyUrl || '').trim();
+      var lazyNonce = String(readinessSection.dataset.vmsLazyNonce || '').trim();
+      var lazyPostId = parseInt(readinessSection.dataset.vmsLazyPostId || '0', 10) || 0;
+      if (!lazyUrl || !lazyNonce || !lazyPostId) return false;
+
+      var params = new URLSearchParams();
+      params.set('action', 'vms_load_event_plan_admin_section');
+      params.set('post_id', String(lazyPostId));
+      params.set('section', 'readiness_details');
+      params.set('nonce', lazyNonce);
+      try {
+        var response = await window.fetch(lazyUrl, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+          body: params.toString()
+        });
+        var payload = await response.json().catch(function () { return null; });
+        if (!response.ok || !payload || !payload.success || !payload.data) return false;
+        return applyCanonicalReadinessState(payload.data.readiness_state);
+      } catch (error) {
+        return false;
+      }
+    }
+
     function workflowActionConsumesTransient(submitter, section) {
       if (!submitter || !section || String(section.dataset.sectionKey || '') !== 'cancellation') return false;
       return ['mark_cancelled', 'create_rescheduled_draft', 'retry_cancellation_all'].indexOf(String(submitter.value || '')) !== -1;
+    }
+
+    function workflowActionConsumesPersistedChanges(submitter, section) {
+      if (!submitter || !section || String(section.dataset.sectionKey || '') !== 'cancellation') return false;
+      return String(submitter.value || '') === 'mark_cancelled';
+    }
+
+    function validateCancellationMarkAction(submitter, section) {
+      if (!workflowActionConsumesPersistedChanges(submitter, section)) return true;
+      var reason = section.querySelector('#vms_cancel_reason_code');
+      var feedback = section.querySelector('[data-vms-section-feedback]');
+      if (reason && String(reason.value || '').trim()) {
+        reason.removeAttribute('aria-invalid');
+        return true;
+      }
+      if (reason) {
+        reason.setAttribute('aria-invalid', 'true');
+        try { reason.focus(); } catch (e) {}
+      }
+      setSectionStatus(section, 'Action required', 'failed');
+      if (feedback) feedback.textContent = 'Choose a cancellation reason before marking this Event Plan cancelled.';
+      return false;
     }
 
     function bindFlagWatchers(section, body) {
@@ -714,6 +791,9 @@
         }
         if (typeof window.BVMGR_EVENT_PLAN_INIT_STAFF === 'function') {
           window.BVMGR_EVENT_PLAN_INIT_STAFF(body);
+        }
+        if (payload.data.readiness_state) {
+          applyCanonicalReadinessState(payload.data.readiness_state);
         }
         return true;
       } catch (error) {
@@ -1020,7 +1100,7 @@
       if (!collapsed && editableSectionKeys.has(String(section.dataset.sectionKey || ''))) {
         return true;
       }
-      if (editableSectionKeys.has(String(section.dataset.sectionKey || ''))) {
+      if (editableSectionKeys.has(String(section.dataset.sectionKey || '')) || (collapsed && isLazySectionUnloaded(section))) {
         openAndFocusSection(section, false);
       } else {
         setCollapsed(section, !collapsed);
@@ -1146,10 +1226,13 @@
         ? '<button type="button" class="button button-primary" data-vms-section-action="next">Save &amp; Continue</button>'
         : '';
       var saveButtonClass = continueButton ? 'button button-secondary' : 'button button-primary';
+      var saveButton = key === 'cancellation'
+        ? ''
+        : '<button type="button" class="' + saveButtonClass + '" data-vms-section-action="save">Save Changes</button>';
       actions.innerHTML =
         '<div class="vms-ep-section-actions__buttons">' +
           continueButton +
-          '<button type="button" class="' + saveButtonClass + '" data-vms-section-action="save">Save Changes</button>' +
+          saveButton +
           '<button type="button" class="button" data-vms-section-action="discard">Discard Changes</button>' +
         '</div>' +
         '<div class="vms-ep-section-actions__state"><strong data-vms-section-status data-state="saved">Saved</strong><span class="description" data-vms-section-feedback aria-live="polite"></span></div>';
@@ -1190,6 +1273,28 @@
 
       submitter.setAttribute('aria-disabled', 'true');
       setSectionStatus(section, 'Locking…', 'saving');
+      suppressBeforeUnload = true;
+      return false;
+    }
+
+    function handleCancellationMarkSubmit(event, submitter) {
+      var section = submitter && submitter.closest
+        ? submitter.closest('.vms-collapsible-section[data-section-key="cancellation"]')
+        : null;
+      if (!workflowActionConsumesPersistedChanges(submitter, section)) return false;
+      if (!validateCancellationMarkAction(submitter, section)) {
+        if (event && typeof event.preventDefault === 'function') event.preventDefault();
+        return true;
+      }
+      if (transitionInFlight || !beginTransition(section, null, {
+        title: 'Marking Event Plan cancelled…',
+        copy: 'Saving the Cancellation details and preparing the guarded cancellation workflow.'
+      })) {
+        blockEventDuringTransition(event);
+        return true;
+      }
+      submitter.setAttribute('aria-disabled', 'true');
+      setSectionStatus(section, 'Cancelling…', 'saving');
       suppressBeforeUnload = true;
       return false;
     }
@@ -1362,6 +1467,12 @@
       form.dataset.vmsCollapseDelegatedBound = '1';
       form.addEventListener('click', function (event) {
         var workflowSubmit = event.target.closest('button[type="submit"][name="vms_event_plan_action"]');
+        var workflowSection = workflowSubmit ? workflowSubmit.closest('.vms-collapsible-section[data-section-key]') : null;
+        if (workflowActionConsumesPersistedChanges(workflowSubmit, workflowSection) && !validateCancellationMarkAction(workflowSubmit, workflowSection)) {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
         if (workflowSubmit && String(workflowSubmit.value || '') === 'lock_draft_pay') {
           if (transitionInFlight) {
             blockEventDuringTransition(event);
@@ -1374,6 +1485,7 @@
         }
         if (workflowSubmit && blockEventDuringTransition(event)) return;
         if (!workflowSubmit || !activeSection || !sectionDirty(activeSection.querySelector('.vms-collapsible-body'))) return;
+        if (workflowActionConsumesPersistedChanges(workflowSubmit, activeSection)) return;
         if (!sectionPersistedDirty(activeSection.querySelector('.vms-collapsible-body')) && workflowActionConsumesTransient(workflowSubmit, activeSection)) return;
         event.preventDefault();
         event.stopPropagation();
@@ -1465,6 +1577,8 @@
         var submitter = event && event.submitter ? event.submitter : document.activeElement;
         if (submitter && String(submitter.value || '') === 'lock_draft_pay') {
           if (handleCompensationLockSubmit(event, submitter)) return;
+        } else if (submitter && String(submitter.value || '') === 'mark_cancelled') {
+          if (handleCancellationMarkSubmit(event, submitter)) return;
         } else if (blockEventDuringTransition(event)) {
           return;
         }
@@ -1473,6 +1587,7 @@
           && submitter.name === 'vms_event_plan_action'
           && activeSection
           && sectionDirty(activeSection.querySelector('.vms-collapsible-body'))
+          && !workflowActionConsumesPersistedChanges(submitter, activeSection)
           && (sectionPersistedDirty(activeSection.querySelector('.vms-collapsible-body')) || !workflowActionConsumesTransient(submitter, activeSection))
         ) {
           event.preventDefault();
@@ -1501,6 +1616,11 @@
           setSectionStatus(section, 'Save failed', 'failed');
           if (feedback) feedback.textContent = String(detail.message || 'Save failed.');
           return;
+        }
+        if (detail.readinessState) {
+          applyCanonicalReadinessState(detail.readinessState);
+        } else {
+          refreshCanonicalReadinessState();
         }
         resetSectionBaseline(section, true);
         if (sectionTransientDirty(section.querySelector('.vms-collapsible-body'))) {

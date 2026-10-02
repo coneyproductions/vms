@@ -21,15 +21,27 @@ function extractFunction(source, name) {
 
 const workspaceCount = { textContent: '5 blocking issues' };
 const readinessCount = { textContent: '5 blocking issues' };
+const readinessWarningCount = { textContent: '2 warnings' };
+const readinessBody = { innerHTML: '<p>Old blocker</p>', hidden: false };
+const markReadyButton = { disabled: false };
+const publishButton = { disabled: false };
 const readinessSection = {
   dataset: { vmsLazySection: 'readiness_details', vmsLazyLoaded: '1' },
+  hidden: false,
+  collapsed: false,
   querySelector(selector) {
-    return selector === '[data-vms-readiness-blocking-meta]' ? readinessCount : null;
+    if (selector === '[data-vms-readiness-blocking-meta]') return readinessCount;
+    if (selector === '[data-vms-readiness-warning-meta]') return readinessWarningCount;
+    if (selector === '.vms-collapsible-body') return readinessBody;
+    return null;
   },
 };
 const statusRoot = {
   querySelector(selector) {
-    return selector === '[data-vms-workspace-readiness-count]' ? workspaceCount : null;
+    if (selector === '[data-vms-workspace-readiness-count]') return workspaceCount;
+    if (selector === '[data-vms-workflow-action="mark_ready"]') return markReadyButton;
+    if (selector === '[data-vms-workflow-action="publish_now"]') return publishButton;
+    return null;
   },
 };
 const form = {
@@ -40,20 +52,67 @@ const form = {
 const readinessFactory = new Function(
   'statusRoot',
   'form',
+  'setCollapsed',
+  'initExistingSection',
   extractFunction(shell, 'applyCanonicalReadinessState') + '\nreturn applyCanonicalReadinessState;'
 );
-const applyReadiness = readinessFactory(statusRoot, form);
+const initialized = [];
+const applyReadiness = readinessFactory(
+  statusRoot,
+  form,
+  (section, collapsed) => { section.collapsed = collapsed; },
+  (section) => initialized.push(section)
+);
 assert.equal(applyReadiness({
   blocking_issue_count: 1,
   blocking_issue_label: '1 blocking issue',
+  warning_count: 0,
+  warning_label: '0 warnings',
+  has_details: 1,
+  details_html: '<p>Primary Vendor is required.</p>',
+  mark_ready_enabled: 0,
+  publish_enabled: 0,
   blockers: [{ code: 'missing_primary_vendor', label: 'Primary Vendor' }],
 }), true, 'Canonical server readiness payload must apply immediately.');
 assert.equal(workspaceCount.textContent, '1 blocking issue', 'Workspace Readiness banner must refresh without reload.');
 assert.equal(readinessCount.textContent, '1 blocking issue', 'Readiness section summary must use the same canonical count.');
-assert.equal(readinessSection.dataset.vmsLazyLoaded, '0', 'Previously loaded Readiness details must be invalidated after saved state changes.');
+assert.equal(readinessWarningCount.textContent, '0 warnings', 'Readiness warning count must refresh from saved server state.');
+assert.equal(readinessBody.innerHTML, '<p>Primary Vendor is required.</p>', 'Previously loaded Readiness reasons must be replaced after saved state changes.');
+assert.equal(readinessSection.dataset.vmsLazyLoaded, '1', 'Replaced Readiness details remain authoritatively loaded.');
+assert.equal(markReadyButton.disabled, true, 'A saved blocker disables Mark Ready.');
+assert.equal(publishButton.disabled, true, 'A saved blocker disables Publish.');
+
+assert.equal(applyReadiness({
+  blocking_issue_count: 0,
+  blocking_issue_label: '0 blocking issues',
+  warning_count: 0,
+  warning_label: '0 warnings',
+  has_details: 0,
+  details_html: '<p>No blockers.</p>',
+  mark_ready_enabled: 1,
+  publish_enabled: 0,
+}), true, 'All-clear authoritative readiness payload must apply immediately.');
+assert.equal(readinessSection.hidden, true, 'Readiness details hide immediately at 0 blockers and 0 warnings.');
+assert.equal(readinessSection.collapsed, true, 'Hidden Readiness details are collapsed so stale content cannot remain visible.');
+assert.equal(markReadyButton.disabled, false, 'Mark Ready becomes available immediately after the final blocker is saved.');
+
+assert.equal(applyReadiness({
+  blocking_issue_count: 0,
+  blocking_issue_label: '0 blocking issues',
+  warning_count: 1,
+  warning_label: '1 warning',
+  has_details: 1,
+  details_html: '<p>Vendor profile warning.</p>',
+  mark_ready_enabled: 1,
+  publish_enabled: 0,
+}), true, 'A newly introduced warning must apply immediately.');
+assert.equal(readinessSection.hidden, false, 'A saved warning reveals Readiness details without reload.');
+assert.equal(readinessBody.innerHTML, '<p>Vendor profile warning.</p>', 'New authoritative warning reasons replace prior detail content.');
+assert.equal(readinessWarningCount.textContent, '1 warning', 'New warning count is reflected immediately.');
 assert.equal(applyReadiness({ blocking_issue_count: 'not-a-number', blocking_issue_label: '' }), false, 'Malformed readiness data must fail closed.');
 assert.ok(shell.includes('applyCanonicalReadinessState(result.readinessState);'), 'Verified section saves must apply canonical readiness before continuing.');
 assert.ok(shell.includes('readinessState: payload.data && payload.data.readiness_state'), 'The scoped-save transport must expose canonical readiness state.');
+assert.ok(shell.includes('refreshCanonicalReadinessState();'), 'Successful specialized section saves must invoke the shared authoritative readiness refresh.');
 
 const fallbackUntil = {
   value: '2026-10-30',

@@ -70,6 +70,7 @@ try {
 	$assert(substr_count($readinessBranchSource, 'wp_send_json_success(') === 1, 'Readiness-details AJAX branch should write exactly one success response.');
 	$assert(strpos($readinessBranchSource, "'html' => \$html") !== false, 'Readiness-details AJAX branch should preserve the html response key.');
 	$assert(strpos($readinessBranchSource, "'section' => \$section") !== false, 'Readiness-details AJAX branch should preserve the section response key.');
+	$assert(strpos($readinessBranchSource, "'readiness_state' => \$this->build_event_plan_readiness_refresh_state(\$post_id, \$readiness_payload)") !== false, 'Readiness-details AJAX should return the same complete authoritative state used after section saves.');
 	$assert(strpos($readinessBranchSource, "capture_event_plan_partial('readiness-details'") === false, 'Readiness-details AJAX branch should remove the ambiguous captured-partial handoff.');
 
 	$builderMatched = preg_match(
@@ -91,7 +92,7 @@ try {
 	);
 	$assert($rendererMatched === 1, 'Failed to isolate the readiness-details response renderer source.');
 	$rendererSource = (string) $rendererMatch['body'];
-	$assert(strpos($rendererSource, 'render_event_plan_readiness_details_summary_rows_html') !== false, 'Readiness-details response renderer should route summary rows through the dedicated summary-list helper.');
+	$assert(strpos($rendererSource, 'render_event_plan_readiness_details_summary_rows_html') === false, 'Readiness details should show concrete reasons without repeating the summary count rows.');
 	$assert(strpos($rendererSource, 'render_event_plan_readiness_details_warning_notice_html') !== false, 'Readiness-details response renderer should route warning states through the dedicated notice helper.');
 	$assert(strpos($rendererSource, 'render_event_plan_readiness_details_linked_tec_text') !== false, 'Readiness-details response renderer should route linked TEC text through the dedicated helper.');
 	$assert(strpos($rendererSource, 'render_event_plan_readiness_details_ticketing_text') !== false, 'Readiness-details response renderer should route ticketing text through the dedicated helper.');
@@ -110,6 +111,10 @@ try {
 	) as $requiredPhpMarker) {
 		$assert(strpos($eventPlansSource, $requiredPhpMarker) !== false, 'Event Plan PHP should retain the readiness lazy-section shell marker: ' . $requiredPhpMarker);
 	}
+	$assert(strpos($eventPlansSource, '$vms_readiness_has_details = $vms_readiness_blocking_count > 0 || $vms_readiness_warning_count > 0;') !== false, 'Readiness details visibility should use authoritative blocker and warning counts.');
+	$assert(strpos($eventPlansSource, "<?php echo \$vms_readiness_has_details ? '' : 'hidden'; ?>") !== false, 'The retained Readiness disclosure shell should be hidden when there are no blockers or warnings.');
+	$assert(strpos($eventPlansSource, 'data-vms-readiness-warning-meta') !== false, 'Readiness disclosure should expose a refreshable warning-count target.');
+	$assert(strpos($eventPlansSource, 'data-vms-lazy-loaded="<?php echo $vms_readiness_lazy_enabled ? \'0\' : \'1\'; ?>"') !== false, 'Requested Readiness details should retain a fully rendered loaded state.');
 
 	foreach (array(
 		"params.set('action', 'vms_load_event_plan_admin_section');",
@@ -127,6 +132,7 @@ try {
 	}
 
 	$assert(strpos($shellAssetSource, 'payload.data.markup') === false, 'Shell asset should not look for a renamed readiness HTML response key.');
+	$assert(strpos($shellAssetSource, 'applyCanonicalReadinessState(payload.data.readiness_state)') !== false, 'Lazy Readiness responses should reconcile the complete authoritative state.');
 	$assert(strpos($shellAssetSource, 'insertAdjacentHTML(') === false, 'Shell asset should not switch to a different DOM insertion method for readiness details.');
 	$assert(strpos($shellAssetSource, '.html(') === false, 'Shell asset should not switch to a jQuery html() insertion path for readiness details.');
 
@@ -325,7 +331,7 @@ try {
 
 	$warningHtml = (string) $invokePrivate($controller, 'render_event_plan_readiness_details_response_html', array($warningContext));
 	$legacyWarningHtml = $renderLegacyPartial($warningContext);
-	$assert($describeFragment($warningHtml, 'warning renderer output') === $describeFragment($legacyWarningHtml, 'warning legacy partial output'), 'Readiness warning renderer should preserve the legacy partial markup contract.');
+	$assert($describeFragment($warningHtml, 'warning renderer output') !== $describeFragment($legacyWarningHtml, 'warning legacy partial output'), 'Readiness details should intentionally omit the legacy duplicate summary rows.');
 	$assert(strpos($warningHtml, '<script>') === false, 'Readiness warning renderer should keep HTML-like warning text inert.');
 
 	list($warningDoc, $warningXpath, $warningRoot) = $loadFragment($warningHtml, 'warning renderer output');
@@ -351,10 +357,7 @@ try {
 	$assert($warningParagraphs instanceof DOMNodeList && $warningParagraphs->length === 5, 'Readiness warning renderer should preserve the exact paragraph count.');
 	$warningDescriptionParagraphs = $warningXpath->query('//*[@id="root"]//p[@class="description"]');
 	$assert($warningDescriptionParagraphs instanceof DOMNodeList && $warningDescriptionParagraphs->length === 4, 'Readiness warning renderer should preserve the exact description-paragraph inventory.');
-	$summaryList = $warningXpath->query('//*[@id="root"]/div/ul[@class="vms-ep-inline-list"]')->item(0);
-	$assert($summaryList instanceof DOMElement, 'Readiness warning renderer should preserve the summary list wrapper.');
-	$summaryItems = $warningXpath->query('//*[@id="root"]/div/ul[@class="vms-ep-inline-list"]/li');
-	$assert($summaryItems instanceof DOMNodeList && $summaryItems->length === 2, 'Readiness warning renderer should preserve only valid summary rows.');
+	$assert($warningXpath->query('//*[@id="root"]/div/ul[@class="vms-ep-inline-list"]')->length === 0, 'Readiness details should not duplicate summary counts.');
 	$warningNotice = $warningXpath->query('//*[@id="root"]/div/div[@class="notice notice-warning inline vms-notice vms-notice--warning"]')->item(0);
 	$assert($warningNotice instanceof DOMElement, 'Readiness warning renderer should preserve the warning notice wrapper.');
 	$warningNoticeItems = $warningXpath->query('//*[@id="root"]/div/div[@class="notice notice-warning inline vms-notice vms-notice--warning"]/ul/li');
@@ -389,7 +392,7 @@ try {
 
 	$allReadyHtml = (string) $invokePrivate($controller, 'render_event_plan_readiness_details_response_html', array($allReadyContext));
 	$legacyAllReadyHtml = $renderLegacyPartial($allReadyContext);
-	$assert($describeFragment($allReadyHtml, 'all-ready renderer output') === $describeFragment($legacyAllReadyHtml, 'all-ready legacy partial output'), 'Readiness all-ready renderer should preserve the legacy partial markup contract.');
+	$assert($describeFragment($allReadyHtml, 'all-ready renderer output') !== $describeFragment($legacyAllReadyHtml, 'all-ready legacy partial output'), 'Readiness renderer should omit duplicate count rows even when invoked directly for an all-ready context.');
 	list($allReadyDoc, $allReadyXpath) = $loadFragment($allReadyHtml, 'all-ready renderer output');
 	unset($allReadyDoc);
 	$allReadySuccessNotice = $allReadyXpath->query('//*[@id="root"]/div/div[@class="notice notice-success inline vms-notice"]')->item(0);
