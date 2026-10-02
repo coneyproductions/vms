@@ -357,7 +357,7 @@
     }
 
     function controlDirty(el) {
-      if (!el || el.disabled || (el.type === 'hidden' && el.dataset.vmsTransientActionControl !== '1')) return false;
+      if (!el || el.disabled || el.dataset.vmsIgnoreSectionDirty === '1' || (el.type === 'hidden' && el.dataset.vmsTransientActionControl !== '1')) return false;
       if (Object.prototype.hasOwnProperty.call(el.dataset, 'vmsInitialState')) {
         return readControlState(el) !== el.dataset.vmsInitialState;
       }
@@ -456,6 +456,77 @@
       var replacement = template.content ? template.content.firstElementChild : template.firstElementChild;
       if (!replacement) return false;
       current.replaceWith(replacement);
+      document.dispatchEvent(new CustomEvent('vms:event-plan-lock-pay-state-refreshed', {
+        detail: state
+      }));
+      var compensationSection = replacement.closest('.vms-collapsible-section[data-section-key="compensation"]');
+      if (compensationSection) updateCompensationActionState(compensationSection);
+      return true;
+    }
+
+    function setCompensationButtonPrimary(button, primary) {
+      if (!button) return;
+      button.classList.toggle('button-primary', !!primary);
+      button.classList.toggle('button-secondary', !primary);
+    }
+
+    function updateCompensationActionState(section) {
+      if (!section || String(section.dataset.sectionKey || '') !== 'compensation') return false;
+      var body = section.querySelector('.vms-collapsible-body');
+      if (!body) return false;
+
+      var actions = body.querySelector('.vms-ep-section-actions');
+      var saveButton = actions ? actions.querySelector('[data-vms-section-action="save"]') : null;
+      var continueButton = actions ? actions.querySelector('[data-vms-section-action="next"]') : null;
+      var discardButton = actions ? actions.querySelector('[data-vms-section-action="discard"]') : null;
+      var lockRoot = body.querySelector('[data-vms-lock-pay-actions]');
+      var lockButton = lockRoot ? lockRoot.querySelector('[data-vms-lock-pay-submit]') : null;
+      var guidance = lockRoot ? lockRoot.querySelector('[data-vms-lock-pay-guidance]') : null;
+      var acknowledgment = body.querySelector('[data-vms-ignore-section-dirty="1"]');
+      var lockState = lockRoot ? String(lockRoot.dataset.vmsLockState || 'unavailable') : 'unavailable';
+      var dirty = sectionPersistedDirty(body);
+
+      if (guidance && !guidance.dataset.vmsSavedGuidance) {
+        guidance.dataset.vmsSavedGuidance = String(guidance.textContent || '').trim();
+      }
+      if (saveButton) {
+        saveButton.textContent = 'Save Compensation';
+        saveButton.disabled = !dirty || transitionInFlight;
+        setCompensationButtonPrimary(saveButton, dirty);
+      }
+      if (discardButton) {
+        discardButton.disabled = !dirty || transitionInFlight;
+      }
+      if (acknowledgment) {
+        acknowledgment.disabled = dirty || transitionInFlight;
+      }
+
+      if (lockButton) {
+        lockButton.dataset.vmsDirtyDisabled = dirty ? '1' : '0';
+        var lockDisabled = lockButton.dataset.vmsServerDisabled === '1'
+          || lockButton.dataset.vmsAckDisabled === '1'
+          || lockButton.dataset.vmsValidationDisabled === '1'
+          || dirty
+          || transitionInFlight;
+        lockButton.disabled = lockDisabled;
+        lockButton.setAttribute('aria-disabled', lockDisabled ? 'true' : 'false');
+        lockButton.classList.toggle('disabled', lockDisabled);
+        setCompensationButtonPrimary(lockButton, !dirty && (lockState === 'available' || lockState === 'relock'));
+      }
+
+      if (continueButton) {
+        var lockIsNext = !dirty && (lockState === 'available' || lockState === 'relock');
+        continueButton.textContent = dirty ? 'Save & Continue' : (lockIsNext ? 'Continue Without Locking' : 'Continue');
+        continueButton.disabled = transitionInFlight;
+        setCompensationButtonPrimary(continueButton, !dirty && (lockState === 'locked' || lockState === 'unavailable'));
+      }
+
+      if (guidance) {
+        var validationMessage = lockButton ? String(lockButton.dataset.vmsValidationMessage || '').trim() : '';
+        guidance.textContent = dirty
+          ? 'Save Compensation before locking Draft Pay. Continue will save these changes and move on without locking.'
+          : (validationMessage || guidance.dataset.vmsSavedGuidance);
+      }
       return true;
     }
 
@@ -472,6 +543,7 @@
       flag.classList.toggle('is-visible', show);
       flag.hidden = !show;
       setSectionStatus(section, transientDirty ? 'Unsaved action input' : (dirty ? 'Unsaved changes' : 'Saved'), dirty ? 'dirty' : 'saved');
+      updateCompensationActionState(section);
     }
 
     function setSectionStatus(section, label, state) {
@@ -687,7 +759,7 @@
       return overlay;
     }
 
-    function beginTransition(section, target) {
+    function beginTransition(section, target, presentation) {
       if (transitionInFlight) return false;
       transitionInFlight = true;
       transitionNavigationAllowed = false;
@@ -696,10 +768,14 @@
       var currentLabel = sectionLabel(section, 'section');
       var targetLabel = target ? sectionLabel(target, 'the next section') : '';
       var overlay = ensureTransitionOverlay();
-      overlay.querySelector('[data-vms-transition-title]').textContent = 'Saving ' + currentLabel + '…';
-      overlay.querySelector('[data-vms-transition-copy]').textContent = targetLabel
-        ? 'Your changes are being saved before ' + targetLabel + ' opens.'
-        : 'Please keep this page open while the section is saved.';
+      overlay.querySelector('[data-vms-transition-title]').textContent = presentation && presentation.title
+        ? String(presentation.title)
+        : 'Saving ' + currentLabel + '…';
+      overlay.querySelector('[data-vms-transition-copy]').textContent = presentation && presentation.copy
+        ? String(presentation.copy)
+        : (targetLabel
+          ? 'Your changes are being saved before ' + targetLabel + ' opens.'
+          : 'Please keep this page open while the section is saved.');
       overlay.setAttribute('aria-busy', 'true');
       overlay.hidden = false;
       return true;
@@ -714,6 +790,10 @@
       transitionNavigationAllowed = false;
       transitionNavigationSection = null;
       transitionInFlight = false;
+      var compensationSection = form && typeof form.querySelector === 'function'
+        ? form.querySelector('.vms-collapsible-section[data-section-key="compensation"]')
+        : null;
+      if (compensationSection) updateCompensationActionState(compensationSection);
     }
 
     function blockEventDuringTransition(event) {
@@ -1068,6 +1148,44 @@
         '</div>' +
         '<div class="vms-ep-section-actions__state"><strong data-vms-section-status data-state="saved">Saved</strong><span class="description" data-vms-section-feedback aria-live="polite"></span></div>';
       body.appendChild(actions);
+      updateCompensationActionState(section);
+    }
+
+    function handleCompensationLockSubmit(event, submitter) {
+      if (!submitter || String(submitter.value || '') !== 'lock_draft_pay') return false;
+      var section = submitter.closest('.vms-collapsible-section[data-section-key="compensation"]');
+      if (!section) return false;
+      var body = section.querySelector('.vms-collapsible-body');
+      var feedback = section.querySelector('[data-vms-section-feedback]');
+
+      if (transitionInFlight) {
+        blockEventDuringTransition(event);
+        return true;
+      }
+      if (sectionPersistedDirty(body)) {
+        if (event && typeof event.preventDefault === 'function') event.preventDefault();
+        if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+        updateCompensationActionState(section);
+        setSectionStatus(section, 'Unsaved changes', 'dirty');
+        if (feedback) feedback.textContent = 'Save Compensation before locking Draft Pay.';
+        return true;
+      }
+      if (submitter.disabled || submitter.getAttribute('aria-disabled') === 'true') {
+        if (event && typeof event.preventDefault === 'function') event.preventDefault();
+        return true;
+      }
+      if (!beginTransition(section, null, {
+        title: 'Locking Draft Pay…',
+        copy: 'Please keep this page open while the saved compensation terms are locked.'
+      })) {
+        if (event && typeof event.preventDefault === 'function') event.preventDefault();
+        return true;
+      }
+
+      submitter.setAttribute('aria-disabled', 'true');
+      setSectionStatus(section, 'Locking…', 'saving');
+      suppressBeforeUnload = true;
+      return false;
     }
 
     function prepareMetaboxSection(id, key, label) {
@@ -1238,6 +1356,16 @@
       form.dataset.vmsCollapseDelegatedBound = '1';
       form.addEventListener('click', function (event) {
         var workflowSubmit = event.target.closest('button[type="submit"][name="vms_event_plan_action"]');
+        if (workflowSubmit && String(workflowSubmit.value || '') === 'lock_draft_pay') {
+          if (transitionInFlight) {
+            blockEventDuringTransition(event);
+            return;
+          }
+          if (activeSection && String(activeSection.dataset.sectionKey || '') === 'compensation' && sectionPersistedDirty(activeSection.querySelector('.vms-collapsible-body'))) {
+            handleCompensationLockSubmit(event, workflowSubmit);
+          }
+          return;
+        }
         if (workflowSubmit && blockEventDuringTransition(event)) return;
         if (!workflowSubmit || !activeSection || !sectionDirty(activeSection.querySelector('.vms-collapsible-body'))) return;
         if (!sectionPersistedDirty(activeSection.querySelector('.vms-collapsible-body')) && workflowActionConsumesTransient(workflowSubmit, activeSection)) return;
@@ -1328,8 +1456,12 @@
         if (handleSectionToggleClick(event)) return;
       });
       form.addEventListener('submit', function (event) {
-        if (blockEventDuringTransition(event)) return;
         var submitter = event && event.submitter ? event.submitter : document.activeElement;
+        if (submitter && String(submitter.value || '') === 'lock_draft_pay') {
+          if (handleCompensationLockSubmit(event, submitter)) return;
+        } else if (blockEventDuringTransition(event)) {
+          return;
+        }
         if (
           submitter
           && submitter.name === 'vms_event_plan_action'
@@ -1378,6 +1510,10 @@
         var control = event && event.detail ? event.detail.control : null;
         var section = control && control.closest ? control.closest('.vms-collapsible-section[data-section-key]') : null;
         if (section) setFlag(section);
+      });
+      document.addEventListener('vms:compensation-action-state-change', function () {
+        var section = form.querySelector('.vms-collapsible-section[data-section-key="compensation"]');
+        if (section) updateCompensationActionState(section);
       });
     }
 

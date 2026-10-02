@@ -1184,6 +1184,125 @@ if (!function_exists('bvmgr_comp_final_payment_summary_part')) {
     }
 }
 
+if (!function_exists('bvmgr_comp_default_field_is_configured')) {
+    function bvmgr_comp_default_field_is_configured(string $field, $value): bool
+    {
+        if ($value === null || $value === '') {
+            return false;
+        }
+        if (is_string($value) && trim($value) === '') {
+            return false;
+        }
+        return true;
+    }
+}
+
+if (!function_exists('bvmgr_comp_meaningful_default_diff_keys')) {
+    /**
+     * Return only configured default fields whose values meaningfully differ.
+     *
+     * @return array<int,string>
+     */
+    function bvmgr_comp_meaningful_default_diff_keys(array $actual, array $default): array
+    {
+        $numeric_fields = array(
+            'flat_fee_amount',
+            'door_split_percent',
+            'attendance_bonus_start_count',
+            'attendance_bonus_step_size',
+            'attendance_bonus_step_bonus',
+            'attendance_bonus_per_ticket_rate',
+            'attendance_bonus_max_bonus',
+            'commission_percent',
+        );
+        $attendance_fields = array(
+            'attendance_bonus_mode',
+            'attendance_bonus_start_count',
+            'attendance_bonus_step_size',
+            'attendance_bonus_step_bonus',
+            'attendance_bonus_per_ticket_rate',
+            'attendance_bonus_max_bonus',
+        );
+        $actual_structure = sanitize_key((string) ($actual['structure'] ?? ''));
+        $default_structure = sanitize_key((string) ($default['structure'] ?? ''));
+        $compare_attendance = $actual_structure === 'attendance_bonus' || $default_structure === 'attendance_bonus';
+        $actual_commission_active = is_numeric($actual['commission_percent'] ?? null) && (float) $actual['commission_percent'] > 0;
+        $default_commission_active = is_numeric($default['commission_percent'] ?? null) && (float) $default['commission_percent'] > 0;
+        $keys = array(
+            'structure',
+            'flat_fee_amount',
+            'door_split_percent',
+            'attendance_bonus_mode',
+            'attendance_bonus_start_count',
+            'attendance_bonus_step_size',
+            'attendance_bonus_step_bonus',
+            'attendance_bonus_per_ticket_rate',
+            'attendance_bonus_max_bonus',
+            'commission_percent',
+            'commission_mode',
+        );
+        $diffs = array();
+
+        foreach ($keys as $field) {
+            $default_value = $default[$field] ?? null;
+            if (!bvmgr_comp_default_field_is_configured($field, $default_value)) {
+                continue;
+            }
+            if (in_array($field, $attendance_fields, true) && !$compare_attendance) {
+                continue;
+            }
+            if ($field === 'commission_percent' && !$actual_commission_active && !$default_commission_active) {
+                continue;
+            }
+            if ($field === 'commission_mode' && (!$actual_commission_active && !$default_commission_active)) {
+                continue;
+            }
+
+            $actual_value = $actual[$field] ?? null;
+            if (in_array($field, $numeric_fields, true)) {
+                $default_value = is_numeric($default_value) ? number_format((float) $default_value, 4, '.', '') : (string) $default_value;
+                $actual_value = is_numeric($actual_value) ? number_format((float) $actual_value, 4, '.', '') : '';
+            } else {
+                $default_value = sanitize_key((string) $default_value);
+                $actual_value = sanitize_key((string) $actual_value);
+            }
+            if ($default_value !== $actual_value) {
+                $diffs[] = $field;
+            }
+        }
+
+        return $diffs;
+    }
+}
+
+if (!function_exists('bvmgr_comp_merge_configured_defaults')) {
+    function bvmgr_comp_merge_configured_defaults(array $draft, array $defaults): array
+    {
+        $fields = array(
+            'structure',
+            'flat_fee_amount',
+            'door_split_percent',
+            'attendance_bonus_mode',
+            'attendance_bonus_start_count',
+            'attendance_bonus_step_size',
+            'attendance_bonus_step_bonus',
+            'attendance_bonus_per_ticket_rate',
+            'attendance_bonus_max_bonus',
+            'commission_percent',
+            'commission_mode',
+        );
+        foreach ($fields as $field) {
+            if ($field === 'commission_mode' && (!is_numeric($defaults['commission_percent'] ?? null) || (float) $defaults['commission_percent'] <= 0)) {
+                continue;
+            }
+            if (array_key_exists($field, $defaults) && bvmgr_comp_default_field_is_configured($field, $defaults[$field])) {
+                $draft[$field] = $defaults[$field];
+            }
+        }
+        return $draft;
+    }
+}
+
 if (!function_exists('bvmgr_comp_hash_from_terms')) {
     function bvmgr_comp_hash_from_terms(array $terms): string
     {
@@ -1677,7 +1796,6 @@ function bvmgr_apply_comp_package_to_plan(int $plan_id, int $package_id): bool
     // Snapshot (this is the “source of truth” for what was agreed when applied)
     $deposit_terms = function_exists('bvmgr_get_event_plan_deposit_terms') ? (array) bvmgr_get_event_plan_deposit_terms((int) $plan_id) : array();
     $final_payment_terms = function_exists('bvmgr_get_event_plan_final_payment_terms') ? (array) bvmgr_get_event_plan_final_payment_terms((int) $plan_id) : array();
-
     $snapshot = array(
         'package_id'         => $package_id,
         'package_title'      => (string) get_the_title($package_id),
@@ -4434,6 +4552,12 @@ function bvmgr_apply_band_comp_defaults_to_plan(int $event_plan_id): bool
 	if (empty($terms)) {
 		$terms = array(
 			'structure' => 'flat_fee',
+		);
+	}
+	if (function_exists('bvmgr_get_event_plan_comp_terms') && function_exists('bvmgr_comp_merge_configured_defaults')) {
+		$terms = bvmgr_comp_merge_configured_defaults(
+			(array) bvmgr_get_event_plan_comp_terms($event_plan_id),
+			$terms
 		);
 	}
 

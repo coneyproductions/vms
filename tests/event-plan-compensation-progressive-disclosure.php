@@ -29,7 +29,6 @@ try {
         'Used when Expected Final Payment is Custom timing.',
         'Used when Payment Method is Other.',
         'Separate event expense. Blank or 0 means none for this event.',
-        'Tracked as its own expense, separate from vendor pay.',
         'No attendance bonus is earned until attendance goes above this number.',
         'How many additional tickets are needed to earn each bonus step.',
         'The amount added each time a step is reached.',
@@ -50,7 +49,7 @@ try {
     $assert(strpos($compensation, 'vms-comp-field-help') === false, 'Static field guidance must no longer occupy permanent field-help rows.');
     $assert(strpos($compensation, 'vms-comp-structure-scale-legend') === false, 'Draft Pay color-scale guidance must not remain a permanent legend row.');
     $assert(strpos($compensation, '<div class="vms-ep-card vms-ep-card--blue">') === false, 'The permanent Compensation how-it-works card must be removed.');
-    $assert(substr_count($compensation, 'bvmgr_help_icon(') >= 17, 'Compensation headings and field labels must expose the migrated guidance through help controls.');
+    $assert(substr_count($compensation, 'bvmgr_help_icon(') >= 16, 'Compensation headings and field labels must expose the migrated guidance through help controls.');
 
     $assert(strpos($helpers, 'type="button" class="vms-help-icon"') !== false, 'Compensation help must reuse the canonical non-submitting help button.');
     $assert(strpos($helpers, 'aria-label=') !== false && strpos($helpers, 'aria-expanded="false"') !== false, 'Canonical help buttons must retain accessible state and labels.');
@@ -60,7 +59,7 @@ try {
     $assert(strpos($css, '.vms-comp-field-label') !== false && strpos($css, 'align-items: center;') !== false, 'Field-label help controls must stay compact and label-adjacent.');
 
     foreach (array(
-        'Live Primary Vendor default differs from Draft Pay',
+        'This event uses pay different from the Primary Vendor default',
         'Draft Pay differs from Locked Snapshot',
         '$vms_deposit_summary',
         '$vms_final_payment_summary',
@@ -95,6 +94,10 @@ try {
     $assert(strpos($compensationJs, "agentFeeSummary.textContent = '';\n        agentFeeSummary.hidden = true;") !== false, 'Blank or zero Agent Fee must clear and hide its summary.');
     $assert(strpos($compensationJs, 'agentFeeSummary.hidden = false;') !== false, 'Positive Agent Fee must reveal its calculated summary.');
     $assert(strpos($compensationJs, 'No agent fee is currently set for this event.') === false, 'Zero Agent Fee must not render a permanent empty-state summary.');
+    $assert(substr_count($compensation, 'Agent Fee help') === 1, 'Only the Agent Fee section heading must retain its help control.');
+    $assert(strpos($compensation, 'Agent Fee percentage help') === false, 'Agent Fee percentage must not duplicate the heading help control.');
+    $assert(strpos($compensation, "__('Base Pay ($)', 'backstage-venue-manager')") !== false, 'Base Pay label must include its currency unit.');
+    $assert(strpos($compensation, "__('Flat Fee Amount ($)', 'backstage-venue-manager')") !== false, 'Flat Fee label must include its currency unit.');
     foreach (array(
         "fCommissionPercent.addEventListener('input', renderAgentFeeSummary);",
         "fCommissionPercent.addEventListener('change', renderAgentFeeSummary);",

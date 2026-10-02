@@ -24,7 +24,7 @@ $assert($selectorPos !== false && $legendPos > $selectorPos && $legendPos < $nam
 $assert(strpos($eventPlans, 'Availability for %s: [✓] Available, [✖] Not Available, [?] Unknown') !== false, 'Availability legend must include the saved date and explicit symbols.');
 
 $assert(strpos($shell, 'async function openAndFocusSection(section, force)') !== false, 'Workspace must define one canonical open-and-focus path.');
-$assert(strpos($shell, 'await waitForSectionLayout();') !== false, 'Navigation must wait for layout after lazy loading/opening.');
+$assert(strpos($shell, 'await waitForSectionLayout(section);') !== false, 'Navigation must wait for its destination layout after lazy loading/opening.');
 $assert(strpos($shell, 'scrollSectionWrapperIntoWorkingPosition(section);') !== false, 'Navigation must scroll the destination wrapper, not a stale inner anchor.');
 $assert(strpos($shell, "document.getElementById('wpadminbar')") !== false, 'Navigation must account for the WordPress admin bar offset.');
 $assert(strpos($shell, 'scrollSectionTargetIntoView') === false, 'The fixed-delay legacy scrolling path must be removed.');
@@ -36,7 +36,7 @@ $assert(strpos($compensationJs, "String(depositStatus.value || '') !== 'not_requ
 $assert(strpos($adminCss, '[data-vms-deposit-details][hidden]') !== false, 'Hidden deposit details must be removed from layout.');
 
 $assert(strpos($eventPlans, "'missing_keys' => \$missing_keys") !== false, 'Canonical pay-lock readiness must return keyed missing items.');
-$assert(strpos($eventPlans, "if (in_array(\$scope, array('basics', 'schedule'), true))") !== false, 'Basics and Schedule saves must refresh pay-lock readiness.');
+$assert(strpos($eventPlans, "if (in_array(\$scope, array('basics', 'schedule', 'compensation'), true))") !== false, 'Basics, Schedule, and Compensation saves must refresh authoritative pay-lock state.');
 $assert(strpos($eventPlans, "'html' => bvmgr_event_plan_render_lock_pay_actions_html(\$lock_pay_state)") !== false, 'Scoped saves must return the canonical server-rendered pay-lock action.');
 $assert(strpos($shell, 'applyLockPayState(result.lockPayState);') !== false, 'Workspace must refresh pay-lock actions in place after successful relevant saves.');
 $assert(strpos($eventPlans, "array('date', 'venue')") !== false && strpos($eventPlans, "array('start_time', 'end_time', 'primary_vendor')") !== false, 'Pay-lock navigation must route exact missing items to their owning sections.');

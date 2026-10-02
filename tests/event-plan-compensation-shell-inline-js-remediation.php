@@ -71,7 +71,7 @@ try {
 		'const section = document.getElementById(\'vms-pay-override-box\');',
 		'const lowSummary = document.getElementById(\'vms-low-guarantee-summary\');',
 		'document.addEventListener(\'vms_comp_options_updated\', () => {',
-		'setButtonsDisabled(needsOverrideAck || needsLowAck || attendanceInvalid);',
+		'setButtonsDisabled(needsOverrideAck || needsLowAck, compensationLockValidationMessage(actualState()));',
 	) as $removedInlineMarker) {
 		$assert(
 			strpos($eventPlansSource, $removedInlineMarker) === false,
@@ -102,7 +102,7 @@ try {
 		'lock_draft_pay',
 		'document.dispatchEvent(new Event(\'vms_comp_options_updated\'));',
 		'document.addEventListener(\'vms_comp_options_updated\', () => {',
-		'setButtonsDisabled(needsOverrideAck || needsLowAck || attendanceInvalid);',
+		'setButtonsDisabled(needsOverrideAck || needsLowAck, compensationLockValidationMessage(actualState()));',
 	) as $requiredCompMarker) {
 		$assert(strpos($compensationAssetSource, $requiredCompMarker) !== false, 'Compensation asset should own the migrated compensation-shell marker: ' . $requiredCompMarker);
 	}
@@ -133,7 +133,7 @@ try {
 
 		$assetPath = $fileInfo->getPathname();
 		$contents = file_get_contents($assetPath);
-		if (!is_string($contents) || strpos($contents, 'setButtonsDisabled(needsOverrideAck || needsLowAck || attendanceInvalid);') === false) {
+		if (!is_string($contents) || strpos($contents, 'setButtonsDisabled(needsOverrideAck || needsLowAck, compensationLockValidationMessage(actualState()));') === false) {
 			continue;
 		}
 

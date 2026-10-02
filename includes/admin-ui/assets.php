@@ -69,6 +69,7 @@ if (!function_exists('bvmgr_admin_ui_enqueue_assets')) {
 
 		if ($is_event_plan_screen) {
 			$event_plan_shell_version = bvmgr_admin_ui_local_asset_version('assets/js/vms-event-plan-shell.js');
+			$event_plan_compensation_version = bvmgr_admin_ui_local_asset_version('assets/js/vms-event-plan-compensation.js');
 			$event_plan_admin_style_version = bvmgr_admin_ui_local_asset_version('assets/css/vms-admin.css');
 			$event_plan_ticketing_version = bvmgr_admin_ui_local_asset_version('assets/admin-ticketing.js');
 			$registered_styles = wp_styles();
@@ -124,7 +125,7 @@ if (!function_exists('bvmgr_admin_ui_enqueue_assets')) {
 				'bvmgr-event-plan-compensation',
 				BVMGR_PLUGIN_URL . 'assets/js/vms-event-plan-compensation.js',
 				array(),
-				bvmgr_admin_ui_asset_version(),
+				$event_plan_compensation_version,
 				true
 			);
 

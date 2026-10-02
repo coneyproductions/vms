@@ -81,7 +81,7 @@
     </div>
 
     <label class="vms-pay-override-ack vms-mt-10">
-        <input type="checkbox" id="vms_pay_override_ack" name="vms_pay_override_ack" value="1" <?php checked($vms_combined_ack_checked); ?> />
+        <input type="checkbox" id="vms_pay_override_ack" name="vms_pay_override_ack" value="1" data-vms-ignore-section-dirty="1" <?php checked($vms_combined_ack_checked); ?> />
         <strong><?php esc_html_e('I acknowledge this Draft Pay selection may differ from defaults and/or the highest guaranteed option for this event.', 'backstage-venue-manager'); ?></strong>
     </label>
 

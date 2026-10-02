@@ -501,6 +501,9 @@ if (!function_exists('bvmgr_event_plan_render_lock_pay_actions_html')) {
     function bvmgr_event_plan_render_lock_pay_actions_html(array $state): string
     {
         $enabled = !empty($state['ok']);
+        $locked = !empty($state['locked']);
+        $out_of_sync = !empty($state['out_of_sync']);
+        $action_state = !$enabled ? 'unavailable' : ($locked ? ($out_of_sync ? 'relock' : 'locked') : 'available');
         $missing = array_values(array_filter(array_map('sanitize_text_field', (array) ($state['missing'] ?? array()))));
         $missing_keys = array_values(array_unique(array_filter(array_map('sanitize_key', (array) ($state['missing_keys'] ?? array())))));
         $needs_basics = (bool) array_intersect($missing_keys, array('date', 'venue'));
@@ -508,18 +511,31 @@ if (!function_exists('bvmgr_event_plan_render_lock_pay_actions_html')) {
 
         ob_start();
         ?>
-        <div class="vms-ep-lock-actions<?php echo $enabled ? '' : ' is-disabled'; ?>" data-vms-lock-pay-actions>
+        <div
+            id="vms-lock-pay-status"
+            class="vms-ep-lock-actions<?php echo $enabled ? '' : ' is-disabled'; ?>"
+            data-vms-lock-pay-actions
+            data-vms-lock-state="<?php echo esc_attr($action_state); ?>">
+            <?php if ($action_state === 'locked'): ?>
+                <div class="notice notice-success inline vms-notice vms-ep-lock-actions__complete" role="status">
+                    <strong><?php esc_html_e('Draft Pay locked', 'backstage-venue-manager'); ?></strong><br>
+                    <span class="description"><?php esc_html_e('The locked snapshot shown above is the current payout source.', 'backstage-venue-manager'); ?></span>
+                </div>
+            <?php else: ?>
             <p class="vms-mt-10">
                 <button
                     type="submit"
                     name="vms_event_plan_action"
                     value="lock_draft_pay"
                     class="button button-primary"
+                    data-vms-lock-pay-submit
+                    data-vms-server-disabled="<?php echo $enabled ? '0' : '1'; ?>"
                     <?php disabled(!$enabled); ?>
                     aria-disabled="<?php echo $enabled ? 'false' : 'true'; ?>">
-                    🔒 <?php esc_html_e('Lock Draft Pay for This Event', 'backstage-venue-manager'); ?>
+                    🔒 <?php echo esc_html($action_state === 'relock' ? __('Lock Updated Draft Pay', 'backstage-venue-manager') : __('Lock Draft Pay for This Event', 'backstage-venue-manager')); ?>
                 </button>
             </p>
+            <?php endif; ?>
             <?php if (!$enabled): ?>
                 <p class="description vms-ep-lock-actions__helper">
                     <?php
@@ -549,8 +565,18 @@ if (!function_exists('bvmgr_event_plan_render_lock_pay_actions_html')) {
                     </p>
                 <?php endif; ?>
             <?php endif; ?>
-            <p class="description vms-mt-neg-4">
-                <?php esc_html_e('Locks the current Draft Pay for this event so later default changes do not alter payout.', 'backstage-venue-manager'); ?>
+            <p class="description vms-mt-neg-4" data-vms-lock-pay-guidance>
+                <?php
+                if ($action_state === 'locked') {
+                    esc_html_e('Continue when you are ready. Editing and saving compensation later will make the saved Draft Pay available to lock again.', 'backstage-venue-manager');
+                } elseif ($action_state === 'relock') {
+                    esc_html_e('Saved Draft Pay differs from the locked payout snapshot. Lock again when the updated terms are final, or continue without changing the payout source.', 'backstage-venue-manager');
+                } elseif ($action_state === 'available') {
+                    esc_html_e('Draft Pay is saved. Lock it when the terms are final for this event, or continue without locking.', 'backstage-venue-manager');
+                } else {
+                    esc_html_e('Locking uses saved Draft Pay and is optional for Continue. Save the required Event Plan details first.', 'backstage-venue-manager');
+                }
+                ?>
             </p>
         </div>
         <?php
@@ -815,7 +841,7 @@ if (!function_exists('bvmgr_event_plan_classify_validation_blockers')) {
             __('End time must be after start time.', 'backstage-venue-manager') => array('invalid_time_range', __('Start and End Time', 'backstage-venue-manager'), 'readiness'),
             __('External Ticketing requires a complete http:// or https:// ticket purchase URL before this Event Plan can be marked Ready or published.', 'backstage-venue-manager') => array('missing_external_ticket_url', __('External Ticket URL', 'backstage-venue-manager'), 'readiness'),
             __('Flat fee amount is required for this compensation structure.', 'backstage-venue-manager') => array('missing_flat_fee', __('Vendor Pay', 'backstage-venue-manager'), 'readiness'),
-            __('Flat fee amount must be a positive number.', 'backstage-venue-manager') => array('invalid_flat_fee', __('Vendor Pay', 'backstage-venue-manager'), 'readiness'),
+            __('Flat fee amount must be a non-negative number.', 'backstage-venue-manager') => array('invalid_flat_fee', __('Vendor Pay', 'backstage-venue-manager'), 'readiness'),
             __('Base Pay is required for Base + Attendance Bonus.', 'backstage-venue-manager') => array('missing_base_pay', __('Base Pay', 'backstage-venue-manager'), 'readiness'),
             __('Bonus Style is required for Base + Attendance Bonus.', 'backstage-venue-manager') => array('missing_bonus_style', __('Bonus Style', 'backstage-venue-manager'), 'readiness'),
             __('Bonus Starts After is required for Base + Attendance Bonus.', 'backstage-venue-manager') => array('missing_bonus_start', __('Bonus Starts After', 'backstage-venue-manager'), 'readiness'),
@@ -864,23 +890,11 @@ if (!function_exists('bvmgr_event_plan_compensation_readiness_evaluation')) {
         $actual_structure = sanitize_key((string) ($actual['structure'] ?? ''));
         $default_structure = sanitize_key((string) ($default['structure'] ?? ''));
         $has_default = !empty($default['has_default']) && $default_structure !== '';
-        $differs = $has_default && $default_structure !== $actual_structure;
-
-        foreach (array('flat_fee_amount', 'door_split_percent') as $field) {
-            if ($has_default && array_key_exists($field, $default) && $default[$field] !== null && $default[$field] !== ($actual[$field] ?? null)) {
-                $differs = true;
-            }
-        }
-
-        if ($has_default && ($default_structure === 'attendance_bonus' || $actual_structure === 'attendance_bonus')) {
-            if ((string) ($default['attendance_bonus_mode'] ?? '') !== '' && sanitize_key((string) $default['attendance_bonus_mode']) !== sanitize_key((string) ($actual['attendance_bonus_mode'] ?? ''))) {
-                $differs = true;
-            }
-            foreach (array('attendance_bonus_start_count', 'attendance_bonus_step_size', 'attendance_bonus_step_bonus', 'attendance_bonus_per_ticket_rate', 'attendance_bonus_max_bonus') as $field) {
-                if (array_key_exists($field, $default) && $default[$field] !== null && $default[$field] !== ($actual[$field] ?? null)) {
-                    $differs = true;
-                }
-            }
+        $differs = false;
+        if ($has_default) {
+            $differs = function_exists('bvmgr_comp_meaningful_default_diff_keys')
+                ? !empty(bvmgr_comp_meaningful_default_diff_keys($actual, $default))
+                : $default_structure !== $actual_structure;
         }
 
         $guarantee_max = max(0.0, $guarantee_max);
@@ -5595,10 +5609,12 @@ class BVMGR_Admin_Event_Plans
                 absint($bundle['band_vendor_id'] ?? 0)
             );
         }
-        if (in_array($scope, array('basics', 'schedule'), true)) {
-            $lock_pay_state = $this->get_lock_pay_basics_state($post_id);
+        if (in_array($scope, array('basics', 'schedule', 'compensation'), true)) {
+            $lock_pay_state = $this->get_lock_pay_action_state($post_id);
             $response['lock_pay_state'] = array(
                 'ok' => !empty($lock_pay_state['ok']) ? 1 : 0,
+                'locked' => !empty($lock_pay_state['locked']) ? 1 : 0,
+                'out_of_sync' => !empty($lock_pay_state['out_of_sync']) ? 1 : 0,
                 'missing' => array_values((array) ($lock_pay_state['missing'] ?? array())),
                 'missing_keys' => array_values((array) ($lock_pay_state['missing_keys'] ?? array())),
                 'html' => bvmgr_event_plan_render_lock_pay_actions_html($lock_pay_state),
@@ -6680,6 +6696,29 @@ class BVMGR_Admin_Event_Plans
                 'band_id' => $band_id,
             ),
         );
+    }
+
+    /**
+     * Add the authoritative saved Draft Pay/snapshot relationship to lock readiness.
+     */
+    private function get_lock_pay_action_state(int $post_id, array $request = array()): array
+    {
+        $state = $this->get_lock_pay_basics_state($post_id, $request);
+        $snapshot = get_post_meta($post_id, '_vms_comp_snapshot', true);
+        $snapshot = is_array($snapshot) ? $snapshot : array();
+        $current_hash = function_exists('bvmgr_comp_hash_for_plan')
+            ? (string) bvmgr_comp_hash_for_plan($post_id)
+            : '';
+        $snapshot_hash = isset($snapshot['comp_hash']) ? (string) $snapshot['comp_hash'] : '';
+        $needs_snapshot = (string) get_post_meta($post_id, '_vms_comp_needs_snapshot', true) === '1';
+
+        $state['locked'] = !empty($snapshot);
+        $state['out_of_sync'] = !empty($snapshot) && (
+            $needs_snapshot
+            || ($snapshot_hash !== '' && $current_hash !== '' && $snapshot_hash !== $current_hash)
+        );
+
+        return $state;
     }
 
     private function format_cancellation_gmt(string $gmt): string
@@ -8677,22 +8716,6 @@ class BVMGR_Admin_Event_Plans
 
         $vms_combined_ack_checked = ($ack_checked || $vms_low_ack_checked);
 
-        $vms_comp_terms_for_compare = static function (array $terms) use ($vms_norm_num): array {
-            return array(
-                'structure' => isset($terms['structure']) ? (string) $terms['structure'] : '',
-                'flat_fee_amount' => $vms_norm_num($terms['flat_fee_amount'] ?? ''),
-                'door_split_percent' => $vms_norm_num($terms['door_split_percent'] ?? ''),
-                'attendance_bonus_mode' => isset($terms['attendance_bonus_mode']) ? (string) $terms['attendance_bonus_mode'] : '',
-                'attendance_bonus_start_count' => $vms_norm_num($terms['attendance_bonus_start_count'] ?? ''),
-                'attendance_bonus_step_size' => $vms_norm_num($terms['attendance_bonus_step_size'] ?? ''),
-                'attendance_bonus_step_bonus' => $vms_norm_num($terms['attendance_bonus_step_bonus'] ?? ''),
-                'attendance_bonus_per_ticket_rate' => $vms_norm_num($terms['attendance_bonus_per_ticket_rate'] ?? ''),
-                'attendance_bonus_max_bonus' => $vms_norm_num($terms['attendance_bonus_max_bonus'] ?? ''),
-                'commission_percent' => $vms_norm_num($terms['commission_percent'] ?? ''),
-                'commission_mode' => isset($terms['commission_mode']) ? (string) $terms['commission_mode'] : '',
-            );
-        };
-
         $vms_actual_terms = array_merge($actual, array(
             'commission_percent' => $commission_percent,
             'commission_mode' => $commission_mode,
@@ -8705,10 +8728,10 @@ class BVMGR_Admin_Event_Plans
             ? $vms_vendor_default_tile['terms']
             : array();
         $vms_vendor_default_has_terms = !empty($vms_vendor_default_terms);
-        $vms_vendor_default_matches_draft = false;
-        if ($vms_vendor_default_has_terms) {
-            $vms_vendor_default_matches_draft = ($vms_comp_terms_for_compare($vms_vendor_default_terms) === $vms_comp_terms_for_compare($vms_actual_terms));
-        }
+        $vms_vendor_default_diff_keys = $vms_vendor_default_has_terms && function_exists('bvmgr_comp_meaningful_default_diff_keys')
+            ? bvmgr_comp_meaningful_default_diff_keys($vms_actual_terms, $vms_vendor_default_terms)
+            : array();
+        $vms_vendor_default_matches_draft = $vms_vendor_default_has_terms && empty($vms_vendor_default_diff_keys);
         $vms_show_vendor_default_drift_notice = ($vms_vendor_default_has_terms && !$vms_vendor_default_matches_draft);
         $vms_vendor_default_subtitle = isset($vms_vendor_default_tile['subtitle']) ? trim((string) $vms_vendor_default_tile['subtitle']) : '';
         $vms_vendor_default_summary = function_exists('bvmgr_snapshot_summary_line')
@@ -8876,10 +8899,8 @@ class BVMGR_Admin_Event_Plans
             'commission_mode' => __('Agent fee basis', 'backstage-venue-manager'),
         );
         if ($vms_vendor_default_has_terms) {
-            $vms_vendor_terms_for_compare = $vms_comp_terms_for_compare($vms_vendor_default_terms);
-            $vms_actual_terms_for_compare = $vms_comp_terms_for_compare($vms_actual_terms);
             foreach ($vms_diff_field_labels as $vms_diff_key => $vms_diff_label) {
-                if (($vms_vendor_terms_for_compare[$vms_diff_key] ?? '') === ($vms_actual_terms_for_compare[$vms_diff_key] ?? '')) {
+                if (!in_array($vms_diff_key, $vms_vendor_default_diff_keys, true)) {
                     continue;
                 }
                 $vms_vendor_default_diff_rows[] = array(
@@ -9329,7 +9350,7 @@ class BVMGR_Admin_Event_Plans
             }
         }
 
-        $lock_pay_basics_state = $this->get_lock_pay_basics_state((int) $post->ID);
+        $lock_pay_basics_state = $this->get_lock_pay_action_state((int) $post->ID);
 
         $comp_options_nonce = wp_create_nonce('bvmgr_comp_options');
         $comp_opts_trace = function_exists('bvmgr_event_plan_perf_span_start')
@@ -10952,7 +10973,7 @@ class BVMGR_Admin_Event_Plans
                 // ---------------------------------
                 // Pay override enforcement (bombproof)
                 // Rule: If Draft Pay differs from computed default pay for venue/date (including holiday),
-                // user must acknowledge before ANY save is allowed.
+                // user must acknowledge before Ready, Publish, or Lock Draft Pay.
                 // ---------------------------------
 
                 $ack = (isset($request['vms_pay_override_ack']) && (string) $request['vms_pay_override_ack'] === '1');
@@ -12670,6 +12691,13 @@ if (function_exists('bvmgr_add_admin_notice')) {
                             break;
                         }
 
+                        if (function_exists('bvmgr_get_event_plan_comp_terms') && function_exists('bvmgr_comp_merge_configured_defaults')) {
+                            $vendor_terms = bvmgr_comp_merge_configured_defaults(
+                                (array) bvmgr_get_event_plan_comp_terms($post_id),
+                                $vendor_terms
+                            );
+                        }
+
                         $applied_vendor_defaults = bvmgr_event_plan_apply_comp_terms($post_id, $vendor_terms);
                         if (!$applied_vendor_defaults) {
                             bvmgr_add_admin_notice(__('Could not apply the current Primary Vendor default to Draft Pay.', 'backstage-venue-manager'), 'error');
@@ -12819,8 +12847,8 @@ if (function_exists('bvmgr_add_admin_notice')) {
                         $bonus_max_bonus = ($bonus_max_bonus === '' || $bonus_max_bonus === null) ? null : (float) $bonus_max_bonus;
                         $commission_percent = ($commission_percent === '' || $commission_percent === null) ? null : max(0, (float) $commission_percent);
 
-                        if (in_array($structure, array('flat_fee', 'flat_fee_door_split'), true) && ($flat === null || $flat <= 0)) {
-                            bvmgr_add_admin_notice(__('Cannot lock Draft Pay: Flat Fee Amount is required for this structure.', 'backstage-venue-manager'), 'error');
+                        if (in_array($structure, array('flat_fee', 'flat_fee_door_split'), true) && ($flat === null || $flat < 0)) {
+                            bvmgr_add_admin_notice(__('Cannot lock Draft Pay: Flat Fee Amount must be $0 or greater for this structure.', 'backstage-venue-manager'), 'error');
                             break;
                         }
                         if (in_array($structure, array('door_split', 'flat_fee_door_split'), true) && ($split === null || $split <= 0 || $split > 100)) {
@@ -12895,7 +12923,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
                         delete_post_meta($post_id, '_vms_comp_needs_snapshot');
 
                         bvmgr_add_admin_notice(__('Draft Pay locked for this event (snapshot created).', 'backstage-venue-manager'), 'success');
-                        bvmgr_admin_scroll_to_compensation($post_id);
+                        update_post_meta($post_id, '_vms_admin_scroll_to', 'vms-lock-pay-status');
                         break;
                 }
 
@@ -13390,7 +13418,7 @@ if (function_exists('bvmgr_add_admin_notice')) {
 
             if (in_array($comp_structure, array('flat_fee', 'flat_fee_door_split'), true)) {
                 if ($flat_fee_amount === '' || $flat_fee_amount === null) $errors[] = __('Flat fee amount is required for this compensation structure.', 'backstage-venue-manager');
-                elseif (!is_numeric($flat_fee_amount) || (float)$flat_fee_amount <= 0) $errors[] = __('Flat fee amount must be a positive number.', 'backstage-venue-manager');
+                elseif (!is_numeric($flat_fee_amount) || (float)$flat_fee_amount < 0) $errors[] = __('Flat fee amount must be a non-negative number.', 'backstage-venue-manager');
             }
 
             if ($comp_structure === 'attendance_bonus') {

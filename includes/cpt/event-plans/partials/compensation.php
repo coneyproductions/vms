@@ -17,7 +17,7 @@
 
 	    <?php
 	        $vms_is_attendance_bonus = ((string) $comp_structure === 'attendance_bonus');
-	        $vms_flat_fee_label = $vms_is_attendance_bonus ? __('Base Pay', 'backstage-venue-manager') : __('Flat Fee Amount', 'backstage-venue-manager');
+	        $vms_flat_fee_label = $vms_is_attendance_bonus ? __('Base Pay ($)', 'backstage-venue-manager') : __('Flat Fee Amount ($)', 'backstage-venue-manager');
 	        $vms_comp_has_data = (
 	            ((string) $comp_structure !== 'flat_fee')
 	            || ((string) $flat_fee_amount !== '')
@@ -60,9 +60,9 @@
 	        <input type="hidden" id="vms_comp_selected_option" name="vms_comp_selected_option" value="<?php echo esc_attr((string) $selected_opt); ?>" />
 
         <?php if (!empty($vms_show_vendor_default_drift_notice)): ?>
-            <div class="vms-ep-card vms-ep-card--amber vms-notice vms-notice--warning vms-mt-10">
-                <strong class="vms-text-warn">⚠️ <?php esc_html_e('Live Primary Vendor default differs from Draft Pay', 'backstage-venue-manager'); ?></strong><br>
-                <span class="description"><?php esc_html_e('The current vendor profile resolves to different default terms for this venue/date. Draft Pay stays as-is until you choose to apply the updated default.', 'backstage-venue-manager'); ?></span>
+            <div class="vms-ep-card vms-ep-card--blue vms-mt-10">
+                <strong><?php esc_html_e('This event uses pay different from the Primary Vendor default', 'backstage-venue-manager'); ?></strong><br>
+                <span class="description"><?php esc_html_e('The Draft Pay for this event will remain as shown unless you choose to replace it with the vendor’s current default.', 'backstage-venue-manager'); ?></span>
 
                 <?php if (!empty($vms_vendor_default_subtitle)): ?>
                     <div class="description vms-mt-6"><strong><?php esc_html_e('Winning source:', 'backstage-venue-manager'); ?></strong> <?php echo esc_html((string) $vms_vendor_default_subtitle); ?></div>
@@ -101,7 +101,7 @@
 
                 <p class="vms-mt-8 vms-mb-0">
                     <button type="submit" name="vms_event_plan_action" value="apply_vendor_defaults" class="button button-secondary">
-                        <?php esc_html_e('Apply current Primary Vendor default to Draft Pay', 'backstage-venue-manager'); ?>
+                        <?php esc_html_e('Use Primary Vendor default instead', 'backstage-venue-manager'); ?>
                     </button>
                 </p>
             </div>
@@ -212,7 +212,7 @@
 	                    </p>
 	                    <p class="vms-comp-field vms-comp-field--door" data-show-when="door_split,flat_fee_door_split">
 	                        <label for="vms_door_split_percent"><strong><?php esc_html_e('Door Split %', 'backstage-venue-manager'); ?></strong></label><br />
-	                        <input type="text" inputmode="decimal" autocomplete="off" id="vms_door_split_percent" name="vms_door_split_percent" class="vms-ep-input-sm" value="<?php echo esc_attr($door_split_percent); ?>" placeholder="<?php esc_attr_e('0', 'backstage-venue-manager'); ?>" /> %
+	                        <input type="text" inputmode="decimal" autocomplete="off" id="vms_door_split_percent" name="vms_door_split_percent" class="vms-ep-input-sm" value="<?php echo esc_attr($door_split_percent); ?>" placeholder="<?php esc_attr_e('0', 'backstage-venue-manager'); ?>" />
 	                    </p>
 	                    <p class="vms-comp-field vms-comp-field--bonus-mode" data-show-when="attendance_bonus">
 	                        <label for="vms_attendance_bonus_mode"><strong><?php esc_html_e('Bonus Style', 'backstage-venue-manager'); ?></strong></label><br />
@@ -404,10 +404,7 @@
 	                </div>
 	                <div class="vms-ep-agent-grid">
 	                    <p class="vms-comp-field vms-comp-field--agent-pct">
-	                        <span class="vms-comp-field-label">
-	                            <label for="vms_commission_percent"><strong><?php esc_html_e('Agent Fee %', 'backstage-venue-manager'); ?></strong></label>
-	                            <?php if (function_exists('bvmgr_help_icon')) bvmgr_help_icon(__('Tracked as its own expense, separate from vendor pay.', 'backstage-venue-manager'), __('Agent Fee percentage help', 'backstage-venue-manager')); ?>
-	                        </span><br />
+	                        <label for="vms_commission_percent"><strong><?php esc_html_e('Agent Fee %', 'backstage-venue-manager'); ?></strong></label><br />
 	                        <input type="text" inputmode="decimal" autocomplete="off" id="vms_commission_percent" name="vms_commission_percent" class="vms-ep-input-sm" value="<?php echo esc_attr($commission_percent); ?>" placeholder="<?php esc_attr_e('0', 'backstage-venue-manager'); ?>" />
 	                    </p>
 	                    <p class="vms-comp-field vms-comp-field--agent-basis">

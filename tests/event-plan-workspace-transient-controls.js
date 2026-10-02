@@ -67,6 +67,13 @@ const section = {
 assert.equal(contract.sectionTransientDirty(body), true, 'Replacement/refund action intent must be dirty.');
 assert.equal(contract.sectionPersistedDirty(body), true, 'Changed persisted cancellation settings must be dirty.');
 
+const acknowledgment = input('vms_pay_override_ack', '1', '', false, 'checkbox');
+acknowledgment.checked = true;
+acknowledgment.dataset.vmsIgnoreSectionDirty = '1';
+const acknowledgmentBody = { querySelectorAll() { return [acknowledgment]; } };
+assert.equal(contract.sectionPersistedDirty(acknowledgmentBody), false, 'Acknowledgment must be ignored by persisted dirty detection.');
+assert.equal(contract.sectionTransientDirty(acknowledgmentBody), false, 'Acknowledgment must be ignored by transient dirty detection.');
+
 contract.resetSectionBaseline(section, true);
 assert.equal(contract.sectionPersistedDirty(body), false, 'Successful ordinary save must reset persisted cancellation fields.');
 assert.equal(contract.sectionTransientDirty(body), true, 'Successful ordinary save must not reset replacement/refund action intent.');
@@ -96,5 +103,6 @@ const transientGuard = shell.indexOf("if (sectionTransientDirty(section.querySel
 const nextNavigation = shell.indexOf('await openAndFocusDestination(target, true);', transientGuard);
 assert.ok(transientGuard >= 0 && nextNavigation > transientGuard, 'Save & Continue must test transient intent before navigation.');
 assert.ok(shell.includes('window.location.reload();'), 'Discard Changes must reload authoritative saved state.');
+assert.match(shell, /dataset\.vmsIgnoreSectionDirty === '1'/, 'The shell uses a narrow section-dirty exclusion without reclassifying the control as transient.');
 
 console.log('event plan workspace transient controls: PASS');

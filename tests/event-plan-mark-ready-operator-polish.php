@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 $root = dirname(__DIR__);
+$helpers = (string) file_get_contents($root . '/includes/helpers.php');
 $eventPlans = (string) file_get_contents($root . '/includes/cpt/event-plans.php');
 $workspaceStatus = (string) file_get_contents($root . '/includes/cpt/event-plans/partials/workspace-status.php');
 $readinessDetails = (string) file_get_contents($root . '/includes/cpt/event-plans/partials/readiness-details.php');
@@ -60,6 +61,13 @@ $extractFunction = static function (string $source, string $name): string {
 };
 
 foreach (array(
+    'bvmgr_comp_default_field_is_configured',
+    'bvmgr_comp_meaningful_default_diff_keys',
+) as $functionName) {
+    eval($extractFunction($helpers, $functionName));
+}
+
+foreach (array(
     'bvmgr_event_plan_classify_validation_blockers',
     'bvmgr_event_plan_compensation_readiness_evaluation',
     'bvmgr_event_plan_saved_compensation_readiness_blockers',
@@ -107,6 +115,25 @@ try {
         '_vms_band_vendor_id' => 88,
     );
     $assert(bvmgr_event_plan_mark_ready_blockers(102) === array(), 'A complete saved Event Plan must not manufacture Mark Ready blockers.');
+
+    $GLOBALS['vms_mark_ready_meta'][105] = $GLOBALS['vms_mark_ready_meta'][102];
+    $GLOBALS['vms_mark_ready_meta'][105]['_vms_flat_fee_amount'] = '0';
+    $assert(bvmgr_event_plan_mark_ready_blockers(105) === array(), 'An intentional zero Flat Fee must be valid and complete.');
+
+    $GLOBALS['vms_mark_ready_meta'][106] = $GLOBALS['vms_mark_ready_meta'][102];
+    $GLOBALS['vms_mark_ready_meta'][106]['_vms_flat_fee_amount'] = '-1';
+    $negativeFlatCodes = array_column(bvmgr_event_plan_mark_ready_blockers(106), 'code');
+    $assert(in_array('invalid_flat_fee', $negativeFlatCodes, true), 'A negative Flat Fee must remain invalid.');
+
+    $GLOBALS['vms_mark_ready_meta'][107] = $GLOBALS['vms_mark_ready_meta'][105];
+    $GLOBALS['vms_mark_ready_meta'][107]['_vms_comp_structure'] = 'flat_fee_door_split';
+    $GLOBALS['vms_mark_ready_meta'][107]['_vms_door_split_percent'] = '20';
+    $assert(bvmgr_event_plan_mark_ready_blockers(107) === array(), 'Flat Fee + Door Split must accept a zero Flat Fee with a valid split.');
+
+    $GLOBALS['vms_mark_ready_meta'][108] = $GLOBALS['vms_mark_ready_meta'][107];
+    $GLOBALS['vms_mark_ready_meta'][108]['_vms_door_split_percent'] = '0';
+    $zeroSplitBlockers = bvmgr_event_plan_mark_ready_blockers(108);
+    $assert(count($zeroSplitBlockers) === 1 && strpos((string) ($zeroSplitBlockers[0]['message'] ?? ''), 'between 1 and 100') !== false, 'A zero Door Split must remain invalid for Flat Fee + Door Split.');
 
     $GLOBALS['vms_mark_ready_comp_default'] = array(
         'has_default' => true,

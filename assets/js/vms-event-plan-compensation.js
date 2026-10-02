@@ -583,21 +583,28 @@
       };
     }
 
-    const actionButtons = Array.from(form.querySelectorAll('button[type="submit"][name="vms_event_plan_action"]'));
-    actionButtons.forEach((btn) => {
-      btn.dataset.vmsBaseDisabled = btn.disabled ? '1' : '0';
-    });
-
-    function setButtonsDisabled(disabled) {
-      actionButtons.forEach((btn) => {
+    function setButtonsDisabled(ackDisabled, validationMessage) {
+      const validationDisabled = String(validationMessage || '').trim() !== '';
+      Array.from(form.querySelectorAll('button[type="submit"][name="vms_event_plan_action"]')).forEach((btn) => {
         const v = btn.value || '';
         if (v === 'mark_ready' || v === 'publish_now' || v === 'lock_draft_pay') {
-          const baseDisabled = btn.dataset.vmsBaseDisabled === '1';
-          const nextDisabled = baseDisabled || !!disabled;
+          if (!Object.prototype.hasOwnProperty.call(btn.dataset, 'vmsBaseDisabled')) {
+            btn.dataset.vmsBaseDisabled = btn.disabled ? '1' : '0';
+          }
+          if (v === 'lock_draft_pay') {
+            btn.dataset.vmsAckDisabled = ackDisabled ? '1' : '0';
+            btn.dataset.vmsValidationDisabled = validationDisabled ? '1' : '0';
+            btn.dataset.vmsValidationMessage = validationDisabled ? String(validationMessage) : '';
+          }
+          const baseDisabled = btn.dataset.vmsBaseDisabled === '1' || btn.dataset.vmsServerDisabled === '1';
+          const dirtyDisabled = v === 'lock_draft_pay' && btn.dataset.vmsDirtyDisabled === '1';
+          const nextDisabled = baseDisabled || dirtyDisabled || !!ackDisabled || validationDisabled;
           btn.disabled = nextDisabled;
+          btn.setAttribute('aria-disabled', nextDisabled ? 'true' : 'false');
           btn.classList.toggle('disabled', nextDisabled);
         }
       });
+      document.dispatchEvent(new CustomEvent('vms:compensation-action-state-change'));
     }
 
     function updateTileSelection() {
@@ -668,7 +675,7 @@
       });
 
       if (flatLabelText) {
-        flatLabelText.textContent = cur === 'attendance_bonus' ? 'Base Pay' : 'Flat Fee Amount';
+        flatLabelText.textContent = cur === 'attendance_bonus' ? 'Base Pay ($)' : 'Flat Fee Amount ($)';
       }
       if (flatHelp) {
         flatHelp.classList.toggle('vms-hidden', cur !== 'attendance_bonus');
@@ -951,19 +958,57 @@
       if (d.split !== null && d.split !== a.split) diff = true;
 
       const compareAttendance = d.structure === 'attendance_bonus' || a.structure === 'attendance_bonus';
-      if (!compareAttendance) {
-        return diff;
+      if (compareAttendance) {
+        if (d.attendance_bonus_mode && d.attendance_bonus_mode !== a.attendance_bonus_mode) diff = true;
+        if (d.attendance_bonus_start_count !== null && d.attendance_bonus_start_count !== a.attendance_bonus_start_count) diff = true;
+        if (d.attendance_bonus_step_size !== null && d.attendance_bonus_step_size !== a.attendance_bonus_step_size) diff = true;
+        if (d.attendance_bonus_step_bonus !== null && d.attendance_bonus_step_bonus !== a.attendance_bonus_step_bonus) diff = true;
+        if (d.attendance_bonus_per_ticket_rate !== null && d.attendance_bonus_per_ticket_rate !== a.attendance_bonus_per_ticket_rate) diff = true;
+        if (d.attendance_bonus_max_bonus !== null && d.attendance_bonus_max_bonus !== a.attendance_bonus_max_bonus) diff = true;
       }
 
-      if (d.attendance_bonus_mode && d.attendance_bonus_mode !== a.attendance_bonus_mode) diff = true;
-      if (d.attendance_bonus_start_count !== null && d.attendance_bonus_start_count !== a.attendance_bonus_start_count) diff = true;
-      if (d.attendance_bonus_step_size !== null && d.attendance_bonus_step_size !== a.attendance_bonus_step_size) diff = true;
-      if (d.attendance_bonus_step_bonus !== null && d.attendance_bonus_step_bonus !== a.attendance_bonus_step_bonus) diff = true;
-      if (d.attendance_bonus_per_ticket_rate !== null && d.attendance_bonus_per_ticket_rate !== a.attendance_bonus_per_ticket_rate) diff = true;
-      if (d.attendance_bonus_max_bonus !== null && d.attendance_bonus_max_bonus !== a.attendance_bonus_max_bonus) diff = true;
-      if (d.commission_percent !== null && d.commission_percent !== a.commission_percent) diff = true;
-      if (d.commission_mode && d.commission_mode !== a.commission_mode) diff = true;
+      const actualCommissionActive = Number(a.commission_percent || 0) > 0;
+      const defaultCommissionActive = Number(d.commission_percent || 0) > 0;
+      if (actualCommissionActive || defaultCommissionActive) {
+        if (d.commission_percent !== null && d.commission_percent !== a.commission_percent) diff = true;
+        if (d.commission_mode && d.commission_mode !== a.commission_mode) diff = true;
+      }
       return diff;
+    }
+
+    function compensationLockValidationMessage(state) {
+      const structure = String(state && state.structure || 'flat_fee');
+      const flat = state ? state.flat : null;
+      const split = state ? state.split : null;
+
+      if ((structure === 'flat_fee' || structure === 'flat_fee_door_split') && (flat === null || flat < 0)) {
+        return 'Flat Fee Amount must be $0 or greater before locking Draft Pay.';
+      }
+      if (structure === 'flat_fee_door_split' && !(split >= 1 && split <= 100)) {
+        return 'Door Split must be between 1% and 100% for Flat Fee + Door Split. Enter a split or choose Flat Fee.';
+      }
+      if (structure === 'door_split' && !(split >= 1 && split <= 100)) {
+        return 'Door Split must be between 1% and 100% before locking Draft Pay.';
+      }
+      if (structure !== 'attendance_bonus') return '';
+      if (flat === null || flat < 0) return 'Base Pay is required for Base + Attendance Bonus.';
+      if (state.attendance_bonus_mode !== 'step' && state.attendance_bonus_mode !== 'continuous') {
+        return 'Bonus Style is required for Base + Attendance Bonus.';
+      }
+      if (state.attendance_bonus_start_count === null || state.attendance_bonus_start_count < 0) {
+        return 'Bonus Starts After is required for Base + Attendance Bonus.';
+      }
+      if (state.attendance_bonus_mode === 'step') {
+        if (state.attendance_bonus_step_size === null || state.attendance_bonus_step_size < 1) {
+          return 'Step Size must be at least 1 for step attendance bonus mode.';
+        }
+        if (state.attendance_bonus_step_bonus === null || state.attendance_bonus_step_bonus < 0) {
+          return 'Bonus Per Step is required for step attendance bonus mode.';
+        }
+      } else if (state.attendance_bonus_per_ticket_rate === null || state.attendance_bonus_per_ticket_rate < 0) {
+        return 'Bonus Per Ticket is required for continuous attendance bonus mode.';
+      }
+      return '';
     }
 
     function renderPayOverride() {
@@ -1030,12 +1075,16 @@
           lines.push(`Max bonus: default ${formatMoney(d.attendance_bonus_max_bonus)} vs draft ${formatMoney(a.attendance_bonus_max_bonus)}.`);
         }
       }
-      if (d.commission_percent !== null && d.commission_percent !== a.commission_percent) {
-        lines.push(`Agent fee: default ${formatPct(d.commission_percent)} vs draft ${formatPct(a.commission_percent)}.`);
-      }
-      if (d.commission_mode && d.commission_mode !== a.commission_mode) {
-        const modeLabel = (value) => value === 'gross' ? 'gross / settlement' : 'added on top';
-        lines.push(`Agent fee basis: default ${modeLabel(d.commission_mode)} vs draft ${modeLabel(a.commission_mode)}.`);
+      const actualCommissionActive = Number(a.commission_percent || 0) > 0;
+      const defaultCommissionActive = Number(d.commission_percent || 0) > 0;
+      if (actualCommissionActive || defaultCommissionActive) {
+        if (d.commission_percent !== null && d.commission_percent !== a.commission_percent) {
+          lines.push(`Agent fee: default ${formatPct(d.commission_percent)} vs draft ${formatPct(a.commission_percent)}.`);
+        }
+        if (d.commission_mode && d.commission_mode !== a.commission_mode) {
+          const modeLabel = (value) => value === 'gross' ? 'gross / settlement' : 'added on top';
+          lines.push(`Agent fee basis: default ${modeLabel(d.commission_mode)} vs draft ${modeLabel(a.commission_mode)}.`);
+        }
       }
       summary.textContent = lines.join(' ');
       return !ack.checked;
@@ -1045,7 +1094,7 @@
       updateTileSelection();
       setFieldVisibility();
 
-      const attendanceInvalid = renderAttendancePreview();
+      renderAttendancePreview();
       renderAgentFeeSummary();
       const needsOverrideAck = renderPayOverride();
       const needsLowAck = renderLowGuarantee();
@@ -1054,7 +1103,7 @@
         ackCard.classList.toggle('vms-hidden', !(overrideDiff || lowDiff));
       }
 
-      setButtonsDisabled(needsOverrideAck || needsLowAck || attendanceInvalid);
+      setButtonsDisabled(needsOverrideAck || needsLowAck, compensationLockValidationMessage(actualState()));
     }
 
     function payStateSignature() {
@@ -1130,6 +1179,7 @@
       lastPaySig = payStateSignature();
       render();
     });
+    document.addEventListener('vms:event-plan-lock-pay-state-refreshed', render);
 
     render();
     return true;
