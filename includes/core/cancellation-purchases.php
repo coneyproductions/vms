@@ -16,6 +16,29 @@ function bvmgr_cancel_purchase_providers(): array
     ));
 }
 
+/** Unknown metadata is only an identity hint when its key names an identity field. */
+function bvmgr_cancel_purchase_meta_key_is_event_identity(string $key): bool
+{
+    $key = strtolower(trim($key));
+    if ($key === '') return false;
+    return (bool) preg_match('/(?:^|_)(?:event_plan_id|event_post_id|event_id|tec_event_post_id|tec_event_id|occurrence_id|reservation_id)$/', $key);
+}
+
+/** An order-level anchor must be an explicit provider identity that matches the target. */
+function bvmgr_cancel_purchase_order_has_target_anchor($order, array $context, array $providers): bool
+{
+    if (!is_object($order) || !method_exists($order, 'get_meta')) return false;
+    foreach ($providers as $provider) {
+        foreach (array('plan_keys' => 'event_plan_id', 'tec_keys' => 'tec_event_id') as $bucket => $target) {
+            foreach (($provider[$bucket] ?? array()) as $key) {
+                $raw = $order->get_meta($key, true);
+                if (is_scalar($raw) && ctype_digit((string) $raw) && absint($raw) > 0 && absint($raw) === absint($context[$target] ?? 0)) return true;
+            }
+        }
+    }
+    return false;
+}
+
 function bvmgr_cancel_purchase_identity($item, array $context, array $providers): array
 {
     $claims = array();
@@ -63,7 +86,7 @@ function bvmgr_cancel_purchase_identity($item, array $context, array $providers)
     if (method_exists($item, 'get_meta_data')) {
         foreach ($item->get_meta_data() as $meta) {
             $data = $meta->get_data();
-            if (preg_match('/event|occurrence|reservation|express_bar/i', (string) $data['key'])) {
+            if (bvmgr_cancel_purchase_meta_key_is_event_identity((string) $data['key'])) {
                 $value = $data['value'] ?? '';
                 // An unrecognized event field pointing at a known *other* event does
                 // not make every cancellation across the site unresolved.
@@ -133,6 +156,7 @@ function bvmgr_cancel_purchase_discover(int $event_plan_id): array
                 $seen[$id] = true;
                 $scope['orders_scanned']++;
                 $lines = array();
+                $has_eligible_item = false;
                 foreach ($order->get_items(array('line_item', 'fee', 'shipping')) as $item_id => $item) {
                     try { $identity = bvmgr_cancel_purchase_identity($item, $context, $providers); }
                     catch (Throwable $e) {
@@ -140,9 +164,11 @@ function bvmgr_cancel_purchase_discover(int $event_plan_id): array
                         $identity = array('state' => 'unresolved', 'provider' => 'provider_failure', 'evidence' => array(), 'reason' => 'provider_failure');
                     }
                     if ($identity['state'] === 'unrelated' || $identity['state'] === 'other_event') continue;
+                    if ($identity['state'] === 'eligible') $has_eligible_item = true;
                     $lines[] = bvmgr_cancel_purchase_line($order, $item, (int) $item_id, $identity);
                 }
                 if (!$lines) continue;
+                if (!$has_eligible_item && !bvmgr_cancel_purchase_order_has_target_anchor($order, $context, $providers)) continue;
                 $paid = in_array($order->get_status(), wc_get_is_paid_statuses(), true) || $order->get_status() === 'refunded';
                 $reason = '';
                 if (!$paid) $reason = 'payment_status_requires_review';
