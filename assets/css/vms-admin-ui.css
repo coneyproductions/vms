@@ -1227,6 +1227,22 @@ body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary {
   border-color: var(--vms-lineup-border-success);
 }
 
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__summary {
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+}
+
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__summary-main {
+  align-items: center;
+  gap: 8px;
+}
+
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__summary-meta {
+  align-items: center;
+  gap: 6px;
+}
+
 body.vms-admin #vms-lineup-schedule-section .vms-lineup-row.is-dragging {
   opacity: 0.78;
 }
@@ -1323,6 +1339,11 @@ body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__pill--primary {
   color: #1f6a44;
 }
 
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__pill--primary {
+  min-height: 32px;
+  padding: 0 10px;
+}
+
 body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__meta,
 body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__warning {
   display: grid;
@@ -1381,6 +1402,12 @@ body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__warning.is-clear {
   color: #1f6a44;
 }
 
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__meta,
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__warning {
+  min-height: 36px;
+  padding: 5px 9px;
+}
+
 body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__toggle {
   display: inline-flex;
   align-items: center;
@@ -1404,6 +1431,11 @@ body.vms-admin #vms-lineup-schedule-section .vms-lineup-row[open] .vms-lineup-ro
   transform: rotate(180deg);
 }
 
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__toggle {
+  width: 32px;
+  height: 32px;
+}
+
 body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__body {
   display: grid;
   gap: 16px;
@@ -1413,6 +1445,8 @@ body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__body {
 }
 
 body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__body--primary {
+  gap: 12px;
+  padding: 12px 14px 14px;
   background: linear-gradient(180deg, #fbfefc 0%, #f4fbf7 100%);
 }
 
@@ -1426,6 +1460,10 @@ body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__fields {
 body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__fields > * {
   min-width: 0;
   margin: 0;
+}
+
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__fields--primary {
+  gap: 10px 12px;
 }
 
 body.vms-admin #vms-lineup-schedule-section .vms-lineup-field {
@@ -1446,6 +1484,13 @@ body.vms-admin #vms-lineup-schedule-section .vms-lineup-field__actions {
   margin-top: 4px;
 }
 
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-field__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
 body.vms-admin #vms-lineup-schedule-section .vms-lineup-field--availability {
   display: grid;
   gap: 3px;
@@ -1456,6 +1501,12 @@ body.vms-admin #vms-lineup-schedule-section .vms-lineup-field--availability {
 
 body.vms-admin #vms-lineup-schedule-section .vms-lineup-field--availability p {
   margin: 0;
+}
+
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-field--availability {
+  gap: 2px;
+  margin-top: 0;
+  padding-top: 6px;
 }
 
 body.vms-admin #vms-lineup-schedule-section .vms-lineup-field--vendor {
@@ -1495,6 +1546,10 @@ body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__fields--primary .vm
   grid-column: span 8;
 }
 
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-field--status {
+  display: none;
+}
+
 body.vms-admin #vms-lineup-schedule-section select,
 body.vms-admin #vms-lineup-schedule-section input[type="text"],
 body.vms-admin #vms-lineup-schedule-section input[type="number"],
@@ -1513,6 +1568,15 @@ body.vms-admin #vms-lineup-schedule-section .vms-ep-time-select {
 body.vms-admin #vms-lineup-schedule-section textarea.large-text {
   min-height: 92px;
   resize: vertical;
+}
+
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__notes {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__notes textarea.large-text {
+  min-height: 68px;
 }
 
 body.vms-admin #vms-lineup-schedule-section .vms-lineup-field--flags,
@@ -1603,6 +1667,12 @@ body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__aux {
   gap: 12px;
 }
 
+body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__aux:not(:has(#vms-tax-status.vms-tax-has-bypass-inline)) {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
 body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__aux-copy {
   margin: 0;
 }
@@ -1684,6 +1754,10 @@ body.vms-admin #vms-lineup-schedule-section .vms-lineup-health__list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__notes {
+    grid-template-columns: 1fr;
+  }
+
   body.vms-admin #vms-lineup-schedule-section .vms-lineup-field--vendor,
   body.vms-admin #vms-lineup-schedule-section .vms-lineup-field--name,
   body.vms-admin #vms-lineup-schedule-section .vms-lineup-field--status,
@@ -1714,6 +1788,20 @@ body.vms-admin #vms-lineup-schedule-section .vms-lineup-health__list {
   body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__fields,
   body.vms-admin #vms-lineup-schedule-section .vms-lineup-row__summary-meta {
     grid-template-columns: 1fr;
+  }
+
+  body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__pill--primary,
+  body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__toggle {
+    min-height: 36px;
+  }
+
+  body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__toggle {
+    width: 36px;
+    height: 36px;
+  }
+
+  body.vms-admin #vms-lineup-schedule-section .vms-lineup-row--primary .vms-lineup-row__notes textarea.large-text {
+    min-height: 92px;
   }
 
   body.vms-admin #vms-lineup-schedule-section .vms-lineup-field--time,

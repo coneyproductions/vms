@@ -4159,10 +4159,23 @@ body.post-type-vms_event_plan .vms-tax-box .title {
 }
 
 body.post-type-vms_event_plan #vms-tax-status .vms-tax-box.ok {
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  margin: 0;
+  padding: 6px 10px;
   color: var(--vms-notice-success-text);
   border-color: #c6dfc3;
   border-left-color: var(--vms-notice-success-border);
   background: var(--vms-notice-success-bg);
+}
+
+body.post-type-vms_event_plan #vms-tax-status .vms-tax-box.ok .title {
+  margin: 0;
+}
+
+body.post-type-vms_event_plan #vms-tax-status .vms-tax-box.ok .muted {
+  display: none;
 }
 
 body.post-type-vms_event_plan #vms-tax-status .vms-tax-box.bad {
