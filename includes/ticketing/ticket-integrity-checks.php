@@ -1370,7 +1370,11 @@ function bvmgr_ticket_integrity_scan_event_record(int $plan_id, array $args = ar
 		$mapping_state = (string) ($ent_snapshot['mapping_state'] ?? 'unmapped');
 		$product = is_array($ent_snapshot['product'] ?? null) ? $ent_snapshot['product'] : array();
 		$eligibility = is_array($ent_snapshot['eligibility'] ?? null) ? $ent_snapshot['eligibility'] : array();
-		$requires_qualifying = empty($eligibility['allow_without_ga']) && ((int) ($eligibility['min_ga_per_unit'] ?? 0) > 0 || sanitize_key((string) ($eligibility['pool_key'] ?? '')) !== '');
+		$requires_qualifying = empty($eligibility['allow_without_ga']) && (
+			array_key_exists('allow_without_ga', $eligibility)
+			|| (int) ($eligibility['min_ga_per_unit'] ?? 0) > 0
+			|| sanitize_key((string) ($eligibility['pool_key'] ?? '')) !== ''
+		);
 
 		if (in_array($mapping_state, array('missing', 'trash', 'not_product'), true)) {
 			bvmgr_ticket_integrity_add_issue(

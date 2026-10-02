@@ -4306,8 +4306,8 @@ a.vms-entitlements-add.vms-ent-link-hidden{
   }
 
   .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty {
-    justify-self: start !important;
-    justify-content: flex-start !important;
+    justify-self: end !important;
+    justify-content: flex-end !important;
   }
 
   .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-price {
@@ -4540,3 +4540,71 @@ body.bvmgr-post-cart-offer-open{overflow:hidden}.bvmgr-post-cart-offer{position:
 :is(.single-tribe_events,.tribe-events-single) .tribe-tickets__tickets-buy:disabled{border-color:#5f7890!important;background:#5f7890!important;color:#fff!important;-webkit-text-fill-color:#fff!important;cursor:not-allowed!important;opacity:.68!important}
 
 .vms-ticket-progressive-content .bvmgr-amenities>.bvmgr-enhance-night__header{display:none}
+
+/* Public Amenities: prominent, initially open, and independently collapsible. */
+.vms-ticket-ui-progressive .vms-ticket-ui-addons.vms-ticket-progressive-section {
+  --vms-amenities-heading-bg: #f2f2f3;
+  --vms-amenities-heading-fg: inherit;
+  border-color: rgba(15, 23, 42, 0.22);
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-toggle {
+  background: var(--vms-amenities-heading-bg);
+  color: var(--vms-amenities-heading-fg);
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-toggle:hover,
+.vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-toggle:focus-visible {
+  background: var(--vms-amenities-heading-bg);
+  box-shadow: inset 0 0 0 999px rgba(127, 127, 127, 0.08);
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-icon {
+  font-size: 0;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-icon::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-addons.vms-ticket-progressive-section.is-open .vms-ticket-progressive-icon {
+  transform: none;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-addons.vms-ticket-progressive-section.is-open .vms-ticket-progressive-icon::before {
+  transform: translateY(2px) rotate(225deg);
+}
+
+@media (max-width: 782px) {
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons.vms-ticket-progressive-section {
+    border: 1px solid rgba(15, 23, 42, 0.20) !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    box-shadow: 0 5px 16px rgba(15, 23, 42, 0.07) !important;
+    overflow: hidden !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-toggle {
+    min-height: 54px !important;
+    padding: 12px 14px !important;
+    background: var(--vms-amenities-heading-bg) !important;
+    color: var(--vms-amenities-heading-fg) !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-toggle:hover,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-toggle:focus-visible {
+    background: var(--vms-amenities-heading-bg) !important;
+    box-shadow: inset 0 0 0 999px rgba(127, 127, 127, 0.08) !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-content {
+    padding: 10px 12px 12px !important;
+  }
+}

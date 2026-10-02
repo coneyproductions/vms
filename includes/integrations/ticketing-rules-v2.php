@@ -601,6 +601,7 @@ function bvmgr_ticketing_v2_resolve_eligibility_for_product(int $product_id, int
     }
 
     $pool_max_set = false;
+    $allow_without_ga_configured = false;
 
     if (is_array($ent_cfg)) {
         $out['label'] = (string) ($ent_cfg['label'] ?? '');
@@ -611,6 +612,7 @@ function bvmgr_ticketing_v2_resolve_eligibility_for_product(int $product_id, int
             $pool_max_set = true;
         }
         $out['min_ga_per_unit'] = absint($elig['min_ga_per_unit'] ?? 0);
+        $allow_without_ga_configured = array_key_exists('allow_without_ga', $elig);
         $out['allow_without_ga'] = !empty($elig['allow_without_ga']);
         $out['max_units_per_order'] = absint($elig['max_units_per_order'] ?? 0);
         $out['max_units_per_ga'] = absint($elig['max_units_per_ga'] ?? 0);
@@ -656,7 +658,7 @@ function bvmgr_ticketing_v2_resolve_eligibility_for_product(int $product_id, int
     }
 
     // If the legacy qualifier explicitly says this is a qualifier, treat it as GA-like.
-    if ($sr_qual === 'yes') {
+    if ($sr_qual === 'yes' && !$allow_without_ga_configured) {
         $out['allow_without_ga'] = true;
         return $out;
     }
@@ -690,8 +692,14 @@ function bvmgr_ticketing_v2_resolve_eligibility_for_product(int $product_id, int
         }
     }
 
-    // Default allow_without_ga when there is no GA requirement.
-    if ($out['min_ga_per_unit'] <= 0) {
+    // Preserve explicit operator intent. A configured false/zero pair means
+    // one qualifying admission per unit; only an unspecified zero defaults to
+    // unrestricted legacy behavior.
+    if ($out['allow_without_ga']) {
+        $out['min_ga_per_unit'] = 0;
+    } elseif ($allow_without_ga_configured && $out['min_ga_per_unit'] <= 0) {
+        $out['min_ga_per_unit'] = 1;
+    } elseif ($out['min_ga_per_unit'] <= 0) {
         $out['allow_without_ga'] = true;
     }
 
@@ -5316,6 +5324,29 @@ function bvmgr_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity
     $pool_hard_max = absint($elig['pool_max_total'] ?? 0);
 
     if ($pool_key === '') {
+        if ($allow_without_ga || $pool_min <= 0) {
+            return $passed;
+        }
+
+        $scan = bvmgr_ticketing_v2_cart_scan();
+        $ga_qty_raw = (int) ($scan['ga_qty_by_plan'][$plan_id] ?? 0);
+        $ga_qty = bvmgr_ticketing_v2_effective_ga_qty_for_plan($plan_id, $ga_qty_raw);
+        $prior_history = function_exists('bvmgr_ticketing_v2_prior_addon_history_for_plan')
+            ? bvmgr_ticketing_v2_prior_addon_history_for_plan($plan_id, is_array($cfg) ? $cfg : array())
+            : array('qualifying_qty' => 0);
+        $ga_qty += max(0, absint($prior_history['qualifying_qty'] ?? 0));
+        $required = $pool_min * max(1, absint($quantity));
+        if ($ga_qty < $required) {
+            $label = (string) ($elig['label'] ?? get_the_title($pid));
+            $ticket_phrase = bvmgr_ticketing_v2_qualifying_ticket_phrase(
+                bvmgr_ticketing_v2_resolve_qualifying_ticket_label($plan_id),
+                $required
+            );
+            /* translators: 1: add-on label, 2: required ticket count, 3: qualifying ticket label. */
+            wc_add_notice(sprintf(__('“%1$s” requires at least %2$d %3$s. Add more %3$s or remove this reservation.', 'backstage-venue-manager'), $label, $required, $ticket_phrase), 'error');
+            return false;
+        }
+
         return $passed;
     }
 
@@ -5339,7 +5370,11 @@ function bvmgr_ticketing_v2_validate_add_to_cart($passed, $product_id, $quantity
                 $pool_hard_max = ($pool_hard_max > 0) ? min($pool_hard_max, $e_pool_max) : $e_pool_max;
             }
             if (empty($e_elig['allow_without_ga'])) {
-                $pool_min = max($pool_min, absint($e_elig['min_ga_per_unit'] ?? 0));
+                $e_pool_min = absint($e_elig['min_ga_per_unit'] ?? 0);
+                if (array_key_exists('allow_without_ga', $e_elig) && $e_pool_min <= 0) {
+                    $e_pool_min = 1;
+                }
+                $pool_min = max($pool_min, $e_pool_min);
             }
         }
     }
@@ -7131,6 +7166,7 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
         'addonHelpStyle' => function_exists('bvmgr_ticketing_ui_help_global_style') ? (array) bvmgr_ticketing_ui_help_global_style('addons') : array(),
         'addonSectionHeading' => __('Amenities', 'backstage-venue-manager'),
         'addonSectionSubtext' => __('Make your night more comfortable.', 'backstage-venue-manager'),
+        'addonSectionHeadingBackground' => function_exists('bvmgr_ticketing_ui_addons_heading_background') ? bvmgr_ticketing_ui_addons_heading_background() : '',
         'ticketRatioQualifyingLabel' => $ticket_ratio_qualifying_label,
         'loginUrl'   => wp_login_url($redirect_after_login),
         'registerUrl' => function_exists('wp_registration_url') ? wp_registration_url() : wp_login_url($redirect_after_login),

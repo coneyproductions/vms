@@ -43,6 +43,44 @@
       .replace(/[^a-z0-9_]+/g, '_');
   }
 
+  function normalizeHexColor(value) {
+    var color = String(value || '').trim();
+    if (!/^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(color)) {
+      return '';
+    }
+    if (color.length === 4) {
+      color = '#' + color.charAt(1) + color.charAt(1) + color.charAt(2) + color.charAt(2) + color.charAt(3) + color.charAt(3);
+    }
+    return color.toLowerCase();
+  }
+
+  function readableTextColor(background) {
+    var color = normalizeHexColor(background);
+    if (!color) {
+      return '';
+    }
+    var channels = [1, 3, 5].map(function (offset) {
+      var value = parseInt(color.slice(offset, offset + 2), 16) / 255;
+      return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+    });
+    var luminance = (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2]);
+    return luminance > 0.179 ? '#111827' : '#ffffff';
+  }
+
+  function applyAmenitiesHeadingTheme(section) {
+    if (!section || !section.style) {
+      return;
+    }
+    var background = normalizeHexColor(cfg.addonSectionHeadingBackground || '');
+    if (!background) {
+      section.style.removeProperty('--vms-amenities-heading-bg');
+      section.style.removeProperty('--vms-amenities-heading-fg');
+      return;
+    }
+    section.style.setProperty('--vms-amenities-heading-bg', background);
+    section.style.setProperty('--vms-amenities-heading-fg', readableTextColor(background));
+  }
+
   function createEl(tag, className, text) {
     var node = document.createElement(tag);
     if (className) {
@@ -273,6 +311,9 @@
     section.classList.toggle('vms-ticket-progressive-section--always-open', key === 'tickets');
     section.setAttribute('data-vms-progressive-section', key);
     section.setAttribute('data-vms-tour', 'ticketing-progressive.' + key);
+    if (key === 'addons') {
+      applyAmenitiesHeadingTheme(section);
+    }
 
     var header = query('.vms-ticket-progressive-header', section);
     var content = sectionContent(section);
@@ -427,10 +468,8 @@
     }
     var hasAddons = moveAddonSourceIntoProgressiveSection(addonsSection, addonsContent, form, flow) || hasAddonChoices(addonsSection);
     addonsSection.hidden = !hasAddons;
-    if (hasAddons && !addonsSection.hasAttribute('data-vms-user-toggled') && selectedAddonQty(addonsSection) > 0) {
+    if (hasAddons && !addonsSection.hasAttribute('data-vms-user-toggled')) {
       setSectionOpen(addonsSection, true, false);
-    } else if (hasAddons && !addonsSection.hasAttribute('data-vms-user-toggled')) {
-      setSectionOpen(addonsSection, false, false);
     }
     return hasAddons;
   }

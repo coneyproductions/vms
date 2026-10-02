@@ -15,10 +15,10 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 let checks = 0;
 function check(value, message) { assert.ok(value, message); checks++; }
 
-async function installRoutes(page, mode, layout, requests, failRef) {
+async function installRoutes(page, mode, layout, requests, failRef, options = {}) {
   await page.route('**/*', async route => {
     const url = new URL(route.request().url());
-    if (url.pathname === '/event/') return route.fulfill({body: fixture(mode, layout), contentType: 'text/html'});
+    if (url.pathname === '/event/') return route.fulfill({body: fixture(mode, layout, options), contentType: 'text/html'});
     if (url.pathname.startsWith('/assets/css/')) {
       return route.fulfill({body: fs.readFileSync(path.join(assetRoot, 'css', path.basename(url.pathname)), 'utf8'), contentType: 'text/css'});
     }
@@ -34,7 +34,7 @@ async function installRoutes(page, mode, layout, requests, failRef) {
       return route.fulfill({body: text, contentType: 'application/javascript'});
     }
     requests.push({path: url.pathname, method: route.request().method(), body: route.request().postData()});
-    if (url.pathname === '/api/cart-context') return route.fulfill({json: {success: true, data: {ga_qty: 0, prior_qualifying_qty: 0, pool_qty_by_key: {}, prior_pool_qty_by_key: {}}}});
+    if (url.pathname === '/api/cart-context') return route.fulfill({json: {success: true, data: {ga_qty: Number(options.cartGaQty || 0), prior_qualifying_qty: Number(options.priorQualifyingQty || 0), pool_qty_by_key: {}, prior_pool_qty_by_key: {}}}});
     if (url.pathname === '/api/validate-assignee') return route.fulfill({json: {success: true, data: {ok: true, assignee_user_id: 42, assignee_email: 'guest@example.test', message: 'Guest approved.'}}});
     if (url.pathname === '/api/atomic-add') {
       if (failRef.value) { failRef.value = false; return route.fulfill({json: {success: false, data: {message: 'Test cart error'}}}); }
@@ -74,6 +74,20 @@ async function runLifecycle(browser, mode, contextOptions, label) {
   await page.waitForFunction(() => document.querySelectorAll('.vms-qualified-ticket-more-info').length === 2);
   await sleep(350);
 
+  const addonSection = page.locator('.vms-ticket-ui-addons');
+  const addonToggle = addonSection.locator('.vms-ticket-progressive-toggle');
+  const addonContent = addonSection.locator('.vms-ticket-progressive-content');
+  const addonTheme = await addonSection.evaluate(node => ({
+    background: node.style.getPropertyValue('--vms-amenities-heading-bg').trim(),
+    foreground: node.style.getPropertyValue('--vms-amenities-heading-fg').trim()
+  }));
+  check(addonTheme.background === '#123456' && addonTheme.foreground === '#ffffff', `${label}/${mode}: configured Amenities heading color receives readable light text`);
+  check(await addonToggle.getAttribute('aria-expanded') === 'true', `${label}/${mode}: zero-selection Amenities initializes open`);
+  check(!(await addonContent.evaluate(node => node.hidden)), `${label}/${mode}: open Amenities content is not hidden`);
+  await addonToggle.click(); await sleep(80);
+  check(await addonToggle.getAttribute('aria-expanded') === 'false', `${label}/${mode}: Amenities can be manually collapsed`);
+  check(await addonContent.evaluate(node => node.hidden), `${label}/${mode}: collapsed Amenities content is hidden`);
+
   const sample = () => page.evaluate(() => ({calls: {...window.__test.calls}, mutations: window.__test.mutations, callbacks: window.__test.callbacks, nodes: document.querySelectorAll('*').length}));
   const idleStart = await sample(); await sleep(900); const idleEnd = await sample();
   check(JSON.stringify(idleStart) === JSON.stringify(idleEnd), `${label}/${mode}: page settles when idle`);
@@ -105,8 +119,10 @@ async function runLifecycle(browser, mode, contextOptions, label) {
   check(await qty(6997).inputValue() === '0', `${label}/${mode}: Child tickets cannot self-qualify`);
   await qty(6996).fill('2'); await qty(6996).dispatchEvent('change'); await sleep(100);
 
-  const addonToggle = page.locator('.vms-ticket-ui-addons .vms-ticket-progressive-toggle');
+  check(await addonToggle.getAttribute('aria-expanded') === 'false', `${label}/${mode}: in-page refresh preserves manually collapsed Amenities`);
+  check(await addonContent.evaluate(node => node.hidden), `${label}/${mode}: preserved collapsed Amenities content remains hidden`);
   await addonToggle.click();
+  check(await addonToggle.getAttribute('aria-expanded') === 'true', `${label}/${mode}: Amenities can be manually reopened`);
   await page.locator('[data-vms-product-id="7000"] .vms-addon-checkbox-wrap').first().click();
   await page.locator('[data-vms-product-id="7006"] .vms-addon-plus').first().click();
   await page.locator('[data-test-extension-qty]').fill('1');
@@ -147,6 +163,70 @@ async function runLifecycle(browser, mode, contextOptions, label) {
   check((await page.locator('.vms-ticketing-subtotal__primary').textContent()).includes('40.00'), `${label}/${mode}: delegated handlers support a replaced TEC quantity input`);
   check(errors.length === 0, `${label}/${mode}: no uncaught errors: ${errors.join('; ')}`);
   await context.close();
+}
+
+async function runAddonEligibilityVariants(browser) {
+  const cases = [
+    {label: 'explicit false plus zero minimum without qualifying admission', options: {poolMinGa: 1}, selected: 0, addable: false},
+    {label: 'explicit false plus zero minimum with selected qualifying admission', options: {poolMinGa: 1}, selected: 1, addable: true},
+    {label: 'explicit false plus zero minimum with prior qualifying admission', options: {poolMinGa: 1, priorQualifyingQty: 1}, selected: 0, addable: true},
+    {label: 'explicit false plus zero minimum with qualifying admission in cart', options: {poolMinGa: 1, cartGaQty: 1}, selected: 0, addable: true},
+    {label: 'explicit true plus zero minimum without qualifying admission', options: {poolMinGa: 0}, selected: 0, addable: true},
+    {label: 'explicit positive ratio below minimum', options: {poolMinGa: 2}, selected: 1, addable: false},
+    {label: 'explicit positive ratio at minimum', options: {poolMinGa: 2}, selected: 2, addable: true}
+  ];
+
+  for (const variant of cases) {
+    const context = await browser.newContext({viewport: {width: 1100, height: 800}});
+    const page = await context.newPage();
+    const requests = [];
+    await page.addInitScript(() => { window.__test = {calls: {}}; });
+    await installRoutes(page, 'guest', 'progressive', requests, {value: false}, variant.options);
+    await page.goto('https://ticketing.example.test/event/');
+    await page.waitForSelector('.vms-ticket-ui-addons');
+    const ga = page.locator('#tribe-tickets__tickets-item-quantity-number--6996');
+    if (variant.selected > 0) {
+      await ga.fill(String(variant.selected));
+      await ga.dispatchEvent('change');
+    }
+    await sleep(180);
+    const plus = page.locator('[data-vms-product-id="7006"] .vms-addon-plus').first();
+    check((!(await plus.isDisabled())) === variant.addable, `${variant.label}: addable=${variant.addable}`);
+    if (variant.addable) {
+      await plus.click();
+      check(await page.locator('[data-vms-product-id="7006"] .vms-addon-input').first().inputValue() === '1', `${variant.label}: selection increments normally`);
+    }
+    await context.close();
+  }
+}
+
+async function runAmenitiesHeadingThemeVariants(browser) {
+  for (const variant of [
+    {label: 'dark custom', value: '#123456', foreground: '#ffffff'},
+    {label: 'light custom', value: '#f5e8a4', foreground: '#111827'},
+    {label: 'CSS default', value: '', foreground: ''}
+  ]) {
+    const context = await browser.newContext({viewport: {width: 390, height: 844}});
+    const page = await context.newPage();
+    await page.addInitScript(() => { window.__test = {calls: {}}; });
+    await installRoutes(page, 'guest', 'progressive', [], {value: false}, {addonHeadingBackground: variant.value});
+    await page.goto('https://ticketing.example.test/event/');
+    const section = page.locator('.vms-ticket-ui-addons');
+    await section.waitFor();
+    const theme = await section.evaluate(node => ({
+      inlineBackground: node.style.getPropertyValue('--vms-amenities-heading-bg').trim(),
+      inlineForeground: node.style.getPropertyValue('--vms-amenities-heading-fg').trim(),
+      computedBackground: getComputedStyle(node).getPropertyValue('--vms-amenities-heading-bg').trim(),
+      borderStyle: getComputedStyle(node).borderStyle
+    }));
+    if (variant.value) {
+      check(theme.inlineBackground === variant.value && theme.inlineForeground === variant.foreground, `${variant.label}: public heading theme and contrast are applied`);
+    } else {
+      check(theme.inlineBackground === '' && theme.inlineForeground === '' && theme.computedBackground === '#f2f2f3', `${variant.label}: empty setting leaves the CSS fallback authoritative`);
+    }
+    check(theme.borderStyle === 'solid', `${variant.label}: mobile Amenities remains a bounded card`);
+    await context.close();
+  }
 }
 
 async function runOwnershipVariants(browser) {
@@ -364,6 +444,8 @@ async function runPostCart(browser) {
     }
     for (const mode of ['guest', 'unverified', 'verified']) await runLifecycle(browser, mode, {viewport: {width: 1280, height: 900}}, 'desktop');
     await runLifecycle(browser, 'guest', {...playwright.devices['iPhone 13']}, 'mobile');
+    await runAddonEligibilityVariants(browser);
+    await runAmenitiesHeadingThemeVariants(browser);
     await runOwnershipVariants(browser);
     await runSettledVisibilityMatrix(browser);
     await runPostCart(browser);

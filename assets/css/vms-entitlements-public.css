@@ -8,6 +8,74 @@
   font-size: 16px;
 }
 
+/* Public Amenities: retain the card when this later-loaded stylesheet is active. */
+.vms-ticket-ui-progressive .vms-ticket-ui-addons.vms-ticket-progressive-section {
+  --vms-amenities-heading-bg: #f2f2f3;
+  --vms-amenities-heading-fg: inherit;
+  border-color: rgba(15, 23, 42, 0.22);
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-toggle {
+  background: var(--vms-amenities-heading-bg);
+  color: var(--vms-amenities-heading-fg);
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-toggle:hover,
+.vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-toggle:focus-visible {
+  background: var(--vms-amenities-heading-bg);
+  box-shadow: inset 0 0 0 999px rgba(127, 127, 127, 0.08);
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-icon {
+  font-size: 0;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-icon::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-addons.vms-ticket-progressive-section.is-open .vms-ticket-progressive-icon {
+  transform: none;
+}
+
+.vms-ticket-ui-progressive .vms-ticket-ui-addons.vms-ticket-progressive-section.is-open .vms-ticket-progressive-icon::before {
+  transform: translateY(2px) rotate(225deg);
+}
+
+@media (max-width: 782px) {
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons.vms-ticket-progressive-section {
+    border: 1px solid rgba(15, 23, 42, 0.20) !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    box-shadow: 0 5px 16px rgba(15, 23, 42, 0.07) !important;
+    overflow: hidden !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-toggle {
+    min-height: 54px !important;
+    padding: 12px 14px !important;
+    background: var(--vms-amenities-heading-bg) !important;
+    color: var(--vms-amenities-heading-fg) !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-toggle:hover,
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-toggle:focus-visible {
+    background: var(--vms-amenities-heading-bg) !important;
+    box-shadow: inset 0 0 0 999px rgba(127, 127, 127, 0.08) !important;
+  }
+
+  .vms-ticket-ui-progressive .vms-ticket-ui-addons .vms-ticket-progressive-content {
+    padding: 10px 12px 12px !important;
+  }
+}
+
 .vms-entitlements-block.vms-entitlements--compact {
   margin: 12px 0;
   padding: 12px;
