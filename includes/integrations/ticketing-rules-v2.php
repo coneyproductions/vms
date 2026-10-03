@@ -7164,8 +7164,16 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
         'ticketHelpStyle' => function_exists('bvmgr_ticketing_ui_help_global_style') ? (array) bvmgr_ticketing_ui_help_global_style('tickets') : array(),
         'addonHelpText' => '',
         'addonHelpStyle' => function_exists('bvmgr_ticketing_ui_help_global_style') ? (array) bvmgr_ticketing_ui_help_global_style('addons') : array(),
-        'addonSectionHeading' => __('Amenities', 'backstage-venue-manager'),
-        'addonSectionSubtext' => __('Make your night more comfortable.', 'backstage-venue-manager'),
+        'addonSectionHeading' => function_exists('bvmgr_ticketing_ui_addons_section_heading_effective')
+            ? (string) bvmgr_ticketing_ui_addons_section_heading_effective((int) $plan_id_for_event)
+            : (function_exists('bvmgr_ticketing_ui_addons_section_heading')
+                ? (string) bvmgr_ticketing_ui_addons_section_heading()
+                : (string) __('Fire Pits & Tables', 'backstage-venue-manager')),
+        'addonSectionSubtext' => function_exists('bvmgr_ticketing_ui_addons_section_subtext_effective')
+            ? (string) bvmgr_ticketing_ui_addons_section_subtext_effective((int) $plan_id_for_event)
+            : (function_exists('bvmgr_ticketing_ui_addons_section_subtext')
+                ? (string) bvmgr_ticketing_ui_addons_section_subtext()
+                : (string) __('Click here to add a fire pit or table to your order.', 'backstage-venue-manager')),
         'addonSectionHeadingBackground' => function_exists('bvmgr_ticketing_ui_addons_heading_background') ? bvmgr_ticketing_ui_addons_heading_background() : '',
         'ticketRatioQualifyingLabel' => $ticket_ratio_qualifying_label,
         'loginUrl'   => wp_login_url($redirect_after_login),

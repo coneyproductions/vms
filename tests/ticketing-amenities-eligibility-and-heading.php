@@ -51,8 +51,15 @@ function sanitize_hex_color($value) {
 	$value = trim((string) $value);
 	return preg_match('/^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/', $value) ? $value : null;
 }
+function __($text, $domain = null): string { return (string) $text; }
 
 eval($extract_function($rules_source, 'bvmgr_ticketing_v2_resolve_eligibility_for_product'));
+eval($extract_function($helpers_source, 'bvmgr_ticketing_ui_addons_section_heading_default'));
+eval($extract_function($helpers_source, 'bvmgr_ticketing_ui_addons_section_subtext_default'));
+eval($extract_function($helpers_source, 'bvmgr_ticketing_ui_addons_section_heading'));
+eval($extract_function($helpers_source, 'bvmgr_ticketing_ui_addons_section_subtext'));
+eval($extract_function($helpers_source, 'bvmgr_ticketing_ui_addons_section_heading_effective'));
+eval($extract_function($helpers_source, 'bvmgr_ticketing_ui_addons_section_subtext_effective'));
 eval($extract_function($helpers_source, 'bvmgr_ticketing_ui_addons_heading_background_default'));
 eval($extract_function($helpers_source, 'bvmgr_ticketing_ui_addons_heading_background'));
 
@@ -102,6 +109,28 @@ $GLOBALS['amenities_options']['vms_settings'] = array();
 $assert(bvmgr_ticketing_ui_addons_heading_background() === '', 'Unset heading color must leave the CSS fallback authoritative.');
 $assert(bvmgr_ticketing_ui_addons_heading_background_default() === '#f2f2f3', 'Admin Default control must match the CSS fallback color.');
 
+$GLOBALS['amenities_options']['vms_settings'] = array(
+	'ticket_ui_addons_heading' => 'Global Add-ons',
+	'ticket_ui_addons_subtext' => 'Global add-on guidance.',
+);
+$GLOBALS['amenities_post_meta'][707] = array();
+$assert(bvmgr_ticketing_ui_addons_section_heading_effective(707) === 'Global Add-ons', 'Global heading must be used when no event override exists.');
+$assert(bvmgr_ticketing_ui_addons_section_subtext_effective(707) === 'Global add-on guidance.', 'Global subtext must be used when no event override exists.');
+
+$GLOBALS['amenities_post_meta'][707]['_vms_ticket_ui_addons_heading_override'] = 'Event &amp; Extras';
+$GLOBALS['amenities_post_meta'][707]['_vms_ticket_ui_addons_subtext_override'] = 'Event-specific add-on guidance.';
+$assert(bvmgr_ticketing_ui_addons_section_heading_effective(707) === 'Event & Extras', 'Event heading override must beat the configured global heading.');
+$assert(bvmgr_ticketing_ui_addons_section_subtext_effective(707) === 'Event-specific add-on guidance.', 'Event subtext override must beat the configured global subtext.');
+
+$GLOBALS['amenities_post_meta'][707]['_vms_ticket_ui_addons_heading_override'] = '   ';
+$GLOBALS['amenities_post_meta'][707]['_vms_ticket_ui_addons_subtext_override'] = "\t";
+$assert(bvmgr_ticketing_ui_addons_section_heading_effective(707) === 'Global Add-ons', 'A cleared event heading override must fall back to the configured global heading.');
+$assert(bvmgr_ticketing_ui_addons_section_subtext_effective(707) === 'Global add-on guidance.', 'A cleared event subtext override must fall back to the configured global subtext.');
+
+$GLOBALS['amenities_options']['vms_settings'] = array();
+$assert(bvmgr_ticketing_ui_addons_section_heading_effective(707) === 'Fire Pits & Tables', 'Missing event and global heading values must preserve the legacy fallback heading.');
+$assert(bvmgr_ticketing_ui_addons_section_subtext_effective(707) === 'Click here to add a fire pit or table to your order.', 'Missing event and global subtext values must preserve the legacy fallback subtext.');
+
 foreach (array(
 	'ticket_ui_addons_heading_background',
 	'Add-on heading background color',
@@ -112,6 +141,10 @@ foreach (array(
 	$assert(strpos($settings_source, $needle) !== false, 'Settings must retain ' . $needle . '.');
 }
 $assert(strpos($rules_source, "'addonSectionHeadingBackground'") !== false, 'Public Ticketing config must expose the sanitized global heading color.');
+$assert(strpos($rules_source, "bvmgr_ticketing_ui_addons_section_heading_effective((int) \$plan_id_for_event)") !== false, 'Public localized config must use the event-aware effective heading helper.');
+$assert(strpos($rules_source, "bvmgr_ticketing_ui_addons_section_subtext_effective((int) \$plan_id_for_event)") !== false, 'Public localized config must use the event-aware effective subtext helper.');
+$assert(strpos($rules_source, "'addonSectionHeading' => __('Amenities', 'backstage-venue-manager')") === false, 'Public localized config must not hardcode Amenities as the authoritative heading.');
+$assert(strpos($rules_source, "'addonSectionSubtext' => __('Make your night more comfortable.', 'backstage-venue-manager')") === false, 'Public localized config must not hardcode the Amenities subtext as authoritative.');
 $assert(strpos($progressive_source, "--vms-amenities-heading-bg") !== false && strpos($progressive_source, 'readableTextColor') !== false, 'Progressive Amenities must apply custom properties with automatic text contrast.');
 $assert(strpos($settings_source . $helpers_source . $rules_source, '_vms_ticket_ui_addons_heading_background') === false, 'Amenities heading color must not gain a per-event override.');
 
