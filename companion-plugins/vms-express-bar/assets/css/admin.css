@@ -1,0 +1,174 @@
+.vmseb-admin-page .vmseb-filter-form{margin:12px 0 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.vmseb-admin-page .vmseb-table td,.vmseb-admin-page .vmseb-table th{vertical-align:top}
+.vmseb-status,.vmseb-pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2f6;font-size:12px;font-weight:600}
+.vmseb-status--ready{background:#fff5d6}.vmseb-status--completed,.vmseb-pill--ok{background:#dff5e6}
+.vmseb-queue-tabs{margin-bottom:16px}
+.vmseb-queue-tabs .count{font-weight:400}
+.vmseb-show-context{max-width:900px;padding:18px 20px;margin:16px 0;background:#fff;border:1px solid #c3c4c7;border-left:5px solid #2271b1;border-radius:6px}
+.vmseb-show-context__eyebrow{display:block;margin-bottom:4px;color:#50575e;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.vmseb-show-context h2{margin:0 0 6px;font-size:22px;line-height:1.25}
+.vmseb-show-context p{margin:0;font-size:15px}
+.vmseb-event-id{margin-left:8px;color:#646970;font-size:12px;font-weight:600}
+.vmseb-view-description{margin:0 0 12px}
+.vmseb-excluded-note{display:inline-block;margin:0 0 16px;padding:8px 12px}
+.vmseb-table-wrap{overflow-x:auto}
+.vmseb-table{min-width:960px}
+.vmseb-table .vmseb-pill--woo{white-space:nowrap}
+.vmseb-movement{max-width:720px;margin-top:24px}
+.vmseb-movement .vmseb-table{min-width:0}
+.vmseb-registry-wrap{max-height:70vh;overflow:auto;border:1px solid #d9e0e6;border-radius:12px}
+.vmseb-registry-table th{position:sticky;top:0;background:#fff;z-index:1}
+.vmseb-thumb{width:32px;height:32px;border-radius:8px;object-fit:cover;border:1px solid #e2e8f0;vertical-align:middle;margin-right:8px}
+.vmseb-item-title{margin-bottom:2px}.vmseb-item-meta{color:#586574;font-size:12px}
+.vmseb-stock-pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#f4f6f8;font-size:12px}
+.vmseb-action-form{display:inline-block;margin:0 4px 4px 0}
+
+.vmseb-admin-card {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    margin: 16px 0;
+    padding: 16px;
+}
+
+.vmseb-admin-card h2 {
+    margin-top: 0;
+}
+
+.vmseb-good {
+    color: #008a20;
+    font-weight: 600;
+}
+
+.vmseb-warn {
+    color: #8a4b00;
+    font-weight: 600;
+}
+
+.vmseb-registry-row.is-dirty {
+    background: #fff9e8;
+}
+
+.vmseb-registry-row.is-saving {
+    opacity: 0.8;
+}
+
+.vmseb-row-actions {
+    min-width: 150px;
+}
+
+.vmseb-row-actions .button {
+    width: 100%;
+}
+
+.vmseb-row-feedback {
+    min-height: 18px;
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.vmseb-row-feedback[data-state="success"] {
+    color: #008a20;
+}
+
+.vmseb-row-feedback[data-state="error"] {
+    color: #b32d2e;
+}
+
+.vmseb-row-feedback[data-state="info"] {
+    color: #50575e;
+}
+
+.vmseb-form-actions {
+    margin-top: 16px;
+}
+
+@media (max-width: 782px) {
+    .vmseb-queue-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        border-bottom: 0;
+    }
+
+    .vmseb-queue-tabs .nav-tab {
+        float: none;
+        margin: 0;
+        padding: 8px 10px;
+        text-align: center;
+    }
+
+    .vmseb-show-context {
+        box-sizing: border-box;
+        padding: 14px 16px;
+    }
+
+    .vmseb-show-context h2 {
+        font-size: 19px;
+    }
+
+    .vmseb-admin-page .vmseb-filter-form {
+        align-items: stretch;
+    }
+
+    .vmseb-admin-page .vmseb-filter-form label {
+        flex-basis: 100%;
+    }
+
+    .vmseb-admin-page .vmseb-filter-form select {
+        width: 100%;
+        max-width: none;
+    }
+
+    .vmseb-table-wrap {
+        overflow: visible;
+    }
+
+    .vmseb-table-wrap .vmseb-table {
+        min-width: 0;
+        border: 0;
+        background: transparent;
+    }
+
+    .vmseb-table-wrap .vmseb-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .vmseb-table-wrap .vmseb-table tbody,
+    .vmseb-table-wrap .vmseb-table tr,
+    .vmseb-table-wrap .vmseb-table td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .vmseb-table-wrap .vmseb-table tr {
+        margin-bottom: 12px;
+        border: 1px solid #c3c4c7;
+        border-radius: 6px;
+        background: #fff;
+    }
+
+    .vmseb-table-wrap .vmseb-table td {
+        display: grid;
+        grid-template-columns: minmax(88px, 32%) minmax(0, 1fr);
+        gap: 10px;
+        border-bottom: 1px solid #dcdcde;
+    }
+
+    .vmseb-table-wrap .vmseb-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+    }
+
+    .vmseb-table-wrap .vmseb-table td:last-child {
+        border-bottom: 0;
+    }
+}
