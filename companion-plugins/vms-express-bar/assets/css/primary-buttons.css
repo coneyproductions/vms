@@ -1,0 +1,38 @@
+.vms-express-bar .button-primary,
+.vms-express-bar .button-primary:visited {
+	border-color: #155fa0 !important;
+	background: #155fa0 !important;
+	color: #fff !important;
+	-webkit-text-fill-color: #fff !important;
+	text-shadow: none !important;
+}
+
+.vms-express-bar .button-primary:hover,
+.vms-express-bar .button-primary:focus {
+	border-color: #0f4c81 !important;
+	background: #0f4c81 !important;
+	color: #fff !important;
+	-webkit-text-fill-color: #fff !important;
+}
+
+.vms-express-bar .button-primary:active {
+	border-color: #0b3d68 !important;
+	background: #0b3d68 !important;
+	color: #fff !important;
+	-webkit-text-fill-color: #fff !important;
+}
+
+.vms-express-bar .button-primary:focus-visible {
+	outline: 3px solid #75bfff !important;
+	outline-offset: 3px !important;
+}
+
+.vms-express-bar .button-primary:disabled,
+.vms-express-bar .button-primary[aria-disabled="true"] {
+	border-color: #5f7890 !important;
+	background: #5f7890 !important;
+	color: #fff !important;
+	-webkit-text-fill-color: #fff !important;
+	cursor: not-allowed !important;
+	opacity: .68 !important;
+}

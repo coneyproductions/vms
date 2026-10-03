@@ -141,7 +141,7 @@ $check(
 		&& $guestListRequestedVendor === 5505,
 	array('allowed_tabs' => $portalTabs, 'requested_tab' => $guestListRequestedTab, 'requested_vendor' => $guestListRequestedVendor)
 );
-$check('express-bar-regression', defined('VMSEB_VERSION') && (string) VMSEB_VERSION === '0.6.39' && in_array('vms-express-bar', $allMenuSlugs, true) && in_array('vms-bar-menu', $allMenuSlugs, true));
+$check('express-bar-regression', defined('VMSEB_VERSION') && (string) VMSEB_VERSION === '0.6.40' && in_array('vms-express-bar', $allMenuSlugs, true) && in_array('vms-bar-menu', $allMenuSlugs, true));
 $check('sponsorships-standalone-regression', defined('VMS_SPONSORSHIPS_VERSION') && (string) VMS_SPONSORSHIPS_VERSION === '0.1.7.1' && in_array('vms-sponsorships', $allMenuSlugs, true) && shortcode_exists('vms_sponsor_inquiry'));
 $check('event-venue-map-regression', class_exists('Event_Venue_Map_Modal') && (string) Event_Venue_Map_Modal::VERSION === '1.2.4' && has_filter('the_content') !== false && has_action('wp_footer') !== false);
 

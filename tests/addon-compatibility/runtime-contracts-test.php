@@ -15,7 +15,7 @@ $expectedVersions = array(
 	'events-slider' => '1.0.10',
 	'fill-dates' => '0.1.8',
 	'data-tools' => '0.5.55',
-	'express-bar' => '0.6.39',
+	'express-bar' => '0.6.40',
 	'refer-a-friend' => '0.2.6',
 );
 $allowedClassifications = array('LEGACY_FALLBACK', 'GUARDED_OPTIONAL', 'ADDON_MIGRATION_GAP');
