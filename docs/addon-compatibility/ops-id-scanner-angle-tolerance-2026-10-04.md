@@ -7,11 +7,11 @@ Staging URL: `https://staging.serenaderange.com/vms-ops/`
 
 ## Result
 
-The affected phone/PWA is using the bundled ZXing path. The roughly 10-degree PDF417 failure is decoder angle sensitivity, not native target-region crop clipping. A focused, staging-only `0.1.70.2` candidate is prepared directly from the exact current staging `0.1.70` tree.
+The affected phone/PWA is using the bundled ZXing path. The roughly 10-degree PDF417 failure is decoder angle sensitivity, not native target-region crop clipping. The focused, staging-only `0.1.70.2` candidate prepared directly from the exact staging `0.1.70` tree was deployed on 2026-10-04 for actual-phone acceptance.
 
 The candidate preserves the ordinary full-video ZXing decode as the first path. Only after ordinary ID decoding misses twice does it try one throttled, small-angle corrected canvas frame. Ticket scanning, the native `BarcodeDetector` path, camera selection/settings, zoom and scanner preferences, the visible target, duplicate handling, and the existing two-read ID stability gate are unchanged.
 
-The paused `0.1.70.1` starting-zoom candidate was not applied or folded into this candidate. Staging and production were not modified.
+The paused `0.1.70.1` starting-zoom candidate was not applied or folded into this candidate. Production was not modified.
 
 ## Affected-phone engine identification
 
@@ -75,7 +75,7 @@ The three staging base files were re-read over the configured read-only SSH path
 - exact base: `0.1.70`, 62 files, canonical tree SHA-256 `b899e5f00ec7db26883b068200ba369a582f8f4236ad734de0fbcba0b670e85d`
 - exact candidate: `0.1.70.2`, 62 files, canonical tree SHA-256 `73c752ee5a1f102c76a6a6b811f7baec83dcd6a37cb7a66bb27698e313285e52`
 - changed runtime paths: exactly the three files in the table
-- rollback source: the exact three base files retained in the task-owned base tree outside the web root
+- rollback source: the exact three base files archived outside the web root at `/home/coney/codex-backups/ops-id-angle-staging-20261004T214502Z`
 
 `0.1.70.2` is intentionally based directly on `0.1.70`: version `0.1.70.1` identifies the separate, paused zoom candidate and is not a prerequisite for this overlay.
 
@@ -110,18 +110,36 @@ Reproduction sources:
 
 The generator accepts a TCPDF `pdf417.php` implementation and an empty output directory. It writes the 21 fixed synthetic fixtures plus a hash receipt. The fallback test accepts candidate `app.js`; the matrix accepts the candidate plugin root, generated fixture root, and an optional Playwright module path. The matrix checks ordinary `0°`/`±5°`, failed ordinary `±10°`/`±15°`, unchanged `TRY_HARDER` results, and successful inverse-angle correction in all three views. Phone timing remains part of acceptance rather than a desktop performance claim.
 
+## Staging deployment receipt
+
+The authorized staging-only deployment atomically replaced only the three reviewed runtime paths. Before the first runtime write, the exact originals were copied to `/home/coney/codex-backups/ops-id-angle-staging-20261004T214502Z` outside the web root. Its `originals.sha256` manifest verifies all three recorded `0.1.70` hashes. The reconstructed upload was held separately at `/home/coney/codex-staging/ops-id-angle-staging-20261004T214502Z`; its `candidate.sha256` manifest verifies all three candidate hashes.
+
+Post-deployment verification passed:
+
+- the three deployed file hashes exactly match the candidate column above;
+- the complete deployed tree remains 62 files and has canonical SHA-256 `73c752ee5a1f102c76a6a6b811f7baec83dcd6a37cb7a66bb27698e313285e52`;
+- the plugin remains active and reports `0.1.70.2`;
+- remote PHP lint and local candidate JavaScript syntax passed;
+- a fresh request for `app.js?ver=0.1.70.2` returned HTTP 200 with SHA-256 `d6f1b9f017e58167db220c6828acb8102e2142985b32edcb88ee9d31cd4e1dfc`;
+- the service worker returned HTTP 200, uses cache `vms-ops-shell-0.1.70.2`, and references `app.js?ver=0.1.70.2` plus the other versioned scanner assets;
+- the manifest returned HTTP 200 with staging-only start URL and scope `https://staging.serenaderange.com/vms-ops/`;
+- the unauthenticated PWA route retained its expected login redirect;
+- staging `error_log` and `wp-content/debug.log` did not grow from their pre-deployment byte counts;
+- no deployment temporary file remains in the plugin tree.
+
+A fresh read-only production check after staging deployment confirmed the exact recorded `0.1.65.2` hashes remain unchanged: app `5adb0d986219760671ce10d4cfa6425f1e20da55945e702df8a3d1cd35a753d4`, entry `39f868dd8470ed8220fd5da955346d278c1d476c8c7850f6fafe6c78ed76fe25`, and build `cd1f9c0074b0470155aa6a306125d36ceaf12a5d8a856e012ef41c834f240333`. Production remains active at `0.1.65.2` and was not written.
+
 ## Short actual-phone test
 
-After a separately authorized staging deployment, use the same phone, installed PWA, fixed stand, distance, and lighting:
+Use the same phone, installed PWA, fixed stand, distance, and lighting:
 
-1. Open `https://staging.serenaderange.com/vms-ops/` and confirm build `0.1.70.2`; confirm `app.js?ver=0.1.70.2` is delivered rather than a cached `0.1.70` or paused `0.1.70.1` asset.
-2. With an authorized test ID, scan nearly level and confirm the normal response remains prompt.
-3. Rotate approximately `+10°` without changing distance or framing; expect a normal response within about three seconds.
-4. Repeat at approximately `-10°`.
-5. Recheck level orientation to confirm the straight-on path remains prompt.
-6. Confirm ID zoom/framing and camera choice are unchanged; close/reopen and relaunch the PWA once.
-7. Scan an authorized ticket QR/barcode and confirm ticket-scanner continuity.
-8. If a device using native `BarcodeDetector` with PDF417 is available, record it separately; otherwise mark that case `NOT RUN`.
+1. Open `https://staging.serenaderange.com/vms-ops/` and confirm `app.js?ver=0.1.70.2` is delivered rather than a cached `0.1.70` or paused `0.1.70.1` asset.
+2. With an authorized test ID, scan level, approximately `+10°`, and approximately `-10°` without changing the stand distance or framing.
+3. Vary the angle slightly around those positions to check tolerance between the correction angles.
+4. Compare level and angled time-to-response and watch for preview freezing.
+5. Confirm zoom, framing, camera choice, close/reopen behavior, and PWA relaunch remain unchanged.
+6. Scan an authorized ticket QR/barcode and confirm ticket-scanner continuity.
+7. If a device using native `BarcodeDetector` with PDF417 is available, record it separately; otherwise mark that case `NOT RUN`.
 
 Do not retain or report barcode payloads or identity data. Record only build, browser/device family, angle, approximate time-to-response, and PASS/FAIL.
 
@@ -134,10 +152,10 @@ Do not retain or report barcode payloads or identity data. Record only build, br
 | Synthetic ordinary `±5°` and corrected `±10°`/`±15°` | PASS |
 | Existing duplicate/two-read stability path | PASS — unchanged; repeated fallback handoff exercised by focused harness |
 | Ticket fallback exclusion | PASS — executable harness |
-| Candidate delivery/cache identity on phone | `NOT RUN` |
+| Candidate delivery/cache identity on phone | `NOT RUN` — server-side fresh delivery PASS |
 | Actual authorized-ID level and `±10°` scans | `NOT RUN` |
 | Actual-phone camera/zoom continuity | `NOT RUN` |
 | Actual ticket scan | `NOT RUN` |
 | Native PDF417 device | `NOT RUN` |
 
-No staging or production write, activation change, preference/storage clear, device setting change, package, ZIP, tag, or deployment occurred. Production remains unchanged. The zoom candidate remains paused and undeployed.
+Staging now contains only the reviewed `0.1.70.2` three-file angle overlay. No production write, activation change, preference/storage clear, device setting change, package, ZIP, tag, or production promotion occurred. Production remains unchanged. The zoom candidate remains paused and undeployed. The angle-only production overlay remains gated on an unqualified actual-phone acceptance pass and was not prepared or deployed.
