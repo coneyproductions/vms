@@ -108,7 +108,7 @@ Reproduction sources:
 - `tests/addon-compatibility/ops-id-angle-fallback.js`
 - `tests/addon-compatibility/ops-id-angle-matrix.js`
 
-The generator accepts a TCPDF `pdf417.php` implementation and an empty output directory. It writes the 21 fixed synthetic fixtures plus a hash receipt. The fallback test accepts candidate `app.js`; the matrix accepts the candidate plugin root, generated fixture root, and an optional Playwright module path. The matrix checks ordinary `0°`/`±5°`, failed ordinary `±10°`/`±15°`, unchanged `TRY_HARDER` results, and successful inverse-angle correction in all three views. Phone timing remains part of acceptance rather than a desktop performance claim.
+The generator accepts a TCPDF `pdf417.php` implementation and an empty output directory. It writes the original 21 fixed angle fixtures, 28 card/background fixtures, and a hash receipt. The fallback test accepts candidate `app.js`; the matrices accept the candidate plugin root, generated fixture root, and an optional Playwright module path. The angle matrix checks ordinary `0°`/`±5°`, failed ordinary `±10°`/`±15°`, unchanged `TRY_HARDER` results, and successful inverse-angle correction in all three views. Phone timing remains part of acceptance rather than a desktop performance claim.
 
 ## Staging deployment receipt
 
@@ -169,6 +169,44 @@ Only the three reviewed runtime paths were atomically replaced. Post-deployment 
 
 A fresh production read-back after deployment again matched all three recorded `0.1.65.2` hashes. Production was not written.
 
+## Background-sensitivity follow-up
+
+The operator reports that staging `0.1.70.3` substantially improves angled scanning and that its starting zoom is satisfactory. The remaining physical behavior is background-dependent: authorized IDs scan reliably over white paper, almost never over black/dark surfaces, and inconsistently in midair. No ID image, payload, or identity data was retained.
+
+The synthetic generator now adds a light `1600x900` ID-like card surface with neutral design marks and a `1420x410` white barcode surface. The PDF417 modules retain a `60 px` horizontal and `50 px` vertical quiet zone. That same card and barcode are rendered at `0°`, `±5°`, `±10°`, and `±15°` over white, gray, black, and deterministic patterned surroundings. Generated PNGs remain outside Git; only their fixed-payload generator and executable tests are tracked.
+
+The shipped ZXing decoder produced the same result for every synthetic background:
+
+| Synthetic case | White | Gray | Black | Patterned |
+| --- | --- | --- | --- | --- |
+| Ordinary `0°` and `±5°` | PASS | PASS | PASS | PASS |
+| Ordinary `±10°` and `±15°` | FAIL | FAIL | FAIL | FAIL |
+| Existing full-frame inverse-angle correction | PASS | PASS | PASS | PASS |
+| Padded-region inverse-angle correction | PASS | PASS | PASS | PASS |
+| Padded correction with white-painted rotation margins | PASS | PASS | PASS | PASS |
+
+The padded region retained `1720x840` pixels around the angled card/barcode, so it did not reproduce the known tight-crop clipping concern. It added zero successful decodes over the current full-frame correction. Painting the rotated crop's empty margins white also added zero; this confirms only that the decoder does not benefit on controlled pixels and is not treated as a reproduction of white paper's physical effect.
+
+`tests/addon-compatibility/ops-id-background-fallback.js` then passed the real bundled `NotFoundException` and all eight white/gray/black/patterned `±10°` frames through the actual `0.1.70.3` fallback sequence. Every case completed the unchanged two-read stability path: `+10°` succeeded on the first correction and `-10°` on the second correction.
+
+Camera-layer assessment:
+
+- scanner capture requests an ideal `1920x1080` stream and configures continuous focus when the selected track reports it, otherwise ID mode may request single-shot focus;
+- the current scanner does not force exposure, exposure compensation, or white-balance constraints;
+- the synthetic test holds card/barcode pixels constant, so its equal background results rule out a decoder-only background sensitivity under controlled detail;
+- a deliberately washed-out simulation failed both full-frame and padded decoding, and combined washout/blur failed both at every sampled angle. Cropping did not recover detail removed before decoding;
+- actual affected-phone exposure/focus settings were not available to record, so automatic exposure, autofocus behavior, motion, glare, and lighting remain physical-camera variables rather than a confirmed single cause.
+
+The most likely inference is that white paper changes the camera scene enough to improve exposure/focus or reduce glare, while a dark surface or unsupported midair card allows the captured barcode detail to wash out, blur, or move. Software cropping occurs after capture and cannot repair that lost detail. Because the padded crop produced no decoder gain and sometimes did worse under simulated washout, no runtime crop or camera-constraint change is justified. Staging remains on `0.1.70.3`; no new staging overlay was prepared or deployed.
+
+Reproducibility additions:
+
+- `tests/addon-compatibility/ops-id-background-matrix.js`
+- `tests/addon-compatibility/ops-id-background-fallback.js`
+- extended `tests/addon-compatibility/generate-ops-id-angle-fixtures.php`
+
+Two clean fixture generations were byte-identical. The original 21-case angle matrix, mock fallback test, real bundled-error regression, three Ops JavaScript suites, 28-case background matrix, and eight-case real-fallback background harness all pass against exact staging `0.1.70.3` source.
+
 ## Short actual-phone test
 
 Use the same phone, installed PWA, fixed stand, distance, and lighting:
@@ -193,9 +231,10 @@ Do not retain or report barcode payloads or identity data. Record only build, br
 | Existing duplicate/two-read stability path | PASS — unchanged; repeated fallback handoff exercised by focused harness |
 | Ticket fallback exclusion | PASS — executable harness |
 | Candidate delivery/cache identity on phone | `NOT RUN` — server-side fresh delivery PASS |
-| Actual authorized-ID level and `±10°` scans | `NOT RUN` |
+| Actual authorized-ID level and `±10°` scans | Operator reports substantial angled-scan improvement; formal timings `NOT RUN` |
+| Actual background sensitivity | OBSERVED — white reliable; black/dark almost never; midair inconsistent |
 | Actual-phone camera/zoom continuity | `NOT RUN` |
 | Actual ticket scan | `NOT RUN` |
 | Native PDF417 device | `NOT RUN` |
 
-Staging now runs the reviewed `0.1.70.3` angle correction. No production write, activation change, preference/storage clear, device setting change, package, ZIP, tag, or production promotion occurred. Production remains unchanged. The zoom candidate remains paused and undeployed. The angle-only production overlay remains gated on an unqualified actual-phone acceptance pass and was not prepared or deployed.
+Staging remains on the reviewed `0.1.70.3` angle correction. For the physical test, use even illumination, avoid glare, hold the card still and flat, and use a neutral/light backing when needed; a decoder-only change cannot guarantee recovery from a blurred or washed-out camera frame. No staging or production runtime write, activation change, preference/storage clear, device setting change, package, ZIP, tag, or production promotion occurred in this follow-up. Production remains unchanged. The zoom candidate remains paused and undeployed. The angle-only production overlay remains gated on an unqualified actual-phone acceptance pass and was not prepared or deployed.
