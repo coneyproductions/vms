@@ -35,15 +35,15 @@ The fixture payload was synthetic and non-personal:
 - angles: `0`, `+5`, `-5`, `+10`, `-10`, `+15`, and `-15` degrees
 - views: intact `1920x1080` frame, current native ROI geometry, and vertically expanded ROI geometry
 
-The synthetic PNGs and local matrix harness remain outside Git. No supplied ID screenshot or ID payload was copied, decoded, or committed.
+The generated PNGs remain outside Git. Their fixed-payload generator, executable source fallback test, and bundled-ZXing matrix test are tracked under `tests/addon-compatibility/`. No supplied ID screenshot or ID payload was copied, decoded, or committed.
 
 | Fixture view | 0° ordinary | ±5° ordinary | ±10° ordinary | ±15° ordinary | `TRY_HARDER` difference | Exact inverse rotation |
 | --- | --- | --- | --- | --- | --- | --- |
-| Full video frame | PASS | FAIL | FAIL | FAIL | None | PASS at every nonzero angle |
-| Current native ROI | PASS | FAIL | FAIL | FAIL | None | PASS at every nonzero angle |
-| Expanded native ROI | PASS | FAIL | FAIL | FAIL | None | PASS at every nonzero angle |
+| Full video frame | PASS | PASS | FAIL | FAIL | None | PASS at every failed angle |
+| Current native ROI | PASS | PASS | FAIL | FAIL | None | PASS at every failed angle |
+| Expanded native ROI | PASS | PASS | FAIL | FAIL | None | PASS at every failed angle |
 
-The intact full-frame failures rule out crop clipping as the cause on ZXing. Expanding the crop does not change the result. Setting the bundled implementation's `TRY_HARDER` hint also changes no result, so the candidate does not enable that hint. Applying the matching `±5`, `±10`, or `±15` correction restores every rotated fixture.
+The intact full-frame failures at `±10°` and `±15°` rule out crop clipping as the cause on ZXing. Near-level `±5°` remains on the ordinary fast path. Expanding the crop does not change the result. Setting the bundled implementation's `TRY_HARDER` hint also changes no result, so the candidate does not enable that hint. Applying the matching `±10°` or `±15°` correction restores every failed fixture; adjacent corrections also succeed in several cases, demonstrating overlap between the fallback angles.
 
 The current native ROI can geometrically clip the top and bottom of a long PDF417 symbol at about 10 degrees, but that is a separate potential native-path concern. The affected phone did not use that path, so the candidate does not change native ROI behavior speculatively.
 
@@ -102,7 +102,13 @@ Passed:
 - exact three-file diff inspection and whitespace checks
 - patch decode, fresh-base application, byte parity, file count, and canonical tree-hash parity
 
-The desktop matrix's bundled-decode timings were median `20.3 ms`, p95 `67.4 ms`, and maximum `303.9 ms`; these are implementation evidence, not a phone performance claim. Phone timing remains part of acceptance.
+Reproduction sources:
+
+- `tests/addon-compatibility/generate-ops-id-angle-fixtures.php`
+- `tests/addon-compatibility/ops-id-angle-fallback.js`
+- `tests/addon-compatibility/ops-id-angle-matrix.js`
+
+The generator accepts a TCPDF `pdf417.php` implementation and an empty output directory. It writes the 21 fixed synthetic fixtures plus a hash receipt. The fallback test accepts candidate `app.js`; the matrix accepts the candidate plugin root, generated fixture root, and an optional Playwright module path. The matrix checks ordinary `0°`/`±5°`, failed ordinary `±10°`/`±15°`, unchanged `TRY_HARDER` results, and successful inverse-angle correction in all three views. Phone timing remains part of acceptance rather than a desktop performance claim.
 
 ## Short actual-phone test
 
@@ -125,7 +131,7 @@ Do not retain or report barcode payloads or identity data. Record only build, br
 | --- | --- |
 | Affected-phone engine identification | PASS — ZXing |
 | Synthetic straight-on/full-frame decode | PASS |
-| Synthetic `±5°`, `±10°`, `±15°` correction | PASS |
+| Synthetic ordinary `±5°` and corrected `±10°`/`±15°` | PASS |
 | Existing duplicate/two-read stability path | PASS — unchanged; repeated fallback handoff exercised by focused harness |
 | Ticket fallback exclusion | PASS — executable harness |
 | Candidate delivery/cache identity on phone | `NOT RUN` |
