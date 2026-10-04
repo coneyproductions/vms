@@ -151,6 +151,24 @@ The new `tests/addon-compatibility/ops-id-angle-bundled-error.js` regression obt
 
 Applying the decoded correction to a fresh copy of the exact deployed `0.1.70.2` tree reproduces `0.1.70.3` byte-for-byte with no other file difference.
 
+### `0.1.70.3` staging deployment receipt
+
+Immediately before deployment, staging still reported `0.1.70.2` and all three runtime hashes matched the base column above. The exact three originals were archived outside the web root at `/home/coney/codex-backups/ops-id-angle-error-kind-staging-20261004T221700Z`; its owner-only `originals.sha256` manifest verifies all three files. The owner-only upload at `/home/coney/codex-staging/ops-id-angle-error-kind-staging-20261004T221700Z` independently verifies all three candidate files.
+
+Only the three reviewed runtime paths were atomically replaced. Post-deployment verification passed:
+
+- all three deployed SHA-256 values match the `0.1.70.3` candidate column;
+- the complete deployed tree remains 62 files and matches canonical SHA-256 `c29ce397096e2dbbbf9bbb12456417af9d843907f2f0e10865f6d5e2fbd30d7b`;
+- the plugin remains active, reports `0.1.70.3`, and its entry file passes remote PHP lint;
+- a fresh request for `app.js?ver=0.1.70.3` returned HTTP 200, exact SHA-256 `748e4110a29cd8de1d08a6dd724f3ac99a8b6893e896c0073c7e388394c778df`, and the `getKind()`-first line;
+- the service worker returned HTTP 200, uses cache `vms-ops-shell-0.1.70.3`, and references the `0.1.70.3` app and both ZXing bundles;
+- `/vms-ops/manifest.json` returned HTTP 200 with the staging start URL and scope;
+- the unauthenticated PWA route retained its expected login redirect;
+- staging `error_log` and `wp-content/debug.log` remained at their pre-deployment byte counts;
+- no deployment temporary file remains in the plugin tree.
+
+A fresh production read-back after deployment again matched all three recorded `0.1.65.2` hashes. Production was not written.
+
 ## Short actual-phone test
 
 Use the same phone, installed PWA, fixed stand, distance, and lighting:
@@ -180,4 +198,4 @@ Do not retain or report barcode payloads or identity data. Record only build, br
 | Actual ticket scan | `NOT RUN` |
 | Native PDF417 device | `NOT RUN` |
 
-Staging contains only the angle-candidate lineage; the `0.1.70.3` correction is limited to the reviewed three-file overlay above. No production write, activation change, preference/storage clear, device setting change, package, ZIP, tag, or production promotion occurred. Production remains unchanged. The zoom candidate remains paused and undeployed. The angle-only production overlay remains gated on an unqualified actual-phone acceptance pass and was not prepared or deployed.
+Staging now runs the reviewed `0.1.70.3` angle correction. No production write, activation change, preference/storage clear, device setting change, package, ZIP, tag, or production promotion occurred. Production remains unchanged. The zoom candidate remains paused and undeployed. The angle-only production overlay remains gated on an unqualified actual-phone acceptance pass and was not prepared or deployed.
