@@ -1,5 +1,5 @@
 BVM Square Reporting
-Version 0.1.2
+Version 0.1.3
 
 Purpose
 -------
@@ -36,3 +36,9 @@ Setup
 - Restores exact Woo/BVM order-item names on classified Square order lines after order creation.
 - Keeps the stable Square reporting variation/category attached and leaves totals and unrelated lines untouched.
 - Fails closed on missing or mismatched catalog IDs and logs Square update failures without interrupting checkout.
+
+0.1.3
+-----
+- Restores reporting line names for Cash App Pay orders as well as credit-card orders.
+- Covers Square orders pre-created by the native-discount bridge before payment.
+- Keeps repeated checkout/retry invocations idempotent and name-only.

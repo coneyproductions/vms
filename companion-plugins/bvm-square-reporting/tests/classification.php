@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 define('ABSPATH', __DIR__ . '/');
 function add_action(...$args): void { unset($args); }
+function add_filter(...$args): void { unset($args); }
 function sanitize_key($value): string { return strtolower((string) preg_replace('/[^a-z0-9_\-]/i', '', (string) $value)); }
 
 require dirname(__DIR__) . '/includes/core.php';

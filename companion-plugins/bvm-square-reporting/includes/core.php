@@ -15,6 +15,9 @@ add_action('woocommerce_checkout_create_order_line_item', 'bvm_sqr_stamp_checkou
 add_action('woocommerce_new_order_item', 'bvm_sqr_stamp_new_order_item', 100, 3);
 add_action('woocommerce_checkout_order_created', 'bvm_sqr_stamp_created_order_items', 200, 1);
 add_action('wc_square_credit_card_api_request_performed', 'bvm_sqr_restore_square_line_names_after_create', 20, 3);
+add_action('wc_square_cash_app_pay_api_request_performed', 'bvm_sqr_restore_square_line_names_after_create', 20, 3);
+add_filter('wc_payment_gateway_square_credit_card_get_order', 'bvm_sqr_restore_precreated_square_order_line_names', 20, 2);
+add_filter('wc_payment_gateway_square_cash_app_pay_get_order', 'bvm_sqr_restore_precreated_square_order_line_names', 20, 2);
 
 if (!function_exists('bvm_sqr_classes')) {
     function bvm_sqr_classes(): array
@@ -731,6 +734,90 @@ if (!function_exists('bvm_sqr_restore_square_line_names_after_create')) {
     }
 }
 
+if (!function_exists('bvm_sqr_restore_precreated_square_order_line_names')) {
+    /**
+     * Restore names when another checkout integration pre-creates the Square
+     * order before WooCommerce Square reaches its normal createOrder call.
+     *
+     * @param mixed $order   WooCommerce Square's transaction order object.
+     * @param mixed $gateway Active WooCommerce Square gateway.
+     * @return mixed The unchanged transaction order object.
+     */
+    function bvm_sqr_restore_precreated_square_order_line_names($order, $gateway)
+    {
+        if (!is_object($order)) {
+            return $order;
+        }
+
+        $square_order_id = isset($order->square_order_id) ? trim((string) $order->square_order_id) : '';
+        if ($square_order_id === '' && is_object($gateway) && method_exists($gateway, 'get_order_meta')) {
+            $square_order_id = trim((string) $gateway->get_order_meta($order, 'square_order_id'));
+        }
+        if ($square_order_id === '') {
+            return $order;
+        }
+
+        try {
+            $result = bvm_sqr_restore_precreated_square_order($order, $square_order_id);
+        } catch (Throwable $e) {
+            $order_id = method_exists($order, 'get_id') ? absint($order->get_id()) : 0;
+            $result = new WP_Error(
+                'bvm_sqr_precreated_line_name_exception',
+                $e->getMessage(),
+                array('order_id' => $order_id)
+            );
+        }
+
+        if (is_wp_error($result)) {
+            bvm_sqr_log_line_name_error($result);
+        }
+
+        return $order;
+    }
+}
+
+if (!function_exists('bvm_sqr_restore_precreated_square_order')) {
+    /**
+     * Retrieve a pre-created Square order and apply the normal narrow name-only
+     * restoration before the payment gateway submits its payment.
+     *
+     * @return array|WP_Error|null
+     */
+    function bvm_sqr_restore_precreated_square_order($order, string $square_order_id)
+    {
+        if (!is_object($order) || !method_exists($order, 'get_order_number')) {
+            return null;
+        }
+
+        $square_order = bvm_sqr_retrieve_square_order($square_order_id);
+        if (is_wp_error($square_order)) {
+            $order_id = method_exists($order, 'get_id') ? absint($order->get_id()) : 0;
+            return new WP_Error(
+                $square_order->get_error_code(),
+                $square_order->get_error_message(),
+                array('order_id' => $order_id)
+            );
+        }
+
+        $reference_id = isset($square_order['reference_id']) ? trim((string) $square_order['reference_id']) : '';
+        if ($reference_id === '' || $reference_id !== (string) $order->get_order_number()) {
+            return null;
+        }
+
+        $result = bvm_sqr_restore_square_order_line_names($order, $square_order);
+        if (is_wp_error($result)) {
+            $order_id = method_exists($order, 'get_id') ? absint($order->get_id()) : 0;
+            return new WP_Error(
+                $result->get_error_code(),
+                $result->get_error_message(),
+                array('order_id' => $order_id)
+            );
+        }
+
+        return $result;
+    }
+}
+
 if (!function_exists('bvm_sqr_maybe_restore_square_line_names')) {
     /**
      * Build and submit the narrow Square line-name update when the response is
@@ -777,8 +864,35 @@ if (!function_exists('bvm_sqr_maybe_restore_square_line_names')) {
             return null;
         }
 
+        $result = bvm_sqr_restore_square_order_line_names($order, $square_order);
+
+        if (is_wp_error($result)) {
+            $order_id = method_exists($order, 'get_id') ? absint($order->get_id()) : absint($reference_id);
+            return new WP_Error(
+                $result->get_error_code(),
+                $result->get_error_message(),
+                array('order_id' => $order_id)
+            );
+        }
+
+        return $result;
+    }
+}
+
+if (!function_exists('bvm_sqr_build_square_line_name_updates')) {
+    /**
+     * Build the fail-closed uid/name-only updates for one Woo/Square order pair.
+     */
+    function bvm_sqr_build_square_line_name_updates($order, array $square_order): array
+    {
+        if (!is_object($order) || !method_exists($order, 'get_items')) {
+            return array();
+        }
+
         $woo_items = array_values($order->get_items('line_item'));
-        $square_items = array_values($square_order['line_items']);
+        $square_items = isset($square_order['line_items']) && is_array($square_order['line_items'])
+            ? array_values($square_order['line_items'])
+            : array();
         $updates = array();
 
         foreach ($woo_items as $index => $item) {
@@ -814,26 +928,95 @@ if (!function_exists('bvm_sqr_maybe_restore_square_line_names')) {
             );
         }
 
+        return $updates;
+    }
+}
+
+if (!function_exists('bvm_sqr_restore_square_order_line_names')) {
+    /**
+     * Apply the narrow name-only update to an already-created Square order.
+     *
+     * @return array|WP_Error|null
+     */
+    function bvm_sqr_restore_square_order_line_names($order, array $square_order)
+    {
+        if (empty($square_order['id']) || !isset($square_order['version'])) {
+            return null;
+        }
+
+        $updates = bvm_sqr_build_square_line_name_updates($order, $square_order);
         if (empty($updates)) {
             return null;
         }
 
-        $result = bvm_sqr_update_square_order_line_names(
+        return bvm_sqr_update_square_order_line_names(
             (string) $square_order['id'],
             (int) $square_order['version'],
             $updates
         );
+    }
+}
 
-        if (is_wp_error($result)) {
-            $order_id = method_exists($order, 'get_id') ? absint($order->get_id()) : absint($reference_id);
-            return new WP_Error(
-                $result->get_error_code(),
-                $result->get_error_message(),
-                array('order_id' => $order_id)
-            );
+if (!function_exists('bvm_sqr_retrieve_square_order')) {
+    /**
+     * Retrieve one Square order without creating or mutating any provider data.
+     *
+     * @return array|WP_Error
+     */
+    function bvm_sqr_retrieve_square_order(string $square_order_id)
+    {
+        if (!function_exists('wc_square')) {
+            return new WP_Error('bvm_sqr_square_missing', 'WooCommerce Square is unavailable.');
         }
 
-        return $result;
+        $plugin = wc_square();
+        $settings = is_object($plugin) && method_exists($plugin, 'get_settings_handler') ? $plugin->get_settings_handler() : null;
+        if (!is_object($settings)) {
+            return new WP_Error('bvm_sqr_settings_missing', 'WooCommerce Square settings are unavailable.');
+        }
+
+        $access_token = method_exists($settings, 'get_access_token') ? trim((string) $settings->get_access_token()) : '';
+        if ($access_token === '') {
+            return new WP_Error('bvm_sqr_token_missing', 'WooCommerce Square access token is unavailable.');
+        }
+
+        $is_sandbox = method_exists($settings, 'is_sandbox') && $settings->is_sandbox();
+        $base_url = $is_sandbox ? 'https://connect.squareupsandbox.com/v2' : 'https://connect.squareup.com/v2';
+        $response = wp_remote_request(
+            $base_url . '/orders/' . rawurlencode($square_order_id),
+            array(
+                'method' => 'GET',
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $access_token,
+                    'Square-Version' => '2025-01-23',
+                ),
+                'timeout' => 30,
+            )
+        );
+
+        if (is_wp_error($response)) {
+            return $response;
+        }
+
+        $status = (int) wp_remote_retrieve_response_code($response);
+        $body = json_decode((string) wp_remote_retrieve_body($response), true);
+        if ($status !== 200 || !is_array($body) || empty($body['order']) || !is_array($body['order'])) {
+            $detail = '';
+            if (is_array($body) && !empty($body['errors'][0]['detail'])) {
+                $detail = sanitize_text_field((string) $body['errors'][0]['detail']);
+            }
+            if ($detail === '') {
+                $detail = sprintf('Square returned HTTP %d while retrieving the reporting order.', $status);
+            }
+            return new WP_Error('bvm_sqr_square_retrieve_failed', $detail);
+        }
+
+        $square_order = $body['order'];
+        if (empty($square_order['id']) || (string) $square_order['id'] !== $square_order_id) {
+            return new WP_Error('bvm_sqr_square_order_mismatch', 'Square returned an unexpected reporting order.');
+        }
+
+        return $square_order;
     }
 }
 

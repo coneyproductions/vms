@@ -5,15 +5,22 @@ declare(strict_types=1);
 define('ABSPATH', __DIR__ . '/');
 
 $GLOBALS['bvm_sqr_test_actions'] = array();
+$GLOBALS['bvm_sqr_test_filters'] = array();
 $GLOBALS['bvm_sqr_test_order'] = null;
 $GLOBALS['bvm_sqr_test_http_calls'] = array();
 $GLOBALS['bvm_sqr_test_http_response'] = array('response' => array('code' => 200), 'body' => '{"order":{"id":"SQUARE-321"}}');
+$GLOBALS['bvm_sqr_test_http_responses'] = array();
 $GLOBALS['bvm_sqr_test_http_callback'] = null;
 $GLOBALS['bvm_sqr_test_logs'] = array();
 
 function add_action(...$args): void
 {
     $GLOBALS['bvm_sqr_test_actions'][] = $args;
+}
+
+function add_filter(...$args): void
+{
+    $GLOBALS['bvm_sqr_test_filters'][] = $args;
 }
 
 function absint($value): int
@@ -90,6 +97,7 @@ class WC_Order_Item_Product
 
 class BVM_SQR_Test_Order
 {
+    public string $square_order_id = '';
     private int $id;
     private array $items;
 
@@ -168,6 +176,9 @@ function wp_remote_request(string $url, array $args)
         $GLOBALS['bvm_sqr_test_http_callback'] = null;
         $callback();
     }
+    if (!empty($GLOBALS['bvm_sqr_test_http_responses'])) {
+        return array_shift($GLOBALS['bvm_sqr_test_http_responses']);
+    }
     return $GLOBALS['bvm_sqr_test_http_response'];
 }
 
@@ -209,6 +220,7 @@ function bvm_sqr_test_reset(): void
         'body' => '{"order":{"id":"SQUARE-321","version":8}}',
     );
     $GLOBALS['bvm_sqr_test_http_callback'] = null;
+    $GLOBALS['bvm_sqr_test_http_responses'] = array();
     $GLOBALS['bvm_sqr_test_logs'] = array();
 }
 
@@ -263,6 +275,24 @@ bvm_sqr_test_check(count($registered_hook) === 1, 'Square create-order observer 
 bvm_sqr_test_check(($registered_hook[0][1] ?? '') === 'bvm_sqr_restore_square_line_names_after_create', 'observer callback should be correct');
 bvm_sqr_test_check(($registered_hook[0][2] ?? 0) === 20 && ($registered_hook[0][3] ?? 0) === 3, 'observer priority and arity should match staging proof');
 
+$registered_cash_hook = array_values(array_filter(
+    $GLOBALS['bvm_sqr_test_actions'],
+    static fn(array $hook): bool => ($hook[0] ?? '') === 'wc_square_cash_app_pay_api_request_performed'
+));
+bvm_sqr_test_check(count($registered_cash_hook) === 1, 'Cash App create-order observer should be registered once');
+bvm_sqr_test_check(($registered_cash_hook[0][1] ?? '') === 'bvm_sqr_restore_square_line_names_after_create', 'Cash App should use the same fail-closed observer');
+bvm_sqr_test_check(($registered_cash_hook[0][2] ?? 0) === 20 && ($registered_cash_hook[0][3] ?? 0) === 3, 'Cash App observer priority and arity should match credit card');
+
+foreach (array('wc_payment_gateway_square_credit_card_get_order', 'wc_payment_gateway_square_cash_app_pay_get_order') as $filter_name) {
+    $registered_filter = array_values(array_filter(
+        $GLOBALS['bvm_sqr_test_filters'],
+        static fn(array $filter): bool => ($filter[0] ?? '') === $filter_name
+    ));
+    bvm_sqr_test_check(count($registered_filter) === 1, $filter_name . ' should have one pre-created order observer');
+    bvm_sqr_test_check(($registered_filter[0][1] ?? '') === 'bvm_sqr_restore_precreated_square_order_line_names', $filter_name . ' should use the pre-created order restorer');
+    bvm_sqr_test_check(($registered_filter[0][2] ?? 0) === 20 && ($registered_filter[0][3] ?? 0) === 2, $filter_name . ' should run after the discount bridge');
+}
+
 // Eligible ticket: exact Woo name restored with catalog identity and totals omitted from the partial update.
 bvm_sqr_test_reset();
 [$request, $response, $square_order_before] = bvm_sqr_test_exchange();
@@ -281,6 +311,104 @@ bvm_sqr_test_check($update_lines[0]['name'] === "2026-09-19 19:00 - Child's Admi
 bvm_sqr_test_check($square_order_before['line_items'][0]['catalog_object_id'] === 'JT77UDM7GOTTCEDDX6LBCGYT', 'stable reporting catalog variation should remain attached');
 bvm_sqr_test_check($square_order_before['line_items'][1]['name'] === 'Popcorn', 'normal Square catalog control should remain unchanged');
 bvm_sqr_test_check(!isset($update_lines[0]['quantity'], $update_lines[0]['base_price_money'], $update_lines[0]['total_tax_money'], $update_lines[0]['total_discount_money']), 'quantity, price, tax, and discount must not be changed');
+
+// Normal paid GA, including a multiple-ticket quantity, keeps the exact event-aware name.
+$paid_ga = new WC_Order_Item_Product(
+    '2026-10-03 19:00 - General Admission',
+    array(
+        '_bvm_square_reporting_class' => 'online_ticket',
+        '_bvm_square_reporting_variation_id' => 'TICKET-VARIATION',
+    )
+);
+$paid_updates = bvm_sqr_build_square_line_name_updates(
+    new BVM_SQR_Test_Order(401, array($paid_ga)),
+    array('line_items' => array(array(
+        'uid' => 'paid-ga',
+        'name' => 'ONLINE TICKET',
+        'catalog_object_id' => 'TICKET-VARIATION',
+        'quantity' => '4',
+        'base_price_money' => array('amount' => 2000, 'currency' => 'USD'),
+    )))
+);
+bvm_sqr_test_check($paid_updates === array(array('uid' => 'paid-ga', 'name' => '2026-10-03 19:00 - General Admission')), 'paid and multiple GA tickets should resolve to the exact Woo name');
+
+// A complimentary ticket is still eligible even when its Square price is zero.
+$comp_ticket = new WC_Order_Item_Product(
+    '2026-10-03 19:00 - Police, Fire Fighter, EMT Admission',
+    array(
+        '_bvm_square_reporting_class' => 'online_ticket',
+        '_bvm_square_reporting_variation_id' => 'TICKET-VARIATION',
+    )
+);
+$comp_updates = bvm_sqr_build_square_line_name_updates(
+    new BVM_SQR_Test_Order(402, array($comp_ticket)),
+    array('line_items' => array(array(
+        'uid' => 'comp-ticket',
+        'name' => 'ONLINE TICKET',
+        'catalog_object_id' => 'TICKET-VARIATION',
+        'quantity' => '2',
+        'base_price_money' => array('amount' => 0, 'currency' => 'USD'),
+    )))
+);
+bvm_sqr_test_check(($comp_updates[0]['name'] ?? '') === '2026-10-03 19:00 - Police, Fire Fighter, EMT Admission', 'complimentary tickets should not remain generic');
+
+// Ticket and add-on lines resolve independently in the same order.
+$addon = new WC_Order_Item_Product(
+    '2026-10-03 19:00 - Table #06',
+    array(
+        '_bvm_square_reporting_class' => 'online_addon',
+        '_bvm_square_reporting_variation_id' => 'ADDON-VARIATION',
+    )
+);
+$combined_updates = bvm_sqr_build_square_line_name_updates(
+    new BVM_SQR_Test_Order(403, array($paid_ga, $addon)),
+    array('line_items' => array(
+        array('uid' => 'ticket', 'name' => 'ONLINE TICKET', 'catalog_object_id' => 'TICKET-VARIATION'),
+        array('uid' => 'addon', 'name' => 'ONLINE ADDON', 'catalog_object_id' => 'ADDON-VARIATION'),
+    ))
+);
+bvm_sqr_test_check(count($combined_updates) === 2, 'ticket plus add-on should produce two independent name updates');
+bvm_sqr_test_check(($combined_updates[0]['name'] ?? '') === '2026-10-03 19:00 - General Admission', 'combined ticket should resolve');
+bvm_sqr_test_check(($combined_updates[1]['name'] ?? '') === '2026-10-03 19:00 - Table #06', 'combined add-on should resolve');
+
+// Future-event identity must come from that order item's canonical Woo name.
+$future_ticket = new WC_Order_Item_Product(
+    '2026-10-24 19:00 - General Admission',
+    array(
+        '_bvm_square_reporting_class' => 'online_ticket',
+        '_bvm_square_reporting_variation_id' => 'TICKET-VARIATION',
+    )
+);
+$future_updates = bvm_sqr_build_square_line_name_updates(
+    new BVM_SQR_Test_Order(404, array($future_ticket)),
+    array('line_items' => array(array('uid' => 'future', 'name' => 'ONLINE TICKET', 'catalog_object_id' => 'TICKET-VARIATION')))
+);
+bvm_sqr_test_check(($future_updates[0]['name'] ?? '') === '2026-10-24 19:00 - General Admission', 'future-event ticket date should be preserved');
+
+// A Square order pre-created by the native-discount bridge is retrieved and fixed before payment.
+bvm_sqr_test_reset();
+[$request, $response, $precreated_square_order] = bvm_sqr_test_exchange();
+$precreated_order = $GLOBALS['bvm_sqr_test_order'];
+$precreated_order->square_order_id = 'SQUARE-321';
+$GLOBALS['bvm_sqr_test_http_responses'] = array(
+    array('response' => array('code' => 200), 'body' => json_encode(array('order' => $precreated_square_order))),
+    array('response' => array('code' => 200), 'body' => '{"order":{"id":"SQUARE-321","version":8}}'),
+);
+$returned_order = bvm_sqr_restore_precreated_square_order_line_names($precreated_order, null);
+bvm_sqr_test_check($returned_order === $precreated_order, 'pre-created order filter must return the unchanged gateway order object');
+bvm_sqr_test_check(count($GLOBALS['bvm_sqr_test_http_calls']) === 2, 'pre-created order should perform one GET and one narrow PUT');
+bvm_sqr_test_check(($GLOBALS['bvm_sqr_test_http_calls'][0][1]['method'] ?? '') === 'GET', 'pre-created order should be retrieved first');
+bvm_sqr_test_check(($GLOBALS['bvm_sqr_test_http_calls'][1][1]['method'] ?? '') === 'PUT', 'pre-created generic line should be restored before payment');
+
+// A retry sees the already-correct name and performs no second PUT or order creation.
+$precreated_square_order['version'] = 8;
+$precreated_square_order['line_items'][0]['name'] = "2026-09-19 19:00 - Child's Admission (12 & under)";
+$GLOBALS['bvm_sqr_test_http_responses'] = array(
+    array('response' => array('code' => 200), 'body' => json_encode(array('order' => $precreated_square_order))),
+);
+bvm_sqr_restore_precreated_square_order_line_names($precreated_order, null);
+bvm_sqr_test_check(count($GLOBALS['bvm_sqr_test_http_calls']) === 3, 'retry should add only one read and no duplicate update');
+bvm_sqr_test_check(($GLOBALS['bvm_sqr_test_http_calls'][2][1]['method'] ?? '') === 'GET', 'retry should remain read-only after names are correct');
 
 // A mismatched catalog object ID must fail closed.
 bvm_sqr_test_reset();
