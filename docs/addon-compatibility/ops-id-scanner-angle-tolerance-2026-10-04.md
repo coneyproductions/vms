@@ -129,11 +129,33 @@ Post-deployment verification passed:
 
 A fresh read-only production check after staging deployment confirmed the exact recorded `0.1.65.2` hashes remain unchanged: app `5adb0d986219760671ce10d4cfa6425f1e20da55945e702df8a3d1cd35a753d4`, entry `39f868dd8470ed8220fd5da955346d278c1d476c8c7850f6fafe6c78ed76fe25`, and build `cd1f9c0074b0470155aa6a306125d36ceaf12a5d8a856e012ef41c834f240333`. Production remains active at `0.1.65.2` and was not written.
 
+## Confirmed bundled-error trigger defect and `0.1.70.3` correction
+
+Follow-up diagnosis confirmed that the `0.1.70.2` angle fallback did not trigger on real bundled decode misses. The original focused harness used mock errors whose `name` was `NotFoundException`, but the shipped minified ZXing bundle reports its stable type through `error.getKind()` while both `error.name` and `error.constructor.name` are `e`. Consequently, the ordinary decoder's real misses never incremented the two-miss fallback gate.
+
+The correction is deliberately limited to miss classification in `startZxingDetectorLoop()`: use `error.getKind()` first when available, then retain the existing name/constructor fallback for compatible errors without that API. The rotation sequence, two-miss gate, throttle, successful-angle retention, normal decoded-value handoff, duplicate/stability behavior, camera, zoom, preferences, native path, and ticket path are unchanged.
+
+The new `tests/addon-compatibility/ops-id-angle-bundled-error.js` regression obtains a real error by asking the shipped `BrowserMultiFormatReader` to decode a blank PDF417 canvas. It verifies `getKind() === 'NotFoundException'`, verifies the names are minified, and passes that same error object through the candidate callback twice. It fails against deployed `0.1.70.2` because no rotation occurs and passes against corrected `0.1.70.3` because the second miss performs exactly one fallback attempt. The existing mock-error fallback test also continues to pass.
+
+| Path | Deployed staging `0.1.70.2` SHA-256 | Corrected candidate `0.1.70.3` SHA-256 |
+| --- | --- | --- |
+| `pwa/assets/js/app.js` | `d6f1b9f017e58167db220c6828acb8102e2142985b32edcb88ee9d31cd4e1dfc` | `748e4110a29cd8de1d08a6dd724f3ac99a8b6893e896c0073c7e388394c778df` |
+| `vms-ops-console-premium.php` | `3ac32c7f781e4efc1da0e62e43d34bdf9a2bb447c293e7ad73327cdee52a34a9` | `d42498054ede0b30638921ca7b7db4bab05fdd93b44f5a85f0e818e695934436` |
+| `vms-build.txt` | `6504d2120c19ee89ae78f735c8b9424716f41228b44f64b30b254177a6d0fce1` | `8ad40266f5908c8a837e872ddb77d6f93441b6ff4def0ac5d166f66797499aec` |
+
+- exact current staging base: `0.1.70.2`, 62 files, canonical tree SHA-256 `20c2364ed0c7e9ef2304cd3ac05c37bca898fb41544c5f7a4ade6df2f297a280`
+- exact corrected candidate: `0.1.70.3`, 62 files, canonical tree SHA-256 `c29ce397096e2dbbbf9bbb12456417af9d843907f2f0e10865f6d5e2fbd30d7b`
+- artifact: `docs/addon-compatibility/vms-ops-console-premium-0.1.70.2-to-0.1.70.3-angle-error-kind.patch.b64`
+- decoded patch SHA-256: `e30e9d5f4973becd312554764249d896f3be9bf2eaab06c6f97d7e1f4bb91e85`
+- encoded artifact SHA-256: `71b3d20d748bd739e1520bb6cdea747bc0725c79567540ed36612bb541f6049d`
+
+Applying the decoded correction to a fresh copy of the exact deployed `0.1.70.2` tree reproduces `0.1.70.3` byte-for-byte with no other file difference.
+
 ## Short actual-phone test
 
 Use the same phone, installed PWA, fixed stand, distance, and lighting:
 
-1. Open `https://staging.serenaderange.com/vms-ops/` and confirm `app.js?ver=0.1.70.2` is delivered rather than a cached `0.1.70` or paused `0.1.70.1` asset.
+1. Open `https://staging.serenaderange.com/vms-ops/` and confirm `app.js?ver=0.1.70.3` is delivered rather than a cached `0.1.70.2` or paused `0.1.70.1` asset.
 2. With an authorized test ID, scan level, approximately `+10°`, and approximately `-10°` without changing the stand distance or framing.
 3. Vary the angle slightly around those positions to check tolerance between the correction angles.
 4. Compare level and angled time-to-response and watch for preview freezing.
@@ -158,4 +180,4 @@ Do not retain or report barcode payloads or identity data. Record only build, br
 | Actual ticket scan | `NOT RUN` |
 | Native PDF417 device | `NOT RUN` |
 
-Staging now contains only the reviewed `0.1.70.2` three-file angle overlay. No production write, activation change, preference/storage clear, device setting change, package, ZIP, tag, or production promotion occurred. Production remains unchanged. The zoom candidate remains paused and undeployed. The angle-only production overlay remains gated on an unqualified actual-phone acceptance pass and was not prepared or deployed.
+Staging contains only the angle-candidate lineage; the `0.1.70.3` correction is limited to the reviewed three-file overlay above. No production write, activation change, preference/storage clear, device setting change, package, ZIP, tag, or production promotion occurred. Production remains unchanged. The zoom candidate remains paused and undeployed. The angle-only production overlay remains gated on an unqualified actual-phone acceptance pass and was not prepared or deployed.
