@@ -143,7 +143,7 @@ FAKE_DRIVER = r"""
         if (escapeHandler) {
           window.removeEventListener('keyup', escapeHandler);
         }
-        if (typeof config.onDestroyed === 'function') {
+        if (mode !== 'destroy_without_callback' && typeof config.onDestroyed === 'function') {
           config.onDestroyed();
         }
         if (focusBefore && typeof focusBefore.focus === 'function') {
@@ -166,6 +166,14 @@ FAKE_DRIVER = r"""
           return activeIndex < config.steps.length - 1;
         }
       };
+
+      function requestDestroy() {
+        if (typeof config.onDestroyStarted === 'function') {
+          config.onDestroyStarted();
+        } else {
+          destroy();
+        }
+      }
 
       function show() {
         removeChrome();
@@ -194,7 +202,7 @@ FAKE_DRIVER = r"""
 
         chrome.addEventListener('click', function (event) {
           if (event.target.closest('.driver-popover-close-btn')) {
-            destroy();
+            requestDestroy();
             return;
           }
           if (event.target.closest('.driver-popover-next-btn')) {
@@ -202,14 +210,14 @@ FAKE_DRIVER = r"""
               activeIndex += 1;
               show();
             } else {
-              destroy();
+              requestDestroy();
             }
           }
         });
 
         escapeHandler = function (event) {
           if (event.key === 'Escape') {
-            destroy();
+            requestDestroy();
           }
         };
         window.addEventListener('keyup', escapeHandler);
@@ -341,6 +349,13 @@ def run_runtime(browser: Any, label: str, runtime: pathlib.Path, payload_name: s
     assert_stays_dismissed(page, "single-tour-dismissal")
     page.close()
 
+    page = scenario("driver-early-destroy-without-onDestroyed", mode="destroy_without_callback")
+    page.locator("#start-one").click()
+    page.locator(".driver-popover-close-btn").click()
+    assert_stays_dismissed(page, "driver-early-destroy-without-onDestroyed")
+    check(len(page.evaluate("window.__tourTest.fetchBodies")) == 1, "Early Driver dismissal did not record seen")
+    page.close()
+
     page = scenario("ad-hoc-fallback-dismissal")
     page.locator("#start-missing").click()
     page.wait_for_selector(".driver-popover")
@@ -391,6 +406,7 @@ def run_runtime(browser: Any, label: str, runtime: pathlib.Path, payload_name: s
     page.wait_for_timeout(1300)
     check("Tour two" in popover_title(page), "Older callback or watchdog replaced the newer tour")
     check(page.evaluate("window.__tourTest.factoryCalls") == 2, "Rapid launch invoked an unexpected fallback")
+    check(page.evaluate("window.__tourTest.destroys") >= 1, "Rapid launch did not destroy the older tour")
     page.locator(".driver-popover-close-btn").click()
     page.close()
 

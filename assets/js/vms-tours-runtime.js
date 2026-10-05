@@ -15,6 +15,7 @@
   var inlineHelpByAnchor = {};
   var activeDriver = null;
   var activeCleanup = null;
+  var activeAbort = null;
   var activeDriverFlowId = 0;
   var driverFlowSequence = 0;
   var launchInvocationSequence = 0;
@@ -394,17 +395,25 @@
   }
 
   function stopActiveTour() {
-    if (activeCleanup) {
+    var driverToStop = activeDriver;
+    if (activeAbort) {
+      try {
+        activeAbort();
+      } catch (err) {
+        log('Failed to settle prior tour', err);
+      }
+      activeAbort = null;
+    } else if (activeCleanup) {
       try {
         activeCleanup();
-      } catch (err) {
-        log('Failed to cleanup prior tour', err);
+      } catch (cleanupError) {
+        log('Failed to cleanup prior tour', cleanupError);
       }
-      activeCleanup = null;
     }
-    if (activeDriver && typeof activeDriver.destroy === 'function') {
+    activeCleanup = null;
+    if (driverToStop && typeof driverToStop.destroy === 'function') {
       try {
-        activeDriver.destroy();
+        driverToStop.destroy();
       } catch (err2) {
         log('Failed to destroy prior tour', err2);
       }
@@ -469,6 +478,17 @@
         resolve(result);
       }
 
+      function finalize(result) {
+        cleanup();
+        if (activeDriverFlowId === driverFlowId) {
+          activeDriver = null;
+          activeCleanup = null;
+          activeAbort = null;
+          activeDriverFlowId = 0;
+        }
+        settle(result);
+      }
+
       var driverSteps = prepared.map(function (row, idx) {
         var step = row.step || {};
         return {
@@ -497,6 +517,13 @@
         overlayClickBehavior: 'close',
         popoverClass: 'vms-driver-popover',
         steps: driverSteps,
+        onDestroyStarted: function () {
+          var result = finished ? 'completed' : (started ? 'dismissed' : 'never_started');
+          if (driverObj && typeof driverObj.destroy === 'function') {
+            driverObj.destroy();
+          }
+          finalize(result);
+        },
         onHighlightStarted: function (_, __, ctx) {
           if (!started) {
             started = true;
@@ -543,19 +570,13 @@
               if (driverObj && typeof driverObj.destroy === 'function') {
                 driverObj.destroy();
               }
+              finalize(started ? 'dismissed' : 'never_started');
             });
             popover.footerButtons.insertBefore(skipBtn, popover.footerButtons.firstChild);
           }
         },
         onDestroyed: function () {
-          cleanup();
-          if (activeDriverFlowId === driverFlowId) {
-            activeDriver = null;
-            activeCleanup = null;
-            activeDriverFlowId = 0;
-          }
-
-          settle(finished ? 'completed' : (started ? 'dismissed' : 'never_started'));
+          finalize(finished ? 'completed' : (started ? 'dismissed' : 'never_started'));
         }
         });
       } catch (factoryError) {
@@ -587,6 +608,9 @@
 
       activeDriver = driverObj;
       activeCleanup = cleanup;
+      activeAbort = function () {
+        finalize(started ? 'dismissed' : 'never_started');
+      };
       activeDriverFlowId = driverFlowId;
 
       document.addEventListener('click', clickHandler, true);
@@ -599,14 +623,8 @@
           driverObj.drive();
         }
       } catch (err) {
-        cleanup();
-        if (activeDriverFlowId === driverFlowId) {
-          activeDriver = null;
-          activeCleanup = null;
-          activeDriverFlowId = 0;
-        }
         log('Failed to start Driver.js tour', err);
-        settle(started ? 'dismissed' : 'never_started');
+        finalize(started ? 'dismissed' : 'never_started');
       }
     });
   }
