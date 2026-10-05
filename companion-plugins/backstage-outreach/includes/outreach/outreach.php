@@ -105,11 +105,18 @@ if (!function_exists('vms_outreach_render_admin_page')) {
 		};
 
 		if (function_exists('vms_admin_ui_render_shell')) {
+			$actions_html = function_exists('backstage_outreach_help_button')
+				? backstage_outreach_help_button(
+					'backstage-outreach.business-qr-setup',
+					'outreach-qr-help',
+					__('Guest Pass & QR Setup Help', 'backstage-outreach')
+				)
+				: '';
 			vms_admin_ui_render_shell(
 				array(
 					'title' => __('Outreach', 'backstage-outreach'),
 					'subtitle' => __('Reusable campaign workflow for imports, mapping, preview, delivery prep, and audience tracking. Customer sending stays in MailPoet.', 'backstage-outreach'),
-					'actions_html' => '',
+					'actions_html' => $actions_html,
 					'shell_id' => 'vms-pass-claims-wrap',
 				),
 				$content
@@ -119,6 +126,13 @@ if (!function_exists('vms_outreach_render_admin_page')) {
 
 		echo '<div class="wrap">';
 		echo '<h1>' . esc_html__('Outreach', 'backstage-outreach') . '</h1>';
+		if (function_exists('backstage_outreach_help_button')) {
+			echo '<p>' . backstage_outreach_help_button(
+				'backstage-outreach.business-qr-setup',
+				'outreach-qr-help',
+				__('Guest Pass & QR Setup Help', 'backstage-outreach')
+			) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Button HTML is produced by BVM's escaped help-button renderer.
+		}
 		$content();
 		echo '</div>';
 	}
