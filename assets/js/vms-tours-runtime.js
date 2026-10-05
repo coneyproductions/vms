@@ -15,6 +15,10 @@
   var inlineHelpByAnchor = {};
   var activeDriver = null;
   var activeCleanup = null;
+  var activeDriverFlowId = 0;
+  var driverFlowSequence = 0;
+  var launchInvocationSequence = 0;
+  var activeLaunchInvocationId = 0;
 
   tours.forEach(function (tour) {
     if (tour && tour.id) {
@@ -406,30 +410,64 @@
       }
     }
     activeDriver = null;
+    activeDriverFlowId = 0;
+  }
+
+  function beginLaunchInvocation() {
+    launchInvocationSequence += 1;
+    activeLaunchInvocationId = launchInvocationSequence;
+    return activeLaunchInvocationId;
+  }
+
+  function isCurrentLaunchInvocation(invocationId) {
+    return invocationId > 0 && invocationId === activeLaunchInvocationId;
   }
 
   function runDriverFlow(flow) {
     var factory = getDriverFactory();
     if (!factory) {
       log('Driver.js was not found.');
-      return Promise.resolve(false);
+      if (typeof flow.onFailure === 'function') {
+        flow.onFailure();
+      }
+      return Promise.resolve('never_started');
     }
 
     var prepared = Array.isArray(flow.steps) ? flow.steps : [];
     if (!prepared.length) {
       log('No runnable tour steps remain.', { tour: flow.id || 'ad-hoc' });
-      if (typeof flow.onClose === 'function') {
-        flow.onClose();
+      if (typeof flow.onFailure === 'function') {
+        flow.onFailure();
       }
-      return Promise.resolve(false);
+      return Promise.resolve('never_started');
     }
 
     stopActiveTour();
+    driverFlowSequence += 1;
+    var driverFlowId = driverFlowSequence;
 
     return new Promise(function (resolve) {
       var finished = false;
+      var started = false;
+      var settled = false;
       var activeIndex = 0;
       var cleanup = function () {};
+
+      function settle(result) {
+        if (settled) {
+          return;
+        }
+        settled = true;
+
+        if (result === 'completed' && typeof flow.onFinish === 'function') {
+          flow.onFinish();
+        } else if (result === 'dismissed' && typeof flow.onClose === 'function') {
+          flow.onClose();
+        } else if (result === 'never_started' && typeof flow.onFailure === 'function') {
+          flow.onFailure();
+        }
+        resolve(result);
+      }
 
       var driverSteps = prepared.map(function (row, idx) {
         var step = row.step || {};
@@ -449,7 +487,9 @@
         };
       });
 
-      var driverObj = factory({
+      var driverObj = null;
+      try {
+        driverObj = factory({
         animate: true,
         allowClose: true,
         showProgress: true,
@@ -458,6 +498,13 @@
         popoverClass: 'vms-driver-popover',
         steps: driverSteps,
         onHighlightStarted: function (_, __, ctx) {
+          if (!started) {
+            started = true;
+            if (typeof flow.onStart === 'function') {
+              flow.onStart();
+            }
+          }
+
           var idx = ctx && ctx.state && typeof ctx.state.activeIndex === 'number' ? ctx.state.activeIndex : 0;
           activeIndex = idx;
           var row = prepared[idx];
@@ -502,17 +549,20 @@
         },
         onDestroyed: function () {
           cleanup();
-          activeDriver = null;
-          activeCleanup = null;
-
-          if (finished && typeof flow.onFinish === 'function') {
-            flow.onFinish();
-          } else if (!finished && typeof flow.onClose === 'function') {
-            flow.onClose();
+          if (activeDriverFlowId === driverFlowId) {
+            activeDriver = null;
+            activeCleanup = null;
+            activeDriverFlowId = 0;
           }
-          resolve(finished);
+
+          settle(finished ? 'completed' : (started ? 'dismissed' : 'never_started'));
         }
-      });
+        });
+      } catch (factoryError) {
+        log('Failed to create Driver.js tour', factoryError);
+        settle('never_started');
+        return;
+      }
 
       var clickHandler = function (event) {
         if (!event.target || !event.target.closest) {
@@ -537,6 +587,7 @@
 
       activeDriver = driverObj;
       activeCleanup = cleanup;
+      activeDriverFlowId = driverFlowId;
 
       document.addEventListener('click', clickHandler, true);
 
@@ -549,31 +600,38 @@
         }
       } catch (err) {
         cleanup();
-        activeDriver = null;
-        activeCleanup = null;
-        log('Failed to start Driver.js tour', err);
-        if (typeof flow.onClose === 'function') {
-          flow.onClose();
+        if (activeDriverFlowId === driverFlowId) {
+          activeDriver = null;
+          activeCleanup = null;
+          activeDriverFlowId = 0;
         }
-        resolve(false);
+        log('Failed to start Driver.js tour', err);
+        settle(started ? 'dismissed' : 'never_started');
       }
     });
   }
 
-  function startRegisteredTour(tourId) {
+  function startRegisteredTour(tourId, lifecycle) {
+    var launchLifecycle = lifecycle || {};
+    var invocationId = Number(launchLifecycle.invocationId || 0);
+    if (!invocationId) {
+      invocationId = beginLaunchInvocation();
+    }
+
     var tour = resolveRegisteredTour(tourId);
     if (!tour && tours.length === 1 && tours[0] && tours[0].id) {
       tour = tours[0];
     }
     if (!tour) {
       log('Tour was requested but not found in runtime payload.', { requested: tourId });
-      return Promise.resolve(false);
+      return Promise.resolve('never_started');
     }
 
     var prepared = buildPreparedSteps(tour);
     return runDriverFlow({
       id: tour.id,
       steps: prepared,
+      onStart: typeof launchLifecycle.onStart === 'function' ? launchLifecycle.onStart : null,
       onFinish: function () {
         markSeen(tour.id).then(function () {
           markComplete(tour.id, tour.version || '1.0.0');
@@ -750,16 +808,29 @@
       if (typeof cfg.onClose === 'function') {
         cfg.onClose();
       }
+      if (typeof cfg.onResult === 'function') {
+        cfg.onResult('never_started');
+      }
       return false;
+    }
+
+    if (!Number(cfg.launchInvocationId || 0)) {
+      beginLaunchInvocation();
     }
 
     runDriverFlow({
       id: cfg.tourId || 'vms.adhoc',
       steps: prepared,
       options: cfg.options || {},
+      onStart: typeof cfg.onStart === 'function' ? cfg.onStart : null,
       onFinish: typeof cfg.onFinish === 'function' ? cfg.onFinish : null,
       onClose: typeof cfg.onClose === 'function' ? cfg.onClose : null,
+      onFailure: typeof cfg.onClose === 'function' ? cfg.onClose : null,
       onStepChange: typeof cfg.onStepChange === 'function' ? cfg.onStepChange : null
+    }).then(function (result) {
+      if (typeof cfg.onResult === 'function') {
+        cfg.onResult(result);
+      }
     });
 
     return true;
@@ -810,6 +881,7 @@
       maxRuns = 1;
     }
     var queue = eligible.slice(0, maxRuns);
+    var invocationId = beginLaunchInvocation();
 
     var chain = Promise.resolve();
     queue.forEach(function (tour, index) {
@@ -820,7 +892,11 @@
         }
         return new Promise(function (resolve) {
           window.setTimeout(function () {
-            startRegisteredTour(tour.id).then(function () {
+            if (!isCurrentLaunchInvocation(invocationId)) {
+              resolve(false);
+              return;
+            }
+            startRegisteredTour(tour.id, { invocationId: invocationId }).then(function () {
               resolve(true);
             });
           }, index === 0 ? delay : 220);
@@ -979,14 +1055,19 @@
         return;
       }
 
-      function openHelpPanelFallback() {
+      function openHelpPanelFallback(expectedInvocationId) {
         var panel = document.getElementById('vms-help-tour-panel');
         if (panel && !panel.hidden) {
           return;
         }
         var helpBtn = document.getElementById('vms-help-tour-button');
         if (helpBtn) {
-          helpBtn.click();
+          window.setTimeout(function () {
+            if (!isCurrentLaunchInvocation(expectedInvocationId)) {
+              return;
+            }
+            helpBtn.click();
+          }, 0);
         }
       }
 
@@ -1017,40 +1098,90 @@
           event.preventDefault();
 
           var fallbackUsed = false;
+          var invocationId = beginLaunchInvocation();
+          var registeredWatchdog = null;
+
+          function cancelRegisteredWatchdog() {
+            if (registeredWatchdog !== null) {
+              window.clearTimeout(registeredWatchdog);
+              registeredWatchdog = null;
+            }
+          }
+
           function triggerTourFallback() {
-            if (fallbackUsed || hasVisibleTourChrome()) {
+            if (!isCurrentLaunchInvocation(invocationId) || fallbackUsed || hasVisibleTourChrome()) {
               return;
             }
             fallbackUsed = true;
+            cancelRegisteredWatchdog();
 
             var fallbackConfig = parseFallbackTourConfig(run);
             if (fallbackConfig) {
-              var adHocStarted = startAdHocTour(fallbackConfig);
+              var adHocFallbackSettled = false;
+              var adHocWatchdog = null;
+              var adHocConfig = {};
+              Object.keys(fallbackConfig).forEach(function (key) {
+                adHocConfig[key] = fallbackConfig[key];
+              });
+              adHocConfig.launchInvocationId = invocationId;
+              adHocConfig.onStart = function () {
+                adHocFallbackSettled = true;
+                if (adHocWatchdog !== null) {
+                  window.clearTimeout(adHocWatchdog);
+                  adHocWatchdog = null;
+                }
+              };
+              adHocConfig.onResult = function (result) {
+                if (!isCurrentLaunchInvocation(invocationId) || adHocFallbackSettled) {
+                  return;
+                }
+                adHocFallbackSettled = true;
+                if (adHocWatchdog !== null) {
+                  window.clearTimeout(adHocWatchdog);
+                  adHocWatchdog = null;
+                }
+                if (result === 'never_started') {
+                  openHelpPanelFallback(invocationId);
+                }
+              };
+
+              var adHocStarted = startAdHocTour(adHocConfig);
               if (!adHocStarted) {
-                openHelpPanelFallback();
-              } else {
-                window.setTimeout(function () {
-                  if (!hasVisibleTourChrome()) {
-                    openHelpPanelFallback();
-                  }
-                }, 500);
+                if (!adHocFallbackSettled) {
+                  adHocFallbackSettled = true;
+                  openHelpPanelFallback(invocationId);
+                }
+                return;
               }
+              adHocWatchdog = window.setTimeout(function () {
+                if (!adHocFallbackSettled && isCurrentLaunchInvocation(invocationId) && !hasVisibleTourChrome()) {
+                  adHocFallbackSettled = true;
+                  openHelpPanelFallback(invocationId);
+                }
+              }, 500);
               return;
             }
 
-            openHelpPanelFallback();
+            openHelpPanelFallback(invocationId);
           }
 
-          startRegisteredTour(tourId).then(function (started) {
-            if (started) {
-              return;
-            }
-            triggerTourFallback();
-          });
-
-          window.setTimeout(function () {
+          registeredWatchdog = window.setTimeout(function () {
             triggerTourFallback();
           }, 700);
+
+          startRegisteredTour(tourId, {
+            invocationId: invocationId,
+            onStart: cancelRegisteredWatchdog
+          }).then(function (result) {
+            if (!isCurrentLaunchInvocation(invocationId)) {
+              return;
+            }
+            cancelRegisteredWatchdog();
+            if (result === 'never_started') {
+              triggerTourFallback();
+            }
+          });
+
         }
         return;
       }

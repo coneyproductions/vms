@@ -3,7 +3,7 @@
 defined('ABSPATH') || exit;
 
 if (!defined('BVMGR_TOURS_VERSION')) {
-	define('BVMGR_TOURS_VERSION', '1.0.0');
+	define('BVMGR_TOURS_VERSION', '1.0.1');
 }
 
 if (!defined('BVMGR_TOURS_DEBUG')) {
