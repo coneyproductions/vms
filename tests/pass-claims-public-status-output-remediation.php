@@ -85,6 +85,14 @@ if (!function_exists('__')) {
 	}
 }
 
+if (!function_exists('is_wp_error')) {
+	function is_wp_error($value): bool
+	{
+		unset($value);
+		return false;
+	}
+}
+
 if (!function_exists('_n')) {
 	function _n($single, $plural, $number, $domain = ''): string
 	{
@@ -605,7 +613,7 @@ foreach ((array) preg_split('/\R/', $statusHelperSource) as $line) {
 }
 $assert(count($allowlistUseLines) === 1, 'Pass Claims public status allowlist should be used exactly once outside its definition.');
 
-$assert(substr_count($passClaimsSource, 'bvmgr_pass_claims_render_public_status_screen(') === 7, 'Pass Claims should route exactly the six selected public status branches through the dedicated status renderer.');
+$assert(substr_count($passClaimsSource, 'bvmgr_pass_claims_render_public_status_screen(') === 8, 'Pass Claims should route exactly the seven selected public status branches through the dedicated status renderer.');
 $assert(strpos($passClaimsSource, "bvmgr_pass_claims_render_public_shell(__('Claim Pass', 'backstage-venue-manager'), '<h1>' . esc_html__('Pass Not Found'") === false, 'The invalid-token status branch should no longer hand raw concatenated status HTML directly to the public shell.');
 
 $resetRuntime();

@@ -4,7 +4,7 @@ Tags: event management, venue management, vendor management, ticketing, woocomme
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.3.1
+Stable tag: 1.3.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -71,11 +71,11 @@ Backstage Venue Manager retains operational data by default. The plugin ships wi
 
 = Does Backstage Venue Manager support multisite? =
 
-Multisite is not officially supported or verified for 1.3.1.
+Multisite is not officially supported or verified for 1.3.2.
 
 = How are privacy export and erasure requests handled? =
 
-Backstage Venue Manager 1.3.1 does not add dedicated exporter or eraser automation. Operators should handle requests manually with their existing WordPress tools and site-specific operational procedures until that automation is added.
+Backstage Venue Manager 1.3.2 does not add dedicated exporter or eraser automation. Operators should handle requests manually with their existing WordPress tools and site-specific operational procedures until that automation is added.
 
 = Where do I get support? =
 
@@ -96,22 +96,17 @@ Browser contact: when the fully configured active Vendor Application form is dis
 Server-side verification: Backstage Venue Manager sends the Turnstile response token and the visitor IP address to Cloudflare and authenticates the verification request with the configured secret key. The Vendor Application form contents are not sent to Cloudflare through this integration.
 Service docs and privacy: https://developers.cloudflare.com/turnstile/get-started/server-side-validation/ and https://www.cloudflare.com/turnstile-privacy-policy/
 
-2. QRServer / goQR.me
-Used by: admissions and pass-claim QR image generation, when those workflows are used.
-Data sent: the QR payload encoded into the generated QR-image request URL.
-Service docs and privacy: https://goqr.me/api/ and https://goqr.me/privacy-safety-security/
-
-3. Vendor-provided ICS calendar URLs
+2. Vendor-provided ICS calendar URLs
 Used by: vendor availability ICS sync, when an operator or vendor configures an ICS URL.
 Data sent: Backstage Venue Manager fetches the configured ICS URL directly from the remote calendar host.
 Service terms and privacy: depend on the configured calendar host.
 
-4. Operator-configured webhook endpoints
+3. Operator-configured webhook endpoints
 Used by: webhook-based social sharing and publishing workflows, when configured.
 Data sent: event identifiers, venue summary fields, rendered caption text, destination URL, featured image URL, queue metadata, and an HMAC signature when a signing secret is configured.
 Service terms and privacy: depend on the configured webhook destination selected by the operator.
 
-5. Vendor-selected video and oEmbed providers
+4. Vendor-selected video and oEmbed providers
 Used by: optional vendor profile and promotional video embeds, when a vendor or operator saves a supported external video URL.
 Server-side contact: WordPress may request the selected URL and its provider endpoints to discover and render the embed.
 Browser contact: when an embedded video is displayed, the visitor's browser may connect directly to the selected provider.
@@ -122,11 +117,11 @@ Service docs, terms, and privacy: supported providers are described at https://w
 
 Backstage Venue Manager retains operational data by default on uninstall to reduce the risk of accidental data loss.
 
-Depending on the modules in use, retained data can include settings, venue and vendor records, event-planning records, ticketing-related operational data, and related logs or status metadata. Backstage Venue Manager 1.3.1 does not add automated uninstall cleanup tooling or dedicated privacy exporter or eraser automation. Operators should review their operational data-handling process before uninstalling the plugin or responding to privacy requests.
+Depending on the modules in use, retained data can include settings, venue and vendor records, event-planning records, ticketing-related operational data, and related logs or status metadata. Backstage Venue Manager 1.3.2 does not add automated uninstall cleanup tooling or dedicated privacy exporter or eraser automation. Operators should review their operational data-handling process before uninstalling the plugin or responding to privacy requests.
 
 == Optional Integrations / Dependencies ==
 
-WooCommerce, The Events Calendar, and Event Tickets are optional integrations for 1.3.1. Backstage Venue Manager should continue loading without them, but dependent features will remain unavailable until the required plugin stack is installed.
+WooCommerce, The Events Calendar, and Event Tickets are optional integrations for 1.3.2. Backstage Venue Manager should continue loading without them, but dependent features will remain unavailable until the required plugin stack is installed.
 
 Optional add-ons are distributed as separate plugins. The WordPress.org core plugin can detect compatible companion plugins when they are installed, but it does not install, license, or unlock them from inside the core plugin.
 
@@ -139,6 +134,13 @@ Product documentation: https://coneyproductions.booklivetalent.com/vms/
 Private security reports: coneyproductionsllc@gmail.com
 
 == Changelog ==
+
+= 1.3.2 =
+
+* Added reusable-business Guest Pass integration points for the separate Backstage Outreach companion plugin.
+* Added Source, batch, referring-business, status, claimed-event, date, and search filters with deterministic pagination.
+* Added complete matching CSV exports with spreadsheet-formula protection.
+* Added local printable QR support for complimentary Guest Passes while preserving native claim, credential, check-in, cancellation, and quick-print authority.
 
 = 1.3.1 =
 
@@ -176,6 +178,10 @@ Private security reports: coneyproductionsllc@gmail.com
 * Documented optional dependency boundaries, external-service disclosures, privacy notes, and uninstall data-retention behavior.
 
 == Upgrade Notice ==
+
+= 1.3.2 =
+
+Backstage Venue Manager 1.3.2 adds the core integration and administration surfaces used by Backstage Outreach 1.1.0. Install the companion separately when reusable business distribution is required, and clear external caches after upgrading.
 
 = 1.3.1 =
 

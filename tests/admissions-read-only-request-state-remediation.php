@@ -339,6 +339,10 @@ vms_test_assert($vendorPortalSource !== '', 'Vendor Portal source should be read
 eval(vms_test_extract_function($adminUiSource, 'bvmgr_admission_admin_enqueue_assets'));
 eval(vms_test_extract_function($passClaimsSource, 'bvmgr_pass_claims_is_admin_page'));
 eval(vms_test_extract_function($passClaimsSource, 'bvmgr_pass_claims_render_admin_notices'));
+eval(vms_test_extract_function($passClaimsSource, 'bvmgr_pass_claims_list_filters'));
+function bvmgr_pass_claims_render_filtered_passes_tab(): void
+{
+}
 eval(vms_test_extract_function($passClaimsSource, 'bvmgr_pass_claims_render_passes_tab'));
 eval(vms_test_extract_function($passClaimsSource, 'bvmgr_pass_claims_render_admin_page'));
 eval(vms_test_extract_function($vendorPortalSource, 'bvmgr_vendor_portal_query_key'));
@@ -373,9 +377,9 @@ vms_test_assert_contains(
 	'Pass Claims admin notices should read the result filter through the shared key helper.'
 );
 vms_test_assert_contains(
-	"\$batch_id = bvmgr_request_read_absint(\$_GET, 'batch_id');",
+	"\$filters = bvmgr_pass_claims_list_filters((array) wp_unslash(\$_GET));",
 	$passClaimsSource,
-	'Pass Claims passes-tab filtering should read batch_id through the shared integer helper.'
+	'Pass Claims passes-tab filtering should normalize all bookmarkable filters through the shared shape-safe parser.'
 );
 vms_test_assert_contains(
 	"\$tab = bvmgr_request_read_key(\$_GET, 'tab');",
@@ -486,12 +490,8 @@ bvmgr_pass_claims_render_admin_notices();
 $noticesHtml = (string) ob_get_clean();
 vms_test_assert_not_contains('Pass voided.', $noticesHtml, 'Pass Claims admin notices should reject array-shaped result values.');
 
-$GLOBALS['vms_test_pass_claim_token_args'] = array();
-ob_start();
-$_GET = array('batch_id' => array('9'));
-bvmgr_pass_claims_render_passes_tab();
-ob_end_clean();
-vms_test_assert_same(array(0, 300), $GLOBALS['vms_test_pass_claim_token_args'], 'Pass Claims passes-tab filtering should reject array-shaped batch IDs.');
+$filters = bvmgr_pass_claims_list_filters(array('batch_id' => array('9')));
+vms_test_assert_same(0, $filters['batch_id'], 'Pass Claims passes-tab filtering should reject array-shaped batch IDs.');
 
 $GLOBALS['vms_test_pass_claim_render_log'] = array();
 ob_start();
