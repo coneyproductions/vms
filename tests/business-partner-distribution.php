@@ -32,7 +32,7 @@ $assertions = array(
 	'Partner party size is rejected before allocation' => strpos($outreach, 'Party size must be between 1 and %d.') !== false,
 	'Partner submissions reuse the public claim rate limit' => strpos($outreach, "bvmgr_pass_claims_rate_limit_hit(\$ip, (string) \$distribution['public_key'])") !== false,
 	'Attribution does not overload recipient identity' => strpos($outreach, "'outreach_distribution_id'") !== false && strpos($outreach, "['outreach_recipient_id']") === false,
-	'Distribution state is audited without voiding passes' => strpos($outreach, 'outreach_partner_distribution_status') !== false && strpos($outreach, 'Existing customer credentials were not changed.') !== false,
+	'Distribution state is audited without voiding passes' => strpos($outreach, 'outreach_partner_distribution_status') !== false && strpos($outreach, 'Existing purchased tickets and customer credentials were not changed.') !== false,
 	'Revoked links cannot be resumed' => strpos($outreach, 'A revoked distribution cannot be resumed.') !== false && strpos($outreach, 'Revocation is permanent for this link.') !== false,
 	'Claim submit revalidates mutable distribution state' => strpos($outreach, '$fresh_distribution') !== false && strpos($outreach, 'WHERE d.id=%d FOR UPDATE') !== false,
 	'Post-commit mail failure preserves successful claim response' => strpos($outreach, 'mail_transport_exception') !== false && strpos($outreach, 'if (!$committed)') !== false,
