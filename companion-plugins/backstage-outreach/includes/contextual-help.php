@@ -134,7 +134,7 @@ if (!function_exists('backstage_outreach_register_contextual_help_tours')) {
 					'id' => 'offer-type',
 					'selector' => '[data-vms-tour="outreach-distribution-type"]',
 					'title' => __('Choose free or paid', 'backstage-outreach'),
-					'body' => __('Complimentary Guest Pass issues free admissions. Neighborhood Offer gives customers 50% off eligible paid tickets: they scan, select eligible tickets, receive the automatic discount, and complete normal checkout.', 'backstage-outreach'),
+					'body' => __('Complimentary Guest Pass issues free admissions. Neighborhood Offer gives customers 50% off eligible paid tickets: they scan, select eligible tickets, receive the automatic discount, and complete normal checkout. Change the offer here in Outreach—not by directly editing its managed WooCommerce coupon.', 'backstage-outreach'),
 					'placement' => 'left',
 				),
 				array(
