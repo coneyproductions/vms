@@ -875,7 +875,7 @@ function backstage_outreach_handle_distribution_print(): void
 	$row = $wpdb->get_row($wpdb->prepare('SELECT d.*, b.business_name, c.campaign_name FROM %i d INNER JOIN %i b ON b.id=d.business_id INNER JOIN %i c ON c.id=d.campaign_id WHERE d.id=%d', backstage_outreach_business_table('campaign_businesses'), backstage_outreach_business_table('businesses'), vms_admission_table_pass_outreach_campaigns(), $id), ARRAY_A);
 	if (!is_array($row)) { wp_die(esc_html__('Distribution not found.', 'backstage-outreach')); }
 	$url = backstage_outreach_distribution_url($row);
-	$qr = bvmgr_pass_claims_qr_image_url($url);
+	$qr = bvmgr_pass_claims_claim_qr_image_url($url);
 	nocache_headers();
 	echo '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>' . esc_html((string) $row['business_name']) . '</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;color:#17202a}.sheet{max-width:520px;margin:30px auto;padding:34px;text-align:center;border:1px solid #d9e2ef;border-radius:16px}.eyebrow{text-transform:uppercase;letter-spacing:.12em;color:#146b55;font-weight:700}.qr{width:320px;max-width:90%;height:auto}.note{color:#526174}.actions{margin:20px}@media print{.actions{display:none}.sheet{border:0;margin:0 auto}}</style></head><body><div class="actions"><button onclick="window.print()">' . esc_html__('Print', 'backstage-outreach') . '</button></div><main class="sheet"><p class="eyebrow">' . esc_html__('Serenade Range Guest Pass', 'backstage-outreach') . '</p><h1>' . esc_html((string) $row['business_name']) . '</h1><p>' . esc_html((string) $row['campaign_name']) . '</p><img class="qr" src="' . esc_attr($qr) . '" alt="' . esc_attr__('Reusable partner Guest Pass QR', 'backstage-outreach') . '"><p><strong>' . esc_html__('Scan to claim your own Guest Pass', 'backstage-outreach') . '</strong></p><p class="note">' . esc_html__('This marketing QR is reusable. It is not an admission credential; each guest receives separate gate QR credentials after claiming.', 'backstage-outreach') . '</p></main></body></html>';
 	exit;
@@ -931,7 +931,7 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		global $wpdb;
 		foreach ($rows as $row) {
 			$url = backstage_outreach_distribution_url($row);
-			$qr = function_exists('bvmgr_pass_claims_qr_image_url') ? bvmgr_pass_claims_qr_image_url($url) : '';
+			$qr = function_exists('bvmgr_pass_claims_claim_qr_image_url') ? bvmgr_pass_claims_claim_qr_image_url($url) : '';
 			$stats = $wpdb->get_row($wpdb->prepare("SELECT COUNT(DISTINCT dc.pass_claim_id) claims, COUNT(DISTINCT e.id) admissions, COALESCE(SUM(e.checked_in_qty),0) checked_in FROM %i dc LEFT JOIN %i e ON e.pass_claim_id=dc.pass_claim_id WHERE dc.distribution_id = %d AND dc.status = 'fulfilled'", backstage_outreach_business_table('distribution_claims'), bvmgr_admission_table_entries(), (int) $row['id']), ARRAY_A);
 			echo '<tr><td><strong>' . esc_html((string) $row['business_name']) . '</strong></td><td>' . esc_html((string) $row['status']) . '</td><td><input class="regular-text" readonly value="' . esc_attr($url) . '" data-backstage-copy-value> <button type="button" class="button button-small" data-backstage-copy>' . esc_html__('Copy Link', 'backstage-outreach') . '</button>';
 			if ($qr !== '') {
@@ -977,7 +977,7 @@ function backstage_outreach_handle_distribution_export(): void
 	fputcsv($out, array('campaign_id', 'campaign_name', 'source_id', 'business_id', 'business_name', 'status', 'partner_link', 'qr_image_url'));
 	foreach (backstage_outreach_distribution_rows($campaign_id) as $row) {
 		$url = backstage_outreach_distribution_url($row);
-		$qr = function_exists('bvmgr_pass_claims_qr_image_url') ? bvmgr_pass_claims_qr_image_url($url) : '';
+		$qr = function_exists('bvmgr_pass_claims_claim_qr_image_url') ? bvmgr_pass_claims_claim_qr_image_url($url) : '';
 		fputcsv($out, array($campaign_id, backstage_outreach_csv_safe((string) $campaign['campaign_name']), (int) $row['source_id'], (int) $row['business_id'], backstage_outreach_csv_safe((string) $row['business_name']), (string) $row['status'], $url, $qr));
 	}
 	fclose($out);

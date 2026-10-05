@@ -5,7 +5,8 @@ $root = dirname(__DIR__);
 $outreach = file_get_contents($root . '/companion-plugins/backstage-outreach/includes/business-distribution.php');
 $integration = file_get_contents($root . '/companion-plugins/backstage-outreach/includes/integration-bvm.php');
 $passes = file_get_contents($root . '/includes/modules/admissions/pass-claims.php');
-if (!is_string($outreach) || !is_string($integration) || !is_string($passes)) {
+$localQr = file_get_contents($root . '/includes/modules/admissions/local-qr.php');
+if (!is_string($outreach) || !is_string($integration) || !is_string($passes) || !is_string($localQr)) {
 	throw new RuntimeException('Could not read partner distribution sources.');
 }
 
@@ -37,6 +38,7 @@ $assertions = array(
 	'Post-commit mail failure preserves successful claim response' => strpos($outreach, 'mail_transport_exception') !== false && strpos($outreach, 'if (!$committed)') !== false,
 	'Rewrite migration is idempotently requested' => strpos($outreach, "update_option('backstage_outreach_flush_rewrite', '1', false)") !== false,
 	'Rewrite flush runs after all route registration' => strpos($integration, "add_action('init', 'backstage_outreach_maybe_flush_rewrite', 99)") !== false && strpos($integration, "add_action('init', 'backstage_outreach_register_public_route', 31)") !== false && strpos($outreach, "add_action('init', 'backstage_outreach_register_partner_route', 32)") !== false,
+	'Partner print and export use same-site URL QR validation' => substr_count($outreach, 'bvmgr_pass_claims_claim_qr_image_url($url)') === 3 && strpos($localQr, "'/guest-pass/partner/'") !== false && strpos($localQr, "[a-f0-9]{48}\\.[a-f0-9]{64}") !== false,
 	'Filters and exports use the same query builder' => substr_count($passes, 'bvmgr_pass_claims_filtered_query(') >= 4,
 	'CSV cells are protected from formulas' => strpos($passes, "preg_match('/^[=+\\-@]/'") !== false,
 	'Event filters use the claimed event' => strpos($passes, "c.event_plan_id=%d") !== false,
