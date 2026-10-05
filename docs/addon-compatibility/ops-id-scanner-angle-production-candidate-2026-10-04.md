@@ -3,13 +3,13 @@
 Date: 2026-10-04
 Focused branch: `fix/ops-id-angle-tolerance-20261004`
 Candidate: `0.1.65.3`
-Status: prepared and verified; **not deployed**
+Status: **deployed and server-verified in production**
 
 ## Result
 
 The production candidate is a three-file overlay built directly from a fresh read of the active production `0.1.65.2` plugin. It carries only the accepted ID-camera rotation fallback and the corrected bundled-ZXing miss classification from staging `0.1.70.3`.
 
-The paused starting-zoom migration is not present. No other staging-only application, PHP, build, camera, scanner, ticket, preference, or PWA change is included. Production remains live and unchanged at `0.1.65.2`.
+The paused starting-zoom migration is not present. No other staging-only application, PHP, build, camera, scanner, ticket, preference, or PWA change is included. Production now runs the reviewed `0.1.65.3` overlay; staging remains `0.1.70.3`.
 
 ## Accepted operator evidence
 
@@ -90,16 +90,38 @@ The owner-only candidate upload and dry-run tree are outside the web root at:
 
 Both checksum manifests pass. The dry run started from the archived originals, prepared same-directory temporary files, atomically replaced exactly the three simulated targets, verified candidate hashes/version/lint, atomically restored all three originals, and reverified every original hash. No temporary deployment file remained. The live production plugin was not touched.
 
+## Production deployment receipt
+
+The explicitly authorized production deployment ran from `2026-10-05 00:31:12` through `00:31:15 UTC` (`2026-10-04 19:31:12` through `19:31:15 CDT`). Immediately before the first runtime write, production was freshly reverified as active `0.1.65.2`: all three base hashes, the 61-file inventory, and canonical tree SHA-256 `029816fedf703f10da41f728461623f4670ca4b7e89c7835baf75aaa6715b760` matched this report. The candidate and rollback manifests passed again.
+
+Only the three reviewed runtime paths were copied to same-directory temporary files and atomically renamed over their corresponding targets. Server-side failure handling was armed to atomically restore all three archived originals if any deployment-integrity, lint, active-state, or version check failed. No rollback was required.
+
+Post-deployment verification passed:
+
+- all three deployed file hashes exactly match the `0.1.65.3` candidate column;
+- the complete deployed tree remains 61 files and matches canonical SHA-256 `060e5c85b26cdeea386349ebfcee1813b6e3d9d5e7d52b20a16292f5c5dcfaee`;
+- the plugin remains active, reports `0.1.65.3`, and its entry file passes remote PHP lint;
+- a fresh HTTP 200 response from `https://serenaderange.com/wp-content/plugins/vms-ops-console-premium/pwa/assets/js/app.js?ver=0.1.65.3` has exact SHA-256 `f11a44cead1b611b985d132e313e23627f082d94fa6e20e4b1d05eea2bbe330e` and contains the `getKind()`-first classification;
+- `https://serenaderange.com/vms-ops/sw.js?ver=0.1.65.3` returns HTTP 200, has SHA-256 `4b857367564098cf5d7cd3eb3728997419d062f88790c3f925b927cac55824ac`, uses cache `vms-ops-shell-0.1.65.3`, and references the `0.1.65.3` app and bundled ZXing assets;
+- the production manifest returns HTTP 200 with production start URL and scope `https://serenaderange.com/vms-ops/`;
+- the unauthenticated PWA route retains its expected HTTP 302 login redirect;
+- production `error_log` remained byte- and timestamp-identical at `16,933,175` bytes, and both `wp-content/debug.log` and a plugin-local `error_log` remained absent;
+- no `.codex-*` deployment file remains in the production plugin tree;
+- the candidate and rollback manifests still pass after deployment;
+- a fresh public staging worker check confirms staging remains `0.1.70.3`.
+
+Scanner preferences and site storage were not read, cleared, migrated, or changed. No ID image, identity information, or decoded payload was retained.
+
 ## Remaining production acceptance checks
 
 | Check | Status |
 | --- | --- |
-| Production deployment authorization | `NOT RUN` / not authorized |
-| Delivered `app.js?ver=0.1.65.3` and service-worker cache identity | `NOT RUN` |
+| Production deployment and server-side integrity/runtime checks | `PASS` |
+| Delivered `app.js?ver=0.1.65.3` and service-worker cache identity | `PASS` |
 | Actual production-phone level, approximately `+10°`, and approximately `-10°` ID scans | `NOT RUN` |
 | Production-phone straight-on versus angled timing and preview continuity | `NOT RUN` |
 | Production-phone camera choice, zoom/framing, close/reopen, and PWA relaunch continuity | `NOT RUN` |
 | Authorized production ticket scan | `NOT RUN` |
 | Zoom-unsupported or native-PDF417 device, if available | `NOT RUN` |
 
-The dark-background limitation is not claimed fixed. Use a light backing and even, glare-controlled lighting during acceptance. Production deployment remains a separate explicit authorization boundary.
+The dark-background limitation is not claimed fixed. Use a light backing and even, glare-controlled lighting during acceptance.
