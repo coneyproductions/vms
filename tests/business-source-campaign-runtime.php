@@ -6,6 +6,9 @@
 
 defined('ABSPATH') || exit;
 
+$backstage_business_source_delivery_block = static fn() => true;
+add_filter('pre_wp_mail', $backstage_business_source_delivery_block, PHP_INT_MAX);
+
 function backstage_business_source_runtime_assert(bool $condition, string $message): void
 {
 	if (!$condition) {
@@ -20,6 +23,12 @@ $user_id = get_current_user_id() ?: 1;
 $source_id = 0;
 $batch_id = 0;
 $paid_batch_id = 0;
+$inactive_batch_id = 0;
+$unsupported_batch_id = 0;
+$unrelated_batch_id = 0;
+$created_batch_id = 0;
+$no_eligible_source_id = 0;
+$unrelated_source_id = 0;
 $campaign_id = 0;
 $business_ids = array();
 $drift_business_id = 0;
@@ -85,6 +94,68 @@ try {
 	)) !== false, 'Could not create disposable paid-discount batch.');
 	$paid_batch_id = (int) $wpdb->insert_id;
 
+	$insert_fixture_batch = static function (int $fixture_source_id, string $name, string $status, string $value_type, float $value_amount) use ($wpdb, $batch_table, $user_id, $now): int {
+		$inserted = $wpdb->insert($batch_table, array(
+			'source_id' => $fixture_source_id,
+			'batch_name' => $name,
+			'quantity' => 5,
+			'validity_type' => 'any_event',
+			'venue_ids_json' => '[]',
+			'value_type' => $value_type,
+			'value_amount' => $value_amount,
+			'applies_to' => 'entry_only',
+			'status' => $status,
+			'checkin_open_mode' => 'same_day',
+			'max_per_phone' => 0,
+			'generated_count' => 0,
+			'created_by' => $user_id,
+			'created_at' => $now,
+			'admissions_per_link' => 2,
+			'total_admission_cap' => 10,
+			'max_per_email' => 0,
+		));
+		return $inserted === false ? 0 : (int) $wpdb->insert_id;
+	};
+	$inactive_batch_id = $insert_fixture_batch($source_id, $marker . ' inactive', 'paused', 'free', 0.0);
+	$unsupported_batch_id = $insert_fixture_batch($source_id, $marker . ' unsupported', 'active', 'percent', 25.0);
+	backstage_business_source_runtime_assert($inactive_batch_id > 0 && $unsupported_batch_id > 0, 'Could not create ineligible batch fixtures.');
+
+	foreach (array('no eligible', 'unrelated') as $source_suffix) {
+		backstage_business_source_runtime_assert($wpdb->insert($source_table, array(
+			'source_name' => $marker . ' ' . $source_suffix,
+			'status' => 'active',
+			'created_by' => $user_id,
+			'created_at' => $now,
+		)) !== false, 'Could not create auxiliary Source fixture.');
+		if ($source_suffix === 'no eligible') {
+			$no_eligible_source_id = (int) $wpdb->insert_id;
+		} else {
+			$unrelated_source_id = (int) $wpdb->insert_id;
+		}
+	}
+	$unrelated_batch_id = $insert_fixture_batch($unrelated_source_id, $marker . ' unrelated eligible', 'active', 'free', 0.0);
+	backstage_business_source_runtime_assert($unrelated_batch_id > 0, 'Could not create unrelated eligible batch.');
+
+	$fixture_batches = array(
+		bvmgr_pass_claims_get_batch_by_id($batch_id),
+		bvmgr_pass_claims_get_batch_by_id($paid_batch_id),
+		bvmgr_pass_claims_get_batch_by_id($inactive_batch_id),
+		bvmgr_pass_claims_get_batch_by_id($unsupported_batch_id),
+		bvmgr_pass_claims_get_batch_by_id($unrelated_batch_id),
+	);
+	$eligible_for_source = vms_pass_outreach_eligible_business_batches($fixture_batches, $source_id);
+	backstage_business_source_runtime_assert(count($eligible_for_source) === 2, 'Initial batch filtering did not exclude unrelated, inactive, or unsupported batches.');
+	backstage_business_source_runtime_assert(vms_pass_outreach_eligible_business_batches($fixture_batches, $no_eligible_source_id) === array(), 'A Source with no eligible batch did not produce the empty state.');
+	$forged_setup = vms_pass_outreach_sanitize_upload_first_campaign_setup(array(
+		'recipient_source_mode' => 'business_source',
+		'tracking_category_mode' => 'existing',
+		'related_source_id' => $source_id,
+		'related_batch_id' => $unrelated_batch_id,
+	), false);
+	backstage_business_source_runtime_assert(is_wp_error($forged_setup) && $forged_setup->get_error_code() === 'batch_source_mismatch', 'Forged Source/batch mismatch was not blocked server-side.');
+	$empty_setup = vms_pass_outreach_sanitize_upload_first_campaign_setup(array('recipient_source_mode' => 'business_source'), false);
+	backstage_business_source_runtime_assert(is_wp_error($empty_setup) && $empty_setup->get_error_code() === 'missing_related_source', 'Disabled-JavaScript empty submission did not identify the first missing prerequisite.');
+
 	for ($index = 1; $index <= 35; $index++) {
 		$business_id = backstage_outreach_insert_business(array(
 			'business_name' => sprintf('%s business %02d', $marker, $index),
@@ -105,6 +176,37 @@ try {
 		);
 		$business_ids[] = $business_id;
 	}
+	backstage_business_source_runtime_assert(
+		backstage_outreach_business_upsert_membership($no_eligible_source_id, $business_ids[0], 'manual', null, 0, array('fixture' => true), $user_id),
+		'Could not link a business to the no-eligible-batch Source.'
+	);
+
+	$new_batch_review = vms_pass_outreach_prepare_business_batch_review(array(
+		'recipient_source_mode' => 'business_source',
+		'tracking_category_mode' => 'existing',
+		'related_source_id' => $source_id,
+		'business_campaign_name' => $marker . ' preserved Café campaign',
+		'business_batch_name' => $marker . ' reviewed batch',
+		'business_batch_offer_type' => 'percent_50',
+		'business_batch_quantity' => 9,
+		'business_batch_admissions_per_link' => 2,
+		'business_batch_total_admission_cap' => 70,
+		'business_batch_validity_type' => 'any_event',
+		'business_batch_single_event_plan_id' => 0,
+		'business_batch_start_date' => '',
+		'business_batch_end_date' => '',
+		'business_batch_season_label' => '',
+		'business_batch_expires_at' => '',
+		'business_batch_notes' => 'Reviewed explicitly — no generated claim links.',
+	), $user_id);
+	backstage_business_source_runtime_assert(is_array($new_batch_review), 'Explicit new-batch review failed.');
+	backstage_business_source_runtime_assert((string) ($new_batch_review['form_payload']['campaign_name'] ?? '') === $marker . ' preserved Café campaign', 'Campaign draft was not preserved through batch review.');
+	$created_batch = vms_pass_outreach_create_business_offer_batch((array) $new_batch_review['batch_payload'], $user_id);
+	backstage_business_source_runtime_assert(is_array($created_batch) && absint($created_batch['id'] ?? 0) > 0, 'Explicit reviewed batch definition was not created.');
+	$created_batch_id = absint($created_batch['id']);
+	backstage_business_source_runtime_assert(absint($created_batch['generated_count'] ?? 0) === 0, 'New batch setup silently generated individual claim links.');
+	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_tokens(), $created_batch_id)) === 0, 'New batch setup inserted individual claim-link tokens.');
+	backstage_business_source_runtime_assert(vms_pass_outreach_business_batch_offer_label($created_batch) === 'Neighborhood Offer — 50% off admission for up to 2 people', 'Paid offer wording does not reflect reviewed settings exactly.');
 
 	$preview = vms_pass_outreach_build_business_source_preview($source_id, $batch_id);
 	backstage_business_source_runtime_assert(is_array($preview), 'Business Source preview failed.');
@@ -142,6 +244,17 @@ try {
 	$wpdb->delete(backstage_outreach_business_table('businesses'), array('id' => $drift_business_id));
 	$drift_business_id = 0;
 
+	$batch_drift_preview = vms_pass_outreach_build_business_source_preview($source_id, $batch_id);
+	backstage_business_source_runtime_assert(is_array($batch_drift_preview), 'Could not prepare the batch-drift review fixture.');
+	$wpdb->update($batch_table, array('status' => 'paused'), array('id' => $batch_id));
+	$batch_drift_result = vms_pass_outreach_create_business_source_campaign($setup, $batch_drift_preview, $user_id);
+	backstage_business_source_runtime_assert(is_wp_error($batch_drift_result) && $batch_drift_result->get_error_code() === 'inactive_related_batch', 'Batch status drift did not block campaign creation.');
+	$wpdb->update($batch_table, array('status' => 'active'), array('id' => $batch_id));
+	$wpdb->update($batch_table, array('source_id' => $unrelated_source_id), array('id' => $batch_id));
+	$batch_owner_drift_result = vms_pass_outreach_create_business_source_campaign($setup, $batch_drift_preview, $user_id);
+	backstage_business_source_runtime_assert(is_wp_error($batch_owner_drift_result) && $batch_owner_drift_result->get_error_code() === 'batch_source_mismatch', 'Batch Source drift did not block campaign creation.');
+	$wpdb->update($batch_table, array('source_id' => $source_id), array('id' => $batch_id));
+
 	$preview = vms_pass_outreach_build_business_source_preview($source_id, $batch_id);
 	$created = vms_pass_outreach_create_business_source_campaign($setup, $preview, $user_id);
 	backstage_business_source_runtime_assert(is_array($created) && !empty($created['campaign']['id']), 'Reviewed business campaign was not created.');
@@ -169,6 +282,7 @@ try {
 		'shared_admission_cap' => 70,
 	), JSON_PRETTY_PRINT) . "\n";
 } finally {
+	remove_filter('pre_wp_mail', $backstage_business_source_delivery_block, PHP_INT_MAX);
 	if ($campaign_id > 0) {
 		$wpdb->delete(backstage_outreach_business_table('distribution_claims'), array('campaign_id' => $campaign_id));
 		$wpdb->delete(backstage_outreach_business_table('campaign_businesses'), array('campaign_id' => $campaign_id));
@@ -188,13 +302,29 @@ try {
 	if ($paid_batch_id > 0) {
 		$wpdb->delete(bvmgr_admission_table_pass_batches(), array('id' => $paid_batch_id));
 	}
+	foreach (array($inactive_batch_id, $unsupported_batch_id, $unrelated_batch_id, $created_batch_id) as $fixture_batch_id) {
+		if ($fixture_batch_id > 0) {
+			$wpdb->delete(bvmgr_admission_table_pass_batches(), array('id' => $fixture_batch_id));
+		}
+	}
 	if ($source_id > 0) {
 		$wpdb->delete(bvmgr_admission_table_pass_sources(), array('id' => $source_id));
+	}
+	foreach (array($no_eligible_source_id, $unrelated_source_id) as $fixture_source_id) {
+		if ($fixture_source_id > 0) {
+			$wpdb->delete(bvmgr_admission_table_pass_sources(), array('id' => $fixture_source_id));
+		}
 	}
 	$wpdb->query($wpdb->prepare(
 		'DELETE FROM %i WHERE action=%s AND details LIKE %s',
 		bvmgr_admission_table_audit(),
 		'pass_outreach_business_campaign_create',
 		'%' . $wpdb->esc_like($marker) . '%'
+	));
+	$wpdb->query($wpdb->prepare(
+		'DELETE FROM %i WHERE action=%s AND details LIKE %s',
+		bvmgr_admission_table_audit(),
+		'pass_outreach_business_batch_create',
+		'%' . $wpdb->esc_like('"batch_id":' . $created_batch_id) . '%'
 	));
 }

@@ -85,6 +85,30 @@
     return target;
   }
 
+  function scrollToAdminTarget(target, focusInvalid) {
+    if (!target || !target.getBoundingClientRect) {
+      return;
+    }
+
+    var adminBar = document.getElementById('wpadminbar');
+    var adminBarHeight = adminBar ? adminBar.getBoundingClientRect().height : 0;
+    var top = window.pageYOffset + target.getBoundingClientRect().top - adminBarHeight - 16;
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: Math.max(0, top), behavior: reduceMotion ? 'auto' : 'smooth' });
+
+    if (!focusInvalid) {
+      return;
+    }
+
+    var scope = target.closest('.vms-pass-form-section, .vms-pass-upload-step, form') || target;
+    var invalid = scope.querySelector('[aria-invalid="true"]');
+    if (invalid && !invalid.disabled && invalid.focus) {
+      window.requestAnimationFrame(function () {
+        invalid.focus({ preventScroll: true });
+      });
+    }
+  }
+
   function replaceHash(targetId) {
     if (!targetId) {
       return;
@@ -162,9 +186,7 @@
     if (window.location.hash) {
       window.requestAnimationFrame(function () {
         var target = openSectionForHashTarget();
-        if (target && target.scrollIntoView) {
-          target.scrollIntoView({ block: 'start' });
-        }
+        scrollToAdminTarget(target, true);
         syncAllStickyTables();
       });
     }
@@ -573,9 +595,9 @@
   window.addEventListener('load', syncAllStickyTables);
   window.addEventListener('pageshow', function () {
     var target = openSectionForHashTarget();
-    if (target && target.scrollIntoView) {
+    if (target) {
       window.requestAnimationFrame(function () {
-        target.scrollIntoView({ block: 'start' });
+        scrollToAdminTarget(target, true);
       });
     }
     syncAllStickyTables();
@@ -587,9 +609,7 @@
   });
   window.addEventListener('hashchange', function () {
     var target = openSectionForHashTarget();
-    if (target && target.scrollIntoView) {
-      target.scrollIntoView({ block: 'start' });
-    }
+    scrollToAdminTarget(target, true);
     syncAllStickyTables();
     syncAllContactAudienceSelectAll();
   });

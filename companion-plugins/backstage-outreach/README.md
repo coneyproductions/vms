@@ -87,6 +87,20 @@ next review step. Complimentary batches and Percent Off batches set to exactly
 as sample data, and display-time punctuation repair leaves historical stored
 records unchanged.
 
+Version 1.2.4 guides the operator through the reusable-business prerequisites
+inside Outreach. The batch picker exposes only active batches owned by the
+selected Source whose offer is complimentary or exactly 50% off. A Source with
+no eligible batch has an explicit reviewed batch-definition flow that preserves
+the campaign draft and creates no individual claim links. Preview and campaign
+creation retain server-side Source, batch, membership, and review drift checks
+when browser validation is absent or bypassed.
+
+The setup screen presents Source, offer batch, business review, campaign
+creation, and QR generation in order. It keeps business QR quantity separate
+from individual claim-link quantity and shared admission capacity, carries the
+reviewed Source/batch directly into QR setup, and renders saved link results as
+labeled cards on narrow screens.
+
 ## Development checks
 
 From the Backstage Venue Manager repository root:

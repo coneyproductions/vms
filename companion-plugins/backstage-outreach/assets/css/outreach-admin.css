@@ -1141,6 +1141,17 @@
   margin-top: 6px;
 }
 
+#vms-pass-claims-wrap .vms-pass-business-results-table th,
+#vms-pass-claims-wrap .vms-pass-business-results-table td {
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-results-table input.regular-text {
+  width: min(100%, 32rem);
+}
+
 #vms-pass-claims-wrap .vms-pass-business-email-state {
   display: block;
   margin-top: 4px;
@@ -2010,7 +2021,132 @@
   margin: 0;
 }
 
+#vms-pass-claims-wrap .vms-pass-business-workflow {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-steps li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid #d8e2f0;
+  border-radius: 10px;
+  background: #f7f9fc;
+  color: #526174;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-steps li > span {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e5ebf3;
+  color: #34475e;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-steps li.is-complete,
+#vms-pass-claims-wrap .vms-pass-business-steps li.is-current {
+  border-color: #82baa9;
+  background: #f0faf6;
+  color: #174c3e;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-steps li.is-current {
+  box-shadow: inset 0 0 0 1px #146b55;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-steps li.is-complete > span,
+#vms-pass-claims-wrap .vms-pass-business-steps li.is-current > span {
+  background: #146b55;
+  color: #fff;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-guidance,
+#vms-pass-claims-wrap .vms-pass-business-empty,
+#vms-pass-claims-wrap .vms-pass-business-batch-summary,
+#vms-pass-claims-wrap .vms-pass-business-campaign-step {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid #d8e2f0;
+  border-radius: 10px;
+  background: #f7f9fc;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-guidance {
+  border-left: 4px solid #2271b1;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-empty {
+  border-color: #efd39b;
+  background: #fff8e8;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-empty p:first-child,
+#vms-pass-claims-wrap .vms-pass-business-campaign-step h3 {
+  margin-top: 0;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-batch-summary {
+  display: grid;
+  gap: 5px;
+  border-color: #82baa9;
+  background: #f0faf6;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-batch-create {
+  margin: 16px 0;
+  padding: 0 14px 14px;
+  border: 1px solid #d8e2f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-batch-create > summary {
+  padding: 13px 0;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-campaign-step label {
+  display: grid;
+  gap: 6px;
+}
+
 @media (max-width: 640px) {
+  #vms-pass-claims-wrap .vms-pass-business-steps {
+    grid-template-columns: 1fr;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-steps li {
+    font-size: 13px;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-batch-create,
+  #vms-pass-claims-wrap .vms-pass-business-guidance,
+  #vms-pass-claims-wrap .vms-pass-business-empty,
+  #vms-pass-claims-wrap .vms-pass-business-batch-summary,
+  #vms-pass-claims-wrap .vms-pass-business-campaign-step {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
   #vms-pass-claims-wrap .vms-pass-preview-summary--actions .vms-pass-actions .button {
     width: 100%;
     max-width: 100%;
@@ -2043,7 +2179,8 @@
     background: transparent;
   }
 
-  #vms-pass-claims-wrap .vms-pass-business-source-table thead {
+  #vms-pass-claims-wrap .vms-pass-business-source-table thead,
+  #vms-pass-claims-wrap .vms-pass-business-results-table thead {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -2054,13 +2191,17 @@
 
   #vms-pass-claims-wrap .vms-pass-business-source-table tbody,
   #vms-pass-claims-wrap .vms-pass-business-source-table tr,
-  #vms-pass-claims-wrap .vms-pass-business-source-table td {
+  #vms-pass-claims-wrap .vms-pass-business-source-table td,
+  #vms-pass-claims-wrap .vms-pass-business-results-table tbody,
+  #vms-pass-claims-wrap .vms-pass-business-results-table tr,
+  #vms-pass-claims-wrap .vms-pass-business-results-table td {
     display: block;
     width: 100%;
     box-sizing: border-box;
   }
 
-  #vms-pass-claims-wrap .vms-pass-business-source-table tr {
+  #vms-pass-claims-wrap .vms-pass-business-source-table tr,
+  #vms-pass-claims-wrap .vms-pass-business-results-table tr {
     margin-bottom: 12px;
     border: 1px solid #d8e2f0;
     border-radius: 10px;
@@ -2068,7 +2209,8 @@
     overflow: hidden;
   }
 
-  #vms-pass-claims-wrap .vms-pass-business-source-table td {
+  #vms-pass-claims-wrap .vms-pass-business-source-table td,
+  #vms-pass-claims-wrap .vms-pass-business-results-table td {
     display: grid;
     grid-template-columns: minmax(112px, 36%) minmax(0, 1fr);
     gap: 10px;
@@ -2076,11 +2218,13 @@
     border-bottom: 1px solid #edf2f7;
   }
 
-  #vms-pass-claims-wrap .vms-pass-business-source-table td:last-child {
+  #vms-pass-claims-wrap .vms-pass-business-source-table td:last-child,
+  #vms-pass-claims-wrap .vms-pass-business-results-table td:last-child {
     border-bottom: 0;
   }
 
-  #vms-pass-claims-wrap .vms-pass-business-source-table td::before {
+  #vms-pass-claims-wrap .vms-pass-business-source-table td::before,
+  #vms-pass-claims-wrap .vms-pass-business-results-table td::before {
     content: attr(data-label);
     font-weight: 600;
     color: #26364a;
@@ -2089,5 +2233,10 @@
   #vms-pass-claims-wrap .vms-pass-business-source-table td > details,
   #vms-pass-claims-wrap .vms-pass-business-source-table td > .vms-pass-business-email-state {
     grid-column: 2;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-results-table td > input.regular-text {
+    min-width: 0;
+    width: 100%;
   }
 }
