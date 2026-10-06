@@ -54,6 +54,21 @@ revoking, or expiring an
 offer removes it from carts and blocks unpaid retries; already-paid orders and
 their tickets remain untouched.
 
+## Business CSV review
+
+Version 1.2.2 expands Import Businesses preview into a complete, non-mutating
+review of every parsed CSV record. The review shows the sanitized values that
+will be stored, physical CSV row numbers, full addresses, validation results,
+missing-email delivery limitations, and expandable Notes. Unsupported headers,
+duplicate canonical/alias mappings, invalid records, and empty valid sets block
+commit in both the interface and the server handler. `address` is supported as
+an explicit alias for `address_line`.
+
+A replacement upload invalidates the prior preview before validation begins,
+so a failed replacement cannot leave an older file available to commit. The
+10-minute preview expiry, capability and nonce checks, atomic transaction,
+provenance keys, and one-record-per-business identity model remain unchanged.
+
 ## Development checks
 
 From the Backstage Venue Manager repository root:
@@ -62,6 +77,9 @@ From the Backstage Venue Manager repository root:
 php tests/backstage-outreach-current-bvm-integration.php
 php tests/business-partner-distribution.php
 php tests/business-discount-qr-links.php
+php tests/business-import-preview.php
+BVM_BUSINESS_IMPORT_HTML=/tmp/business-import-review.html php tests/business-import-preview.php
+BVM_BUSINESS_IMPORT_HTML=/tmp/business-import-review.html BVM_BUSINESS_IMPORT_SCREENSHOTS=/tmp/business-import-review-shots node tests/business-import-preview-screenshots.js
 wp eval-file wp-content/plugins/packages/vms-github-reconcile/tests/business-discount-qr-runtime.php
 wp eval-file wp-content/plugins/packages/vms-github-reconcile/tests/business-discount-qr-concurrency.php
 find companion-plugins/backstage-outreach -name '*.php' -print0 | xargs -0 -n1 php -l
