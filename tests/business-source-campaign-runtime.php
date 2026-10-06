@@ -27,9 +27,13 @@ $inactive_batch_id = 0;
 $unsupported_batch_id = 0;
 $unrelated_batch_id = 0;
 $created_batch_id = 0;
+$complimentary_batch_id = 0;
 $no_eligible_source_id = 0;
 $unrelated_source_id = 0;
 $campaign_id = 0;
+$complimentary_campaign_id = 0;
+$complimentary_claim_id = 0;
+$event_plan_id = 0;
 $business_ids = array();
 $drift_business_id = 0;
 
@@ -44,6 +48,15 @@ try {
 	$batch_table = bvmgr_admission_table_pass_batches();
 	$campaign_table = vms_admission_table_pass_outreach_campaigns();
 	$recipient_table = vms_pass_outreach_recipient_table();
+	$event_plan_id = wp_insert_post(array(
+		'post_type' => 'vms_event_plan',
+		'post_status' => 'publish',
+		'post_title' => $marker . ' Café — claim event',
+	), true);
+	backstage_business_source_runtime_assert(!is_wp_error($event_plan_id) && $event_plan_id > 0, 'Could not create disposable Event Plan.');
+	$status_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
+	update_post_meta((int) $event_plan_id, $status_key, 'published');
+	update_post_meta((int) $event_plan_id, '_vms_event_date', wp_date('Y-m-d', time() + (14 * DAY_IN_SECONDS)));
 
 	backstage_business_source_runtime_assert($wpdb->insert($source_table, array(
 		'source_name' => $marker,
@@ -52,6 +65,18 @@ try {
 		'created_at' => $now,
 	)) !== false, 'Could not create disposable Source.');
 	$source_id = (int) $wpdb->insert_id;
+	$normal_batch_validation = bvmgr_pass_claims_sanitize_batch_payload(array(
+		'source_id' => $source_id,
+		'batch_name' => $marker . ' normal individual links',
+		'quantity' => 3,
+		'admissions_per_link' => 2,
+		'total_admission_cap' => 0,
+		'validity_type' => 'any_event',
+		'value_type' => 'free',
+		'status' => 'active',
+		'checkin_open_mode' => 'same_day',
+	));
+	backstage_business_source_runtime_assert(is_array($normal_batch_validation) && (int) $normal_batch_validation['quantity'] === 3 && (int) $normal_batch_validation['total_admission_cap'] === 6, 'Normal individual-pass quantity validation or cap derivation changed.');
 
 	backstage_business_source_runtime_assert($wpdb->insert($batch_table, array(
 		'source_id' => $source_id,
@@ -73,6 +98,10 @@ try {
 		'max_per_email' => 0,
 	)) !== false, 'Could not create disposable batch.');
 	$batch_id = (int) $wpdb->insert_id;
+	$normal_generation = bvmgr_pass_claims_generate_tokens_for_batch($batch_id, 3, $source_id, $user_id);
+	backstage_business_source_runtime_assert(is_array($normal_generation) && (int) ($normal_generation['generated_count'] ?? 0) === 3, 'Ordinary individual-pass token generation changed.');
+	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_tokens(), $batch_id)) === 3, 'Ordinary individual-pass generation did not persist all requested links.');
+	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT generated_count FROM %i WHERE id=%d', $batch_table, $batch_id)) === 3, 'Ordinary individual-pass generation did not update generated_count.');
 	backstage_business_source_runtime_assert($wpdb->insert($batch_table, array(
 		'source_id' => $source_id,
 		'batch_name' => $marker . ' paid 50 percent pool',
@@ -188,7 +217,6 @@ try {
 		'business_campaign_name' => $marker . ' preserved Café campaign',
 		'business_batch_name' => $marker . ' reviewed batch',
 		'business_batch_offer_type' => 'percent_50',
-		'business_batch_quantity' => 9,
 		'business_batch_admissions_per_link' => 2,
 		'business_batch_total_admission_cap' => 70,
 		'business_batch_validity_type' => 'any_event',
@@ -201,12 +229,77 @@ try {
 	), $user_id);
 	backstage_business_source_runtime_assert(is_array($new_batch_review), 'Explicit new-batch review failed.');
 	backstage_business_source_runtime_assert((string) ($new_batch_review['form_payload']['campaign_name'] ?? '') === $marker . ' preserved Café campaign', 'Campaign draft was not preserved through batch review.');
+	backstage_business_source_runtime_assert((int) ($new_batch_review['batch_payload']['quantity'] ?? -1) === 0, 'Definition-only review did not retain a true zero individual-link quantity.');
+	backstage_business_source_runtime_assert((int) ($new_batch_review['batch_payload']['single_event_plan_id'] ?? -1) === 0 && (string) ($new_batch_review['batch_payload']['start_date'] ?? 'x') === '' && (string) ($new_batch_review['batch_payload']['season_label'] ?? 'x') === '', 'Any Event review retained irrelevant forged scope values.');
 	$created_batch = vms_pass_outreach_create_business_offer_batch((array) $new_batch_review['batch_payload'], $user_id);
 	backstage_business_source_runtime_assert(is_array($created_batch) && absint($created_batch['id'] ?? 0) > 0, 'Explicit reviewed batch definition was not created.');
 	$created_batch_id = absint($created_batch['id']);
 	backstage_business_source_runtime_assert(absint($created_batch['generated_count'] ?? 0) === 0, 'New batch setup silently generated individual claim links.');
+	backstage_business_source_runtime_assert(absint($created_batch['quantity'] ?? 1) === 0, 'New batch definition stored a hidden individual claim-link quantity.');
 	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_tokens(), $created_batch_id)) === 0, 'New batch setup inserted individual claim-link tokens.');
 	backstage_business_source_runtime_assert(vms_pass_outreach_business_batch_offer_label($created_batch) === 'Neighborhood Offer — 50% off admission for up to 2 people', 'Paid offer wording does not reflect reviewed settings exactly.');
+
+	$scope_base = array(
+		'recipient_source_mode' => 'business_source',
+		'tracking_category_mode' => 'existing',
+		'related_source_id' => $source_id,
+		'business_campaign_name' => $marker . ' scope draft Café — You’ve…',
+		'business_batch_name' => $marker . ' scope review',
+		'business_batch_offer_type' => 'free',
+		'business_batch_admissions_per_link' => 2,
+		'business_batch_total_admission_cap' => 100,
+		'business_batch_expires_at' => '2030-12-31T23:00',
+		'business_batch_notes' => 'Café — You’ve… ひらがな é',
+	);
+	$scope_cases = array(
+		'any_event' => array('event' => $event_plan_id, 'start' => '2030-01-01', 'end' => '2030-02-01', 'season' => 'Forged season'),
+		'single_event' => array('event' => $event_plan_id, 'start' => '2030-01-01', 'end' => '2030-02-01', 'season' => 'Forged season'),
+		'date_range' => array('event' => $event_plan_id, 'start' => '2030-01-01', 'end' => '2030-02-01', 'season' => 'Forged season'),
+		'season' => array('event' => $event_plan_id, 'start' => '2030-01-01', 'end' => '2030-02-01', 'season' => 'Winter Café'),
+	);
+	foreach ($scope_cases as $scope => $scope_values) {
+		$scope_review = vms_pass_outreach_prepare_business_batch_review(array_merge($scope_base, array(
+			'business_batch_validity_type' => $scope,
+			'business_batch_single_event_plan_id' => $scope_values['event'],
+			'business_batch_start_date' => $scope_values['start'],
+			'business_batch_end_date' => $scope_values['end'],
+			'business_batch_season_label' => $scope_values['season'],
+		)), $user_id);
+		backstage_business_source_runtime_assert(is_array($scope_review), 'Definition review failed for scope ' . $scope . '.');
+		$scope_payload = (array) $scope_review['batch_payload'];
+		backstage_business_source_runtime_assert((string) $scope_payload['expires_at'] !== '', 'Offer expiry was lost for scope ' . $scope . '.');
+		if ($scope === 'any_event') {
+			backstage_business_source_runtime_assert((int) $scope_payload['single_event_plan_id'] === 0 && $scope_payload['start_date'] === '' && $scope_payload['end_date'] === '' && $scope_payload['season_label'] === '', 'Any Event retained hidden scope values.');
+		} elseif ($scope === 'single_event') {
+			backstage_business_source_runtime_assert((int) $scope_payload['single_event_plan_id'] === $event_plan_id && $scope_payload['start_date'] === '' && $scope_payload['end_date'] === '' && $scope_payload['season_label'] === '', 'One Event did not isolate its event selection.');
+		} elseif ($scope === 'date_range') {
+			backstage_business_source_runtime_assert((int) $scope_payload['single_event_plan_id'] === 0 && $scope_payload['start_date'] === '2030-01-01' && $scope_payload['end_date'] === '2030-02-01' && $scope_payload['season_label'] === '', 'Date Range did not isolate its dates.');
+		} else {
+			backstage_business_source_runtime_assert((int) $scope_payload['single_event_plan_id'] === 0 && $scope_payload['season_label'] === 'Winter Café' && $scope_payload['start_date'] === '2030-01-01' && $scope_payload['end_date'] === '2030-02-01', 'Season did not retain its supported label and dates.');
+		}
+		backstage_business_source_runtime_assert((string) ($scope_review['form_payload']['campaign_name'] ?? '') === $marker . ' scope draft Café — You’ve…', 'UTF-8 campaign draft was not preserved for scope ' . $scope . '.');
+	}
+	$invalid_date_scope = vms_pass_outreach_prepare_business_batch_review(array_merge($scope_base, array(
+		'business_batch_validity_type' => 'date_range',
+		'business_batch_start_date' => '',
+		'business_batch_end_date' => '',
+	)), $user_id);
+	backstage_business_source_runtime_assert(is_wp_error($invalid_date_scope) && $invalid_date_scope->get_error_code() === 'invalid_date_range', 'Disabled-JavaScript Date Range submission bypassed required dates.');
+
+	$complimentary_review = vms_pass_outreach_prepare_business_batch_review(array_merge($scope_base, array(
+		'business_batch_name' => $marker . ' complimentary claim batch',
+		'business_batch_validity_type' => 'single_event',
+		'business_batch_single_event_plan_id' => $event_plan_id,
+		'business_batch_start_date' => '',
+		'business_batch_end_date' => '',
+		'business_batch_season_label' => '',
+		'business_batch_expires_at' => '',
+	)), $user_id);
+	backstage_business_source_runtime_assert(is_array($complimentary_review), 'Complimentary definition-only review failed.');
+	$complimentary_batch = vms_pass_outreach_create_business_offer_batch((array) $complimentary_review['batch_payload'], $user_id);
+	backstage_business_source_runtime_assert(is_array($complimentary_batch) && absint($complimentary_batch['id'] ?? 0) > 0, 'Complimentary definition-only batch creation failed.');
+	$complimentary_batch_id = absint($complimentary_batch['id']);
+	backstage_business_source_runtime_assert(absint($complimentary_batch['quantity'] ?? 1) === 0 && absint($complimentary_batch['generated_count'] ?? 1) === 0, 'Complimentary definition created unwanted individual-link quantity or generated links.');
 
 	$preview = vms_pass_outreach_build_business_source_preview($source_id, $batch_id);
 	backstage_business_source_runtime_assert(is_array($preview), 'Business Source preview failed.');
@@ -219,6 +312,82 @@ try {
 	$paid_preview = vms_pass_outreach_build_business_source_preview($source_id, $paid_batch_id);
 	backstage_business_source_runtime_assert(is_array($paid_preview) && $paid_preview['batch_offer_type'] === 'paid_discount' && (int) $paid_preview['link_eligible_count'] === 35, 'The 50% paid Neighborhood Offer route did not preserve all 35 link-eligible businesses.');
 	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE campaign_id > 0 AND campaign_id IN (SELECT id FROM %i WHERE related_source_id=%d)', $recipient_table, $campaign_table, $source_id)) === 0, 'Fixture unexpectedly has historical recipients.');
+
+	$complimentary_preview = vms_pass_outreach_build_business_source_preview($source_id, $complimentary_batch_id);
+	backstage_business_source_runtime_assert(is_array($complimentary_preview) && $complimentary_preview['batch_offer_type'] === 'complimentary', 'Complimentary definition preview failed.');
+	$complimentary_setup = array(
+		'campaign_name' => $marker . ' complimentary claim campaign',
+		'campaign_purpose' => 'guest_pass_invitation',
+		'email_subject' => "You're invited to Serenade Range",
+		'message_template' => vms_pass_outreach_default_message_template(),
+		'internal_notes' => 'Disposable complimentary customer claim.',
+		'related_source_id' => $source_id,
+		'related_batch_id' => $complimentary_batch_id,
+		'validity_type' => 'single_event',
+		'single_event_plan_id' => $event_plan_id,
+		'admissions_per_recipient' => 2,
+		'total_admission_cap' => 0,
+		'status' => 'active',
+		'eligibility_mode' => 'anyone_with_invite',
+		'recipient_source_mode' => 'business_source',
+		'tracking_category_mode' => 'existing',
+	);
+	$complimentary_created = vms_pass_outreach_create_business_source_campaign($complimentary_setup, $complimentary_preview, $user_id);
+	backstage_business_source_runtime_assert(is_array($complimentary_created) && !empty($complimentary_created['campaign']['id']), 'Complimentary customer-claim campaign creation failed.');
+	$complimentary_campaign_id = absint($complimentary_created['campaign']['id']);
+	$complimentary_distribution_id = backstage_outreach_create_distribution($complimentary_campaign_id, $source_id, $business_ids[0], 'complimentary', 0, 0, '', array(), array(), $user_id);
+	backstage_business_source_runtime_assert($complimentary_distribution_id > 0, 'Complimentary reusable business link creation failed.');
+	$complimentary_distribution_rows = backstage_outreach_distribution_rows($complimentary_campaign_id);
+	$complimentary_distribution_row = reset($complimentary_distribution_rows);
+	$complimentary_distribution = is_array($complimentary_distribution_row)
+		? backstage_outreach_distribution_context(backstage_outreach_distribution_token($complimentary_distribution_row))
+		: null;
+	backstage_business_source_runtime_assert(is_array($complimentary_distribution), 'Complimentary reusable business link did not resolve.');
+	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_tokens(), $complimentary_batch_id)) === 0, 'Complimentary definition had a token before an actual customer claim.');
+	$claim_event = bvmgr_pass_claims_get_event_plan_brief($event_plan_id);
+	$claim_input = array(
+		'first_name' => 'Café',
+		'last_name' => 'Customer',
+		'phone' => '312-555-0199',
+		'email' => '',
+		'party_size' => 2,
+		'opt_in' => 0,
+	);
+	$failed_submission_key = 'disposable-failed-' . wp_generate_uuid4();
+	$force_claim_failure = static function ($payload, array $context) use ($complimentary_distribution_id) {
+		return absint($context['distribution_id'] ?? 0) === $complimentary_distribution_id ? null : $payload;
+	};
+	add_filter('bvmgr_pass_claims_claim_insert_payload', $force_claim_failure, PHP_INT_MAX, 2);
+	$failed_claim = backstage_outreach_partner_claim($complimentary_distribution, (array) $claim_event, $claim_input, $failed_submission_key);
+	remove_filter('bvmgr_pass_claims_claim_insert_payload', $force_claim_failure, PHP_INT_MAX);
+	backstage_business_source_runtime_assert(is_wp_error($failed_claim) && $failed_claim->get_error_code() === 'invalid_claim_insert_payload', 'Disposable forced claim failure did not reach the post-token rollback path.');
+	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_tokens(), $complimentary_batch_id)) === 0, 'Failed claim retained its internal token instead of rolling back.');
+	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_claims(), $complimentary_batch_id)) === 0, 'Failed claim retained a pass claim row.');
+	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE pass_batch_id=%d', bvmgr_admission_table_entries(), $complimentary_batch_id)) === 0, 'Failed claim retained an admission row.');
+	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE campaign_id=%d', backstage_outreach_business_table('distribution_claims'), $complimentary_campaign_id)) === 0, 'Failed claim retained an Outreach claim mapping.');
+
+	$successful_submission_key = 'disposable-success-' . wp_generate_uuid4();
+	$claim_result = backstage_outreach_partner_claim($complimentary_distribution, (array) $claim_event, $claim_input, $successful_submission_key);
+	backstage_business_source_runtime_assert(is_array($claim_result) && absint($claim_result['claim_id'] ?? 0) > 0, 'Zero-token complimentary business batch could not complete an actual customer claim.');
+	$complimentary_claim_id = absint($claim_result['claim_id']);
+	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d AND status=%s', bvmgr_admission_table_pass_tokens(), $complimentary_batch_id, 'claimed')) === 1, 'Complimentary customer claim did not atomically consume its internal claim token.');
+	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d AND status=%s', bvmgr_admission_table_pass_tokens(), $complimentary_batch_id, 'unclaimed')) === 0, 'Complimentary internal token was exposed as an unclaimed individual link.');
+	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT generated_count FROM %i WHERE id=%d', $batch_table, $complimentary_batch_id)) === 0, 'Complimentary customer claim changed the individual-link generated count.');
+	$claim_counts_before_retry = array(
+		'tokens' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_tokens(), $complimentary_batch_id)),
+		'claims' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_claims(), $complimentary_batch_id)),
+		'entries' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE pass_batch_id=%d', bvmgr_admission_table_entries(), $complimentary_batch_id)),
+		'mappings' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE campaign_id=%d', backstage_outreach_business_table('distribution_claims'), $complimentary_campaign_id)),
+	);
+	$retried_claim = backstage_outreach_partner_claim($complimentary_distribution, (array) $claim_event, $claim_input, $successful_submission_key);
+	backstage_business_source_runtime_assert(is_array($retried_claim) && absint($retried_claim['claim_id'] ?? 0) === $complimentary_claim_id, 'Retry did not return the original complimentary claim.');
+	$claim_counts_after_retry = array(
+		'tokens' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_tokens(), $complimentary_batch_id)),
+		'claims' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_claims(), $complimentary_batch_id)),
+		'entries' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE pass_batch_id=%d', bvmgr_admission_table_entries(), $complimentary_batch_id)),
+		'mappings' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE campaign_id=%d', backstage_outreach_business_table('distribution_claims'), $complimentary_campaign_id)),
+	);
+	backstage_business_source_runtime_assert($claim_counts_after_retry === $claim_counts_before_retry, 'Retry created duplicate claim data or consumed capacity twice.');
 
 	$drift_business_id = backstage_outreach_insert_business(array('business_name' => $marker . ' drift'), $user_id);
 	backstage_business_source_runtime_assert($drift_business_id > 0 && backstage_outreach_business_upsert_membership($source_id, $drift_business_id, 'manual', null, 0, array(), $user_id), 'Could not create drift fixture.');
@@ -278,11 +447,28 @@ try {
 		'missing_email' => 14,
 		'historical_recipients' => 0,
 		'reusable_links' => 35,
-		'individual_claim_links' => 12,
+		'ordinary_individual_links_generated' => 3,
+		'new_definition_individual_claim_links' => 0,
+		'complimentary_claim_internal_tokens' => 1,
+		'failed_claim_residue' => 0,
+		'retry_duplicate_writes' => 0,
 		'shared_admission_cap' => 70,
 	), JSON_PRETTY_PRINT) . "\n";
 } finally {
 	remove_filter('pre_wp_mail', $backstage_business_source_delivery_block, PHP_INT_MAX);
+	if ($complimentary_campaign_id > 0) {
+		$wpdb->delete(backstage_outreach_business_table('distribution_claims'), array('campaign_id' => $complimentary_campaign_id));
+		$wpdb->delete(backstage_outreach_business_table('campaign_businesses'), array('campaign_id' => $complimentary_campaign_id));
+		$wpdb->delete(vms_admission_table_pass_outreach_campaigns(), array('id' => $complimentary_campaign_id));
+	}
+	if ($complimentary_claim_id > 0) {
+		$wpdb->delete(bvmgr_admission_table_entries(), array('pass_claim_id' => $complimentary_claim_id));
+		$wpdb->delete(bvmgr_admission_table_pass_claims(), array('id' => $complimentary_claim_id));
+	}
+	if ($complimentary_batch_id > 0) {
+		$wpdb->delete(bvmgr_admission_table_pass_tokens(), array('batch_id' => $complimentary_batch_id));
+		$wpdb->delete(bvmgr_admission_table_pass_batches(), array('id' => $complimentary_batch_id));
+	}
 	if ($campaign_id > 0) {
 		$wpdb->delete(backstage_outreach_business_table('distribution_claims'), array('campaign_id' => $campaign_id));
 		$wpdb->delete(backstage_outreach_business_table('campaign_businesses'), array('campaign_id' => $campaign_id));
@@ -297,6 +483,7 @@ try {
 		$wpdb->delete(backstage_outreach_business_table('businesses'), array('id' => $business_id));
 	}
 	if ($batch_id > 0) {
+		$wpdb->delete(bvmgr_admission_table_pass_tokens(), array('batch_id' => $batch_id));
 		$wpdb->delete(bvmgr_admission_table_pass_batches(), array('id' => $batch_id));
 	}
 	if ($paid_batch_id > 0) {
@@ -306,6 +493,10 @@ try {
 		if ($fixture_batch_id > 0) {
 			$wpdb->delete(bvmgr_admission_table_pass_batches(), array('id' => $fixture_batch_id));
 		}
+	}
+	if ($event_plan_id > 0) {
+		$wpdb->delete(bvmgr_admission_table_audit(), array('event_plan_id' => $event_plan_id));
+		wp_delete_post($event_plan_id, true);
 	}
 	if ($source_id > 0) {
 		$wpdb->delete(bvmgr_admission_table_pass_sources(), array('id' => $source_id));
@@ -321,10 +512,12 @@ try {
 		'pass_outreach_business_campaign_create',
 		'%' . $wpdb->esc_like($marker) . '%'
 	));
-	$wpdb->query($wpdb->prepare(
-		'DELETE FROM %i WHERE action=%s AND details LIKE %s',
-		bvmgr_admission_table_audit(),
-		'pass_outreach_business_batch_create',
-		'%' . $wpdb->esc_like('"batch_id":' . $created_batch_id) . '%'
-	));
+	foreach (array($created_batch_id, $complimentary_batch_id) as $audited_batch_id) {
+		$wpdb->query($wpdb->prepare(
+			'DELETE FROM %i WHERE action=%s AND details LIKE %s',
+			bvmgr_admission_table_audit(),
+			'pass_outreach_business_batch_create',
+			'%' . $wpdb->esc_like('"batch_id":' . $audited_batch_id) . '%'
+		));
+	}
 }
