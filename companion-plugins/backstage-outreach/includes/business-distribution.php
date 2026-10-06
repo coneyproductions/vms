@@ -194,18 +194,23 @@ function backstage_outreach_request_absint(array $source, string $key, int $defa
 function backstage_outreach_business_payload(array $raw)
 {
 	$read = static fn(string $key): string => isset($raw[$key]) && is_scalar($raw[$key]) ? (string) $raw[$key] : '';
-	$name = sanitize_text_field($read('business_name'));
-	if ($name === '') {
+	$payload = backstage_outreach_business_sanitized_payload($raw);
+	if ($payload['business_name'] === '') {
 		return new WP_Error('business_name_required', __('Business name is required.', 'backstage-outreach'));
 	}
-	$email = sanitize_email($read('email'));
-	if ($read('email') !== '' && $email === '') {
+	if (trim($read('email')) !== '' && $payload['email'] === '') {
 		return new WP_Error('business_email_invalid', __('Enter a valid email address or leave it blank.', 'backstage-outreach'));
 	}
+	return $payload;
+}
+
+function backstage_outreach_business_sanitized_payload(array $raw): array
+{
+	$read = static fn(string $key): string => isset($raw[$key]) && is_scalar($raw[$key]) ? (string) $raw[$key] : '';
 	return array(
-		'business_name' => $name,
+		'business_name' => sanitize_text_field($read('business_name')),
 		'contact_name' => sanitize_text_field($read('contact_name')),
-		'email' => $email,
+		'email' => sanitize_email($read('email')),
 		'phone' => sanitize_text_field($read('phone')),
 		'website' => esc_url_raw($read('website')),
 		'address_line' => sanitize_text_field($read('address_line')),
@@ -489,31 +494,160 @@ function backstage_outreach_csv_rows(string $path)
 	if (!$handle) {
 		return new WP_Error('csv_open_failed', __('The CSV could not be opened.', 'backstage-outreach'));
 	}
-	$headers = fgetcsv($handle);
-	if (!is_array($headers)) {
+	$raw_headers = fgetcsv($handle, 0, ',', '"', '\\');
+	if (!is_array($raw_headers)) {
 		fclose($handle);
 		return new WP_Error('csv_header_missing', __('The CSV must contain a header row.', 'backstage-outreach'));
 	}
-	$headers = array_map(static fn($v) => sanitize_key((string) $v), $headers);
-	$allowed = array('external_id', 'business_name', 'contact_name', 'email', 'phone', 'website', 'address_line', 'city', 'state', 'postal_code', 'notes');
+	$aliases = array(
+		'external_id' => 'external_id',
+		'business_name' => 'business_name',
+		'contact_name' => 'contact_name',
+		'email' => 'email',
+		'phone' => 'phone',
+		'website' => 'website',
+		'address' => 'address_line',
+		'address_line' => 'address_line',
+		'city' => 'city',
+		'state' => 'state',
+		'postal_code' => 'postal_code',
+		'notes' => 'notes',
+	);
+	$headers = array();
+	$mapped_from = array();
+	$header_errors = array();
+	foreach ($raw_headers as $index => $raw_header) {
+		$label = preg_replace('/^\xEF\xBB\xBF/', '', (string) $raw_header);
+		$label = sanitize_text_field(trim((string) $label));
+		$normalized = sanitize_key($label);
+		if ($normalized === '' || !isset($aliases[$normalized])) {
+			$shown = $label !== '' ? $label : sprintf(__('Column %d', 'backstage-outreach'), $index + 1);
+			$header_errors[] = sprintf(__('Unsupported CSV column "%s". Remove it before committing.', 'backstage-outreach'), $shown);
+			continue;
+		}
+		$target = $aliases[$normalized];
+		if (isset($mapped_from[$target])) {
+			$header_errors[] = sprintf(__('CSV columns "%1$s" and "%2$s" both map to "%3$s". Keep only one of them.', 'backstage-outreach'), $mapped_from[$target], $label, $target);
+			continue;
+		}
+		$headers[$index] = $target;
+		$mapped_from[$target] = $label;
+	}
 	$rows = array();
-	while (($values = fgetcsv($handle)) !== false) {
+	$row_number = 1;
+	while (($values = fgetcsv($handle, 0, ',', '"', '\\')) !== false) {
+		$row_number++;
+		if (!array_filter($values, static fn($v) => trim((string) $v) !== '')) {
+			continue;
+		}
 		$row = array();
 		foreach ($headers as $index => $header) {
-			if ($header !== '' && in_array($header, $allowed, true)) {
-				$row[$header] = (string) ($values[$index] ?? '');
-			}
+			$row[$header] = (string) ($values[$index] ?? '');
 		}
-		if (array_filter($row, static fn($v) => trim((string) $v) !== '')) {
-			$rows[] = $row;
-			if (count($rows) > 1000) {
-				fclose($handle);
-				return new WP_Error('csv_row_limit', __('The CSV contains more than 1,000 non-empty rows. Split it into smaller reviewed imports.', 'backstage-outreach'));
-			}
+		$rows[] = array('row_number' => $row_number, 'values' => $row);
+		if (count($rows) > 1000) {
+			fclose($handle);
+			return new WP_Error('csv_row_limit', __('The CSV contains more than 1,000 non-empty rows. Split it into smaller reviewed imports.', 'backstage-outreach'));
 		}
 	}
 	fclose($handle);
-	return $rows;
+	return array('rows' => $rows, 'header_errors' => $header_errors);
+}
+
+function backstage_outreach_build_business_import_preview(int $source_id, array $parsed): array
+{
+	$valid = array();
+	$records = array();
+	$row_errors = array();
+	$missing_email_count = 0;
+	foreach ((array) ($parsed['rows'] ?? array()) as $parsed_row) {
+		$row_number = max(2, absint($parsed_row['row_number'] ?? 0));
+		$row = (array) ($parsed_row['values'] ?? array());
+		$payload = backstage_outreach_business_sanitized_payload($row);
+		$errors = array();
+		if ($payload['business_name'] === '') {
+			$errors[] = __('Business name is required.', 'backstage-outreach');
+		}
+		$raw_email = isset($row['email']) && is_scalar($row['email']) ? trim((string) $row['email']) : '';
+		if ($raw_email !== '' && $payload['email'] === '') {
+			$errors[] = __('Enter a valid email address or leave it blank.', 'backstage-outreach');
+		}
+		$missing_email = $raw_email === '';
+		if ($missing_email) {
+			$missing_email_count++;
+		}
+		$record = array(
+			'row_number' => $row_number,
+			'payload' => $payload,
+			'external_id' => sanitize_text_field((string) ($row['external_id'] ?? '')),
+			'snapshot' => $row,
+			'errors' => $errors,
+			'status' => empty($errors) ? 'valid' : 'invalid',
+			'missing_email' => $missing_email,
+		);
+		$records[] = $record;
+		if (!empty($errors)) {
+			foreach ($errors as $error) {
+				$row_errors[] = sprintf(__('Row %1$d: %2$s', 'backstage-outreach'), $row_number, $error);
+			}
+			continue;
+		}
+		$valid[] = array(
+			'payload' => $payload,
+			'external_id' => $record['external_id'],
+			'snapshot' => $row,
+			'row_number' => $row_number,
+		);
+	}
+	$header_errors = array_values(array_map('strval', (array) ($parsed['header_errors'] ?? array())));
+	$blocking_errors = array_merge($header_errors, $row_errors);
+	return array(
+		'preview_version' => 2,
+		'source_id' => $source_id,
+		'rows' => $valid,
+		'records' => $records,
+		'errors' => $row_errors,
+		'header_errors' => $header_errors,
+		'blocking_errors' => $blocking_errors,
+		'valid_count' => count($valid),
+		'invalid_count' => count($records) - count($valid),
+		'missing_email_count' => $missing_email_count,
+	);
+}
+
+function backstage_outreach_prepare_business_import_preview(int $source_id, string $key)
+{
+	// A replacement attempt owns this slot immediately; a failed upload must not leave an older preview committable.
+	delete_transient($key);
+	$upload = bvmgr_upload_read_file($_FILES, 'business_csv');
+	if (!is_wp_error($upload)) {
+		$upload = bvmgr_validate_uploaded_file($upload, array('allowed_mimes' => array('csv' => 'text/csv', 'txt' => 'text/plain'), 'max_bytes' => 2 * MB_IN_BYTES));
+	}
+	if (is_wp_error($upload)) {
+		return $upload;
+	}
+	$parsed = backstage_outreach_csv_rows((string) $upload['tmp_name']);
+	if (is_wp_error($parsed)) {
+		return $parsed;
+	}
+	$preview = backstage_outreach_build_business_import_preview($source_id, $parsed);
+	set_transient($key, $preview, 10 * MINUTE_IN_SECONDS);
+	return $preview;
+}
+
+function backstage_outreach_business_import_commit_error(array $preview, int $source_id)
+{
+	if ((int) ($preview['preview_version'] ?? 0) !== 2 || (int) ($preview['source_id'] ?? 0) !== $source_id) {
+		return new WP_Error('business_import_preview_expired', __('Import preview expired. Preview the CSV again.', 'backstage-outreach'));
+	}
+	$valid_count = count((array) ($preview['rows'] ?? array()));
+	if ($valid_count <= 0) {
+		return new WP_Error('business_import_no_valid_rows', __('The CSV has no valid rows to import. Correct it and preview the replacement file.', 'backstage-outreach'));
+	}
+	if (!empty($preview['blocking_errors']) || !empty($preview['errors']) || (int) ($preview['invalid_count'] ?? 0) > 0) {
+		return new WP_Error('business_import_blocked', __('The CSV still has blocking header or row errors. Correct them and preview the replacement file before committing.', 'backstage-outreach'));
+	}
+	return null;
 }
 
 function backstage_outreach_handle_business_import(): void
@@ -530,31 +664,16 @@ function backstage_outreach_handle_business_import(): void
 	}
 	$key = 'backstage_outreach_business_import_' . get_current_user_id();
 	if ($mode === 'preview') {
-		$upload = bvmgr_upload_read_file($_FILES, 'business_csv');
-		if (!is_wp_error($upload)) {
-			$upload = bvmgr_validate_uploaded_file($upload, array('allowed_mimes' => array('csv' => 'text/csv', 'txt' => 'text/plain'), 'max_bytes' => 2 * MB_IN_BYTES));
-		}
-		$rows = is_wp_error($upload) ? $upload : backstage_outreach_csv_rows((string) $upload['tmp_name']);
-		if (is_wp_error($rows)) {
-			backstage_outreach_business_message($rows->get_error_message(), 'error');
-		} else {
-			$valid = array();
-			$errors = array();
-			foreach ($rows as $index => $row) {
-				$payload = backstage_outreach_business_payload($row);
-				if (is_wp_error($payload)) {
-					$errors[] = sprintf(__('Row %1$d: %2$s', 'backstage-outreach'), $index + 2, $payload->get_error_message());
-					continue;
-				}
-				$valid[] = array('payload' => $payload, 'external_id' => sanitize_text_field((string) ($row['external_id'] ?? '')), 'snapshot' => $row);
-			}
-			set_transient($key, array('source_id' => $source_id, 'rows' => $valid, 'errors' => $errors), 10 * MINUTE_IN_SECONDS);
+		$preview = backstage_outreach_prepare_business_import_preview($source_id, $key);
+		if (is_wp_error($preview)) {
+			backstage_outreach_business_message($preview->get_error_message(), 'error');
 		}
 		backstage_outreach_business_redirect(array('source_id' => $source_id, 'import_preview' => 1));
 	}
 	$preview = get_transient($key);
-	if (!is_array($preview) || (int) ($preview['source_id'] ?? 0) !== $source_id) {
-		backstage_outreach_business_message(__('Import preview expired. Preview the CSV again.', 'backstage-outreach'), 'error');
+	$commit_error = is_array($preview) ? backstage_outreach_business_import_commit_error($preview, $source_id) : new WP_Error('business_import_preview_expired', __('Import preview expired. Preview the CSV again.', 'backstage-outreach'));
+	if (is_wp_error($commit_error)) {
+		backstage_outreach_business_message($commit_error->get_error_message(), 'error');
 		backstage_outreach_business_redirect(array('source_id' => $source_id));
 	}
 	global $wpdb;
@@ -606,6 +725,102 @@ function backstage_outreach_business_activity(int $business_id): array
 		backstage_outreach_business_table('distribution_claims'), bvmgr_admission_table_entries(), $business_id
 	), ARRAY_A);
 	return is_array($row) ? $row : array('claims' => 0, 'admissions' => 0, 'checked_in' => 0);
+}
+
+function backstage_outreach_business_import_value_html(string $value): string
+{
+	return $value === '' ? '<span class="vms-business-import-not-provided">' . esc_html__('Not provided', 'backstage-outreach') . '</span>' : esc_html($value);
+}
+
+function backstage_outreach_render_business_import_preview(array $preview, int $source_id): void
+{
+	$records = (array) ($preview['records'] ?? array());
+	$valid_count = count((array) ($preview['rows'] ?? array()));
+	$invalid_count = count(array_filter($records, static fn($record) => (string) ($record['status'] ?? '') !== 'valid'));
+	$missing_email_count = count(array_filter($records, static fn($record) => !empty($record['missing_email'])));
+	$commit_error = backstage_outreach_business_import_commit_error($preview, $source_id);
+
+	echo '<div class="vms-business-import-review" data-vms-business-import-review>';
+	echo '<p class="vms-business-import-review__summary"><strong>' . esc_html(sprintf(__('%1$d valid · %2$d invalid · %3$d missing email', 'backstage-outreach'), $valid_count, $invalid_count, $missing_email_count)) . '</strong></p>';
+	if (!empty($preview['header_errors'])) {
+		echo '<div class="notice notice-error inline"><p><strong>' . esc_html__('Unsupported or ambiguous CSV columns must be corrected before import.', 'backstage-outreach') . '</strong></p><ul class="ul-disc">';
+		foreach ((array) $preview['header_errors'] as $error) {
+			echo '<li>' . esc_html((string) $error) . '</li>';
+		}
+		echo '</ul></div>';
+	}
+
+	echo '<div class="vms-business-import-review__table-wrap" tabindex="0" aria-label="' . esc_attr__('Business import records', 'backstage-outreach') . '"><table class="widefat striped vms-business-import-review__table"><thead><tr>';
+	foreach (array(
+		__('CSV Row', 'backstage-outreach'),
+		__('Business Name', 'backstage-outreach'),
+		__('Contact Name', 'backstage-outreach'),
+		__('Email', 'backstage-outreach'),
+		__('Phone', 'backstage-outreach'),
+		__('Website', 'backstage-outreach'),
+		__('Full Address', 'backstage-outreach'),
+		__('Validation Status', 'backstage-outreach'),
+	) as $heading) {
+		echo '<th scope="col">' . esc_html($heading) . '</th>';
+	}
+	echo '</tr></thead><tbody>';
+	foreach ($records as $record) {
+		$payload = (array) ($record['payload'] ?? array());
+		$status = (string) ($record['status'] ?? '') === 'valid' ? 'valid' : 'invalid';
+		$address_lines = array();
+		$address_line = (string) ($payload['address_line'] ?? '');
+		if ($address_line !== '') {
+			$address_lines[] = $address_line;
+		}
+		$locality = trim(implode(' ', array_filter(array(
+			(string) ($payload['city'] ?? ''),
+			(string) ($payload['state'] ?? ''),
+			(string) ($payload['postal_code'] ?? ''),
+		), static fn($value) => $value !== '')));
+		if ($locality !== '') {
+			$address_lines[] = $locality;
+		}
+		$address_html = empty($address_lines)
+			? backstage_outreach_business_import_value_html('')
+			: implode('<br>', array_map('esc_html', $address_lines));
+		$email_html = backstage_outreach_business_import_value_html((string) ($payload['email'] ?? ''));
+		if (!empty($record['missing_email'])) {
+			$email_html .= '<span class="vms-business-import-email-note">' . esc_html__('Email delivery unavailable', 'backstage-outreach') . '</span>';
+		}
+		$status_html = '<strong class="vms-business-import-status vms-business-import-status--' . esc_attr($status) . '">' . esc_html($status === 'valid' ? __('Valid', 'backstage-outreach') : __('Invalid', 'backstage-outreach')) . '</strong>';
+		if (!empty($record['errors'])) {
+			$status_html .= '<ul class="ul-disc">';
+			foreach ((array) $record['errors'] as $error) {
+				$status_html .= '<li>' . esc_html((string) $error) . '</li>';
+			}
+			$status_html .= '</ul>';
+		} elseif (!empty($record['missing_email'])) {
+			$status_html .= '<span class="vms-business-import-status__note">' . esc_html__('Valid; email delivery is unavailable.', 'backstage-outreach') . '</span>';
+		}
+		echo '<tr class="vms-business-import-record vms-business-import-record--' . esc_attr($status) . '">';
+		echo '<th scope="row" data-label="' . esc_attr__('CSV Row', 'backstage-outreach') . '">' . esc_html((string) absint($record['row_number'] ?? 0)) . '</th>';
+		echo '<td data-label="' . esc_attr__('Business Name', 'backstage-outreach') . '">' . backstage_outreach_business_import_value_html((string) ($payload['business_name'] ?? '')) . '</td>';
+		echo '<td data-label="' . esc_attr__('Contact Name', 'backstage-outreach') . '">' . backstage_outreach_business_import_value_html((string) ($payload['contact_name'] ?? '')) . '</td>';
+		echo '<td data-label="' . esc_attr__('Email', 'backstage-outreach') . '">' . $email_html . '</td>';
+		echo '<td data-label="' . esc_attr__('Phone', 'backstage-outreach') . '">' . backstage_outreach_business_import_value_html((string) ($payload['phone'] ?? '')) . '</td>';
+		echo '<td data-label="' . esc_attr__('Website', 'backstage-outreach') . '">' . backstage_outreach_business_import_value_html((string) ($payload['website'] ?? '')) . '</td>';
+		echo '<td data-label="' . esc_attr__('Full Address', 'backstage-outreach') . '">' . $address_html . '</td>';
+		echo '<td data-label="' . esc_attr__('Validation Status', 'backstage-outreach') . '">' . $status_html . '</td>';
+		echo '</tr>';
+		$notes = (string) ($payload['notes'] ?? '');
+		echo '<tr class="vms-business-import-record-notes"><td colspan="8"><details><summary>' . esc_html(sprintf(__('Notes for CSV row %d', 'backstage-outreach'), absint($record['row_number'] ?? 0))) . '</summary><div>' . ($notes === '' ? backstage_outreach_business_import_value_html('') : nl2br(esc_html($notes))) . '</div></details></td></tr>';
+	}
+	if (empty($records)) {
+		echo '<tr><td colspan="8">' . esc_html__('No non-empty business records were found in this CSV.', 'backstage-outreach') . '</td></tr>';
+	}
+	echo '</tbody></table></div>';
+
+	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-business-import-review__commit"><input type="hidden" name="action" value="backstage_outreach_business_import"><input type="hidden" name="source_id" value="' . esc_attr((string) $source_id) . '"><input type="hidden" name="import_mode" value="commit">';
+	wp_nonce_field('backstage_outreach_business_import');
+	if (is_wp_error($commit_error)) {
+		echo '<p class="description vms-business-import-review__blocked">' . esc_html($commit_error->get_error_message()) . '</p>';
+	}
+	echo '<button class="button button-primary"' . (is_wp_error($commit_error) ? ' disabled aria-disabled="true"' : '') . '>' . esc_html__('Commit CSV Import', 'backstage-outreach') . '</button></form></div>';
 }
 
 function backstage_outreach_render_source_management(): void
@@ -686,16 +901,12 @@ function backstage_outreach_render_source_management(): void
 	}
 	echo '<label class="vms-pass-span-2">' . esc_html__('Notes', 'backstage-outreach') . '<textarea name="notes">' . esc_textarea((string) ($edit['notes'] ?? '')) . '</textarea></label></div><p><button class="button button-primary">' . esc_html__('Save Business', 'backstage-outreach') . '</button></p></form></section>';
 
-	echo '<section class="vms-pass-card"><h3>' . esc_html__('Import Businesses', 'backstage-outreach') . '</h3><p class="description">' . esc_html__('Preview is required. Supported headers: external_id, business_name, contact_name, email, phone, website, address_line, city, state, postal_code, notes.', 'backstage-outreach') . '</p><form method="post" enctype="multipart/form-data" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_business_import"><input type="hidden" name="source_id" value="' . esc_attr((string) $source_id) . '"><input type="hidden" name="import_mode" value="preview">';
+	echo '<section class="vms-pass-card"><h3>' . esc_html__('Import Businesses', 'backstage-outreach') . '</h3><p class="description">' . esc_html__('Preview is required. Supported headers: external_id, business_name, contact_name, email, phone, website, address_line (or address), city, state, postal_code, notes. Every column must be supported, and aliases cannot be duplicated.', 'backstage-outreach') . '</p><form method="post" enctype="multipart/form-data" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_business_import"><input type="hidden" name="source_id" value="' . esc_attr((string) $source_id) . '"><input type="hidden" name="import_mode" value="preview">';
 	wp_nonce_field('backstage_outreach_business_import');
 	echo '<input type="file" name="business_csv" accept=".csv,text/csv" required> <button class="button">' . esc_html__('Preview CSV', 'backstage-outreach') . '</button></form>';
 	$import = get_transient('backstage_outreach_business_import_' . get_current_user_id());
 	if (is_array($import) && (int) ($import['source_id'] ?? 0) === $source_id) {
-		echo '<p><strong>' . esc_html(sprintf(__('%1$d valid rows; %2$d errors.', 'backstage-outreach'), count((array) $import['rows']), count((array) $import['errors']))) . '</strong></p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_business_import"><input type="hidden" name="source_id" value="' . esc_attr((string) $source_id) . '"><input type="hidden" name="import_mode" value="commit">';
-		if (!empty($import['rows'])) { echo '<p class="description">' . esc_html(implode(', ', array_map(static fn($row) => (string) ($row['payload']['business_name'] ?? ''), array_slice((array) $import['rows'], 0, 20)))) . '</p>'; }
-		if (!empty($import['errors'])) { echo '<ul class="ul-disc"><li>' . implode('</li><li>', array_map('esc_html', (array) $import['errors'])) . '</li></ul>'; }
-		wp_nonce_field('backstage_outreach_business_import');
-		echo '<button class="button button-primary">' . esc_html__('Commit CSV Import', 'backstage-outreach') . '</button></form>';
+		backstage_outreach_render_business_import_preview($import, $source_id);
 	}
 	echo '</section>';
 

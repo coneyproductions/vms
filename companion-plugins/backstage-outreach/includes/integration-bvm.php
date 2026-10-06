@@ -39,10 +39,25 @@ if (!function_exists('backstage_outreach_add_top_nav_item')) {
 }
 add_filter('vms_admin_ui_nav_cluster_items', 'backstage_outreach_add_top_nav_item', 20, 2);
 
+if (!function_exists('backstage_outreach_should_enqueue_admin_assets')) {
+	function backstage_outreach_should_enqueue_admin_assets(): bool
+	{
+		if (vms_outreach_is_admin_page()) {
+			return true;
+		}
+		if (!is_admin()) {
+			return false;
+		}
+		$page = isset($_GET['page']) ? sanitize_key((string) wp_unslash($_GET['page'])) : '';
+		$tab = isset($_GET['tab']) ? sanitize_key((string) wp_unslash($_GET['tab'])) : '';
+		return $page === 'vms-passes' && $tab === 'sources';
+	}
+}
+
 if (!function_exists('backstage_outreach_enqueue_admin_assets')) {
 	function backstage_outreach_enqueue_admin_assets(): void
 	{
-		if (!vms_outreach_is_admin_page()) {
+		if (!backstage_outreach_should_enqueue_admin_assets()) {
 			return;
 		}
 		$css_path = BACKSTAGE_OUTREACH_PLUGIN_PATH . 'assets/css/outreach-admin.css';
