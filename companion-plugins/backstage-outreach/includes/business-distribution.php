@@ -1254,7 +1254,10 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		}
 	}
 	$batch = absint($campaign['related_batch_id'] ?? 0) > 0 ? bvmgr_pass_claims_get_batch_by_id(absint($campaign['related_batch_id'])) : null;
-	$default_type = is_array($active_row) ? backstage_outreach_discount_distribution_type($active_row) : 'complimentary';
+	$batch_defaults_to_paid = is_array($batch)
+		&& sanitize_key((string) ($batch['value_type'] ?? '')) === 'percent'
+		&& abs((float) ($batch['value_amount'] ?? 0) - 50.0) <= 0.00001;
+	$default_type = is_array($active_row) ? backstage_outreach_discount_distribution_type($active_row) : ($batch_defaults_to_paid ? 'coupon_backed' : 'complimentary');
 	$default_cap = is_array($active_row) ? absint($active_row['admission_cap'] ?? 0) : 0;
 	$default_order_cap = is_array($active_row) ? absint($active_row['order_cap'] ?? 0) : 0;
 	$default_expiry = is_array($active_row) && !empty($active_row['expires_at']) ? str_replace(' ', 'T', substr((string) $active_row['expires_at'], 0, 16)) : '';
@@ -1275,15 +1278,23 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 	if (empty($businesses)) {
 		echo '<div class="notice notice-warning inline"><p>' . esc_html__('No active businesses are linked to this campaign Source. Open the Source, add or reactivate a business, then return here to select it.', 'backstage-outreach') . '</p></div>';
 	}
+	if (is_array($batch)) {
+		echo '<div class="vms-pass-preview-summary vms-business-distribution-capacity"><table class="widefat striped"><tbody>';
+		echo '<tr><th scope="row">' . esc_html__('Available Business Links / QRs', 'backstage-outreach') . '</th><td>' . esc_html((string) count($businesses)) . '</td></tr>';
+		echo '<tr><th scope="row">' . esc_html__('Batch Individual Claim-Link Quantity', 'backstage-outreach') . '</th><td>' . esc_html((string) absint($batch['quantity'] ?? 0)) . '</td></tr>';
+		echo '<tr><th scope="row">' . esc_html__('Batch Shared Admission Cap', 'backstage-outreach') . '</th><td>' . esc_html((string) absint($batch['total_admission_cap'] ?? 0)) . '</td></tr>';
+		echo '</tbody></table><p class="description">' . esc_html__('Business QR count is based on active Source memberships. It does not consume or change the batch\'s individual claim-link quantity; claims and paid orders remain subject to the configured shared limits.', 'backstage-outreach') . '</p></div>';
+	}
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" data-vms-tour="outreach-business-selection"><input type="hidden" name="action" value="backstage_outreach_campaign_businesses"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="distribution_mode" value="preview">';
 	wp_nonce_field('backstage_outreach_campaign_businesses');
-	echo '<p><label><input type="checkbox" data-backstage-select-all> ' . esc_html__('Select all active businesses', 'backstage-outreach') . '</label></p><div class="vms-pass-grid">';
+	$all_selected = !empty($businesses) && (empty($rows) || count(array_filter($rows, static fn(array $row): bool => (string) ($row['status'] ?? '') === 'active')) === count($businesses));
+	echo '<p><label><input type="checkbox" data-backstage-select-all' . checked($all_selected, true, false) . '> ' . esc_html__('Select all active businesses', 'backstage-outreach') . '</label></p><div class="vms-pass-grid">';
 	foreach ($businesses as $business) {
 		$id = (int) $business['id'];
-		$checked = isset($by_business[$id]) && (string) $by_business[$id]['status'] === 'active';
+		$checked = empty($rows) || (isset($by_business[$id]) && (string) $by_business[$id]['status'] === 'active');
 		echo '<label class="vms-pass-checkbox"><input type="checkbox" name="business_ids[]" value="' . esc_attr((string) $id) . '"' . checked($checked, true, false) . ' data-backstage-business> <span><strong>' . esc_html((string) $business['business_name']) . '</strong><br><small>' . esc_html((string) $business['contact_name']) . '</small></span></label>';
 	}
-	echo '<label data-vms-tour="outreach-distribution-type">' . esc_html__('Distribution type', 'backstage-outreach') . '<select name="distribution_type"><option value="complimentary"' . selected($default_type, 'complimentary', false) . '>' . esc_html__('Complimentary Guest Pass', 'backstage-outreach') . '</option><option value="coupon_backed"' . selected($default_type, 'coupon_backed', false) . '>' . esc_html__('Neighborhood Offer — 50% off admission', 'backstage-outreach') . '</option></select><span class="description">' . esc_html__('Neighborhood Offers use a managed native 50% coupon and may share an active Free Guest Pass capacity batch or use a Percent Off batch set to exactly 50%. Complimentary keeps the existing free-only claim path.', 'backstage-outreach') . '</span></label>';
+	echo '<label data-vms-tour="outreach-distribution-type">' . esc_html__('Distribution type', 'backstage-outreach') . '<select name="distribution_type"><option value="complimentary"' . selected($default_type, 'complimentary', false) . '>' . esc_html__('Complimentary Guest Pass', 'backstage-outreach') . '</option><option value="coupon_backed"' . selected($default_type, 'coupon_backed', false) . '>' . esc_html__('Neighborhood Offer - 50% off paid admission', 'backstage-outreach') . '</option></select><span class="description">' . esc_html__('Neighborhood Offers apply a managed native 50% discount to eligible paid admission tickets. They may share an active Free Guest Pass capacity batch or use a Percent Off batch set to exactly 50%. Complimentary keeps the existing free-only claim path.', 'backstage-outreach') . '</span></label>';
 	echo '<label data-vms-tour="outreach-business-limits">' . esc_html__('Optional ticket cap per business', 'backstage-outreach') . '<input type="number" min="0" name="admission_cap" value="' . esc_attr((string) $default_cap) . '"><span class="description">' . esc_html__('For coupon offers, counts discounted ticket quantities. For complimentary links, counts reserved admissions. 0 uses only campaign-wide limits.', 'backstage-outreach') . '</span></label>';
 	echo '<label>' . esc_html__('Optional paid-order cap per business', 'backstage-outreach') . '<input type="number" min="0" name="order_cap" value="' . esc_attr((string) $default_order_cap) . '"><span class="description">' . esc_html__('Applied as the managed coupon usage limit. 0 means unlimited orders subject to ticket limits.', 'backstage-outreach') . '</span></label>';
 	echo '<label>' . esc_html__('Optional distribution expiry', 'backstage-outreach') . '<input type="datetime-local" name="expires_at" value="' . esc_attr($default_expiry) . '"></label></div>';
@@ -1303,7 +1314,7 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		if (!empty($preview_names)) {
 			echo '<p>' . esc_html(implode(', ', $preview_names)) . '</p>';
 		}
-		$type_label = sanitize_key((string) ($preview['distribution_type'] ?? 'complimentary')) === 'coupon_backed' ? __('Neighborhood Offer — 50% off admission', 'backstage-outreach') : __('Complimentary Guest Pass', 'backstage-outreach');
+		$type_label = sanitize_key((string) ($preview['distribution_type'] ?? 'complimentary')) === 'coupon_backed' ? __('Neighborhood Offer - 50% off paid admission', 'backstage-outreach') : __('Complimentary Guest Pass', 'backstage-outreach');
 		echo '<p>' . esc_html(sprintf(__('Type: %1$s · Per-business ticket cap: %2$d · Paid-order cap: %3$d · Expiry: %4$s', 'backstage-outreach'), $type_label, absint($preview['admission_cap'] ?? 0), absint($preview['order_cap'] ?? 0), (string) ($preview['expires_at'] ?? '') !== '' ? (string) $preview['expires_at'] : __('none', 'backstage-outreach'))) . '</p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_campaign_businesses"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="distribution_mode" value="commit">';
 		wp_nonce_field('backstage_outreach_campaign_businesses');
 		echo '<button class="button button-primary">' . esc_html__('Save Reviewed Links', 'backstage-outreach') . '</button></form></div>';
@@ -1317,7 +1328,7 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 			$is_coupon = backstage_outreach_discount_distribution_type($row) === 'coupon_backed';
 			$stats = $is_coupon ? backstage_outreach_discount_paid_stats((int) $row['id']) : $wpdb->get_row($wpdb->prepare("SELECT COUNT(DISTINCT dc.pass_claim_id) claims, COUNT(DISTINCT e.id) admissions, COALESCE(SUM(e.checked_in_qty),0) checked_in FROM %i dc LEFT JOIN %i e ON e.pass_claim_id=dc.pass_claim_id WHERE dc.distribution_id = %d AND dc.status = 'fulfilled'", backstage_outreach_business_table('distribution_claims'), bvmgr_admission_table_entries(), (int) $row['id']), ARRAY_A);
 			$coupon_uses = $is_coupon && absint($row['coupon_id'] ?? 0) > 0 && class_exists('WC_Coupon') ? absint((new WC_Coupon(absint($row['coupon_id'])))->get_usage_count()) : 0;
-			echo '<tr><td><strong>' . esc_html((string) $row['business_name']) . '</strong><div class="description">' . esc_html($is_coupon ? __('Neighborhood Offer — 50% off admission', 'backstage-outreach') : __('Complimentary Guest Pass', 'backstage-outreach')) . ($is_coupon && !empty($row['coupon_code']) ? ' · ' . esc_html((string) $row['coupon_code']) : '') . '</div></td><td>' . esc_html((string) $row['status']) . '</td><td data-vms-tour="outreach-qr-actions"><input class="regular-text" readonly value="' . esc_attr($url) . '" data-backstage-copy-value> <button type="button" class="button button-small" data-backstage-copy>' . esc_html__('Copy Link', 'backstage-outreach') . '</button>';
+			echo '<tr><td><strong>' . esc_html((string) $row['business_name']) . '</strong><div class="description">' . esc_html($is_coupon ? __('Neighborhood Offer - 50% off paid admission', 'backstage-outreach') : __('Complimentary Guest Pass', 'backstage-outreach')) . ($is_coupon && !empty($row['coupon_code']) ? ' | ' . esc_html((string) $row['coupon_code']) : '') . '</div></td><td>' . esc_html((string) $row['status']) . '</td><td data-vms-tour="outreach-qr-actions"><input class="regular-text" readonly value="' . esc_attr($url) . '" data-backstage-copy-value> <button type="button" class="button button-small" data-backstage-copy>' . esc_html__('Copy Link', 'backstage-outreach') . '</button>';
 			if ($qr !== '') {
 				echo ' <a class="button button-small" href="' . esc_url($qr) . '" target="_blank" rel="noopener" download>' . esc_html__('QR Download', 'backstage-outreach') . '</a>';
 			}

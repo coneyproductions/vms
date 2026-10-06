@@ -1097,6 +1097,10 @@
   max-height: 520px;
 }
 
+#vms-pass-claims-wrap .vms-pass-table-scroll--business-source {
+  max-height: 640px;
+}
+
 #vms-pass-claims-wrap .vms-pass-table-scroll .widefat {
   margin: 0;
   border: 0;
@@ -1119,6 +1123,31 @@
 
 #vms-pass-claims-wrap .vms-pass-table-scroll--outreach-import .widefat {
   min-width: 1162px;
+}
+
+#vms-pass-claims-wrap .vms-pass-table-scroll--business-source .widefat {
+  min-width: 1040px;
+  table-layout: fixed;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-source-table th,
+#vms-pass-claims-wrap .vms-pass-business-source-table td {
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-source-table details {
+  margin-top: 6px;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-email-state {
+  display: block;
+  margin-top: 4px;
+}
+
+#vms-pass-claims-wrap .vms-pass-sample-data-notice {
+  margin: 10px 0 14px;
 }
 
 #vms-pass-claims-wrap .vms-business-import-review {
@@ -1982,6 +2011,16 @@
 }
 
 @media (max-width: 640px) {
+  #vms-pass-claims-wrap .vms-pass-preview-summary--actions .vms-pass-actions .button {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 40px;
+    white-space: normal;
+    line-height: 1.3;
+    text-align: center;
+  }
+
   #vms-pass-claims-wrap .vms-pass-purpose-roadmap summary {
     flex-direction: column;
     align-items: flex-start;
@@ -1989,5 +2028,66 @@
 
   #vms-pass-claims-wrap .vms-pass-purpose-roadmap__item {
     grid-template-columns: 1fr;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-table-scroll--business-source {
+    max-height: none;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-table-scroll--business-source .widefat {
+    min-width: 0;
+    table-layout: auto;
+    background: transparent;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-source-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-source-table tbody,
+  #vms-pass-claims-wrap .vms-pass-business-source-table tr,
+  #vms-pass-claims-wrap .vms-pass-business-source-table td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-source-table tr {
+    margin-bottom: 12px;
+    border: 1px solid #d8e2f0;
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-source-table td {
+    display: grid;
+    grid-template-columns: minmax(112px, 36%) minmax(0, 1fr);
+    gap: 10px;
+    border: 0;
+    border-bottom: 1px solid #edf2f7;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-source-table td:last-child {
+    border-bottom: 0;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-source-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #26364a;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-source-table td > details,
+  #vms-pass-claims-wrap .vms-pass-business-source-table td > .vms-pass-business-email-state {
+    grid-column: 2;
   }
 }

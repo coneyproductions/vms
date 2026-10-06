@@ -230,8 +230,9 @@ business_import_assert(strpos($source, "provenance = hash('sha256', 'csv:'") !==
 business_import_assert(strpos($source, "\$wpdb->query('START TRANSACTION')") !== false && strpos($source, "\$wpdb->query('ROLLBACK')") !== false, 'Atomic CSV import behavior must remain intact.');
 business_import_assert(strpos($css, '.vms-business-import-review__table-wrap') !== false && strpos($css, 'overflow-wrap: anywhere') !== false, 'Desktop review styles must wrap long values inside a bounded table.');
 business_import_assert(strpos($css, '@media (max-width: 782px)') !== false && strpos($css, 'content: attr(data-label)') !== false, 'Narrow-screen review styles must expose labels in the stacked record layout.');
-business_import_assert(strpos($plugin, 'Version: 1.2.2') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.2'") !== false, 'The standalone Outreach release metadata must identify version 1.2.2.');
+business_import_assert(strpos($plugin, 'Version: 1.2.3') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.3'") !== false, 'The standalone Outreach release metadata must identify version 1.2.3.');
 business_import_assert(strpos($integration, "return \$page === 'vms-passes' && \$tab === 'sources';") !== false, 'The standalone Outreach assets must load on the business Source import screen.');
+business_import_assert(substr_count($integration, 'BACKSTAGE_OUTREACH_VERSION') >= 2 && strpos($integration, 'filemtime(') === false, 'Outreach admin asset cache keys must follow the reproducible plugin release version.');
 
 $html_output = getenv('BVM_BUSINESS_IMPORT_HTML');
 if (is_string($html_output) && $html_output !== '') {

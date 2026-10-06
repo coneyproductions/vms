@@ -60,21 +60,17 @@ if (!function_exists('backstage_outreach_enqueue_admin_assets')) {
 		if (!backstage_outreach_should_enqueue_admin_assets()) {
 			return;
 		}
-		$css_path = BACKSTAGE_OUTREACH_PLUGIN_PATH . 'assets/css/outreach-admin.css';
-		$js_path = BACKSTAGE_OUTREACH_PLUGIN_PATH . 'assets/js/outreach-admin.js';
-		$css_version = is_file($css_path) ? (string) filemtime($css_path) : BACKSTAGE_OUTREACH_VERSION;
-		$js_version = is_file($js_path) ? (string) filemtime($js_path) : BACKSTAGE_OUTREACH_VERSION;
 		wp_enqueue_style(
 			'backstage-outreach-admin',
 			BACKSTAGE_OUTREACH_PLUGIN_URL . 'assets/css/outreach-admin.css',
 			array('bvmgr-admin', 'bvmgr-admin-ui'),
-			$css_version
+			BACKSTAGE_OUTREACH_VERSION
 		);
 		wp_enqueue_script(
 			'backstage-outreach-admin',
 			BACKSTAGE_OUTREACH_PLUGIN_URL . 'assets/js/outreach-admin.js',
 			array(),
-			$js_version,
+			BACKSTAGE_OUTREACH_VERSION,
 			true
 		);
 	}

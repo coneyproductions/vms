@@ -69,6 +69,24 @@ so a failed replacement cannot leave an older file available to commit. The
 10-minute preview expiry, capability and nonce checks, atomic transaction,
 provenance keys, and one-record-per-business identity model remain unchanged.
 
+## Reusable business campaign setup
+
+Version 1.2.3 adds an explicit Reusable Business Links / QRs campaign route.
+An operator selects an existing business Source and compatible active batch,
+then reviews every current active membership before creating the campaign.
+Businesses without email remain link-eligible; email values are reference data
+only and do not prepare delivery. The review keeps business QR count separate
+from individual claim-link quantity and the batch shared-admission cap.
+
+Campaign creation revalidates the Source, batch, active memberships, and the
+reviewed digest before saving. It creates no historical recipient/contact rows,
+preserves independent business identity, carries the Source and batch directly
+into business QR setup, and defaults all reviewed active businesses for the
+next review step. Complimentary batches and Percent Off batches set to exactly
+50% retain their distinct distribution behavior. Message previews are labeled
+as sample data, and display-time punctuation repair leaves historical stored
+records unchanged.
+
 ## Development checks
 
 From the Backstage Venue Manager repository root:
@@ -78,8 +96,10 @@ php tests/backstage-outreach-current-bvm-integration.php
 php tests/business-partner-distribution.php
 php tests/business-discount-qr-links.php
 php tests/business-import-preview.php
+php tests/business-source-campaign.php
 BVM_BUSINESS_IMPORT_HTML=/tmp/business-import-review.html php tests/business-import-preview.php
 BVM_BUSINESS_IMPORT_HTML=/tmp/business-import-review.html BVM_BUSINESS_IMPORT_SCREENSHOTS=/tmp/business-import-review-shots node tests/business-import-preview-screenshots.js
+wp eval-file wp-content/plugins/packages/vms-github-reconcile/tests/business-source-campaign-runtime.php
 wp eval-file wp-content/plugins/packages/vms-github-reconcile/tests/business-discount-qr-runtime.php
 wp eval-file wp-content/plugins/packages/vms-github-reconcile/tests/business-discount-qr-concurrency.php
 find companion-plugins/backstage-outreach -name '*.php' -print0 | xargs -0 -n1 php -l
