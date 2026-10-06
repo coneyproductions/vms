@@ -815,8 +815,6 @@ if (!function_exists('vms_pass_outreach_business_batch_review_error_fields')) {
 				return array('related_source_id' => $message);
 			case 'missing_batch_name':
 				return array('business_batch_name' => $message);
-			case 'invalid_quantity':
-				return array('business_batch_quantity' => $message);
 			case 'invalid_admissions_per_link':
 				return array('business_batch_admissions_per_link' => $message);
 			case 'missing_business_batch_capacity':
@@ -828,6 +826,7 @@ if (!function_exists('vms_pass_outreach_business_batch_review_error_fields')) {
 				return array('business_batch_single_event_plan_id' => $message);
 			case 'invalid_date_range':
 			case 'invalid_date_range_order':
+			case 'invalid_season_dates':
 				return array(
 					'business_batch_start_date' => $message,
 					'business_batch_end_date' => $message,
@@ -850,7 +849,6 @@ if (!function_exists('vms_pass_outreach_business_batch_form_payload')) {
 		$fields = array(
 			'business_batch_name',
 			'business_batch_offer_type',
-			'business_batch_quantity',
 			'business_batch_admissions_per_link',
 			'business_batch_total_admission_cap',
 			'business_batch_validity_type',
@@ -887,13 +885,13 @@ if (!function_exists('vms_pass_outreach_prepare_business_batch_review')) {
 			return new WP_Error('invalid_value_type', __('Choose Complimentary admission or the 50% Neighborhood Offer.', 'backstage-outreach'));
 		}
 		if (absint($raw['business_batch_total_admission_cap'] ?? 0) <= 0) {
-			return new WP_Error('missing_business_batch_capacity', __('Enter the shared admission capacity explicitly. It is not inferred from the business count or individual claim-link quantity.', 'backstage-outreach'));
+			return new WP_Error('missing_business_batch_capacity', __('Enter the total admissions available across all businesses.', 'backstage-outreach'));
 		}
 
 		$batch_raw = array(
 			'source_id' => $source_id,
 			'batch_name' => sanitize_text_field((string) ($raw['business_batch_name'] ?? '')),
-			'quantity' => absint($raw['business_batch_quantity'] ?? 0),
+			'quantity' => 0,
 			'admissions_per_link' => absint($raw['business_batch_admissions_per_link'] ?? 0),
 			'total_admission_cap' => absint($raw['business_batch_total_admission_cap'] ?? 0),
 			'validity_type' => sanitize_key((string) ($raw['business_batch_validity_type'] ?? '')),
@@ -911,11 +909,9 @@ if (!function_exists('vms_pass_outreach_prepare_business_batch_review')) {
 			'max_per_email' => 0,
 			'notes' => sanitize_textarea_field((string) ($raw['business_batch_notes'] ?? '')),
 		);
-		$payload = function_exists('bvmgr_pass_claims_sanitize_batch_payload')
-			? bvmgr_pass_claims_sanitize_batch_payload($batch_raw)
-			: (function_exists('vms_pass_claims_sanitize_batch_payload')
-				? vms_pass_claims_sanitize_batch_payload($batch_raw)
-				: new WP_Error('business_batch_service_unavailable', __('Guest Pass batch validation is unavailable.', 'backstage-outreach')));
+		$payload = function_exists('bvmgr_pass_claims_sanitize_batch_definition_payload')
+			? bvmgr_pass_claims_sanitize_batch_definition_payload($batch_raw)
+			: new WP_Error('business_batch_service_unavailable', __('Guest Pass batch-definition validation is unavailable.', 'backstage-outreach'));
 		if (is_wp_error($payload)) {
 			return $payload;
 		}
@@ -954,11 +950,9 @@ if (!function_exists('vms_pass_outreach_create_business_offer_batch')) {
 	 */
 	function vms_pass_outreach_create_business_offer_batch(array $payload, int $user_id)
 	{
-		$validated = function_exists('bvmgr_pass_claims_sanitize_batch_payload')
-			? bvmgr_pass_claims_sanitize_batch_payload($payload)
-			: (function_exists('vms_pass_claims_sanitize_batch_payload')
-				? vms_pass_claims_sanitize_batch_payload($payload)
-				: new WP_Error('business_batch_service_unavailable', __('Guest Pass batch validation is unavailable.', 'backstage-outreach')));
+		$validated = function_exists('bvmgr_pass_claims_sanitize_batch_definition_payload')
+			? bvmgr_pass_claims_sanitize_batch_definition_payload($payload)
+			: new WP_Error('business_batch_service_unavailable', __('Guest Pass batch-definition validation is unavailable.', 'backstage-outreach'));
 		if (is_wp_error($validated)) {
 			return $validated;
 		}
@@ -1340,6 +1334,37 @@ if (!function_exists('vms_pass_outreach_business_batch_offer_label')) {
 	}
 }
 
+if (!function_exists('vms_pass_outreach_business_batch_scope_label')) {
+	function vms_pass_outreach_business_batch_scope_label(array $batch): string
+	{
+		$validity_type = sanitize_key((string) ($batch['validity_type'] ?? ''));
+		if ($validity_type === 'single_event') {
+			$event = function_exists('bvmgr_pass_claims_get_event_plan_brief')
+				? bvmgr_pass_claims_get_event_plan_brief(absint($batch['single_event_plan_id'] ?? 0))
+				: null;
+			return sprintf(__('One Event — %s', 'backstage-outreach'), sanitize_text_field((string) ($event['title'] ?? __('Selected event', 'backstage-outreach'))));
+		}
+		if ($validity_type === 'date_range') {
+			return sprintf(
+				__('Date Range — %1$s through %2$s', 'backstage-outreach'),
+				sanitize_text_field((string) ($batch['start_date'] ?? '')),
+				sanitize_text_field((string) ($batch['end_date'] ?? ''))
+			);
+		}
+		if ($validity_type === 'season') {
+			$start_date = sanitize_text_field((string) ($batch['start_date'] ?? ''));
+			$end_date = sanitize_text_field((string) ($batch['end_date'] ?? ''));
+			$date_label = ($start_date !== '' && $end_date !== '') ? $start_date . ' through ' . $end_date : '';
+			$parts = array_filter(array(
+				sanitize_text_field((string) ($batch['season_label'] ?? '')),
+				$date_label,
+			));
+			return sprintf(__('Season — %s', 'backstage-outreach'), implode(' · ', $parts));
+		}
+		return __('Any Event', 'backstage-outreach');
+	}
+}
+
 if (!function_exists('vms_pass_outreach_business_batch_catalog_entry')) {
 	function vms_pass_outreach_business_batch_catalog_entry(array $batch): array
 	{
@@ -1364,6 +1389,7 @@ if (!function_exists('vms_pass_outreach_business_batch_catalog_entry')) {
 				$offer_label
 			),
 			'offer_label' => $offer_label,
+			'scope_label' => vms_pass_outreach_business_batch_scope_label($batch),
 			'quantity' => $quantity,
 			'admissions_per_link' => $admissions_per_link,
 			'total_admission_cap' => $total_admission_cap,
@@ -1514,6 +1540,7 @@ if (!function_exists('vms_pass_outreach_build_business_source_preview')) {
 			'batch_id' => $batch_id,
 			'batch_name' => sanitize_text_field((string) ($batch['batch_name'] ?? '')),
 			'batch_offer_label' => vms_pass_outreach_business_batch_offer_label($batch),
+			'batch_scope_label' => vms_pass_outreach_business_batch_scope_label($batch),
 			'batch_offer_type' => $is_fifty_percent_batch ? 'paid_discount' : 'complimentary',
 			'active_membership_count' => count($rows),
 			'link_eligible_count' => count($rows),
@@ -4189,7 +4216,6 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 			$business_batch_form = array(
 				'business_batch_name' => (string) ($reviewed_batch_payload['batch_name'] ?? ''),
 				'business_batch_offer_type' => sanitize_key((string) ($reviewed_batch_payload['value_type'] ?? '')) === 'percent' ? 'percent_50' : 'free',
-				'business_batch_quantity' => (string) absint($reviewed_batch_payload['quantity'] ?? 0),
 				'business_batch_admissions_per_link' => (string) absint($reviewed_batch_payload['admissions_per_link'] ?? 0),
 				'business_batch_total_admission_cap' => (string) absint($reviewed_batch_payload['total_admission_cap'] ?? 0),
 				'business_batch_validity_type' => (string) ($reviewed_batch_payload['validity_type'] ?? ''),
@@ -4203,6 +4229,10 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 		}
 		$business_batch_value = static function (string $key, string $default = '') use ($business_batch_form): string {
 			return array_key_exists($key, $business_batch_form) ? (string) $business_batch_form[$key] : $default;
+		};
+		$business_batch_validity_type = sanitize_key($business_batch_value('business_batch_validity_type'));
+		$business_scope_visible = static function (array $types) use ($business_batch_validity_type): bool {
+			return in_array($business_batch_validity_type, $types, true);
 		};
 		$validity_type = sanitize_key((string) vms_pass_outreach_payload_value($form_payload, 'validity_type', 'any_event'));
 		if (!in_array($validity_type, vms_pass_outreach_allowed_validity_types(), true)) {
@@ -4751,31 +4781,30 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 				echo '<div class="vms-pass-business-batch-summary" data-vms-business-batch-summary' . $hidden_attr(empty($selected_batch_entry)) . '>';
 				if (!empty($selected_batch_entry)) {
 					echo '<strong>' . esc_html((string) $selected_batch_entry['offer_label']) . '</strong>';
-					echo '<span>' . esc_html(sprintf(__('Individual claim-link quantity: %1$d. Business QR count is determined later by reviewed active memberships. Shared admission capacity: %2$d.', 'backstage-outreach'), absint($selected_batch_entry['quantity'] ?? 0), absint($selected_batch_entry['total_admission_cap'] ?? 0))) . '</span>';
+					echo '<span>' . esc_html(sprintf(__('Admissions per customer: %1$d. Total admissions available across all businesses: %2$d. Scope: %3$s.', 'backstage-outreach'), absint($selected_batch_entry['admissions_per_link'] ?? 0), absint($selected_batch_entry['total_admission_cap'] ?? 0), (string) ($selected_batch_entry['scope_label'] ?? ''))) . '</span>';
 				}
 				echo '</div>';
 				$business_pair_ready = $selected_business_source_id > 0 && $selected_business_batch_id > 0;
 				$business_guidance = $selected_business_source_id <= 0
 					? __('Select a business Source to see its eligible offer batches.', 'backstage-outreach')
 					: (empty($eligible_business_batches)
-						? __('This Source has no eligible active batch. Create and confirm one below before reviewing businesses.', 'backstage-outreach')
+						? ''
 						: ($selected_business_batch_id <= 0 ? __('Select an eligible offer batch before previewing active businesses.', 'backstage-outreach') : __('Source and offer batch are ready. Preview every active business before creating the campaign.', 'backstage-outreach')));
-				echo '<p id="vms-outreach-business-guidance" class="vms-pass-business-guidance" role="status" aria-live="polite" data-vms-business-guidance>' . esc_html($business_guidance) . '</p>';
-				echo '<div class="vms-pass-business-empty" data-vms-business-empty' . $hidden_attr($selected_business_source_id <= 0 || !empty($eligible_business_batches)) . '><p><strong>' . esc_html__('No eligible offer batch for this Source', 'backstage-outreach') . '</strong></p><p>' . esc_html__('Create the batch definition here, review it, and explicitly confirm it. This does not create individual claim links.', 'backstage-outreach') . '</p><button type="button" class="button" data-vms-open-business-batch>' . esc_html__('Create an offer batch for this Source', 'backstage-outreach') . '</button></div>';
-				echo '<details class="vms-pass-business-batch-create" data-vms-business-batch-create' . (!empty($business_batch_form) || !empty($business_batch_review) ? ' open' : '') . '><summary>' . esc_html__('Create an offer batch for this Source', 'backstage-outreach') . '</summary>';
-				echo '<p class="description">' . esc_html__('Reviewing is read-only. The batch definition is created only after explicit confirmation. Individual claim-link quantity, eventual business QR count, and shared admission capacity are independent values; no claim links are generated here.', 'backstage-outreach') . '</p>';
+				echo '<p id="vms-outreach-business-guidance" class="vms-pass-business-guidance" role="status" aria-live="polite" data-vms-business-guidance' . $hidden_attr($business_guidance === '') . '>' . esc_html($business_guidance) . '</p>';
+				echo '<div class="vms-pass-business-empty" role="status" aria-live="polite" data-vms-business-empty' . $hidden_attr($selected_business_source_id <= 0 || !empty($eligible_business_batches)) . '><p><strong>' . esc_html__('No eligible offer batch for this Source', 'backstage-outreach') . '</strong></p><p>' . esc_html__('Create the batch definition here, review it, and explicitly confirm it. This does not create individual claim links.', 'backstage-outreach') . '</p><button type="button" class="button" data-vms-open-business-batch>' . esc_html__('Create an offer batch for this Source', 'backstage-outreach') . '</button></div>';
+				echo '<details class="vms-pass-business-batch-create" data-vms-business-batch-create' . (!empty($business_batch_form) || !empty($business_batch_review) ? ' open' : '') . '><summary>' . esc_html__('New offer batch setup', 'backstage-outreach') . '</summary>';
+				echo '<p class="description">' . esc_html__('Reviewing is read-only. The batch definition is created only after explicit confirmation. Business QR count comes from the later reviewed membership list. No individual claim links are generated here.', 'backstage-outreach') . '</p>';
 				echo '<div class="vms-pass-grid">';
 				echo '<label class="vms-pass-span-2' . (!empty($field_errors['business_batch_name']) ? ' vms-pass-field-has-error' : '') . '">' . $render_label(__('Batch Name', 'backstage-outreach'), array('required' => true)) . '<input type="text" name="business_batch_name" value="' . esc_attr($business_batch_value('business_batch_name')) . '"' . (!empty($field_errors['business_batch_name']) ? ' aria-invalid="true"' : '') . '>' . $render_messages($field_errors, array('business_batch_name')) . '</label>';
-				echo '<label class="' . (!empty($field_errors['business_batch_offer_type']) ? 'vms-pass-field-has-error' : '') . '">' . $render_label(__('Offer', 'backstage-outreach'), array('required' => true)) . '<select name="business_batch_offer_type"' . (!empty($field_errors['business_batch_offer_type']) ? ' aria-invalid="true"' : '') . '><option value="">' . esc_html__('Select offer', 'backstage-outreach') . '</option><option value="free"' . selected($business_batch_value('business_batch_offer_type'), 'free', false) . '>' . esc_html__('Complimentary admission', 'backstage-outreach') . '</option><option value="percent_50"' . selected($business_batch_value('business_batch_offer_type'), 'percent_50', false) . '>' . esc_html__('Neighborhood Offer — 50% off admission', 'backstage-outreach') . '</option></select>' . $render_messages($field_errors, array('business_batch_offer_type')) . '</label>';
-				echo '<label class="' . (!empty($field_errors['business_batch_quantity']) ? 'vms-pass-field-has-error' : '') . '">' . $render_label(__('Individual Claim-link Quantity', 'backstage-outreach'), array('required' => true, 'help' => __('Required by the batch definition; no links are generated by this workflow.', 'backstage-outreach'))) . '<input type="number" min="1" max="5000" name="business_batch_quantity" value="' . esc_attr($business_batch_value('business_batch_quantity')) . '"' . (!empty($field_errors['business_batch_quantity']) ? ' aria-invalid="true"' : '') . '>' . $render_messages($field_errors, array('business_batch_quantity')) . '</label>';
-				echo '<label class="' . (!empty($field_errors['business_batch_admissions_per_link']) ? 'vms-pass-field-has-error' : '') . '">' . $render_label(__('Admissions Per Link / QR', 'backstage-outreach'), array('required' => true)) . '<input type="number" min="1" max="100" name="business_batch_admissions_per_link" value="' . esc_attr($business_batch_value('business_batch_admissions_per_link')) . '"' . (!empty($field_errors['business_batch_admissions_per_link']) ? ' aria-invalid="true"' : '') . '>' . $render_messages($field_errors, array('business_batch_admissions_per_link')) . '</label>';
-				echo '<label class="' . (!empty($field_errors['business_batch_total_admission_cap']) ? 'vms-pass-field-has-error' : '') . '">' . $render_label(__('Shared Admission Capacity', 'backstage-outreach'), array('required' => true, 'help' => __('Enter this explicitly; it is not inferred from business count or individual claim-link quantity.', 'backstage-outreach'))) . '<input type="number" min="1" name="business_batch_total_admission_cap" value="' . esc_attr($business_batch_value('business_batch_total_admission_cap')) . '"' . (!empty($field_errors['business_batch_total_admission_cap']) ? ' aria-invalid="true"' : '') . '>' . $render_messages($field_errors, array('business_batch_total_admission_cap')) . '</label>';
+				echo '<label class="' . (!empty($field_errors['business_batch_offer_type']) ? 'vms-pass-field-has-error' : '') . '">' . $render_label(__('Offer', 'backstage-outreach'), array('required' => true, 'help' => __('This business QR workflow currently supports complimentary admission and 50% off. Create multiple batches when you need different event or date restrictions and limits. Other Guest Pass discount types are not supported by this route.', 'backstage-outreach'))) . '<select name="business_batch_offer_type"' . (!empty($field_errors['business_batch_offer_type']) ? ' aria-invalid="true"' : '') . '><option value="">' . esc_html__('Select offer', 'backstage-outreach') . '</option><option value="free"' . selected($business_batch_value('business_batch_offer_type'), 'free', false) . '>' . esc_html__('Complimentary admission', 'backstage-outreach') . '</option><option value="percent_50"' . selected($business_batch_value('business_batch_offer_type'), 'percent_50', false) . '>' . esc_html__('Neighborhood Offer — 50% off admission', 'backstage-outreach') . '</option></select>' . $render_messages($field_errors, array('business_batch_offer_type')) . '</label>';
+				echo '<label class="' . (!empty($field_errors['business_batch_admissions_per_link']) ? 'vms-pass-field-has-error' : '') . '">' . $render_label(__('Admissions per customer', 'backstage-outreach'), array('required' => true, 'help' => __('The maximum admissions one customer can claim or purchase through a business link.', 'backstage-outreach'))) . '<input type="number" min="1" max="100" name="business_batch_admissions_per_link" value="' . esc_attr($business_batch_value('business_batch_admissions_per_link')) . '"' . (!empty($field_errors['business_batch_admissions_per_link']) ? ' aria-invalid="true"' : '') . '>' . $render_messages($field_errors, array('business_batch_admissions_per_link')) . '</label>';
+				echo '<label class="' . (!empty($field_errors['business_batch_total_admission_cap']) ? 'vms-pass-field-has-error' : '') . '">' . $render_label(__('Total admissions available across all businesses', 'backstage-outreach'), array('required' => true, 'help' => __('The maximum number of admissions available through this offer across all participating businesses combined. For example, 100 allows up to 100 admissions in total. Each person counts toward the limit.', 'backstage-outreach'))) . '<input type="number" min="1" max="50000" name="business_batch_total_admission_cap" value="' . esc_attr($business_batch_value('business_batch_total_admission_cap')) . '"' . (!empty($field_errors['business_batch_total_admission_cap']) ? ' aria-invalid="true"' : '') . '>' . $render_messages($field_errors, array('business_batch_total_admission_cap')) . '</label>';
 				echo '<label class="vms-pass-span-2' . (!empty($field_errors['business_batch_validity_type']) ? ' vms-pass-field-has-error' : '') . '">' . $render_label(__('Applies To', 'backstage-outreach'), array('required' => true)) . '<select name="business_batch_validity_type"' . (!empty($field_errors['business_batch_validity_type']) ? ' aria-invalid="true"' : '') . '><option value="">' . esc_html__('Select scope', 'backstage-outreach') . '</option>';
 				foreach (vms_pass_outreach_form_validity_labels($business_batch_value('business_batch_validity_type')) as $key => $label) {
 					echo '<option value="' . esc_attr((string) $key) . '"' . selected($business_batch_value('business_batch_validity_type'), (string) $key, false) . '>' . esc_html((string) $label) . '</option>';
 				}
 				echo '</select>' . $render_messages($field_errors, array('business_batch_validity_type')) . '</label>';
-				echo '<label class="vms-pass-span-2' . (!empty($field_errors['business_batch_single_event_plan_id']) ? ' vms-pass-field-has-error' : '') . '">' . $render_label(__('Event (when using One Event)', 'backstage-outreach')) . '<select name="business_batch_single_event_plan_id"' . (!empty($field_errors['business_batch_single_event_plan_id']) ? ' aria-invalid="true"' : '') . '><option value="0">' . esc_html__('Select event', 'backstage-outreach') . '</option>';
+				echo '<label class="vms-pass-span-2' . (!empty($field_errors['business_batch_single_event_plan_id']) ? ' vms-pass-field-has-error' : '') . '" data-vms-business-scope="single_event"' . $hidden_attr(!$business_scope_visible(array('single_event'))) . '>' . $render_label(__('Event', 'backstage-outreach'), array('required' => true)) . '<select name="business_batch_single_event_plan_id" data-vms-business-scope-control data-vms-required-scope="single_event"' . disabled(!$business_scope_visible(array('single_event')), true, false) . ($business_scope_visible(array('single_event')) ? ' required' : '') . (!empty($field_errors['business_batch_single_event_plan_id']) ? ' aria-invalid="true"' : '') . '><option value="0">' . esc_html__('Select event', 'backstage-outreach') . '</option>';
 				foreach ((array) $event_plans as $plan) {
 					$plan_id = absint($plan['id'] ?? 0);
 					if ($plan_id > 0) {
@@ -4783,10 +4812,10 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 					}
 				}
 				echo '</select>' . $render_messages($field_errors, array('business_batch_single_event_plan_id')) . '</label>';
-				echo '<label' . vms_pass_outreach_field_wrapper_class($field_errors, array('business_batch_start_date')) . '>' . $render_label(__('Start Date', 'backstage-outreach')) . '<input type="date" name="business_batch_start_date" value="' . esc_attr($business_batch_value('business_batch_start_date')) . '"' . (!empty($field_errors['business_batch_start_date']) ? ' aria-invalid="true"' : '') . '>' . $render_messages($field_errors, array('business_batch_start_date')) . '</label>';
-				echo '<label' . vms_pass_outreach_field_wrapper_class($field_errors, array('business_batch_end_date')) . '>' . $render_label(__('End Date', 'backstage-outreach')) . '<input type="date" name="business_batch_end_date" value="' . esc_attr($business_batch_value('business_batch_end_date')) . '"' . (!empty($field_errors['business_batch_end_date']) ? ' aria-invalid="true"' : '') . '>' . $render_messages($field_errors, array('business_batch_end_date')) . '</label>';
-				echo '<label class="vms-pass-span-2' . (!empty($field_errors['business_batch_season_label']) ? ' vms-pass-field-has-error' : '') . '">' . $render_label(__('Season Label (when using Season)', 'backstage-outreach')) . '<input type="text" name="business_batch_season_label" value="' . esc_attr($business_batch_value('business_batch_season_label')) . '"' . (!empty($field_errors['business_batch_season_label']) ? ' aria-invalid="true"' : '') . '>' . $render_messages($field_errors, array('business_batch_season_label')) . '</label>';
-				echo '<label>' . $render_label(__('Batch Expiry (optional)', 'backstage-outreach')) . '<input type="datetime-local" name="business_batch_expires_at" value="' . esc_attr($business_batch_value('business_batch_expires_at')) . '"></label>';
+				echo '<label' . vms_pass_outreach_field_wrapper_class($field_errors, array('business_batch_start_date')) . ' data-vms-business-scope="date_range season"' . $hidden_attr(!$business_scope_visible(array('date_range', 'season'))) . '>' . $render_label(__('Start Date', 'backstage-outreach'), array('help' => __('Required for Date Range. Optional for Season when both start and end are supplied.', 'backstage-outreach'))) . '<input type="date" name="business_batch_start_date" value="' . esc_attr($business_batch_value('business_batch_start_date')) . '" data-vms-business-scope-control data-vms-required-scope="date_range"' . disabled(!$business_scope_visible(array('date_range', 'season')), true, false) . ($business_batch_validity_type === 'date_range' ? ' required' : '') . (!empty($field_errors['business_batch_start_date']) ? ' aria-invalid="true"' : '') . '>' . $render_messages($field_errors, array('business_batch_start_date')) . '</label>';
+				echo '<label' . vms_pass_outreach_field_wrapper_class($field_errors, array('business_batch_end_date')) . ' data-vms-business-scope="date_range season"' . $hidden_attr(!$business_scope_visible(array('date_range', 'season'))) . '>' . $render_label(__('End Date', 'backstage-outreach'), array('help' => __('Required for Date Range. Optional for Season when both start and end are supplied.', 'backstage-outreach'))) . '<input type="date" name="business_batch_end_date" value="' . esc_attr($business_batch_value('business_batch_end_date')) . '" data-vms-business-scope-control data-vms-required-scope="date_range"' . disabled(!$business_scope_visible(array('date_range', 'season')), true, false) . ($business_batch_validity_type === 'date_range' ? ' required' : '') . (!empty($field_errors['business_batch_end_date']) ? ' aria-invalid="true"' : '') . '>' . $render_messages($field_errors, array('business_batch_end_date')) . '</label>';
+				echo '<label class="vms-pass-span-2' . (!empty($field_errors['business_batch_season_label']) ? ' vms-pass-field-has-error' : '') . '" data-vms-business-scope="season"' . $hidden_attr(!$business_scope_visible(array('season'))) . '>' . $render_label(__('Season Label', 'backstage-outreach'), array('help' => __('Enter a season label, a start and end date, or both.', 'backstage-outreach'))) . '<input type="text" name="business_batch_season_label" value="' . esc_attr($business_batch_value('business_batch_season_label')) . '" data-vms-business-scope-control' . disabled(!$business_scope_visible(array('season')), true, false) . (!empty($field_errors['business_batch_season_label']) ? ' aria-invalid="true"' : '') . '>' . $render_messages($field_errors, array('business_batch_season_label')) . '</label>';
+				echo '<label>' . $render_label(__('Offer Expiry (optional)', 'backstage-outreach'), array('help' => __('This expiry is separate from the event scope above.', 'backstage-outreach'))) . '<input type="datetime-local" name="business_batch_expires_at" value="' . esc_attr($business_batch_value('business_batch_expires_at')) . '"></label>';
 				echo '<label class="vms-pass-span-2">' . $render_label(__('Batch Notes', 'backstage-outreach')) . '<textarea name="business_batch_notes" rows="3">' . esc_textarea($business_batch_value('business_batch_notes')) . '</textarea></label>';
 				echo '</div>';
 				echo '<p class="vms-pass-upload-actions"><button type="submit" class="button" name="save_mode" value="business_batch_preview">' . esc_html__('Review New Batch', 'backstage-outreach') . '</button></p>';
@@ -4797,9 +4826,11 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 						__('Source', 'backstage-outreach') => (string) ($business_batch_review['source_name'] ?? ''),
 						__('Batch', 'backstage-outreach') => (string) ($reviewed['batch_name'] ?? ''),
 						__('Offer', 'backstage-outreach') => vms_pass_outreach_business_batch_offer_label(array_merge($reviewed, array('id' => 1))),
-						__('Individual claim-link quantity', 'backstage-outreach') => (string) absint($reviewed['quantity'] ?? 0),
+						__('Scope', 'backstage-outreach') => vms_pass_outreach_business_batch_scope_label($reviewed),
+						__('Offer expiry', 'backstage-outreach') => !empty($reviewed['expires_at']) ? (string) $reviewed['expires_at'] : __('No expiry', 'backstage-outreach'),
 						__('Business QR count', 'backstage-outreach') => __('Determined by the later reviewed membership list', 'backstage-outreach'),
-						__('Shared admission capacity', 'backstage-outreach') => (string) absint($reviewed['total_admission_cap'] ?? 0),
+						__('Admissions per customer', 'backstage-outreach') => (string) absint($reviewed['admissions_per_link'] ?? 0),
+						__('Total admissions available across all businesses', 'backstage-outreach') => (string) absint($reviewed['total_admission_cap'] ?? 0),
 					);
 					foreach ($reviewed_rows as $label => $value) {
 						echo '<tr><th scope="row">' . esc_html($label) . '</th><td>' . esc_html($value) . '</td></tr>';
@@ -4817,13 +4848,13 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 						__('Source', 'backstage-outreach') => sanitize_text_field((string) ($business_source_preview['source_name'] ?? '')),
 						__('Batch', 'backstage-outreach') => sanitize_text_field((string) ($business_source_preview['batch_name'] ?? '')),
 						__('Batch Offer', 'backstage-outreach') => sanitize_text_field((string) ($business_source_preview['batch_offer_label'] ?? '')),
+						__('Scope', 'backstage-outreach') => sanitize_text_field((string) ($business_source_preview['batch_scope_label'] ?? '')),
 						__('Active Source Memberships', 'backstage-outreach') => (string) absint($business_source_preview['active_membership_count'] ?? 0),
 						__('Eligible for Reusable Links / QRs', 'backstage-outreach') => (string) $business_source_ready_count,
 						__('Businesses with Email (reference only)', 'backstage-outreach') => (string) absint($business_source_preview['email_count'] ?? 0),
 						__('Email Delivery Unavailable', 'backstage-outreach') => (string) absint($business_source_preview['missing_email_count'] ?? 0),
-						__('Batch Individual Claim Links', 'backstage-outreach') => (string) absint($business_source_preview['individual_claim_link_quantity'] ?? 0),
-						__('Admissions Per Business Link / QR', 'backstage-outreach') => (string) absint($business_source_preview['batch_admissions_per_link'] ?? 0),
-						__('Batch Shared Admission Cap', 'backstage-outreach') => (string) absint($business_source_preview['batch_total_admission_cap'] ?? 0),
+						__('Admissions per customer', 'backstage-outreach') => (string) absint($business_source_preview['batch_admissions_per_link'] ?? 0),
+						__('Total admissions available across all businesses', 'backstage-outreach') => (string) absint($business_source_preview['batch_total_admission_cap'] ?? 0),
 					);
 					foreach ($business_totals as $label => $value) {
 						echo '<tr><th scope="row">' . esc_html($label) . '</th><td>' . esc_html($value !== '' ? $value : __('Not provided', 'backstage-outreach')) . '</td></tr>';
@@ -4994,8 +5025,8 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 					'contacts' => __('Outreach Contacts', 'backstage-outreach'),
 				)[$create_preview_mode] ?? __('Not set', 'backstage-outreach')) : __('Not previewed yet', 'backstage-outreach'),
 				($create_preview_mode === 'business_source' ? __('Reviewed Business Links / QRs', 'backstage-outreach') : __('Ready Recipients', 'backstage-outreach')) => (string) $create_preview_ready_count,
-				($create_preview_mode === 'business_source' ? __('Admissions Per Business Link / QR', 'backstage-outreach') : __('Passes Per Recipient', 'backstage-outreach')) => (string) ($create_preview_mode === 'business_source' ? absint($business_source_preview['batch_admissions_per_link'] ?? 0) : absint(vms_pass_outreach_payload_value($form_payload, 'admissions_per_recipient', 2))),
-				($create_preview_mode === 'business_source' ? __('Batch Shared Admission Cap', 'backstage-outreach') : __('Total Passes Needed', 'backstage-outreach')) => (string) $create_preview_total_passes,
+				($create_preview_mode === 'business_source' ? __('Admissions per customer', 'backstage-outreach') : __('Passes Per Recipient', 'backstage-outreach')) => (string) ($create_preview_mode === 'business_source' ? absint($business_source_preview['batch_admissions_per_link'] ?? 0) : absint(vms_pass_outreach_payload_value($form_payload, 'admissions_per_recipient', 2))),
+				($create_preview_mode === 'business_source' ? __('Total admissions available across all businesses', 'backstage-outreach') : __('Total Passes Needed', 'backstage-outreach')) => (string) $create_preview_total_passes,
 			);
 			foreach ($review_rows as $label => $value) {
 				echo '<tr><th scope="row">' . esc_html($label) . '</th><td>' . esc_html($value !== '' ? $value : __('Not set', 'backstage-outreach')) . '</td></tr>';
@@ -5048,11 +5079,10 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 			echo 'var businessRoot=root.querySelector("[data-vms-recipient-source-business]");var businessCatalog=[];var businessReviewInvalidated=false;var catalogNode=businessRoot?businessRoot.querySelector("[data-vms-business-batch-catalog]"):null;try{businessCatalog=catalogNode?JSON.parse(catalogNode.textContent||"[]"):[];}catch(error){businessCatalog=[];}';
 			echo 'var businessUi=' . wp_json_encode(array(
 				'select_source' => __('Select a business Source to see its eligible offer batches.', 'backstage-outreach'),
-				'no_batch' => __('This Source has no eligible active batch. Create and confirm one below before reviewing businesses.', 'backstage-outreach'),
 				'select_batch' => __('Select an eligible offer batch before previewing active businesses.', 'backstage-outreach'),
 				'ready' => __('Source and offer batch are ready. Preview every active business before creating the campaign.', 'backstage-outreach'),
 				'option' => __('Select an eligible offer batch', 'backstage-outreach'),
-				'limits' => __('Individual claim-link quantity: %1$d. Business QR count is determined later by reviewed active memberships. Shared admission capacity: %2$d.', 'backstage-outreach'),
+				'limits' => __('Admissions per customer: %1$d. Total admissions available across all businesses: %2$d. Scope: %3$s.', 'backstage-outreach'),
 			), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';';
 			echo 'function namedField(name){return root.querySelector(\'[name="\'+name+\'"]:not([disabled])\');}';
 			echo 'function selectedValue(name){var input=root.querySelector(\'input[name="\'+name+\'"]:checked:not([disabled])\');if(input){return input.value;}var field=namedField(name);return field?field.value:"";}';
@@ -5061,8 +5091,10 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 			echo 'function updatePurpose(){var purpose=selectedValue("campaign_purpose_select")||root.querySelector(\'input[name="campaign_purpose"]\').value||"guest_pass_invitation";var hidden=root.querySelector(\'input[name="campaign_purpose"]\');if(hidden){hidden.value=purpose;}toggleByAttr("data-vms-purpose-guest-pass",purpose==="guest_pass_invitation");}';
 			echo 'function updateValidity(){var select=root.querySelector(\'select[name="validity_type"]\');var value=select?select.value:"";toggleByAttr("data-vms-validity-single-event",value==="single_event");toggleByAttr("data-vms-validity-date-range",value==="date_range"||value==="season");toggleByAttr("data-vms-validity-season",value==="season");}';
 			echo 'function businessEntry(id){id=parseInt(id||"0",10)||0;return businessCatalog.find(function(entry){return(parseInt(entry.id,10)||0)===id;})||null;}';
-			echo 'function formatBusinessLimits(entry){return String(businessUi.limits||"").replace("%1$d",parseInt(entry.quantity||0,10)||0).replace("%2$d",parseInt(entry.total_admission_cap||0,10)||0);}';
-			echo 'function renderBusinessBatchState(){if(!businessRoot){return;}var source=businessRoot.querySelector("[data-vms-business-source]");var batch=businessRoot.querySelector("[data-vms-business-batch]");var sourceId=parseInt(source&&source.value||"0",10)||0;var entry=businessEntry(batch&&batch.value);var guidance=businessRoot.querySelector("[data-vms-business-guidance]");var empty=businessRoot.querySelector("[data-vms-business-empty]");var summary=businessRoot.querySelector("[data-vms-business-batch-summary]");var preview=businessRoot.querySelector("[data-vms-business-preview-button]");var eligible=businessCatalog.filter(function(item){return(parseInt(item.source_id,10)||0)===sourceId;});if(guidance){guidance.textContent=sourceId<=0?businessUi.select_source:(eligible.length===0?businessUi.no_batch:(!entry?businessUi.select_batch:businessUi.ready));}if(empty){empty.hidden=sourceId<=0||eligible.length>0;}if(summary){summary.replaceChildren();summary.hidden=!entry;if(entry){var strong=document.createElement("strong");strong.textContent=entry.offer_label||"";var span=document.createElement("span");span.textContent=formatBusinessLimits(entry);summary.append(strong,span);}}if(preview){preview.disabled=sourceId<=0||!entry;}}';
+			echo 'function formatBusinessLimits(entry){return String(businessUi.limits||"").replace("%1$d",parseInt(entry.admissions_per_link||0,10)||0).replace("%2$d",parseInt(entry.total_admission_cap||0,10)||0).replace("%3$s",entry.scope_label||"");}';
+			echo 'function renderBusinessBatchState(){if(!businessRoot){return;}var source=businessRoot.querySelector("[data-vms-business-source]");var batch=businessRoot.querySelector("[data-vms-business-batch]");var sourceId=parseInt(source&&source.value||"0",10)||0;var entry=businessEntry(batch&&batch.value);var guidance=businessRoot.querySelector("[data-vms-business-guidance]");var empty=businessRoot.querySelector("[data-vms-business-empty]");var summary=businessRoot.querySelector("[data-vms-business-batch-summary]");var preview=businessRoot.querySelector("[data-vms-business-preview-button]");var eligible=businessCatalog.filter(function(item){return(parseInt(item.source_id,10)||0)===sourceId;});var emptyVisible=sourceId>0&&eligible.length===0;if(guidance){guidance.textContent=sourceId<=0?businessUi.select_source:(!entry&&eligible.length>0?businessUi.select_batch:(entry?businessUi.ready:""));guidance.hidden=emptyVisible;}if(empty){empty.hidden=!emptyVisible;}if(summary){summary.replaceChildren();summary.hidden=!entry;if(entry){var strong=document.createElement("strong");strong.textContent=entry.offer_label||"";var span=document.createElement("span");span.textContent=formatBusinessLimits(entry);summary.append(strong,span);}}if(preview){preview.disabled=sourceId<=0||!entry;}}';
+			echo 'function updateBusinessBatchScope(){if(!businessRoot){return;}var select=businessRoot.querySelector(\'[name="business_batch_validity_type"]\');var value=select?select.value:"";businessRoot.querySelectorAll("[data-vms-business-scope]").forEach(function(node){var scopes=String(node.getAttribute("data-vms-business-scope")||"").split(/\\s+/);var show=scopes.indexOf(value)!==-1;node.hidden=!show;node.querySelectorAll("[data-vms-business-scope-control]").forEach(function(field){field.disabled=!show;var requiredScopes=String(field.getAttribute("data-vms-required-scope")||"").split(/\\s+/);field.required=show&&requiredScopes.indexOf(value)!==-1;});});}';
+			echo 'function enableBusinessScopeDrafts(){if(!businessRoot){return;}businessRoot.querySelectorAll("[data-vms-business-scope-control]").forEach(function(field){field.disabled=false;});}';
 			echo 'function syncBusinessBatches(initial){if(!businessRoot){return;}var source=businessRoot.querySelector("[data-vms-business-source]");var batch=businessRoot.querySelector("[data-vms-business-batch]");if(!source||!batch){return;}var sourceId=parseInt(source.value||"0",10)||0;var previous=parseInt(batch.value||"0",10)||0;var eligible=businessCatalog.filter(function(entry){return(parseInt(entry.source_id,10)||0)===sourceId;});batch.replaceChildren();var placeholder=document.createElement("option");placeholder.value="0";placeholder.textContent=businessUi.option;batch.appendChild(placeholder);eligible.forEach(function(entry){var option=document.createElement("option");option.value=String(entry.id);option.textContent=entry.option_label||entry.name||String(entry.id);batch.appendChild(option);});if(eligible.some(function(entry){return(parseInt(entry.id,10)||0)===previous;})){batch.value=String(previous);}else{batch.value="0";if(!initial&&previous>0){businessReviewInvalidated=true;}}renderBusinessBatchState();}';
 			echo 'function syncBusinessCampaignName(mode){var businessName=businessRoot?businessRoot.querySelector(\'[name="business_campaign_name"]\'):null;var standardName=root.querySelector(\'[data-vms-nonbusiness-campaign-fields] [name="campaign_name"]\');if(mode==="business_source"&&businessName&&standardName&&!businessName.value){businessName.value=standardName.value;}if(mode!=="business_source"&&businessName&&standardName&&!standardName.value){standardName.value=businessName.value;}}';
 			echo 'function updateRecipientSource(){var mode=selectedValue("recipient_source_mode")||"csv_new";var trackingInput=root.querySelector("[data-vms-tracking-mode-input]");syncBusinessCampaignName(mode);toggleByAttr("data-vms-recipient-source-csv",mode==="csv_new");toggleByAttr("data-vms-recipient-source-existing",mode==="existing_source");toggleByAttr("data-vms-recipient-source-business",mode==="business_source");toggleByAttr("data-vms-recipient-source-contacts",mode==="contacts");toggleByAttr("data-vms-nonbusiness-campaign-fields",mode!=="business_source");toggleByAttr("data-vms-nonbusiness-offer-fields",mode!=="business_source");var messageSection=root.querySelector("[data-vms-business-message-secondary]");if(messageSection&&mode==="business_source"){messageSection.open=false;}if(trackingInput){trackingInput.value=(mode==="existing_source"||mode==="business_source")?"existing":"new";}if(mode==="business_source"){syncBusinessBatches(true);}}';
@@ -5071,12 +5103,12 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 			echo 'function updatePreviewStale(){var createButton=root.querySelector("[data-vms-create-campaign-button]");var messageButton=root.querySelector("[data-vms-message-preview-button]");var recipientSnapshot=createButton?(createButton.getAttribute("data-vms-preview-setup")||""):(messageButton?(messageButton.getAttribute("data-vms-preview-setup")||""):"");var messageSnapshot=createButton?(createButton.getAttribute("data-vms-message-preview")||""):(messageButton?(messageButton.getAttribute("data-vms-message-preview")||""):"");recipientSnapshot=canonicalSnapshot(recipientSnapshot);messageSnapshot=canonicalSnapshot(messageSnapshot);var recipientStale=businessReviewInvalidated||(recipientSnapshot!==""&&recipientSnapshot!==currentPreviewSetup());var messageStale=messageSnapshot!==""&&messageSnapshot!==currentMessagePreview();if(createButton){createButton.disabled=recipientStale||messageStale;}if(messageButton){messageButton.disabled=recipientStale||!messageStale;}root.querySelectorAll("[data-vms-preview-stale-note],[data-vms-review-stale-note],[data-vms-message-preview-recipient-note],[data-vms-create-recipient-preview-note]").forEach(function(node){node.hidden=!recipientStale;});root.querySelectorAll("[data-vms-message-preview-stale-note],[data-vms-create-message-preview-note]").forEach(function(node){node.hidden=recipientStale||!messageStale;});}';
 			echo 'root.querySelectorAll(\'input[name="campaign_purpose_select"]\').forEach(function(node){node.addEventListener("change",updatePurpose);});';
 			echo 'root.querySelectorAll(\'input[name="recipient_source_mode"]\').forEach(function(node){node.addEventListener("change",function(){updateRecipientSource();updatePreviewStale();});});';
-			echo 'if(businessRoot){var businessSource=businessRoot.querySelector("[data-vms-business-source]");var businessBatch=businessRoot.querySelector("[data-vms-business-batch]");var openBatch=businessRoot.querySelector("[data-vms-open-business-batch]");if(businessSource){businessSource.addEventListener("change",function(){businessReviewInvalidated=true;syncBusinessBatches(false);updatePreviewStale();});}if(businessBatch){businessBatch.addEventListener("change",function(){businessReviewInvalidated=true;renderBusinessBatchState();updatePreviewStale();});}if(openBatch){openBatch.addEventListener("click",function(){var details=businessRoot.querySelector("[data-vms-business-batch-create]");if(details){details.open=true;var first=details.querySelector("input,select,textarea");if(first){first.focus({preventScroll:true});first.scrollIntoView({block:"center",behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}}});}var createForm=root.querySelector("form");if(createForm){createForm.addEventListener("submit",function(event){var submitter=event.submitter;if(!submitter){return;}if(submitter.value==="recipient_commit"&&selectedValue("recipient_source_mode")==="business_source"){var campaignName=businessRoot.querySelector(\'[name="business_campaign_name"]\');if(campaignName&&!campaignName.value.trim()){event.preventDefault();campaignName.setAttribute("aria-invalid","true");campaignName.focus();return;}}if(submitter.value!=="business_source_preview"){return;}var sourceId=parseInt(businessSource&&businessSource.value||"0",10)||0;var entry=businessEntry(businessBatch&&businessBatch.value);if(sourceId>0&&entry){return;}event.preventDefault();var invalid=sourceId<=0?businessSource:businessBatch;if(invalid){invalid.setAttribute("aria-invalid","true");invalid.focus();}renderBusinessBatchState();});}}';
+			echo 'if(businessRoot){var businessSource=businessRoot.querySelector("[data-vms-business-source]");var businessBatch=businessRoot.querySelector("[data-vms-business-batch]");var businessScope=businessRoot.querySelector(\'[name="business_batch_validity_type"]\');var openBatch=businessRoot.querySelector("[data-vms-open-business-batch]");if(businessSource){businessSource.addEventListener("change",function(){businessReviewInvalidated=true;syncBusinessBatches(false);updatePreviewStale();});}if(businessBatch){businessBatch.addEventListener("change",function(){businessReviewInvalidated=true;renderBusinessBatchState();updatePreviewStale();});}if(businessScope){businessScope.addEventListener("change",updateBusinessBatchScope);}if(openBatch){openBatch.addEventListener("click",function(){var details=businessRoot.querySelector("[data-vms-business-batch-create]");if(details){details.open=true;var first=details.querySelector("input,select,textarea");if(first){first.focus({preventScroll:true});first.scrollIntoView({block:"center",behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}}});}var createForm=root.querySelector("form");if(createForm){createForm.addEventListener("submit",function(event){var submitter=event.submitter;if(!submitter){return;}if(submitter.value==="business_batch_preview"){enableBusinessScopeDrafts();}if(submitter.value==="recipient_commit"&&selectedValue("recipient_source_mode")==="business_source"){var campaignName=businessRoot.querySelector(\'[name="business_campaign_name"]\');if(campaignName&&!campaignName.value.trim()){event.preventDefault();campaignName.setAttribute("aria-invalid","true");campaignName.focus();return;}}if(submitter.value!=="business_source_preview"){return;}var sourceId=parseInt(businessSource&&businessSource.value||"0",10)||0;var entry=businessEntry(businessBatch&&businessBatch.value);if(sourceId>0&&entry){return;}event.preventDefault();var invalid=sourceId<=0?businessSource:businessBatch;if(invalid){invalid.setAttribute("aria-invalid","true");invalid.focus();}renderBusinessBatchState();});}}';
 			echo 'var validitySelect=root.querySelector(\'select[name="validity_type"]\');if(validitySelect){validitySelect.addEventListener("change",updateValidity);}';
 			echo '[\'related_source_id\',\'related_batch_id\',\'tracking_category_name\',\'admissions_per_recipient\',\'single_event_plan_id\',\'start_date\',\'end_date\',\'season_label\'].forEach(function(name){root.querySelectorAll(\'[name="\'+name+\'"]\').forEach(function(field){field.addEventListener("change",updatePreviewStale);field.addEventListener("input",updatePreviewStale);});});';
 			echo '[\'email_subject\',\'message_template\'].forEach(function(name){root.querySelectorAll(\'[name="\'+name+\'"]\').forEach(function(field){field.addEventListener("change",updatePreviewStale);field.addEventListener("input",updatePreviewStale);});});';
 			echo 'if(validitySelect){validitySelect.addEventListener("change",updatePreviewStale);}';
-			echo 'updatePurpose();updateValidity();updateRecipientSource();updatePreviewStale();';
+			echo 'updatePurpose();updateValidity();updateRecipientSource();updateBusinessBatchScope();updatePreviewStale();';
 			echo '})();';
 			echo '</script>';
 		}

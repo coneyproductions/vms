@@ -96,10 +96,21 @@ creation retain server-side Source, batch, membership, and review drift checks
 when browser validation is absent or bypassed.
 
 The setup screen presents Source, offer batch, business review, campaign
-creation, and QR generation in order. It keeps business QR quantity separate
-from individual claim-link quantity and shared admission capacity, carries the
-reviewed Source/batch directly into QR setup, and renders saved link results as
-labeled cards on narrow screens.
+creation, and QR generation in order. Definition-only business batches store a
+true zero individual-link quantity; operators choose admissions per customer
+and the total admissions available across all businesses. Scope-specific fields
+appear only for the selected event scope, while optional offer expiry remains
+separate. The reviewed Source/batch carries directly into QR setup, and saved
+link results render as labeled cards on narrow screens. Complimentary business
+claims create an internal claim token only inside the claim transaction, so the
+zero-token definition remains usable without generating operator-facing links.
+
+Version 1.2.5 simplifies that definition form, presents one accessible missing-
+batch action, and shows only the scope fields that affect the reviewed offer.
+It labels per-customer and across-business admission limits in plain language.
+Together with Backstage Venue Manager 1.3.4, complimentary reusable-business
+claims create and immediately claim an internal transactional token without
+exposing or counting it as an individual claim link.
 
 ## Development checks
 
