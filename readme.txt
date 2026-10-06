@@ -4,7 +4,7 @@ Tags: event management, venue management, vendor management, ticketing, woocomme
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -71,11 +71,11 @@ Backstage Venue Manager retains operational data by default. The plugin ships wi
 
 = Does Backstage Venue Manager support multisite? =
 
-Multisite is not officially supported or verified for 1.3.2.
+Multisite is not officially supported or verified for 1.3.3.
 
 = How are privacy export and erasure requests handled? =
 
-Backstage Venue Manager 1.3.2 does not add dedicated exporter or eraser automation. Operators should handle requests manually with their existing WordPress tools and site-specific operational procedures until that automation is added.
+Backstage Venue Manager 1.3.3 does not add dedicated exporter or eraser automation. Operators should handle requests manually with their existing WordPress tools and site-specific operational procedures until that automation is added.
 
 = Where do I get support? =
 
@@ -117,11 +117,11 @@ Service docs, terms, and privacy: supported providers are described at https://w
 
 Backstage Venue Manager retains operational data by default on uninstall to reduce the risk of accidental data loss.
 
-Depending on the modules in use, retained data can include settings, venue and vendor records, event-planning records, ticketing-related operational data, and related logs or status metadata. Backstage Venue Manager 1.3.2 does not add automated uninstall cleanup tooling or dedicated privacy exporter or eraser automation. Operators should review their operational data-handling process before uninstalling the plugin or responding to privacy requests.
+Depending on the modules in use, retained data can include settings, venue and vendor records, event-planning records, ticketing-related operational data, and related logs or status metadata. Backstage Venue Manager 1.3.3 does not add automated uninstall cleanup tooling or dedicated privacy exporter or eraser automation. Operators should review their operational data-handling process before uninstalling the plugin or responding to privacy requests.
 
 == Optional Integrations / Dependencies ==
 
-WooCommerce, The Events Calendar, and Event Tickets are optional integrations for 1.3.2. Backstage Venue Manager should continue loading without them, but dependent features will remain unavailable until the required plugin stack is installed.
+WooCommerce, The Events Calendar, and Event Tickets are optional integrations for 1.3.3. Backstage Venue Manager should continue loading without them, but dependent features will remain unavailable until the required plugin stack is installed.
 
 Optional add-ons are distributed as separate plugins. The WordPress.org core plugin can detect compatible companion plugins when they are installed, but it does not install, license, or unlock them from inside the core plugin.
 
@@ -134,6 +134,11 @@ Product documentation: https://coneyproductions.booklivetalent.com/vms/
 Private security reports: coneyproductionsllc@gmail.com
 
 == Changelog ==
+
+= 1.3.3 =
+
+* Preserved UTF-8 names and punctuation when the administrator shell extracts page notices from captured HTML.
+* Kept existing notice placement, markup, escaping, and output-buffer behavior unchanged.
 
 = 1.3.2 =
 
@@ -178,6 +183,10 @@ Private security reports: coneyproductionsllc@gmail.com
 * Documented optional dependency boundaries, external-service disclosures, privacy notes, and uninstall data-retention behavior.
 
 == Upgrade Notice ==
+
+= 1.3.3 =
+
+Backstage Venue Manager 1.3.3 corrects UTF-8 parsing in captured administrator-shell markup. No schema change is required.
 
 = 1.3.2 =
 

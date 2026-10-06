@@ -38,7 +38,7 @@ if (!function_exists('bvmgr_admin_ui_extract_notice_markup')) {
 
 		$doc = new DOMDocument('1.0', 'UTF-8');
 		$loaded = $doc->loadHTML(
-			'<!doctype html><html><body><div id="vms-shell-fragment">' . $markup . '</div></body></html>',
+			'<?xml encoding="UTF-8"><!doctype html><html><body><div id="vms-shell-fragment">' . $markup . '</div></body></html>',
 			LIBXML_NOERROR | LIBXML_NOWARNING | (defined('LIBXML_HTML_NOIMPLIED') ? LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD : 0)
 		);
 
