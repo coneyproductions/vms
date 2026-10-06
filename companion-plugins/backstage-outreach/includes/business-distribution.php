@@ -1286,11 +1286,13 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		if (function_exists('vms_pass_outreach_business_batch_offer_label')) {
 			echo '<tr><th scope="row">' . esc_html__('Reviewed Batch Offer', 'backstage-outreach') . '</th><td>' . esc_html(vms_pass_outreach_business_batch_offer_label($batch)) . '</td></tr>';
 		}
+		if (function_exists('vms_pass_outreach_business_batch_scope_label')) {
+			echo '<tr><th scope="row">' . esc_html__('Scope', 'backstage-outreach') . '</th><td>' . esc_html(vms_pass_outreach_business_batch_scope_label($batch)) . '</td></tr>';
+		}
 		echo '<tr><th scope="row">' . esc_html__('Available Business Links / QRs', 'backstage-outreach') . '</th><td>' . esc_html((string) count($businesses)) . '</td></tr>';
-		echo '<tr><th scope="row">' . esc_html__('Batch Individual Claim-Link Quantity', 'backstage-outreach') . '</th><td>' . esc_html((string) absint($batch['quantity'] ?? 0)) . '</td></tr>';
-		echo '<tr><th scope="row">' . esc_html__('Admissions Per Business Link / QR', 'backstage-outreach') . '</th><td>' . esc_html((string) max(1, absint($batch['admissions_per_link'] ?? 1))) . '</td></tr>';
-		echo '<tr><th scope="row">' . esc_html__('Batch Shared Admission Cap', 'backstage-outreach') . '</th><td>' . esc_html((string) absint($batch['total_admission_cap'] ?? 0)) . '</td></tr>';
-		echo '</tbody></table><p class="description">' . esc_html__('Business QR count is based on active Source memberships. It does not consume or change the batch\'s individual claim-link quantity; claims and paid orders remain subject to the configured shared limits.', 'backstage-outreach') . '</p></div>';
+		echo '<tr><th scope="row">' . esc_html__('Admissions per customer', 'backstage-outreach') . '</th><td>' . esc_html((string) max(1, absint($batch['admissions_per_link'] ?? 1))) . '</td></tr>';
+		echo '<tr><th scope="row">' . esc_html__('Total admissions available across all businesses', 'backstage-outreach') . '</th><td>' . esc_html((string) absint($batch['total_admission_cap'] ?? 0)) . '</td></tr>';
+		echo '</tbody></table><p class="description">' . esc_html__('Admissions per customer limits one complimentary claim or paid purchase. The total across businesses is shared by every participating business and counts each admitted person. Business QR count is based on active Source memberships and does not generate individual claim links.', 'backstage-outreach') . '</p></div>';
 	}
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" data-vms-tour="outreach-business-selection"><input type="hidden" name="action" value="backstage_outreach_campaign_businesses"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="distribution_mode" value="preview">';
 	wp_nonce_field('backstage_outreach_campaign_businesses');
@@ -1628,10 +1630,12 @@ function backstage_outreach_partner_claim(array $distribution, array $event, arr
 		} else {
 			$mapping_id = (int) $existing['id'];
 		}
-		$token = $wpdb->get_row($wpdb->prepare("SELECT * FROM %i WHERE batch_id = %d AND status = 'unclaimed' ORDER BY id ASC LIMIT 1 FOR UPDATE", bvmgr_admission_table_pass_tokens(), $batch_id), ARRAY_A);
-		if (!is_array($token)) {
+		$token = function_exists('bvmgr_pass_claims_create_internal_claim_token')
+			? bvmgr_pass_claims_create_internal_claim_token($batch, 0)
+			: new WP_Error('internal_claim_token_unavailable', __('This Guest Pass claim service is unavailable.', 'backstage-outreach'));
+		if (is_wp_error($token)) {
 			$wpdb->query('ROLLBACK');
-			return new WP_Error('campaign_exhausted', __('This Guest Pass campaign has no passes remaining.', 'backstage-outreach'));
+			return $token;
 		}
 		$context = array('distribution_id' => $distribution_id, 'campaign_id' => $campaign_id, 'business_id' => (int) $fresh_distribution['business_id'], 'source_id' => (int) $fresh_distribution['source_id'], 'batch_lock_held' => true, 'defer_email' => true);
 		$result = bvmgr_pass_claims_create_claim($token, $batch, $event, $input, $context);

@@ -951,11 +951,12 @@ if (!function_exists('bvmgr_pass_claims_soft_batch_payload_for_form')) {
 }
 
 if (!function_exists('bvmgr_pass_claims_sanitize_batch_payload')) {
-	function bvmgr_pass_claims_sanitize_batch_payload(array $raw)
+	function bvmgr_pass_claims_sanitize_batch_payload(array $raw, array $options = array())
 	{
+		$definition_only = !empty($options['definition_only']);
 		$source_id = isset($raw['source_id']) ? absint($raw['source_id']) : 0;
 		$batch_name = sanitize_text_field((string) ($raw['batch_name'] ?? ''));
-		$quantity = isset($raw['quantity']) ? absint($raw['quantity']) : 0;
+		$quantity = $definition_only ? 0 : (isset($raw['quantity']) ? absint($raw['quantity']) : 0);
 		$admissions_per_link = isset($raw['admissions_per_link']) ? absint($raw['admissions_per_link']) : 1;
 		$total_admission_cap = isset($raw['total_admission_cap']) ? absint($raw['total_admission_cap']) : 0;
 		$validity_type = sanitize_key((string) ($raw['validity_type'] ?? 'single_event'));
@@ -979,13 +980,13 @@ if (!function_exists('bvmgr_pass_claims_sanitize_batch_payload')) {
 		if ($batch_name === '') {
 			return new WP_Error('missing_batch_name', __('Batch name is required.', 'backstage-venue-manager'));
 		}
-		if ($quantity < 1 || $quantity > 5000) {
+		if (!$definition_only && ($quantity < 1 || $quantity > 5000)) {
 			return new WP_Error('invalid_quantity', __('Number of claim links must be between 1 and 5000.', 'backstage-venue-manager'));
 		}
 		if ($admissions_per_link < 1 || $admissions_per_link > 100) {
 			return new WP_Error('invalid_admissions_per_link', __('Admissions per claimed link must be between 1 and 100.', 'backstage-venue-manager'));
 		}
-		if ($total_admission_cap < 1) {
+		if ($total_admission_cap < 1 && !$definition_only) {
 			$total_admission_cap = $quantity * $admissions_per_link;
 		}
 		if ($total_admission_cap < 1 || $total_admission_cap > 50000) {
@@ -1004,6 +1005,25 @@ if (!function_exists('bvmgr_pass_claims_sanitize_batch_payload')) {
 			return new WP_Error('invalid_checkin_open_mode', __('Select a valid check-in open mode.', 'backstage-venue-manager'));
 		}
 
+		// Definition-only workflows ignore fields outside the selected scope.
+		if ($definition_only) {
+			if ($validity_type === 'any_event') {
+				$single_event_plan_id = 0;
+				$start_date = '';
+				$end_date = '';
+				$season_label = '';
+			} elseif ($validity_type === 'single_event') {
+				$start_date = '';
+				$end_date = '';
+				$season_label = '';
+			} elseif ($validity_type === 'date_range') {
+				$single_event_plan_id = 0;
+				$season_label = '';
+			} elseif ($validity_type === 'season') {
+				$single_event_plan_id = 0;
+			}
+		}
+
 		if ($validity_type === 'single_event') {
 			if ($single_event_plan_id <= 0 || !bvmgr_pass_claims_get_event_plan_brief($single_event_plan_id)) {
 				return new WP_Error('invalid_single_event', __('Select a published Event Plan for Single Event validity.', 'backstage-venue-manager'));
@@ -1019,8 +1039,16 @@ if (!function_exists('bvmgr_pass_claims_sanitize_batch_payload')) {
 			}
 		}
 
-		if ($validity_type === 'season' && $season_label === '' && ($start_date === '' || $end_date === '')) {
-			return new WP_Error('invalid_season', __('For Season validity, provide a Season label or a date range.', 'backstage-venue-manager'));
+		if ($validity_type === 'season') {
+			if ($definition_only && ($start_date === '') !== ($end_date === '')) {
+				return new WP_Error('invalid_season_dates', __('For Season validity, provide both dates or leave both dates blank.', 'backstage-venue-manager'));
+			}
+			if ($season_label === '' && $start_date === '') {
+				return new WP_Error('invalid_season', __('For Season validity, provide a Season label or a date range.', 'backstage-venue-manager'));
+			}
+			if ($definition_only && $start_date !== '' && $start_date > $end_date) {
+				return new WP_Error('invalid_date_range_order', __('Start date must be on or before end date.', 'backstage-venue-manager'));
+			}
 		}
 
 		if ($value_type === 'free') {
@@ -1064,6 +1092,16 @@ if (!function_exists('bvmgr_pass_claims_sanitize_batch_payload')) {
 			'max_per_email' => $max_per_email,
 			'notes' => $notes,
 		);
+	}
+}
+
+if (!function_exists('bvmgr_pass_claims_sanitize_batch_definition_payload')) {
+	/**
+	 * Validate a reusable batch definition without generating individual claim links.
+	 */
+	function bvmgr_pass_claims_sanitize_batch_definition_payload(array $raw)
+	{
+		return bvmgr_pass_claims_sanitize_batch_payload($raw, array('definition_only' => true));
 	}
 }
 
@@ -1226,6 +1264,64 @@ if (!function_exists('bvmgr_pass_claims_generate_tokens_for_batch')) {
 			'generated_count' => $quantity,
 			'samples' => $samples,
 		);
+	}
+}
+
+if (!function_exists('bvmgr_pass_claims_create_internal_claim_token')) {
+	/**
+	 * Create one token for immediate use inside an existing claim transaction.
+	 *
+	 * This token is never exposed as an individual claim link and does not change the
+	 * batch's generated_count. The caller must roll back its transaction on failure.
+	 */
+	function bvmgr_pass_claims_create_internal_claim_token(array $batch, int $created_by = 0)
+	{
+		$batch_id = absint($batch['id'] ?? 0);
+		$source_id = absint($batch['source_id'] ?? 0);
+		if ($batch_id <= 0 || $source_id <= 0) {
+			return new WP_Error('invalid_internal_claim_token', __('The claim token could not be prepared.', 'backstage-venue-manager'));
+		}
+
+		global $wpdb;
+		$table = bvmgr_admission_table_pass_tokens();
+		$created_at = bvmgr_admission_now_mysql();
+		$public_key = bvmgr_pass_claims_generate_public_key();
+		$inserted = $wpdb->insert(
+			$table,
+			array(
+				'batch_id' => $batch_id,
+				'source_id' => $source_id,
+				'token_public_key' => $public_key,
+				'token_hash' => '',
+				'status' => 'unclaimed',
+				'created_at' => $created_at,
+				'created_by' => $created_by,
+			),
+			array('%d', '%d', '%s', '%s', '%s', '%s', '%d')
+		);
+		if ($inserted === false || absint($wpdb->insert_id ?? 0) <= 0) {
+			return new WP_Error('internal_claim_token_insert_failed', __('The claim token could not be prepared.', 'backstage-venue-manager'));
+		}
+
+		$token = array(
+			'id' => absint($wpdb->insert_id),
+			'batch_id' => $batch_id,
+			'source_id' => $source_id,
+			'token_public_key' => $public_key,
+			'created_at' => $created_at,
+			'status' => 'unclaimed',
+		);
+		$raw_token = bvmgr_pass_claims_build_raw_token($token);
+		if ($raw_token === '') {
+			return new WP_Error('internal_claim_token_signature_failed', __('The claim token could not be prepared.', 'backstage-venue-manager'));
+		}
+		$token['token_hash'] = hash('sha256', $raw_token);
+		$updated = $wpdb->update($table, array('token_hash' => $token['token_hash']), array('id' => $token['id']), array('%s'), array('%d'));
+		if ($updated === false) {
+			return new WP_Error('internal_claim_token_update_failed', __('The claim token could not be prepared.', 'backstage-venue-manager'));
+		}
+
+		return $token;
 	}
 }
 

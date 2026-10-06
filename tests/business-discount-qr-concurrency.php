@@ -71,15 +71,14 @@ try {
 	backstage_discount_concurrency_assert($wpdb->insert($source_table, array('source_name' => $marker, 'status' => 'active', 'created_by' => 1, 'created_at' => $now)) !== false, 'Could not create the race Source.');
 	$source_id = (int) $wpdb->insert_id;
 	backstage_discount_concurrency_assert($wpdb->insert($batch_table, array(
-		'source_id' => $source_id, 'batch_name' => $marker, 'quantity' => 2, 'validity_type' => 'single_event',
+		'source_id' => $source_id, 'batch_name' => $marker, 'quantity' => 0, 'validity_type' => 'single_event',
 		'single_event_plan_id' => (int) $event_plan_id, 'venue_ids_json' => '[]', 'value_type' => 'free',
 		'value_amount' => '0.00', 'applies_to' => 'entry_only', 'status' => 'active', 'checkin_open_mode' => 'same_day',
 		'max_per_phone' => 0, 'generated_count' => 0, 'created_by' => 1, 'created_at' => $now,
 		'admissions_per_link' => 1, 'total_admission_cap' => 1, 'max_per_email' => 0,
 	)) !== false, 'Could not create the one-slot shared batch.');
 	$batch_id = (int) $wpdb->insert_id;
-	$tokens = bvmgr_pass_claims_generate_tokens_for_batch($batch_id, 2, $source_id, 1);
-	backstage_discount_concurrency_assert(!is_wp_error($tokens), 'Could not generate complimentary claim tokens.');
+	backstage_discount_concurrency_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_tokens(), $batch_id)) === 0, 'Zero-link race batch unexpectedly generated individual tokens.');
 
 	foreach (array('paid', 'free') as $mode) {
 		backstage_discount_concurrency_assert($wpdb->insert($campaign_table, array(
@@ -184,12 +183,17 @@ try {
 	$mapping_count = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE distribution_id=%d', backstage_outreach_business_table('distribution_claims'), $free_distribution_id));
 	$ledger_count = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE order_id=%d', backstage_outreach_business_table('paid_redemptions'), $order_id));
 	backstage_discount_concurrency_assert($mapping_count <= 1 && $ledger_count <= 1, 'Replay created duplicate claim or paid-ledger rows.');
+	$internal_token_count = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_tokens(), $batch_id));
+	$unclaimed_internal_count = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM %i WHERE batch_id=%d AND status='unclaimed'", bvmgr_admission_table_pass_tokens(), $batch_id));
+	$generated_count = (int) $wpdb->get_var($wpdb->prepare('SELECT generated_count FROM %i WHERE id=%d', $batch_table, $batch_id));
+	backstage_discount_concurrency_assert($internal_token_count === $free_quantity && $unclaimed_internal_count === 0, 'The concurrent complimentary path retained or exposed an internal token incorrectly.');
+	backstage_discount_concurrency_assert($generated_count === 0, 'The concurrent complimentary path incremented generated_count.');
 	$lock_available = (int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, %d)', 'bvm-pass-batch-' . $batch_id, 1));
 	backstage_discount_concurrency_assert($lock_available === 1, 'The shared batch lock was not released after the race.');
 	$wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', 'bvm-pass-batch-' . $batch_id));
 
 	echo "Business discount QR concurrent last-slot PASS\n";
-	echo wp_json_encode(array('paid' => $paid_result, 'complimentary' => $free_result, 'shared_quantity' => $paid_quantity + $free_quantity, 'paid_ledger_rows' => $ledger_count, 'complimentary_mapping_rows' => $mapping_count), JSON_PRETTY_PRINT) . "\n";
+	echo wp_json_encode(array('paid' => $paid_result, 'complimentary' => $free_result, 'shared_quantity' => $paid_quantity + $free_quantity, 'paid_ledger_rows' => $ledger_count, 'complimentary_mapping_rows' => $mapping_count, 'internal_tokens' => $internal_token_count, 'unclaimed_internal_tokens' => $unclaimed_internal_count, 'generated_count' => $generated_count), JSON_PRETTY_PRINT) . "\n";
 } finally {
 	if ($fixture_option !== '') {
 		delete_option($fixture_option);
