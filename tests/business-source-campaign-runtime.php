@@ -39,6 +39,18 @@ $business_ids = array();
 $drift_business_id = 0;
 
 try {
+	$switched_draft = vms_pass_outreach_normalize_business_route_request(array(
+		'recipient_source_mode' => 'business_source',
+		'business_campaign_name' => 'Café — switched draft',
+		'admissions_per_recipient' => '3',
+		'validity_type' => 'date_range',
+		'start_date' => '2030-03-01',
+		'end_date' => '2030-03-31',
+		'business_batch_end_date' => '2030-04-02',
+		'business_batch_touched_fields' => 'business_batch_end_date',
+	));
+	backstage_business_source_runtime_assert((string) $switched_draft['campaign_name'] === 'Café — switched draft' && (string) $switched_draft['business_batch_validity_type'] === 'date_range' && (string) $switched_draft['business_batch_start_date'] === '2030-03-01', 'Compatible campaign draft values did not transfer to an unfilled business-batch draft.');
+	backstage_business_source_runtime_assert((string) $switched_draft['business_batch_end_date'] === '2030-04-02', 'An independently edited business-batch draft value was overwritten during route switching.');
 	$legacy_display = vms_pass_outreach_display_text("\x59\x6f\x75\xc3\xa2\xe2\x82\xac\xe2\x84\xa2\x76\x65\x20\xc3\xa2\xe2\x82\xac\xe2\x80\x9d\x20\x68\x69\x73\x74\x6f\x72\x69\x63\x61\x6c\x20\xc3\x82\xc2\xb7\x20\x64\x65\x73\x63\x72\x69\x70\x74\x69\x6f\x6e");
 	backstage_business_source_runtime_assert($legacy_display === "You've - historical | description", 'Legacy message/description mojibake was not repaired for display.');
 	$unicode_round_trip = 'Café Âme — You’ve “arrived” • déjà vu';
@@ -223,6 +235,7 @@ try {
 		'business_batch_offer_amount' => '37.50',
 		'business_batch_admissions_per_link' => 2,
 		'business_batch_total_admission_cap' => 70,
+		'business_batch_per_business_admission_cap' => 8,
 		'business_batch_validity_type' => 'any_event',
 		'business_batch_single_event_plan_id' => 0,
 		'business_batch_start_date' => '',
@@ -233,6 +246,7 @@ try {
 	), $user_id);
 	backstage_business_source_runtime_assert(is_array($new_batch_review), 'Explicit new-batch review failed.');
 	backstage_business_source_runtime_assert((string) ($new_batch_review['form_payload']['campaign_name'] ?? '') === $marker . ' preserved Café campaign', 'Campaign draft was not preserved through batch review.');
+	backstage_business_source_runtime_assert((int) ($new_batch_review['per_business_admission_cap'] ?? 0) === 8 && (int) ($new_batch_review['form_payload']['business_admission_cap'] ?? 0) === 8, 'Reviewed per-business admission limit was not preserved for QR setup.');
 	backstage_business_source_runtime_assert((int) ($new_batch_review['batch_payload']['quantity'] ?? -1) === 0, 'Definition-only review did not retain a true zero individual-link quantity.');
 	backstage_business_source_runtime_assert((int) ($new_batch_review['batch_payload']['single_event_plan_id'] ?? -1) === 0 && (string) ($new_batch_review['batch_payload']['start_date'] ?? 'x') === '' && (string) ($new_batch_review['batch_payload']['season_label'] ?? 'x') === '', 'Any Event review retained irrelevant forged scope values.');
 	$created_batch = vms_pass_outreach_create_business_offer_batch((array) $new_batch_review['batch_payload'], $user_id);
@@ -296,6 +310,7 @@ try {
 		'business_batch_offer_type' => 'free',
 		'business_batch_admissions_per_link' => 2,
 		'business_batch_total_admission_cap' => 100,
+		'business_batch_per_business_admission_cap' => 2,
 		'business_batch_expires_at' => '2030-12-31T23:00',
 		'business_batch_notes' => 'Café — You’ve… ひらがな é',
 	);
@@ -377,6 +392,7 @@ try {
 		'single_event_plan_id' => $event_plan_id,
 		'admissions_per_recipient' => 2,
 		'total_admission_cap' => 0,
+		'business_admission_cap' => 2,
 		'status' => 'active',
 		'eligibility_mode' => 'anyone_with_invite',
 		'recipient_source_mode' => 'business_source',
@@ -385,8 +401,42 @@ try {
 	$complimentary_created = vms_pass_outreach_create_business_source_campaign($complimentary_setup, $complimentary_preview, $user_id);
 	backstage_business_source_runtime_assert(is_array($complimentary_created) && !empty($complimentary_created['campaign']['id']), 'Complimentary customer-claim campaign creation failed.');
 	$complimentary_campaign_id = absint($complimentary_created['campaign']['id']);
-	$complimentary_distribution_id = backstage_outreach_create_distribution($complimentary_campaign_id, $source_id, $business_ids[0], 'complimentary', 0, 0, '', array(), array(), $user_id);
+	$handoff = get_transient(vms_pass_outreach_business_distribution_handoff_key($complimentary_campaign_id));
+	backstage_business_source_runtime_assert(is_array($handoff) && (int) ($handoff['admission_cap'] ?? 0) === 2, 'Reviewed per-business limit did not reach the QR setup handoff.');
+	$complimentary_distribution_id = backstage_outreach_create_distribution($complimentary_campaign_id, $source_id, $business_ids[0], 'complimentary', 2, 0, '', array(), array(), $user_id);
 	backstage_business_source_runtime_assert($complimentary_distribution_id > 0, 'Complimentary reusable business link creation failed.');
+	$flyer_read_only_before = array(
+		'tokens' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_tokens(), $complimentary_batch_id)),
+		'claims' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_claims(), $complimentary_batch_id)),
+		'mappings' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE campaign_id=%d', backstage_outreach_business_table('distribution_claims'), $complimentary_campaign_id)),
+		'generated_count' => (int) $wpdb->get_var($wpdb->prepare('SELECT generated_count FROM %i WHERE id=%d', $batch_table, $complimentary_batch_id)),
+	);
+	$flyer_row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id=%d', backstage_outreach_business_table('campaign_businesses'), $complimentary_distribution_id), ARRAY_A);
+	$flyer_context = backstage_outreach_distribution_flyer_context(backstage_outreach_distribution_token((array) $flyer_row));
+	backstage_business_source_runtime_assert(is_array($flyer_context), 'Active signed flyer context was rejected' . (is_wp_error($flyer_context) ? ': ' . $flyer_context->get_error_code() . ' — ' . $flyer_context->get_error_message() : '.'));
+	$flyer_html = backstage_outreach_distribution_flyer_html($flyer_context);
+	backstage_business_source_runtime_assert(str_contains($flyer_html, 'Print / Save as PDF') && str_contains($flyer_html, 'Complimentary Guest Passes') && str_contains($flyer_html, 'Total admissions allowed through this business') && str_contains($flyer_html, '@page{size:letter portrait'), 'Complimentary flyer omitted print, offer, limit, or US Letter output.');
+	backstage_business_source_runtime_assert(str_contains($flyer_html, bvmgr_pass_claims_claim_qr_image_url(backstage_outreach_distribution_url($flyer_context))), 'Complimentary flyer QR was not generated from the actual customer offer URL.');
+	backstage_business_source_runtime_assert(str_contains($flyer_html, vms_pass_outreach_business_batch_scope_label((array) $flyer_context['batch'])), 'Complimentary flyer omitted its applicable event scope.');
+	$flyer_expiry_timestamp = time() + (2 * DAY_IN_SECONDS);
+	$flyer_expiry = wp_date('Y-m-d H:i:s', $flyer_expiry_timestamp, wp_timezone());
+	$expiring_flyer_html = backstage_outreach_distribution_flyer_html(array_merge($flyer_context, array('expires_at' => $flyer_expiry)));
+	backstage_business_source_runtime_assert(str_contains($expiring_flyer_html, wp_date('F j, Y \\a\\t g:i a T', $flyer_expiry_timestamp, wp_timezone())), 'Flyer expiry omitted its local date, time, or timezone.');
+	backstage_business_source_runtime_assert(!str_contains($flyer_html, 'Research note') && !str_contains($flyer_html, 'Contact') && !str_contains($flyer_html, '_wpnonce'), 'Public flyer exposed private business or admin data.');
+	$flyer_read_only_after = array(
+		'tokens' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_tokens(), $complimentary_batch_id)),
+		'claims' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_claims(), $complimentary_batch_id)),
+		'mappings' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE campaign_id=%d', backstage_outreach_business_table('distribution_claims'), $complimentary_campaign_id)),
+		'generated_count' => (int) $wpdb->get_var($wpdb->prepare('SELECT generated_count FROM %i WHERE id=%d', $batch_table, $complimentary_batch_id)),
+	);
+	backstage_business_source_runtime_assert($flyer_read_only_after === $flyer_read_only_before, 'Opening or rendering the public flyer created a claim, token, mapping, or generated individual link.');
+	$wpdb->update(backstage_outreach_business_table('campaign_businesses'), array('status' => 'paused'), array('id' => $complimentary_distribution_id));
+	backstage_business_source_runtime_assert(is_wp_error(backstage_outreach_distribution_flyer_context(backstage_outreach_distribution_token((array) $flyer_row))), 'Paused flyer remained publicly available.');
+	$wpdb->update(backstage_outreach_business_table('campaign_businesses'), array('status' => 'revoked'), array('id' => $complimentary_distribution_id));
+	backstage_business_source_runtime_assert(is_wp_error(backstage_outreach_distribution_flyer_context(backstage_outreach_distribution_token((array) $flyer_row))), 'Revoked flyer remained publicly available.');
+	$wpdb->update(backstage_outreach_business_table('campaign_businesses'), array('status' => 'active', 'expires_at' => wp_date('Y-m-d H:i:s', time() - HOUR_IN_SECONDS, wp_timezone())), array('id' => $complimentary_distribution_id));
+	backstage_business_source_runtime_assert(is_wp_error(backstage_outreach_distribution_flyer_context(backstage_outreach_distribution_token((array) $flyer_row))), 'Expired flyer remained publicly available.');
+	$wpdb->update(backstage_outreach_business_table('campaign_businesses'), array('expires_at' => null), array('id' => $complimentary_distribution_id));
 	$complimentary_distribution_rows = backstage_outreach_distribution_rows($complimentary_campaign_id);
 	$complimentary_distribution_row = reset($complimentary_distribution_rows);
 	$complimentary_distribution = is_array($complimentary_distribution_row)
@@ -438,6 +488,9 @@ try {
 		'mappings' => (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE campaign_id=%d', backstage_outreach_business_table('distribution_claims'), $complimentary_campaign_id)),
 	);
 	backstage_business_source_runtime_assert($claim_counts_after_retry === $claim_counts_before_retry, 'Retry created duplicate claim data or consumed capacity twice.');
+	$competing_input = array_merge($claim_input, array('first_name' => 'Competing', 'phone' => '312-555-0188'));
+	$competing_claim = backstage_outreach_partner_claim($complimentary_distribution, (array) $claim_event, $competing_input, 'disposable-competing-' . wp_generate_uuid4());
+	backstage_business_source_runtime_assert(is_wp_error($competing_claim), 'A competing complimentary claim exceeded the enforced per-business admission limit.');
 
 	$drift_business_id = backstage_outreach_insert_business(array('business_name' => $marker . ' drift'), $user_id);
 	backstage_business_source_runtime_assert($drift_business_id > 0 && backstage_outreach_business_upsert_membership($source_id, $drift_business_id, 'manual', null, 0, array(), $user_id), 'Could not create drift fixture.');
@@ -507,6 +560,7 @@ try {
 } finally {
 	remove_filter('pre_wp_mail', $backstage_business_source_delivery_block, PHP_INT_MAX);
 	if ($complimentary_campaign_id > 0) {
+		delete_transient(vms_pass_outreach_business_distribution_handoff_key($complimentary_campaign_id));
 		$wpdb->delete(backstage_outreach_business_table('distribution_claims'), array('campaign_id' => $complimentary_campaign_id));
 		$wpdb->delete(backstage_outreach_business_table('campaign_businesses'), array('campaign_id' => $complimentary_campaign_id));
 		$wpdb->delete(vms_admission_table_pass_outreach_campaigns(), array('id' => $complimentary_campaign_id));

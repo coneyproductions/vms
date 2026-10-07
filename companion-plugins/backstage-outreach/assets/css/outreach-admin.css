@@ -2134,6 +2134,35 @@
   justify-self: start;
 }
 
+#vms-pass-claims-wrap .vms-pass-grid input[type="date"] {
+  width: min(12rem, 100%);
+  justify-self: start;
+}
+
+#vms-pass-claims-wrap .vms-pass-grid input[type="datetime-local"] {
+  width: min(19rem, 100%);
+  justify-self: start;
+}
+
+#vms-pass-claims-wrap #vms-outreach-business-review-action,
+#vms-pass-claims-wrap [data-vms-business-review-summary] {
+  scroll-margin-top: 56px;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-flyer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-flyer-actions .regular-text {
+  flex: 1 1 18rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
 #vms-pass-claims-wrap .vms-pass-inline-value-field {
   display: flex;
   align-items: center;

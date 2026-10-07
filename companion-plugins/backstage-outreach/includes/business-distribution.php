@@ -952,6 +952,11 @@ function backstage_outreach_distribution_url(array $row): string
 	return home_url('/guest-pass/partner/' . rawurlencode(backstage_outreach_distribution_token($row)));
 }
 
+function backstage_outreach_distribution_flyer_url(array $row): string
+{
+	return home_url('/guest-pass/business-flyer/' . rawurlencode(backstage_outreach_distribution_token($row)));
+}
+
 function backstage_outreach_create_distribution(int $campaign_id, int $source_id, int $business_id, string $distribution_type, int $cap, int $order_cap, string $expires_at, array $event_ids, array $product_ids, int $user_id): int
 {
 	global $wpdb;
@@ -1037,6 +1042,12 @@ function backstage_outreach_handle_campaign_businesses(): void
 		exit;
 	}
 	$cap = backstage_outreach_request_absint($_POST, 'admission_cap');
+	if ($cap > 50000) {
+		delete_transient(backstage_outreach_campaign_business_preview_key($campaign_id));
+		backstage_outreach_business_message(__('Total admissions allowed per business cannot exceed 50,000.', 'backstage-outreach'), 'error');
+		wp_safe_redirect(vms_pass_outreach_admin_page_url(array('campaign_id' => $campaign_id)) . '#backstage-outreach-partners');
+		exit;
+	}
 	$order_cap = backstage_outreach_request_absint($_POST, 'order_cap');
 	$expires_raw = backstage_outreach_request_text($_POST, 'expires_at');
 	$expires_at = function_exists('bvmgr_pass_claims_parse_local_datetime') ? bvmgr_pass_claims_parse_local_datetime($expires_raw) : $expires_raw;
@@ -1146,6 +1157,9 @@ function backstage_outreach_handle_campaign_businesses(): void
 	$wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock_name));
 	if ($ok) {
 		delete_transient($preview_key);
+		if (function_exists('vms_pass_outreach_business_distribution_handoff_key')) {
+			delete_transient(vms_pass_outreach_business_distribution_handoff_key($campaign_id));
+		}
 		if (function_exists('bvmgr_admission_audit_log')) {
 			bvmgr_admission_audit_log(0, null, 'outreach_partner_distributions_save', get_current_user_id(), 'admin', array('campaign_id' => $campaign_id, 'source_id' => $source_id, 'business_ids' => $selected, 'distribution_type' => $distribution_type, 'admission_cap' => $cap, 'order_cap' => $order_cap, 'eligible_event_ids' => $configuration['event_ids'] ?? array(), 'eligible_product_ids' => $configuration['product_ids'] ?? array(), 'expires_at' => $expires_at));
 		}
@@ -1271,7 +1285,13 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 	$batch_value_type = is_array($batch) ? sanitize_key((string) ($batch['value_type'] ?? '')) : '';
 	$batch_defaults_to_paid = in_array($batch_value_type, array('percent', 'fixed'), true);
 	$default_type = $batch_defaults_to_paid ? 'coupon_backed' : 'complimentary';
-	$default_cap = is_array($active_row) ? absint($active_row['admission_cap'] ?? 0) : 0;
+	$handoff = function_exists('vms_pass_outreach_business_distribution_handoff_key') ? get_transient(vms_pass_outreach_business_distribution_handoff_key($campaign_id)) : array();
+	if (!is_array($handoff)
+		|| absint($handoff['source_id'] ?? 0) !== $source_id
+		|| absint($handoff['batch_id'] ?? 0) !== absint($campaign['related_batch_id'] ?? 0)) {
+		$handoff = array();
+	}
+	$default_cap = is_array($active_row) ? absint($active_row['admission_cap'] ?? 0) : absint($handoff['admission_cap'] ?? 0);
 	$default_order_cap = is_array($active_row) ? absint($active_row['order_cap'] ?? 0) : 0;
 	$default_expiry = is_array($active_row) && !empty($active_row['expires_at']) ? str_replace(' ', 'T', substr((string) $active_row['expires_at'], 0, 16)) : '';
 	$paid_terms = is_array($batch) && function_exists('backstage_outreach_discount_batch_terms') ? backstage_outreach_discount_batch_terms($batch) : null;
@@ -1305,8 +1325,9 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		}
 		echo '<tr><th scope="row">' . esc_html__('Available Business Links / QRs', 'backstage-outreach') . '</th><td>' . esc_html((string) count($businesses)) . '</td></tr>';
 		echo '<tr><th scope="row">' . esc_html__('Admissions per customer', 'backstage-outreach') . '</th><td>' . esc_html((string) max(1, absint($batch['admissions_per_link'] ?? 1))) . '</td></tr>';
+		echo '<tr><th scope="row">' . esc_html__('Total admissions allowed per business', 'backstage-outreach') . '</th><td>' . esc_html($default_cap > 0 ? (string) $default_cap : __('No separate per-business limit', 'backstage-outreach')) . '</td></tr>';
 		echo '<tr><th scope="row">' . esc_html__('Total admissions available across all businesses', 'backstage-outreach') . '</th><td>' . esc_html((string) absint($batch['total_admission_cap'] ?? 0)) . '</td></tr>';
-		echo '</tbody></table><p class="description">' . esc_html__('Admissions per customer limits one complimentary claim or paid purchase. The total across businesses is shared by every participating business and counts each admitted person. Business QR count is based on active Source memberships and does not generate individual claim links.', 'backstage-outreach') . '</p></div>';
+		echo '</tbody></table><p class="description">' . esc_html__('Admissions per customer limits how many people one customer can claim or purchase for. The per-business and overall limits count admitted people, not customers or orders. Shared overall capacity can run out before every business reaches its individual maximum. Business QR count is based on active Source memberships and does not generate individual claim links.', 'backstage-outreach') . '</p></div>';
 	}
 	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" data-vms-tour="outreach-business-selection"><input type="hidden" name="action" value="backstage_outreach_campaign_businesses"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="distribution_mode" value="preview">';
 	wp_nonce_field('backstage_outreach_campaign_businesses');
@@ -1324,7 +1345,7 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		echo '<option value="coupon_backed"' . selected($default_type, 'coupon_backed', false) . '>' . esc_html($paid_type_label) . '</option>';
 	}
 	echo '</select><span class="description">' . esc_html($batch_value_type === 'free' ? __('Free batches create complimentary claims. Existing paid 50% links backed by a Free batch remain valid, but new paid links require a reviewed Percentage Off or Fixed Amount Off batch.', 'backstage-outreach') : __('The paid Admission Offer uses the exact percentage or fixed-per-admission amount in the reviewed batch. Complimentary claims require a Free batch.', 'backstage-outreach')) . '</span></label>';
-	echo '<label data-vms-tour="outreach-business-limits">' . esc_html__('Optional ticket cap per business', 'backstage-outreach') . '<input type="number" min="0" name="admission_cap" value="' . esc_attr((string) $default_cap) . '"><span class="description">' . esc_html__('For coupon offers, counts discounted ticket quantities. For complimentary links, counts reserved admissions. 0 uses only campaign-wide limits.', 'backstage-outreach') . '</span></label>';
+	echo '<label data-vms-tour="outreach-business-limits">' . esc_html__('Total admissions allowed per business', 'backstage-outreach') . '<input type="number" min="0" max="50000" name="admission_cap" value="' . esc_attr((string) $default_cap) . '"><span class="description">' . esc_html__('For Admission Offers, this counts discounted admissions. For complimentary links, it counts Guest Pass admissions. Leave 0 for no separate per-business limit; the shared overall capacity still applies.', 'backstage-outreach') . '</span></label>';
 	echo '<label>' . esc_html__('Optional paid-order cap per business', 'backstage-outreach') . '<input type="number" min="0" name="order_cap" value="' . esc_attr((string) $default_order_cap) . '"><span class="description">' . esc_html__('Applied as the managed coupon usage limit. 0 means unlimited orders subject to ticket limits.', 'backstage-outreach') . '</span></label>';
 	echo '<label>' . esc_html__('Optional distribution expiry', 'backstage-outreach') . '<input type="datetime-local" name="expires_at" value="' . esc_attr($default_expiry) . '"></label></div>';
 	if (is_array($batch)) {
@@ -1344,7 +1365,7 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 			echo '<p>' . esc_html(implode(', ', $preview_names)) . '</p>';
 		}
 		$type_label = sanitize_key((string) ($preview['distribution_type'] ?? 'complimentary')) === 'coupon_backed' ? $paid_type_label : __('Complimentary Guest Pass', 'backstage-outreach');
-		echo '<p>' . esc_html(sprintf(__('Type: %1$s · Per-business ticket cap: %2$d · Paid-order cap: %3$d · Expiry: %4$s', 'backstage-outreach'), $type_label, absint($preview['admission_cap'] ?? 0), absint($preview['order_cap'] ?? 0), (string) ($preview['expires_at'] ?? '') !== '' ? (string) $preview['expires_at'] : __('none', 'backstage-outreach'))) . '</p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_campaign_businesses"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="distribution_mode" value="commit">';
+		echo '<p>' . esc_html(sprintf(__('Type: %1$s · Total admissions allowed per business: %2$s · Paid-order cap: %3$d · Expiry: %4$s', 'backstage-outreach'), $type_label, absint($preview['admission_cap'] ?? 0) > 0 ? (string) absint($preview['admission_cap']) : __('no separate limit', 'backstage-outreach'), absint($preview['order_cap'] ?? 0), (string) ($preview['expires_at'] ?? '') !== '' ? (string) $preview['expires_at'] : __('none', 'backstage-outreach'))) . '</p><p class="description">' . esc_html__('The overall batch capacity is shared across businesses and may run out before a business reaches this maximum.', 'backstage-outreach') . '</p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_campaign_businesses"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="distribution_mode" value="commit">';
 		wp_nonce_field('backstage_outreach_campaign_businesses');
 		echo '<button class="button button-primary">' . esc_html__('Save Reviewed Links', 'backstage-outreach') . '</button></form></div>';
 	}
@@ -1353,18 +1374,22 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		global $wpdb;
 		foreach ($rows as $row) {
 			$url = backstage_outreach_distribution_url($row);
+			$flyer_url = backstage_outreach_distribution_flyer_url($row);
+			$link_input_id = 'backstage-business-link-' . absint($row['id'] ?? 0);
+			$flyer_input_id = 'backstage-business-flyer-' . absint($row['id'] ?? 0);
 			$qr = function_exists('bvmgr_pass_claims_claim_qr_image_url') ? bvmgr_pass_claims_claim_qr_image_url($url) : '';
 			$is_coupon = backstage_outreach_discount_distribution_type($row) === 'coupon_backed';
 			$stats = $is_coupon ? backstage_outreach_discount_paid_stats((int) $row['id']) : $wpdb->get_row($wpdb->prepare("SELECT COUNT(DISTINCT dc.pass_claim_id) claims, COUNT(DISTINCT e.id) admissions, COALESCE(SUM(e.checked_in_qty),0) checked_in FROM %i dc LEFT JOIN %i e ON e.pass_claim_id=dc.pass_claim_id WHERE dc.distribution_id = %d AND dc.status = 'fulfilled'", backstage_outreach_business_table('distribution_claims'), bvmgr_admission_table_entries(), (int) $row['id']), ARRAY_A);
 			$coupon_uses = $is_coupon && absint($row['coupon_id'] ?? 0) > 0 && class_exists('WC_Coupon') ? absint((new WC_Coupon(absint($row['coupon_id'])))->get_usage_count()) : 0;
 			$row_paid_terms = $is_coupon && function_exists('backstage_outreach_discount_terms_for_distribution') ? backstage_outreach_discount_terms_for_distribution(array_merge($row, array('related_batch_id' => absint($campaign['related_batch_id'] ?? 0)))) : null;
 			$row_type_label = $is_coupon && is_array($row_paid_terms) && function_exists('backstage_outreach_discount_terms_label') ? backstage_outreach_discount_terms_label($row_paid_terms) : __('Admission Offer', 'backstage-outreach');
-			echo '<tr><td data-label="' . esc_attr__('Business', 'backstage-outreach') . '"><strong>' . esc_html((string) $row['business_name']) . '</strong><div class="description">' . esc_html($is_coupon ? $row_type_label : __('Complimentary Guest Pass', 'backstage-outreach')) . ($is_coupon && !empty($row['coupon_code']) ? ' | ' . esc_html((string) $row['coupon_code']) : '') . '</div></td><td data-label="' . esc_attr__('Status', 'backstage-outreach') . '">' . esc_html((string) $row['status']) . '</td><td data-label="' . esc_attr__('Referral Link / QR', 'backstage-outreach') . '" data-vms-tour="outreach-qr-actions"><input class="regular-text" readonly value="' . esc_attr($url) . '" data-backstage-copy-value> <button type="button" class="button button-small" data-backstage-copy>' . esc_html__('Copy Link', 'backstage-outreach') . '</button>';
+			echo '<tr><td data-label="' . esc_attr__('Business', 'backstage-outreach') . '"><strong>' . esc_html((string) $row['business_name']) . '</strong><div class="description">' . esc_html($is_coupon ? $row_type_label : __('Complimentary Guest Pass', 'backstage-outreach')) . ($is_coupon && !empty($row['coupon_code']) ? ' | ' . esc_html((string) $row['coupon_code']) : '') . '</div></td><td data-label="' . esc_attr__('Status', 'backstage-outreach') . '">' . esc_html((string) $row['status']) . '</td><td data-label="' . esc_attr__('Referral Link / QR', 'backstage-outreach') . '" data-vms-tour="outreach-qr-actions"><input id="' . esc_attr($link_input_id) . '" class="regular-text" readonly value="' . esc_attr($url) . '" data-backstage-copy-value> <button type="button" class="button button-small" data-backstage-copy data-backstage-copy-target="' . esc_attr($link_input_id) . '">' . esc_html__('Copy Link', 'backstage-outreach') . '</button>';
 			if ($qr !== '') {
 				echo ' <a class="button button-small" href="' . esc_url($qr) . '" target="_blank" rel="noopener" download>' . esc_html__('QR Download', 'backstage-outreach') . '</a>';
 			}
 			$print = wp_nonce_url(add_query_arg(array('action' => 'backstage_outreach_distribution_print', 'distribution_id' => (int) $row['id']), admin_url('admin-post.php')), 'backstage_outreach_distribution_print_' . (int) $row['id']);
 			echo ' <a class="button button-small" href="' . esc_url($print) . '" target="_blank">' . esc_html__('Printable QR', 'backstage-outreach') . '</a>';
+			echo '<div class="vms-pass-business-flyer-actions"><input id="' . esc_attr($flyer_input_id) . '" class="regular-text" readonly value="' . esc_attr($flyer_url) . '" data-backstage-copy-value aria-label="' . esc_attr__('Shareable reception-desk flyer link', 'backstage-outreach') . '"> <button type="button" class="button button-small" data-backstage-copy data-backstage-copy-target="' . esc_attr($flyer_input_id) . '">' . esc_html__('Copy flyer link', 'backstage-outreach') . '</button> <a class="button button-small" href="' . esc_url($flyer_url) . '" target="_blank" rel="noopener">' . esc_html__('Open flyer', 'backstage-outreach') . '</a></div>';
 			if ((string) $row['status'] !== 'revoked') {
 				$next_status = (string) $row['status'] === 'active' ? 'paused' : 'active';
 				$status_url = wp_nonce_url(add_query_arg(array('action' => 'backstage_outreach_distribution_status', 'distribution_id' => (int) $row['id'], 'status' => $next_status), admin_url('admin-post.php')), 'backstage_outreach_distribution_status_' . (int) $row['id'] . '_' . $next_status);
@@ -1382,7 +1407,7 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		}
 		echo '</tbody></table><p><a class="button" href="' . esc_url(wp_nonce_url(add_query_arg(array('action' => 'backstage_outreach_distribution_export', 'campaign_id' => $campaign_id), admin_url('admin-post.php')), 'backstage_outreach_distribution_export_' . $campaign_id)) . '">' . esc_html__('Export Business Links / QRs', 'backstage-outreach') . '</a></p>';
 	}
-	echo '<script>(function(){var all=document.querySelector("[data-backstage-select-all]");if(all){all.addEventListener("change",function(){document.querySelectorAll("[data-backstage-business]").forEach(function(el){el.checked=all.checked;});});}document.querySelectorAll("[data-backstage-copy]").forEach(function(btn){btn.addEventListener("click",function(){var input=btn.parentNode.querySelector("[data-backstage-copy-value]");if(input&&navigator.clipboard){navigator.clipboard.writeText(input.value);btn.textContent="Copied";}});});})();</script></section>';
+	echo '<script>(function(){var all=document.querySelector("[data-backstage-select-all]");if(all){all.addEventListener("change",function(){document.querySelectorAll("[data-backstage-business]").forEach(function(el){el.checked=all.checked;});});}document.querySelectorAll("[data-backstage-copy]").forEach(function(btn){btn.addEventListener("click",function(){var input=document.getElementById(btn.getAttribute("data-backstage-copy-target")||"");if(input&&navigator.clipboard){navigator.clipboard.writeText(input.value);btn.textContent="Copied";}});});})();</script></section>';
 }
 
 function backstage_outreach_csv_safe(string $value): string
@@ -1405,7 +1430,7 @@ function backstage_outreach_handle_distribution_export(): void
 	header('Content-Type: text/csv; charset=utf-8');
 	header('Content-Disposition: attachment; filename="partner-guest-pass-links-campaign-' . $campaign_id . '.csv"');
 	$out = fopen('php://output', 'wb');
-	fputcsv($out, array('campaign_id', 'campaign_name', 'source_id', 'business_id', 'business_name', 'distribution_type', 'offer_value_type', 'offer_value_amount', 'offer_description', 'status', 'coupon_id', 'coupon_code', 'coupon_uses', 'paid_orders', 'discounted_ticket_quantity', 'coupon_discount_total', 'eligible_ticket_gross_total', 'admission_revenue', 'order_revenue', 'refunded_total', 'refunded_orders', 'cancelled_orders', 'review_required_orders', 'currency', 'complimentary_claims', 'complimentary_admissions', 'partner_link', 'qr_image_url'));
+	fputcsv($out, array('campaign_id', 'campaign_name', 'source_id', 'business_id', 'business_name', 'distribution_type', 'offer_value_type', 'offer_value_amount', 'offer_description', 'status', 'coupon_id', 'coupon_code', 'coupon_uses', 'paid_orders', 'discounted_ticket_quantity', 'coupon_discount_total', 'eligible_ticket_gross_total', 'admission_revenue', 'order_revenue', 'refunded_total', 'refunded_orders', 'cancelled_orders', 'review_required_orders', 'currency', 'complimentary_claims', 'complimentary_admissions', 'partner_link', 'flyer_link', 'qr_image_url'));
 	foreach (backstage_outreach_distribution_rows($campaign_id) as $row) {
 		$url = backstage_outreach_distribution_url($row);
 		$qr = function_exists('bvmgr_pass_claims_claim_qr_image_url') ? bvmgr_pass_claims_claim_qr_image_url($url) : '';
@@ -1420,7 +1445,7 @@ function backstage_outreach_handle_distribution_export(): void
 		$offer_description = $is_coupon
 			? (is_array($terms) && function_exists('backstage_outreach_discount_terms_label') ? backstage_outreach_discount_terms_label($terms) : __('Admission Offer — current batch value unavailable', 'backstage-outreach'))
 			: __('Complimentary admission', 'backstage-outreach');
-		fputcsv($out, array($campaign_id, backstage_outreach_csv_safe((string) $campaign['campaign_name']), (int) $row['source_id'], (int) $row['business_id'], backstage_outreach_csv_safe((string) $row['business_name']), backstage_outreach_discount_distribution_type($row), $offer_value_type, $offer_value_amount, backstage_outreach_csv_safe($offer_description), (string) $row['status'], absint($row['coupon_id'] ?? 0), backstage_outreach_csv_safe((string) ($row['coupon_code'] ?? '')), $coupon_uses, (int) ($paid['paid_orders'] ?? 0), (int) ($paid['discounted_tickets'] ?? 0), (float) ($paid['discount_total'] ?? 0), (float) ($paid['eligible_ticket_gross_total'] ?? 0), (float) ($paid['admission_revenue'] ?? 0), (float) ($paid['order_revenue'] ?? 0), (float) ($paid['refunded_total'] ?? 0), (int) ($paid['refunded_orders'] ?? 0), (int) ($paid['cancelled_orders'] ?? 0), (int) ($paid['review_required_orders'] ?? 0), backstage_outreach_csv_safe((string) ($paid['currency'] ?? '')), (int) ($free['claims'] ?? 0), (int) ($free['admissions'] ?? 0), $url, $qr));
+		fputcsv($out, array($campaign_id, backstage_outreach_csv_safe((string) $campaign['campaign_name']), (int) $row['source_id'], (int) $row['business_id'], backstage_outreach_csv_safe((string) $row['business_name']), backstage_outreach_discount_distribution_type($row), $offer_value_type, $offer_value_amount, backstage_outreach_csv_safe($offer_description), (string) $row['status'], absint($row['coupon_id'] ?? 0), backstage_outreach_csv_safe((string) ($row['coupon_code'] ?? '')), $coupon_uses, (int) ($paid['paid_orders'] ?? 0), (int) ($paid['discounted_tickets'] ?? 0), (float) ($paid['discount_total'] ?? 0), (float) ($paid['eligible_ticket_gross_total'] ?? 0), (float) ($paid['admission_revenue'] ?? 0), (float) ($paid['order_revenue'] ?? 0), (float) ($paid['refunded_total'] ?? 0), (int) ($paid['refunded_orders'] ?? 0), (int) ($paid['cancelled_orders'] ?? 0), (int) ($paid['review_required_orders'] ?? 0), backstage_outreach_csv_safe((string) ($paid['currency'] ?? '')), (int) ($free['claims'] ?? 0), (int) ($free['admissions'] ?? 0), $url, backstage_outreach_distribution_flyer_url($row), $qr));
 	}
 	fclose($out);
 	exit;
@@ -1430,7 +1455,13 @@ add_action('admin_post_backstage_outreach_distribution_export', 'backstage_outre
 function backstage_outreach_register_partner_route(): void
 {
 	add_rewrite_tag('%backstage_outreach_partner_token%', '([^&]+)');
+	add_rewrite_tag('%backstage_outreach_flyer_token%', '([^&]+)');
 	add_rewrite_rule('^guest-pass/partner/([^/]+)/?$', 'index.php?backstage_outreach_partner_token=$matches[1]', 'top');
+	add_rewrite_rule('^guest-pass/business-flyer/([^/]+)/?$', 'index.php?backstage_outreach_flyer_token=$matches[1]', 'top');
+	if ((string) get_option('backstage_outreach_public_routes_version', '') !== 'business-flyer-v1') {
+		update_option('backstage_outreach_public_routes_version', 'business-flyer-v1', false);
+		update_option('backstage_outreach_flush_rewrite', '1', false);
+	}
 }
 add_action('init', 'backstage_outreach_register_partner_route', 32);
 
@@ -1442,6 +1473,16 @@ function backstage_outreach_partner_request_token(): string
 	}
 	$uri = function_exists('bvmgr_request_current_uri') ? bvmgr_request_current_uri() : '';
 	return $uri !== '' && preg_match('~^/guest-pass/partner/([^/?#]+)~', $uri, $m) ? sanitize_text_field(rawurldecode((string) $m[1])) : '';
+}
+
+function backstage_outreach_flyer_request_token(): string
+{
+	$value = get_query_var('backstage_outreach_flyer_token', '');
+	if (is_scalar($value) && (string) $value !== '') {
+		return sanitize_text_field(rawurldecode((string) $value));
+	}
+	$uri = function_exists('bvmgr_request_current_uri') ? bvmgr_request_current_uri() : '';
+	return $uri !== '' && preg_match('~^/guest-pass/business-flyer/([^/?#]+)~', $uri, $m) ? sanitize_text_field(rawurldecode((string) $m[1])) : '';
 }
 
 function backstage_outreach_distribution_context(string $raw_token)
@@ -1499,6 +1540,126 @@ function backstage_outreach_distribution_context(string $raw_token)
 	$row['batch'] = $batch;
 	return $row;
 }
+
+function backstage_outreach_distribution_flyer_context(string $raw_token)
+{
+	$context = backstage_outreach_distribution_context($raw_token);
+	if (is_wp_error($context)) {
+		return $context;
+	}
+	$expiry_values = array(
+		(string) ($context['expires_at'] ?? ''),
+		(string) ($context['campaign_expires_at'] ?? ''),
+		(string) (($context['batch']['expires_at'] ?? '')),
+	);
+	foreach ($expiry_values as $expiry_value) {
+		if ($expiry_value === '' || str_starts_with($expiry_value, '0000-00-00')) {
+			continue;
+		}
+		try {
+			if ((new DateTimeImmutable($expiry_value, wp_timezone()))->getTimestamp() <= time()) {
+				return new WP_Error('partner_flyer_expired', __('This business offer flyer has expired.', 'backstage-outreach'));
+			}
+		} catch (Exception $error) {
+			return new WP_Error('partner_flyer_expired', __('This business offer flyer is unavailable.', 'backstage-outreach'));
+		}
+	}
+	return $context;
+}
+
+function backstage_outreach_distribution_effective_expiry(array $distribution): string
+{
+	$candidates = array_filter(array(
+		(string) ($distribution['expires_at'] ?? ''),
+		(string) ($distribution['campaign_expires_at'] ?? ''),
+		(string) (($distribution['batch']['expires_at'] ?? '')),
+	), static fn(string $value): bool => $value !== '' && !str_starts_with($value, '0000-00-00'));
+	$earliest = null;
+	foreach ($candidates as $candidate) {
+		try {
+			$value = new DateTimeImmutable($candidate, wp_timezone());
+			if (!$earliest || $value < $earliest) {
+				$earliest = $value;
+			}
+		} catch (Exception $error) {
+			continue;
+		}
+	}
+	return $earliest ? wp_date('F j, Y \a\t g:i a T', $earliest->getTimestamp(), wp_timezone()) : '';
+}
+
+function backstage_outreach_distribution_flyer_html(array $distribution): string
+{
+	$is_coupon = backstage_outreach_discount_distribution_type($distribution) === 'coupon_backed';
+	$customer_url = backstage_outreach_distribution_url($distribution);
+	$qr = function_exists('bvmgr_pass_claims_claim_qr_image_url') ? bvmgr_pass_claims_claim_qr_image_url($customer_url) : '';
+	$batch = is_array($distribution['batch'] ?? null) ? (array) $distribution['batch'] : array();
+	$per_customer = max(1, absint($batch['admissions_per_link'] ?? ($distribution['admissions_per_recipient'] ?? 1)));
+	$scope = function_exists('vms_pass_outreach_business_batch_scope_label') ? vms_pass_outreach_business_batch_scope_label($batch) : __('See offer for eligible events.', 'backstage-outreach');
+	$expiry = backstage_outreach_distribution_effective_expiry($distribution);
+	$per_business_cap = absint($distribution['admission_cap'] ?? 0);
+	$overall_cap = absint($batch['total_admission_cap'] ?? ($distribution['campaign_ticket_cap'] ?? 0));
+	if ($is_coupon) {
+		$terms = function_exists('backstage_outreach_discount_terms_for_distribution') ? backstage_outreach_discount_terms_for_distribution($distribution) : null;
+		$offer = is_array($terms) && function_exists('backstage_outreach_discount_terms_label')
+			? backstage_outreach_discount_terms_label($terms, false)
+			: __('Admission discount', 'backstage-outreach');
+		$headline = sprintf(__('%1$s for up to %2$d people per customer', 'backstage-outreach'), $offer, $per_customer);
+	} else {
+		$headline = sprintf(_n('Complimentary Guest Pass for up to %d person per customer', 'Complimentary Guest Passes for up to %d people per customer', $per_customer, 'backstage-outreach'), $per_customer);
+	}
+	$branding = function_exists('bvmgr_pass_claims_print_branding') ? bvmgr_pass_claims_print_branding() : array();
+	$logo_url = esc_url_raw((string) ($branding['logo_url'] ?? ''));
+	$site_name = sanitize_text_field((string) ($branding['site_name'] ?? get_bloginfo('name')));
+	$business_name = sanitize_text_field((string) ($distribution['business_name'] ?? ''));
+	$title = sprintf(__('%s Admission Offer', 'backstage-outreach'), $business_name);
+	$scarcity = '';
+	if ($per_business_cap > 0) {
+		$scarcity = $is_coupon
+			? sprintf(_n('This business link can provide up to %d discounted admission.', 'This business link can provide up to %d discounted admissions.', $per_business_cap, 'backstage-outreach'), $per_business_cap)
+			: sprintf(_n('This business link can provide up to %d Guest Pass admission.', 'This business link can provide up to %d Guest Pass admissions.', $per_business_cap, 'backstage-outreach'), $per_business_cap);
+		if ($overall_cap > 0) {
+			$scarcity .= ' ' . __('Availability is shared across participating businesses, so the offer may end before this maximum is reached.', 'backstage-outreach');
+		}
+	} elseif ($overall_cap > 0) {
+		$scarcity = __('Availability is shared across participating businesses and is not a reserved allotment for this business.', 'backstage-outreach');
+	}
+
+	ob_start();
+	?>
+	<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title><?php echo esc_html($title); ?></title><style>
+	@page{size:letter portrait;margin:.4in}*{box-sizing:border-box}body{margin:0;background:#eef2f5;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.actions{display:flex;justify-content:center;padding:18px}.actions button{min-height:44px;padding:8px 18px;border:1px solid #146b55;border-radius:8px;background:#146b55;color:#fff;font:inherit;font-weight:700;cursor:pointer}.sheet{width:min(7.6in,calc(100% - 24px));min-height:9.6in;margin:0 auto 24px;padding:.45in;text-align:center;background:#fff;border:1px solid #d9e2ef;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}.logo{display:block;max-width:220px;max-height:90px;width:auto;height:auto}.venue{font-weight:700;color:#146b55;letter-spacing:.08em;text-transform:uppercase}.business{overflow-wrap:anywhere;font-size:clamp(2rem,7vw,3.4rem);line-height:1.02;margin:0}.offer{font-size:clamp(1.2rem,3vw,1.65rem);line-height:1.35;margin:0;max-width:34rem}.qr{display:block;width:min(3.8in,78vw);height:auto}.scan{font-size:1.35rem;font-weight:800;margin:0}.details{width:100%;max-width:34rem;margin:0;padding:16px;border-radius:12px;background:#f3f8f6;text-align:left;list-style:none}.details li+li{margin-top:8px}.note{max-width:34rem;margin:0;color:#526174;line-height:1.5;overflow-wrap:anywhere}@media(max-width:480px){.sheet{min-height:0;padding:26px 18px}.details{padding:14px}.actions{position:sticky;top:0;background:#eef2f5;z-index:2}}@media print{body{background:#fff}.actions{display:none}.sheet{width:100%;min-height:0;margin:0;padding:.08in;border:0;border-radius:0;gap:5px;justify-content:flex-start;page-break-inside:avoid}.logo{max-height:.5in}.business{font-size:26pt}.offer{font-size:14pt}.qr{width:2.75in}.scan{font-size:14pt}.details{padding:8px;font-size:10pt}.details li+li{margin-top:3px}.note{font-size:9pt;line-height:1.25}}
+	</style></head><body><div class="actions"><button type="button" onclick="window.print()"><?php echo esc_html__('Print / Save as PDF', 'backstage-outreach'); ?></button></div><main class="sheet">
+	<?php if ($logo_url !== '') : ?><img class="logo" src="<?php echo esc_url($logo_url); ?>" alt="<?php echo esc_attr($site_name); ?>"><?php else : ?><div class="venue"><?php echo esc_html($site_name); ?></div><?php endif; ?>
+	<h1 class="business"><?php echo esc_html($business_name); ?></h1><p class="offer"><?php echo esc_html($headline); ?></p>
+	<?php if ($qr !== '') : ?><img class="qr" src="<?php echo esc_attr($qr); ?>" alt="<?php echo esc_attr__('QR code for this business offer', 'backstage-outreach'); ?>"><?php endif; ?>
+	<p class="scan"><?php echo esc_html__('Scan to view this admission offer', 'backstage-outreach'); ?></p>
+	<ul class="details"><li><strong><?php echo esc_html__('Applies to:', 'backstage-outreach'); ?></strong> <?php echo esc_html($scope); ?></li><li><strong><?php echo esc_html__('Admissions per customer:', 'backstage-outreach'); ?></strong> <?php echo esc_html((string) $per_customer); ?></li><?php if ($per_business_cap > 0) : ?><li><strong><?php echo esc_html__('Total admissions allowed through this business:', 'backstage-outreach'); ?></strong> <?php echo esc_html((string) $per_business_cap); ?></li><?php endif; ?><?php if ($expiry !== '') : ?><li><strong><?php echo esc_html__('Offer expires:', 'backstage-outreach'); ?></strong> <?php echo esc_html($expiry); ?></li><?php endif; ?></ul>
+	<?php if ($scarcity !== '') : ?><p class="note"><?php echo esc_html($scarcity); ?></p><?php endif; ?><p class="note"><?php echo esc_html($is_coupon ? __('The discount applies to eligible admissions only. See the offer page for current availability and checkout details.', 'backstage-outreach') : __('Each guest receives a separate admission credential after a successful claim. This flyer is not an admission credential.', 'backstage-outreach')); ?></p>
+	</main></body></html>
+	<?php
+	return (string) ob_get_clean();
+}
+
+function backstage_outreach_distribution_flyer_router(): void
+{
+	$token = backstage_outreach_flyer_request_token();
+	if ($token === '') {
+		return;
+	}
+	$distribution = backstage_outreach_distribution_flyer_context($token);
+	nocache_headers();
+	if (is_wp_error($distribution)) {
+		status_header($distribution->get_error_code() === 'partner_link_invalid' ? 404 : 410);
+		echo '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>' . esc_html__('Offer unavailable', 'backstage-outreach') . '</title></head><body><main style="max-width:42rem;margin:10vh auto;padding:24px;font-family:sans-serif"><h1>' . esc_html__('Offer unavailable', 'backstage-outreach') . '</h1><p>' . esc_html($distribution->get_error_message()) . '</p></main></body></html>';
+		exit;
+	}
+	status_header(200);
+	header('Content-Type: text/html; charset=' . get_option('blog_charset', 'UTF-8'));
+	echo backstage_outreach_distribution_flyer_html($distribution); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Complete document escapes every dynamic value at construction.
+	exit;
+}
+add_action('template_redirect', 'backstage_outreach_distribution_flyer_router', -3);
 
 function backstage_outreach_partner_claim_insert_payload(array $payload, array $context): array
 {

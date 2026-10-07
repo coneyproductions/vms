@@ -138,7 +138,9 @@ $extra_batch_ids[] = $existing_paid_batch_id;
 $business_ids = array();
 for ($index = 1; $index <= 35; $index++) {
 	$business_id = backstage_outreach_insert_business(array(
-		'business_name' => sprintf('Browser Fixture Business %02d With A Readable Long Name', $index),
+		'business_name' => $index === 1
+			? 'Café — Browser Fixture Business 01 With An Extraordinarily Long Reception Desk Display Name ひらがな é'
+			: sprintf('Browser Fixture Business %02d With A Readable Long Name', $index),
 		'contact_name' => sprintf('Fixture Contact %02d', $index),
 		'email' => $index <= 21 ? sprintf('browser-business-%02d@example.test', $index) : '',
 		'phone' => sprintf('555-020-%02d', $index),

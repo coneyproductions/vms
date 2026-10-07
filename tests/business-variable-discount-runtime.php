@@ -140,6 +140,13 @@ try {
 	backstage_variable_discount_assert($fixed['coupon']->get_discount_type() === 'fixed_product' && abs((float) $fixed['coupon']->get_amount() - 12.35) < 0.001, 'The fixed coupon did not use the reviewed $12.35-per-admission value.');
 	backstage_variable_discount_assert(backstage_outreach_discount_terms_label($percentage['configuration']) === 'Admission Offer — 37.5% off admission', 'Percentage customer wording is inaccurate.');
 	backstage_variable_discount_assert(backstage_outreach_discount_terms_label($fixed['configuration']) === 'Admission Offer — $12.35 off each admission', 'Fixed customer wording is inaccurate.');
+	$percentage_flyer_context = backstage_outreach_distribution_flyer_context(backstage_outreach_distribution_token($percentage['distribution']));
+	$fixed_flyer_context = backstage_outreach_distribution_flyer_context(backstage_outreach_distribution_token($fixed['distribution']));
+	backstage_variable_discount_assert(is_array($percentage_flyer_context) && is_array($fixed_flyer_context), 'Active paid flyer contexts were rejected.');
+	$percentage_flyer = backstage_outreach_distribution_flyer_html(array_merge($percentage_flyer_context, array('admission_cap' => 5)));
+	$fixed_flyer = backstage_outreach_distribution_flyer_html($fixed_flyer_context);
+	backstage_variable_discount_assert(str_contains($percentage_flyer, '37.5% off admission') && str_contains($percentage_flyer, 'discounted admissions') && str_contains($percentage_flyer, 'offer may end before this maximum is reached'), 'Percentage flyer omitted its actual value or shared-capacity explanation.');
+	backstage_variable_discount_assert(str_contains($fixed_flyer, '$12.35 off each admission') && !str_contains($fixed_flyer, 'Total admissions allowed through this business:'), 'Fixed-dollar flyer wording or uncapped scarcity display is inaccurate.');
 	backstage_variable_discount_assert(backstage_outreach_discount_configuration_digest($percentage['configuration']) !== backstage_outreach_discount_configuration_digest($fixed['configuration']), 'Offer type/value are absent from the stale-configuration digest.');
 
 	$legacy_terms = backstage_outreach_discount_batch_terms(array('value_type' => 'free', 'value_amount' => 100));

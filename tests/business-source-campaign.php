@@ -17,6 +17,7 @@ $helper = $helper_start !== false && $helper_end !== false ? substr($outreach, $
 
 $assertions = array(
 	'Reusable business route is an explicit create mode' => strpos($outreach, "'business_source'") !== false && strpos($outreach, 'Reusable Business Links / QRs') !== false,
+	'Route choice precedes route-specific campaign fields' => strpos($outreach, 'Delivery / Recipient Route') < strpos($outreach, "vms_pass_outreach_render_collapsible_summary(__('Campaign'") && strpos($outreach, 'syncBusinessOfferDraft') !== false && strpos($outreach, 'business_batch_touched_fields') !== false,
 	'Preview reads current active reusable memberships' => strpos($outreach, 'backstage_outreach_source_businesses($source_id, false)') !== false,
 	'Preview binds Source and existing batch' => strpos($outreach, 'vms_pass_outreach_build_business_source_preview(int $source_id, int $batch_id)') !== false && strpos($outreach, 'batch_source_mismatch') !== false,
 	'Batch picker uses canonical eligibility and Source filtering' => strpos($outreach, 'vms_pass_outreach_business_batch_eligibility_error') !== false && strpos($outreach, 'vms_pass_outreach_eligible_business_batches') !== false && strpos($outreach, 'foreach ($eligible_business_batches as $batch)') !== false,
@@ -34,6 +35,8 @@ $assertions = array(
 	'Business create helper does not insert recipients or contacts' => $helper !== '' && strpos($helper, 'insert_prepared_recipients') === false && strpos($helper, 'vms_outreach_upsert_contact') === false,
 	'Business creation preserves reviewed source and batch' => strpos($helper, "'related_source_id' => absint(\$current_preview['source_id']") !== false && strpos($helper, "'related_batch_id' => absint(\$current_preview['batch_id']") !== false,
 	'Business flow uses plain-language per-customer and total labels' => substr_count($outreach, 'Total admissions available across all businesses') >= 3 && substr_count($distribution, 'Admissions per customer') >= 1,
+	'Per-business admission limit is reviewed and handed to existing enforcement' => substr_count($outreach, 'Total admissions allowed per business') >= 3 && strpos($outreach, 'business_admission_cap') !== false && strpos($distribution, "'admission_cap' => \$cap") !== false && strpos($distribution, 'vms_pass_outreach_business_distribution_handoff_key') !== false,
+	'Business review state does not reuse zero-recipient totals' => strpos($outreach, 'data-vms-business-review-summary') !== false && strpos($outreach, 'data-vms-individual-review-summary') !== false && strpos($outreach, 'Business Review becomes available after confirmation') !== false,
 	'Conditional business scope controls are server and client enforced' => strpos($outreach, 'data-vms-business-scope="single_event"') !== false && strpos($outreach, 'data-vms-business-scope="date_range season"') !== false && strpos($outreach, 'function updateBusinessBatchScope') !== false && strpos($claims, 'Definition-only workflows ignore fields outside the selected scope.') !== false,
 	'Complimentary business claims use internal transactional tokens' => strpos($distribution, 'bvmgr_pass_claims_create_internal_claim_token') !== false && strpos($claims, 'does not change the') !== false,
 	'Create action continues to QR setup' => strpos($outreach, 'Create Campaign and Continue to Business QR Setup') !== false && strpos($outreach, "'#backstage-outreach-partners'") !== false,
@@ -42,6 +45,9 @@ $assertions = array(
 	'Percentage and fixed batches default to the paid setup path' => strpos($distribution, '$batch_defaults_to_paid') !== false && strpos($distribution, "array('percent', 'fixed')") !== false && strpos($distribution, "'coupon_backed' : 'complimentary'") !== false,
 	'Offer amount is conditional and accessible' => strpos($outreach, 'data-vms-business-offer-amount') !== false && strpos($outreach, 'function updateBusinessOffer') !== false && strpos($outreach, 'greater than 0 and up to 100') !== false,
 	'Date and expiry fields stay compact on mobile' => strpos($css, 'width: min(12rem, 100%)') !== false && strpos($css, 'width: min(19rem, 100%)') !== false,
+	'Shareable flyer uses the signed distribution identity and read-only route' => strpos($distribution, '/guest-pass/business-flyer/') !== false && strpos($distribution, 'backstage_outreach_distribution_context($raw_token)') !== false && strpos($distribution, 'backstage_outreach_distribution_flyer_router') !== false && strpos($distribution, 'backstage_partner_submit') !== false,
+	'Flyer contains public-safe reception and print details' => strpos($distribution, 'Print / Save as PDF') !== false && strpos($distribution, '@page{size:letter portrait') !== false && strpos($distribution, 'Copy flyer link') !== false && strpos($distribution, 'Total admissions allowed through this business') !== false && strpos($distribution, 'Research note') === false,
+	'Flyer state and privacy are enforced without admin credentials' => strpos($distribution, 'backstage_outreach_distribution_flyer_context') !== false && strpos($distribution, 'partner_flyer_expired') !== false && strpos($distribution, '<meta name="robots" content="noindex,nofollow">') !== false,
 	'Message preview is prominently sample-only' => strpos($outreach, 'SAMPLE DATA - NOT A DELIVERY PREVIEW') !== false,
 	'Current defaults avoid transport-sensitive punctuation' => strpos($outreach, "'You\\'ve been invited") !== false && strpos($outreach, 'You’ve been invited') === false,
 	'Legacy mojibake is repaired for display without a bulk update' => strpos($outreach, 'function vms_pass_outreach_display_text') !== false && strpos($outreach, 'Stored campaign history is not rewritten') !== false && strpos($helper, '$wpdb->update') === false,
@@ -49,7 +55,7 @@ $assertions = array(
 	'Narrow-screen business rows use labeled cards' => strpos($css, '.vms-pass-business-source-table td::before') !== false && strpos($css, 'content: attr(data-label)') !== false,
 	'Narrow-screen workflow does not overflow' => strpos($css, '.vms-pass-business-steps') !== false && strpos($css, 'grid-template-columns: 1fr') !== false && strpos($css, 'overflow-wrap: anywhere') !== false,
 	'Business identity remains independent of email' => strpos($distribution, 'UNIQUE KEY public_id (public_id)') !== false && strpos($distribution, 'UNIQUE KEY email') === false,
-	'Outreach 1.2.6 owns reproducible asset cache keys' => strpos($plugin, 'Version: 1.2.6') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.6'") !== false && substr_count($integration, 'BACKSTAGE_OUTREACH_VERSION') >= 2 && strpos($integration, 'filemtime(') === false,
+	'Outreach 1.2.7 owns reproducible asset cache keys' => strpos($plugin, 'Version: 1.2.7') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.7'") !== false && substr_count($integration, 'BACKSTAGE_OUTREACH_VERSION') >= 2 && strpos($integration, 'filemtime(') === false,
 	'Schema versions remain unchanged' => strpos($distribution, "\$target = '1.2.1';") !== false && strpos($db, "return '1.1.0';") !== false,
 );
 

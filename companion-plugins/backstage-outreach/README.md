@@ -120,6 +120,14 @@ the reviewed dollar amount from each eligible admission within the customer
 limit and never reduce a ticket below zero. The managed coupon, cart and checkout
 validation, public offer page, printable QR, and export all report the same value.
 
+Version 1.2.7 places the delivery route before route-specific campaign fields and
+preserves compatible draft values when an operator switches into reusable-business
+setup. Business review now reports its own prerequisite state and carries separate
+per-customer, per-business, and shared overall admission limits into QR setup.
+Each saved business distribution also provides a signed, public, read-only
+reception-desk flyer with accurate offer terms, scope, expiry, scarcity wording,
+the existing venue logo, and a QR for that business's customer offer link.
+
 ## Development checks
 
 From the Backstage Venue Manager repository root:

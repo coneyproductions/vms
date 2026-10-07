@@ -18,6 +18,7 @@ function check(condition, message) {
   }
   fs.mkdirSync(outputDir, { recursive: true });
   const browser = await chromium.launch({ headless: true });
+  let publicFlyerUrl = '';
   const cases = [
     { name: 'desktop', width: 1440, height: 1000, submit: true },
     { name: 'mobile', width: 390, height: 844, submit: false },
@@ -45,8 +46,37 @@ function check(condition, message) {
     await page.goto(fixture.admin_url, { waitUntil: 'domcontentloaded' });
 
     if (testCase.submit) {
+      const routeChoice = page.locator('[data-vms-section-id="recipient_source"]');
+      const campaignSection = page.locator('[data-vms-section-id="campaign"]');
+      check((await routeChoice.boundingBox()).y < (await campaignSection.boundingBox()).y, 'desktop: route choice did not appear before route-specific campaign fields.');
+      const standardCampaign = page.locator('[data-vms-nonbusiness-campaign-fields]');
+      const standardOffer = page.locator('[data-vms-nonbusiness-offer-fields]');
+      await standardCampaign.locator('input[name="campaign_name"]').fill('Fresh Café — route switch draft');
+      await standardOffer.locator('input[name="admissions_per_recipient"]').fill('3');
+      await standardOffer.locator('select[name="validity_type"]').selectOption('date_range');
+      await standardOffer.locator('input[name="start_date"]').fill('2031-03-01');
+      await standardOffer.locator('input[name="end_date"]').fill('2031-03-31');
       await page.locator('input[name="recipient_source_mode"][value="business_source"]').check();
       const route = page.locator('[data-vms-recipient-source-business]');
+      check(await route.locator('input[name="business_campaign_name"]').inputValue() === 'Fresh Café — route switch draft', 'desktop: fresh-page campaign name was not transferred to the business route.');
+      check(await route.locator('input[name="business_batch_admissions_per_link"]').inputValue() === '3', 'desktop: admissions-per-customer draft was not transferred.');
+      check(await route.locator('select[name="business_batch_validity_type"]').inputValue() === 'date_range', 'desktop: date-range scope was not transferred.');
+      check(await route.locator('input[name="business_batch_start_date"]').inputValue() === '2031-03-01' && await route.locator('input[name="business_batch_end_date"]').inputValue() === '2031-03-31', 'desktop: date-range values were not transferred.');
+      await route.locator('[data-vms-business-batch-create]').evaluate((details) => { details.open = true; });
+      await route.locator('input[name="business_batch_start_date"]').fill('2031-03-02');
+      await page.locator('input[name="recipient_source_mode"][value="csv_new"]').check();
+      await standardOffer.locator('input[name="start_date"]').fill('2031-03-03');
+      await page.locator('input[name="recipient_source_mode"][value="business_source"]').check();
+      await page.waitForTimeout(100);
+      check(await route.locator('input[name="business_batch_start_date"]').inputValue() === '2031-03-02', 'desktop: independently edited business draft was overwritten on route switch.');
+      const conflictState = {
+        hidden: await page.locator('[data-vms-business-draft-conflict]').getAttribute('hidden'),
+        touched: await route.locator('input[name="business_batch_touched_fields"]').inputValue(),
+        source: await standardOffer.locator('input[name="start_date"]').inputValue(),
+        target: await route.locator('input[name="business_batch_start_date"]').inputValue(),
+        batch: await route.locator('select[name="related_batch_id"]').inputValue(),
+      };
+      check(conflictState.hidden === null, `desktop: conflicting route drafts were not explained (${JSON.stringify(conflictState)}).`);
       check(await route.locator('button[value="business_source_preview"]').isDisabled(), 'desktop: Preview was enabled before selecting prerequisites.');
       await route.locator('select[name="related_source_id"]').selectOption(String(fixture.existing_source_id));
       check(await route.locator('select[name="related_batch_id"] option').count() === 3, 'desktop: existing Source did not expose exactly its two eligible batches.');
@@ -76,7 +106,7 @@ function check(condition, message) {
       await route.locator('button[value="business_batch_preview"]').click();
       await page.waitForLoadState('domcontentloaded');
       check(new URL(page.url()).hash === '#vms-outreach-business-source-setup', 'desktop: batch validation did not return to the stable workflow anchor.');
-      await page.waitForTimeout(250);
+      await page.waitForTimeout(750);
       check(await page.evaluate(() => document.activeElement && document.activeElement.getAttribute('name')) === 'business_batch_offer_type', 'desktop: first invalid batch field did not receive focus.');
       check(await page.locator('[data-vms-business-batch-create]').getAttribute('open') !== null, 'desktop: relevant batch section did not reopen after validation.');
       await route.locator('input[name="business_campaign_name"]').fill('Draft Café — preserved across batch setup');
@@ -93,7 +123,10 @@ function check(condition, message) {
       check(await route.locator('input[name="business_batch_quantity"]').count() === 0, 'desktop: reusable-business setup still requests an individual claim-link quantity.');
       await route.locator('input[name="business_batch_admissions_per_link"]').fill('2');
       await route.locator('input[name="business_batch_total_admission_cap"]').fill('70');
+      await route.locator('input[name="business_batch_per_business_admission_cap"]').fill('2');
       await route.locator('select[name="business_batch_validity_type"]').selectOption('date_range');
+      await route.locator('input[name="business_batch_start_date"]').fill('');
+      await route.locator('input[name="business_batch_end_date"]').fill('');
       await route.locator('button[value="business_batch_preview"]').click();
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(250);
@@ -131,6 +164,21 @@ function check(condition, message) {
       }));
       await batchCommitButton.click();
       await page.waitForLoadState('domcontentloaded');
+      await page.waitForTimeout(250);
+      check(new URL(page.url()).hash === '#vms-outreach-business-review-action', 'desktop: confirmed batch did not bring the next business-review action into view.');
+      const reviewFocusState = await page.evaluate(() => {
+        const button = document.querySelector('[data-vms-business-preview-button]');
+        const rect = button ? button.getBoundingClientRect() : null;
+        return {
+          disabled: !!button && button.disabled,
+          top: rect ? rect.top : -1,
+          bottom: rect ? rect.bottom : -1,
+          viewport: window.innerHeight,
+          source: document.querySelector('[data-vms-business-source]') ? document.querySelector('[data-vms-business-source]').value : '',
+          batch: document.querySelector('[data-vms-business-batch]') ? document.querySelector('[data-vms-business-batch]').value : '',
+        };
+      });
+      check(!reviewFocusState.disabled && reviewFocusState.top >= 50 && reviewFocusState.bottom <= reviewFocusState.viewport, `desktop: confirmed batch did not enable and bring the next Business Review action into view (${JSON.stringify(reviewFocusState)}).`);
       const createdBatchId = await route.locator('select[name="related_batch_id"]').inputValue();
       check(createdBatchId !== '0', 'desktop: confirmed batch was not selected on return.');
       check(await route.getByText('Complimentary admission', { exact: true }).count() >= 1, 'desktop: confirmed complimentary batch wording is missing.');
@@ -161,7 +209,9 @@ function check(condition, message) {
     check(await preview.getByText('Email delivery unavailable', { exact: true }).count() === 14, `${testCase.name}: expected 14 missing-email indicators.`);
     check(await preview.getByText('Admissions per customer', { exact: true }).count() >= 1, `${testCase.name}: per-customer admissions label is missing.`);
     check(await preview.getByText('Total admissions available across all businesses', { exact: true }).count() >= 1, `${testCase.name}: total admissions label is missing.`);
+    check(await preview.getByText('Total admissions allowed per business', { exact: true }).count() >= 1, `${testCase.name}: per-business admission label is missing.`);
     check(await preview.getByText('70', { exact: true }).count() >= 1, `${testCase.name}: shared admission cap is missing.`);
+    check(await preview.getByText('2', { exact: true }).count() >= 1, `${testCase.name}: per-business admission cap is missing.`);
     check(await page.getByText('SAMPLE DATA - NOT A DELIVERY PREVIEW', { exact: true }).count() === 1, `${testCase.name}: message sample label is not prominent.`);
     check(await page.getByRole('button', { name: 'Create Campaign and Continue to Business QR Setup' }).count() === 1, `${testCase.name}: Continue action is missing.`);
     check(await page.getByText('Admission Offer — 50% off admission for up to 2 people', { exact: true }).count() === 0, `${testCase.name}: complimentary fixture was mislabeled as paid.`);
@@ -187,6 +237,7 @@ function check(condition, message) {
       screenshotTarget = qrPanel;
       check(await qrPanel.locator('input[data-backstage-business]').count() === 35, 'mobile: QR setup did not carry all 35 reviewed businesses.');
       check(await qrPanel.locator('select[name="distribution_type"]').inputValue() === 'complimentary', 'mobile: complimentary batch did not retain complimentary behavior.');
+      check(await qrPanel.locator('input[name="admission_cap"]').inputValue() === '2', 'mobile: reviewed per-business limit did not carry into QR setup.');
       await qrPanel.getByRole('button', { name: 'Review Selection' }).click();
       await page.waitForLoadState('domcontentloaded');
       const linkReviewText = await page.locator('[data-vms-tour="outreach-reviewed-preview"]').innerText();
@@ -196,7 +247,24 @@ function check(condition, message) {
       const resultRows = page.locator('[data-vms-tour="outreach-business-results"] tbody tr');
       check(await resultRows.count() === 35, 'mobile: expected 35 saved reusable business links.');
       const reusableLinks = await resultRows.locator('input[data-backstage-copy-value]').evaluateAll((inputs) => inputs.map((input) => input.value));
-      check(new Set(reusableLinks).size === 35 && reusableLinks.every((value) => value.includes('/guest-pass/partner/')), 'mobile: reusable business links were not unique signed partner URLs.');
+      const customerLinks = reusableLinks.filter((value) => value.includes('/guest-pass/partner/'));
+      const flyerLinks = reusableLinks.filter((value) => value.includes('/guest-pass/business-flyer/'));
+      check(new Set(customerLinks).size === 35, 'mobile: reusable business links were not 35 unique signed partner URLs.');
+      check(new Set(flyerLinks).size === 35, 'mobile: flyer links were not 35 unique signed public URLs.');
+      check(await resultRows.getByRole('button', { name: 'Copy flyer link' }).count() === 35, 'mobile: Copy flyer link actions are missing.');
+      publicFlyerUrl = flyerLinks[0] || '';
+      const campaignStatus = page.locator('select[name="status"]');
+      const activationPost = await campaignStatus.evaluate((field) => {
+        const form = field.form;
+        const fields = Object.fromEntries(Array.from(new FormData(form).entries()));
+        fields.status = 'active';
+        fields.save_mode = 'standard';
+        return { action: new URL(form.getAttribute('action') || window.location.href, window.location.href).toString(), fields };
+      });
+      const activationResponse = await page.request.post(activationPost.action, { form: activationPost.fields, maxRedirects: 0 });
+      check(activationResponse.status() === 302, 'mobile: disposable campaign activation did not return a safe redirect.');
+      await page.goto(new URL(activationResponse.headers().location, fixture.admin_url).toString(), { waitUntil: 'domcontentloaded' });
+      check(await page.locator('select[name="status"]').inputValue() === 'active', 'mobile: disposable campaign could not be activated for public flyer inspection.');
     }
 
     const geometry = await page.evaluate(() => {
@@ -226,6 +294,31 @@ function check(condition, message) {
     await screenshotTarget.screenshot({ path: path.join(outputDir, `${testCase.name}-business-review.png`) });
     await page.screenshot({ path: path.join(outputDir, `${testCase.name}-business-review-viewport.png`), fullPage: false });
     await context.close();
+  }
+
+  check(publicFlyerUrl !== '', 'public flyer URL was not captured from QR results.');
+  for (const flyerCase of [{ name: 'desktop', width: 1440, height: 1000 }, { name: 'mobile', width: 390, height: 844 }]) {
+    const flyerContext = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: flyerCase.width, height: flyerCase.height } });
+    const flyerPage = await flyerContext.newPage();
+    const flyerErrors = [];
+    flyerPage.on('console', (message) => { if (message.type() === 'error') flyerErrors.push(message.text()); });
+    flyerPage.on('pageerror', (error) => flyerErrors.push(error.message));
+    const response = await flyerPage.goto(publicFlyerUrl, { waitUntil: 'networkidle' });
+    check(response && response.status() === 200, `${flyerCase.name}: public flyer did not return HTTP 200.`);
+    check(!flyerPage.url().includes('wp-login.php'), `${flyerCase.name}: public flyer required WordPress login.`);
+    check(await flyerPage.getByRole('button', { name: 'Print / Save as PDF' }).count() === 1, `${flyerCase.name}: print/PDF control is missing.`);
+    check(await flyerPage.getByText('Complimentary Guest Passes for up to 2 people per customer', { exact: true }).count() === 1, `${flyerCase.name}: complimentary flyer wording is inaccurate.`);
+    check(await flyerPage.getByText('Total admissions allowed through this business:', { exact: true }).count() === 1, `${flyerCase.name}: capped flyer omits its real per-business limit.`);
+    check(await flyerPage.locator('img.qr').count() === 1 && (await flyerPage.locator('img.qr').getAttribute('src') || '').startsWith('data:image/png;base64,'), `${flyerCase.name}: flyer QR was not rendered from the actual customer offer link.`);
+    const flyerGeometry = await flyerPage.evaluate(() => ({ overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth, sheetWidth: document.querySelector('.sheet').getBoundingClientRect().width }));
+    check(flyerGeometry.overflow <= 1 && flyerGeometry.sheetWidth <= flyerCase.width, `${flyerCase.name}: flyer overflows its viewport.`);
+    check(flyerErrors.length === 0, `${flyerCase.name}: flyer console errors: ${flyerErrors.join(' | ')}`);
+    await flyerPage.screenshot({ path: path.join(outputDir, `${flyerCase.name}-public-flyer.png`), fullPage: true });
+    if (flyerCase.name === 'desktop') {
+      await flyerPage.emulateMedia({ media: 'print' });
+      await flyerPage.pdf({ path: path.join(outputDir, 'public-flyer-letter.pdf'), format: 'Letter', printBackground: true, preferCSSPageSize: true });
+    }
+    await flyerContext.close();
   }
 
   const noScriptContext = await browser.newContext({
