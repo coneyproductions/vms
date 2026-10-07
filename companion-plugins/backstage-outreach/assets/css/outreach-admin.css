@@ -2202,6 +2202,64 @@
   max-width: 100%;
 }
 
+#vms-pass-claims-wrap .vms-pass-flyer-design,
+#vms-pass-claims-wrap .vms-pass-flyer-defaults {
+  margin-block: 16px;
+}
+
+#vms-pass-claims-wrap .vms-pass-flyer-defaults {
+  padding: 0 14px 14px;
+  border: 1px solid #d8e2f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+#vms-pass-claims-wrap .vms-pass-flyer-defaults > summary {
+  padding-block: 13px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#vms-pass-claims-wrap .vms-pass-flyer-artwork-preview {
+  width: min(28rem, 100%);
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid #c3c4c7;
+  border-radius: 8px;
+  background: #f6f7f7;
+}
+
+#vms-pass-claims-wrap .vms-pass-flyer-artwork-preview img {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-action-groups {
+  display: grid;
+  gap: 10px;
+  min-width: min(32rem, 100%);
+}
+
+#vms-pass-claims-wrap .vms-pass-business-action-groups fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid #d8e2f0;
+  border-radius: 8px;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-action-groups legend {
+  padding-inline: 4px;
+  font-weight: 700;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-action-groups .regular-text {
+  width: min(100%, 30rem);
+  min-width: 0;
+}
+
 #vms-pass-claims-wrap .vms-pass-inline-value-field {
   display: flex;
   align-items: center;
@@ -2226,6 +2284,16 @@
 
   #vms-pass-claims-wrap .vms-pass-business-steps li {
     font-size: 13px;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-action-groups {
+    min-width: 0;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-action-groups .button,
+  #vms-pass-claims-wrap .vms-pass-flyer-artwork-control .button,
+  #vms-pass-claims-wrap .vms-pass-flyer-artwork-control .button-link-delete {
+    margin-top: 6px;
   }
 
   #vms-pass-claims-wrap .vms-pass-business-batch-create,

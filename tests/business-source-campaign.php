@@ -4,6 +4,7 @@ declare(strict_types=1);
 $root = dirname(__DIR__);
 $outreach = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/admissions/outreach.php');
 $distribution = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/business-distribution.php');
+$discounts = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/business-discount-offers.php');
 $recipients = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/admissions/outreach-recipients.php');
 $db = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/outreach/db.php');
 $css = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/assets/css/outreach-admin.css');
@@ -11,6 +12,9 @@ $js = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/
 $plugin = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/backstage-outreach.php');
 $integration = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/integration-bvm.php');
 $claims = (string) file_get_contents($root . '/includes/modules/admissions/pass-claims.php');
+$discount_router_start = strpos($discounts, 'function backstage_outreach_discount_offer_router');
+$discount_router_end = strpos($discounts, 'function backstage_outreach_discount_order_context', (int) $discount_router_start);
+$discount_router = $discount_router_start !== false && $discount_router_end !== false ? substr($discounts, $discount_router_start, $discount_router_end - $discount_router_start) : '';
 
 $helper_start = strpos($outreach, "if (!function_exists('vms_pass_outreach_create_business_source_campaign'))");
 $helper_end = strpos($outreach, "if (!function_exists('vms_pass_outreach_sanitize_campaign_payload'))", (int) $helper_start);
@@ -56,8 +60,15 @@ $assertions = array(
 	'Offer amount is conditional and accessible' => strpos($outreach, 'data-vms-business-offer-amount') !== false && strpos($outreach, 'function updateBusinessOffer') !== false && strpos($outreach, 'greater than 0 and up to 100') !== false,
 	'Date and expiry fields stay compact on mobile' => strpos($css, 'width: min(12rem, 100%)') !== false && strpos($css, 'width: min(19rem, 100%)') !== false,
 	'Shareable flyer uses the signed distribution identity and read-only route' => strpos($distribution, '/guest-pass/business-flyer/') !== false && strpos($distribution, 'backstage_outreach_distribution_context($raw_token)') !== false && strpos($distribution, 'backstage_outreach_distribution_flyer_router') !== false && strpos($distribution, 'backstage_partner_submit') !== false,
-	'Flyer contains public-safe reception and print details' => strpos($distribution, 'Print / Save as PDF') !== false && strpos($distribution, '@page{size:letter portrait') !== false && strpos($distribution, 'Copy flyer link') !== false && strpos($distribution, 'Total admissions allowed through this business') !== false && strpos($distribution, 'Research note') === false,
+	'Flyer contains public-safe reception and print details' => strpos($distribution, 'Print / Save as PDF') !== false && strpos($distribution, '@page{size:letter portrait') !== false && strpos($distribution, 'Printable flyer') !== false && strpos($distribution, 'Maximum through this business') !== false && strpos($distribution, 'Research note') === false,
 	'Flyer state and privacy are enforced without admin credentials' => strpos($distribution, 'backstage_outreach_distribution_flyer_context') !== false && strpos($distribution, 'partner_flyer_expired') !== false && strpos($distribution, '<meta name="robots" content="noindex,nofollow">') !== false,
+	'Flyer design supports venue defaults and campaign overrides without changing signed links' => strpos($distribution, 'backstage_outreach_flyer_design_default') !== false && strpos($distribution, 'backstage_outreach_flyer_design_campaign_') !== false && strpos($distribution, 'campaign_artwork_mode') !== false && strpos($distribution, 'Existing business links now use the updated presentation') !== false,
+	'Artwork remains separate printable image content' => strpos($distribution, '<img class="artwork"') !== false && strpos($distribution, 'background-image') === false && strpos($distribution, 'never baked into this image') !== false,
+	'Business link controls are grouped by customer offer, flyer, and lifecycle' => strpos($distribution, "__('Customer offer'") !== false && strpos($distribution, "__('Printable flyer'") !== false && strpos($distribution, "__('Manage'") !== false && strpos($distribution, 'vms-pass-business-action-groups') !== false,
+	'Draft activation guidance targets the existing status control without activating' => strpos($distribution, 'data-vms-open-section-target="vms-outreach-campaign-status"') !== false && strpos($outreach, 'id="vms-outreach-campaign-status"') !== false,
+	'Paid offer page leads with venue benefit and chronological ticket choices' => strpos($discounts, 'usort($events') !== false && strpos($discounts, 'featured_image_url') !== false && strpos($discounts, "__('Choose tickets'") !== false && strpos($discounts, "__('Shared by %s'") !== false,
+	'Public offer wording avoids implementation jargon' => $discount_router !== '' && strpos($discount_router, 'Commerce Discount') === false && strpos($discount_router, 'managed coupon') === false && strpos($discounts, 'automatic ticket discount') !== false,
+	'Unavailable business pages retain signed-state status and venue navigation' => strpos($distribution, 'backstage_outreach_render_public_offer_status') !== false && strpos($distribution, 'Visit the venue homepage') !== false && strpos($distribution, '$status === 404 ? 404 : 410') !== false,
 	'Message preview is prominently sample-only' => strpos($outreach, 'SAMPLE DATA - NOT A DELIVERY PREVIEW') !== false,
 	'Current defaults avoid transport-sensitive punctuation' => strpos($outreach, "'You\\'ve been invited") !== false && strpos($outreach, 'You’ve been invited') === false,
 	'Legacy mojibake is repaired for display without a bulk update' => strpos($outreach, 'function vms_pass_outreach_display_text') !== false && strpos($outreach, 'Stored campaign history is not rewritten') !== false && strpos($helper, '$wpdb->update') === false,
@@ -65,7 +76,7 @@ $assertions = array(
 	'Narrow-screen business rows use labeled cards' => strpos($css, '.vms-pass-business-source-table td::before') !== false && strpos($css, 'content: attr(data-label)') !== false,
 	'Narrow-screen workflow does not overflow' => strpos($css, '.vms-pass-business-steps') !== false && strpos($css, 'grid-template-columns: 1fr') !== false && strpos($css, 'overflow-wrap: anywhere') !== false,
 	'Business identity remains independent of email' => strpos($distribution, 'UNIQUE KEY public_id (public_id)') !== false && strpos($distribution, 'UNIQUE KEY email') === false,
-	'Outreach 1.2.8 owns reproducible asset cache keys' => strpos($plugin, 'Version: 1.2.8') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.8'") !== false && substr_count($integration, 'BACKSTAGE_OUTREACH_VERSION') >= 2 && strpos($integration, 'filemtime(') === false,
+	'Outreach 1.2.9 owns reproducible asset cache keys' => strpos($plugin, 'Version: 1.2.9') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.9'") !== false && substr_count($integration, 'BACKSTAGE_OUTREACH_VERSION') >= 2 && strpos($integration, 'filemtime(') === false,
 	'Schema versions remain unchanged' => strpos($distribution, "\$target = '1.2.1';") !== false && strpos($db, "return '1.1.0';") !== false,
 );
 

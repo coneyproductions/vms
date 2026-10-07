@@ -60,6 +60,9 @@ if (!function_exists('backstage_outreach_enqueue_admin_assets')) {
 		if (!backstage_outreach_should_enqueue_admin_assets()) {
 			return;
 		}
+		if (current_user_can('upload_files') && function_exists('wp_enqueue_media')) {
+			wp_enqueue_media();
+		}
 		wp_enqueue_style(
 			'backstage-outreach-admin',
 			BACKSTAGE_OUTREACH_PLUGIN_URL . 'assets/css/outreach-admin.css',

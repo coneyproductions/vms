@@ -957,6 +957,128 @@ function backstage_outreach_distribution_flyer_url(array $row): string
 	return home_url('/guest-pass/business-flyer/' . rawurlencode(backstage_outreach_distribution_token($row)));
 }
 
+function backstage_outreach_flyer_design_option_key(int $campaign_id = 0): string
+{
+	return $campaign_id > 0
+		? 'backstage_outreach_flyer_design_campaign_' . $campaign_id
+		: 'backstage_outreach_flyer_design_default';
+}
+
+function backstage_outreach_flyer_branding(): array
+{
+	$branding = function_exists('bvmgr_pass_claims_print_branding') ? bvmgr_pass_claims_print_branding() : array();
+	$site_name = sanitize_text_field((string) ($branding['site_name'] ?? get_bloginfo('name')));
+	if ($site_name === '') {
+		$site_name = __('Live Music Venue', 'backstage-outreach');
+	}
+	return array(
+		'site_name' => $site_name,
+		'logo_url' => esc_url_raw((string) ($branding['logo_url'] ?? '')),
+		'home_url' => esc_url_raw(home_url('/')),
+	);
+}
+
+function backstage_outreach_flyer_design_attachment_url(int $attachment_id): string
+{
+	if ($attachment_id <= 0 || !function_exists('wp_attachment_is_image') || !wp_attachment_is_image($attachment_id)) {
+		return '';
+	}
+	$url = function_exists('wp_get_attachment_image_url') ? wp_get_attachment_image_url($attachment_id, 'large') : '';
+	return is_string($url) ? esc_url_raw($url) : '';
+}
+
+function backstage_outreach_flyer_default_design(): array
+{
+	$branding = backstage_outreach_flyer_branding();
+	$stored = get_option(backstage_outreach_flyer_design_option_key(), array());
+	$stored = is_array($stored) ? $stored : array();
+	$heading = sanitize_text_field((string) ($stored['heading'] ?? ''));
+	$subheading = sanitize_text_field((string) ($stored['subheading'] ?? ''));
+	return array(
+		'heading' => $heading !== '' ? $heading : sprintf(__('Live music at %s', 'backstage-outreach'), $branding['site_name']),
+		'subheading' => $subheading !== '' ? $subheading : __('Concerts, community, and a special admission offer.', 'backstage-outreach'),
+		'artwork_id' => absint($stored['artwork_id'] ?? 0),
+	);
+}
+
+function backstage_outreach_flyer_campaign_design(int $campaign_id): array
+{
+	$stored = get_option(backstage_outreach_flyer_design_option_key($campaign_id), array());
+	$stored = is_array($stored) ? $stored : array();
+	$mode = sanitize_key((string) ($stored['artwork_mode'] ?? 'inherit'));
+	if (!in_array($mode, array('inherit', 'custom', 'none'), true)) {
+		$mode = 'inherit';
+	}
+	return array(
+		'heading' => sanitize_text_field((string) ($stored['heading'] ?? '')),
+		'subheading' => sanitize_text_field((string) ($stored['subheading'] ?? '')),
+		'artwork_mode' => $mode,
+		'artwork_id' => absint($stored['artwork_id'] ?? 0),
+	);
+}
+
+function backstage_outreach_resolved_flyer_design(int $campaign_id): array
+{
+	$defaults = backstage_outreach_flyer_default_design();
+	$campaign = backstage_outreach_flyer_campaign_design($campaign_id);
+	$artwork_id = (int) $defaults['artwork_id'];
+	if ($campaign['artwork_mode'] === 'custom') {
+		$artwork_id = (int) $campaign['artwork_id'];
+	} elseif ($campaign['artwork_mode'] === 'none') {
+		$artwork_id = 0;
+	}
+	return array(
+		'heading' => $campaign['heading'] !== '' ? $campaign['heading'] : $defaults['heading'],
+		'subheading' => $campaign['subheading'] !== '' ? $campaign['subheading'] : $defaults['subheading'],
+		'artwork_id' => $artwork_id,
+		'artwork_url' => backstage_outreach_flyer_design_attachment_url($artwork_id),
+	);
+}
+
+function backstage_outreach_handle_flyer_design_save(): void
+{
+	if (!current_user_can(vms_pass_claims_capability())) {
+		wp_die(esc_html__('Access denied.', 'backstage-outreach'));
+	}
+	check_admin_referer('backstage_outreach_flyer_design');
+	$campaign_id = backstage_outreach_request_absint($_POST, 'campaign_id');
+	$campaign = vms_pass_outreach_get_campaign_by_id($campaign_id);
+	if (!is_array($campaign) || !backstage_outreach_is_reusable_business_campaign($campaign)) {
+		wp_die(esc_html__('Reusable-business campaign not found.', 'backstage-outreach'));
+	}
+	$mode = sanitize_key(backstage_outreach_request_text($_POST, 'campaign_artwork_mode', 'inherit'));
+	if (!in_array($mode, array('inherit', 'custom', 'none'), true)) {
+		$mode = 'inherit';
+	}
+	$campaign_artwork_id = backstage_outreach_request_absint($_POST, 'campaign_artwork_id');
+	if ($mode === 'custom' && backstage_outreach_flyer_design_attachment_url($campaign_artwork_id) === '') {
+		backstage_outreach_business_message(__('Choose a valid Media Library image or use the venue default artwork.', 'backstage-outreach'), 'error');
+		backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-flyer-design');
+	}
+	$can_save_venue_defaults = current_user_can('manage_options') && isset($_POST['venue_flyer_heading']);
+	$venue_artwork_id = $can_save_venue_defaults ? backstage_outreach_request_absint($_POST, 'venue_artwork_id') : 0;
+	if ($can_save_venue_defaults && $venue_artwork_id > 0 && backstage_outreach_flyer_design_attachment_url($venue_artwork_id) === '') {
+		backstage_outreach_business_message(__('The venue-default artwork was not a valid Media Library image.', 'backstage-outreach'), 'error');
+		backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-flyer-design');
+	}
+	update_option(backstage_outreach_flyer_design_option_key($campaign_id), array(
+		'heading' => sanitize_text_field(backstage_outreach_request_text($_POST, 'campaign_flyer_heading')),
+		'subheading' => sanitize_text_field(backstage_outreach_request_text($_POST, 'campaign_flyer_subheading')),
+		'artwork_mode' => $mode,
+		'artwork_id' => $mode === 'custom' ? $campaign_artwork_id : 0,
+	), false);
+	if ($can_save_venue_defaults) {
+		update_option(backstage_outreach_flyer_design_option_key(), array(
+			'heading' => sanitize_text_field(backstage_outreach_request_text($_POST, 'venue_flyer_heading')),
+			'subheading' => sanitize_text_field(backstage_outreach_request_text($_POST, 'venue_flyer_subheading')),
+			'artwork_id' => $venue_artwork_id,
+		), false);
+	}
+	backstage_outreach_business_message(__('Flyer design saved. Existing business links now use the updated presentation; their signed customer URLs did not change.', 'backstage-outreach'));
+	backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-flyer-design');
+}
+add_action('admin_post_backstage_outreach_flyer_design', 'backstage_outreach_handle_flyer_design_save');
+
 function backstage_outreach_create_distribution(int $campaign_id, int $source_id, int $business_id, string $distribution_type, int $cap, int $order_cap, string $expires_at, array $event_ids, array $product_ids, int $user_id): int
 {
 	global $wpdb;
@@ -1653,17 +1775,63 @@ function backstage_outreach_handle_distribution_print(): void
 	$is_coupon = backstage_outreach_discount_distribution_type($row) === 'coupon_backed';
 	$terms = $is_coupon && function_exists('backstage_outreach_discount_terms_for_distribution') ? backstage_outreach_discount_terms_for_distribution($row) : null;
 	$paid_value_label = is_array($terms) && function_exists('backstage_outreach_discount_terms_label') ? backstage_outreach_discount_terms_label($terms, false) : __('Admission discount', 'backstage-outreach');
-	$eyebrow = $is_coupon ? __('Serenade Range Admission Offer', 'backstage-outreach') : __('Serenade Range Guest Pass', 'backstage-outreach');
+	$branding = backstage_outreach_flyer_branding();
+	$logo_url = (string) $branding['logo_url'];
+	$eyebrow = $is_coupon ? __('Admission Offer', 'backstage-outreach') : __('Complimentary Guest Pass', 'backstage-outreach');
 	$alt = $is_coupon ? __('Reusable Admission Offer QR', 'backstage-outreach') : __('Reusable partner Guest Pass QR', 'backstage-outreach');
 	$callout = $is_coupon ? sprintf(__('Scan for %1$s for up to %2$d people', 'backstage-outreach'), $paid_value_label, max(1, absint($row['admissions_per_recipient'] ?? 1))) : __('Scan to claim your own Guest Pass', 'backstage-outreach');
 	$note = $is_coupon
-		? __('This reusable marketing QR opens the offer and applies its managed coupon through normal ticket checkout. It is not an admission credential.', 'backstage-outreach')
-		: __('This marketing QR is reusable. It is not an admission credential; each guest receives separate gate QR credentials after claiming.', 'backstage-outreach');
+		? __('Choose eligible tickets after scanning. The advertised discount is applied automatically.', 'backstage-outreach')
+		: __('Each guest receives a separate admission credential after a successful claim.', 'backstage-outreach');
 	nocache_headers();
-	echo '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>' . esc_html((string) $row['business_name']) . '</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;color:#17202a}.sheet{max-width:520px;margin:30px auto;padding:34px;text-align:center;border:1px solid #d9e2ef;border-radius:16px}.eyebrow{text-transform:uppercase;letter-spacing:.12em;color:#146b55;font-weight:700}.qr{width:320px;max-width:90%;height:auto}.note{color:#526174}.actions{margin:20px}@media print{.actions{display:none}.sheet{border:0;margin:0 auto}}</style></head><body><div class="actions"><button onclick="window.print()">' . esc_html__('Print', 'backstage-outreach') . '</button></div><main class="sheet"><p class="eyebrow">' . esc_html($eyebrow) . '</p><h1>' . esc_html((string) $row['business_name']) . '</h1><p>' . esc_html((string) $row['campaign_name']) . '</p><img class="qr" src="' . esc_attr($qr) . '" alt="' . esc_attr($alt) . '"><p><strong>' . esc_html($callout) . '</strong></p><p class="note">' . esc_html($note) . '</p></main></body></html>';
+	echo '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="robots" content="noindex,nofollow"><title>' . esc_html((string) $row['business_name']) . '</title><style>@page{size:letter portrait;margin:.5in}*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;background:#edf3f1;color:#17202a}.actions{display:flex;justify-content:center;padding:18px}.actions button{min-height:44px;padding:9px 18px;border:0;border-radius:8px;background:#146b55;color:#fff;font:inherit;font-weight:700}.sheet{width:min(7in,calc(100% - 24px));margin:0 auto 24px;padding:.55in;text-align:center;background:#fff;border:1px solid #d9e2ef;border-radius:18px}.logo{display:block;max-width:310px;max-height:120px;width:auto;height:auto;margin:0 auto 24px}.venue{font-size:1.6rem;font-weight:800;margin:0 0 24px}.eyebrow{text-transform:uppercase;letter-spacing:.12em;color:#146b55;font-weight:800}.business{overflow-wrap:anywhere;font-size:2.4rem;line-height:1.1}.qr-wrap{display:inline-block;padding:18px;background:#fff;border:1px solid #dfe6e3;border-radius:12px}.qr{display:block;width:min(3.1in,72vw);height:auto}.callout{font-size:1.3rem}.note{color:#526174;line-height:1.5}@media print{body{background:#fff}.actions{display:none}.sheet{width:100%;margin:0;padding:.15in;border:0;border-radius:0}.logo{max-height:.85in}.qr{width:2.8in}}</style></head><body><div class="actions"><button onclick="window.print()">' . esc_html__('Print / Save as PDF', 'backstage-outreach') . '</button></div><main class="sheet">';
+	if ($logo_url !== '') {
+		echo '<img class="logo" src="' . esc_url($logo_url) . '" alt="' . esc_attr((string) $branding['site_name']) . '">';
+	} else {
+		echo '<p class="venue">' . esc_html((string) $branding['site_name']) . '</p>';
+	}
+	echo '<p class="eyebrow">' . esc_html($eyebrow) . '</p><h1 class="business">' . esc_html((string) $row['business_name']) . '</h1><p>' . esc_html((string) $row['campaign_name']) . '</p><div class="qr-wrap"><img class="qr" src="' . esc_attr($qr) . '" alt="' . esc_attr($alt) . '"></div><p class="callout"><strong>' . esc_html($callout) . '</strong></p><p class="note">' . esc_html($note) . '</p></main></body></html>';
 	exit;
 }
 add_action('admin_post_backstage_outreach_distribution_print', 'backstage_outreach_handle_distribution_print');
+
+function backstage_outreach_render_flyer_artwork_control(string $prefix, int $attachment_id, string $label): void
+{
+	$input_id = 'backstage-outreach-' . sanitize_html_class($prefix) . '-artwork-id';
+	$preview_id = 'backstage-outreach-' . sanitize_html_class($prefix) . '-artwork-preview';
+	$url = backstage_outreach_flyer_design_attachment_url($attachment_id);
+	echo '<div class="vms-pass-flyer-artwork-control" data-vms-flyer-artwork-control data-vms-artwork-prefix="' . esc_attr($prefix) . '"><input type="hidden" id="' . esc_attr($input_id) . '" name="' . esc_attr($prefix . '_artwork_id') . '" value="' . esc_attr((string) $attachment_id) . '"><div id="' . esc_attr($preview_id) . '" class="vms-pass-flyer-artwork-preview"' . ($url === '' ? ' hidden' : '') . '>';
+	if ($url !== '') {
+		echo '<img src="' . esc_url($url) . '" alt="">';
+	}
+	echo '</div><p class="vms-pass-actions"><button type="button" class="button" data-vms-artwork-select data-vms-artwork-target="' . esc_attr($input_id) . '" data-vms-artwork-preview="' . esc_attr($preview_id) . '">' . esc_html($url === '' ? $label : __('Replace artwork', 'backstage-outreach')) . '</button> <button type="button" class="button-link-delete" data-vms-artwork-remove data-vms-artwork-target="' . esc_attr($input_id) . '" data-vms-artwork-preview="' . esc_attr($preview_id) . '"' . ($url === '' ? ' hidden' : '') . '>' . esc_html__('Remove artwork', 'backstage-outreach') . '</button></p></div>';
+}
+
+function backstage_outreach_render_flyer_design_panel(array $campaign): void
+{
+	$campaign_id = absint($campaign['id'] ?? 0);
+	$defaults = backstage_outreach_flyer_default_design();
+	$override = backstage_outreach_flyer_campaign_design($campaign_id);
+	$resolved = backstage_outreach_resolved_flyer_design($campaign_id);
+	echo '<div id="backstage-outreach-flyer-design" class="vms-pass-preview-summary vms-pass-flyer-design" tabindex="-1"><h3>' . esc_html__('Flyer design', 'backstage-outreach') . '</h3><p>' . esc_html__('Set one public design for this campaign. Business name, exact offer, dates, limits, expiry, and each signed QR are added separately for every linked business.', 'backstage-outreach') . '</p>';
+	echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_flyer_design"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '">';
+	wp_nonce_field('backstage_outreach_flyer_design');
+	if (current_user_can('manage_options')) {
+		echo '<details class="vms-pass-flyer-defaults"><summary>' . esc_html__('Venue flyer defaults', 'backstage-outreach') . '</summary><p class="description">' . esc_html__('Used by reusable-business campaigns that do not set a campaign override.', 'backstage-outreach') . '</p><div class="vms-pass-grid"><label>' . esc_html__('Default public heading', 'backstage-outreach') . '<input type="text" name="venue_flyer_heading" value="' . esc_attr((string) $defaults['heading']) . '" maxlength="120"></label><label>' . esc_html__('Default public subheading', 'backstage-outreach') . '<input type="text" name="venue_flyer_subheading" value="' . esc_attr((string) $defaults['subheading']) . '" maxlength="180"></label><div class="vms-pass-span-2"><strong>' . esc_html__('Default artwork', 'backstage-outreach') . '</strong><p class="description">' . esc_html__('Choose a high-resolution landscape or portrait image with a clear focal point. Text and QR content use their own readable panels and are never baked into this image.', 'backstage-outreach') . '</p>';
+		backstage_outreach_render_flyer_artwork_control('venue', (int) $defaults['artwork_id'], __('Choose default artwork', 'backstage-outreach'));
+		echo '</div></div></details>';
+	}
+	echo '<div class="vms-pass-grid"><label>' . esc_html__('Campaign public heading', 'backstage-outreach') . '<input type="text" name="campaign_flyer_heading" value="' . esc_attr((string) $override['heading']) . '" maxlength="120" placeholder="' . esc_attr((string) $defaults['heading']) . '"><span class="description">' . esc_html__('Leave blank to use the venue default.', 'backstage-outreach') . '</span></label><label>' . esc_html__('Campaign public subheading', 'backstage-outreach') . '<input type="text" name="campaign_flyer_subheading" value="' . esc_attr((string) $override['subheading']) . '" maxlength="180" placeholder="' . esc_attr((string) $defaults['subheading']) . '"><span class="description">' . esc_html__('Leave blank to use the venue default.', 'backstage-outreach') . '</span></label><fieldset class="vms-pass-span-2"><legend>' . esc_html__('Campaign artwork', 'backstage-outreach') . '</legend><label class="vms-pass-inline-check"><input type="radio" name="campaign_artwork_mode" value="inherit"' . checked($override['artwork_mode'], 'inherit', false) . '> <span>' . esc_html__('Use venue default artwork', 'backstage-outreach') . '</span></label><label class="vms-pass-inline-check"><input type="radio" name="campaign_artwork_mode" value="custom"' . checked($override['artwork_mode'], 'custom', false) . '> <span>' . esc_html__('Use campaign artwork', 'backstage-outreach') . '</span></label><label class="vms-pass-inline-check"><input type="radio" name="campaign_artwork_mode" value="none"' . checked($override['artwork_mode'], 'none', false) . '> <span>' . esc_html__('No artwork', 'backstage-outreach') . '</span></label><p class="description">' . esc_html__('Artwork is decorative context only. The venue logo, offer terms, business name, dates, limits, and QR remain live, readable content.', 'backstage-outreach') . '</p>';
+	backstage_outreach_render_flyer_artwork_control('campaign', (int) $override['artwork_id'], __('Choose campaign artwork', 'backstage-outreach'));
+	echo '</fieldset></div><p><button class="button button-primary">' . esc_html__('Save flyer design', 'backstage-outreach') . '</button></p></form>';
+	if (sanitize_key((string) ($campaign['status'] ?? '')) !== 'active') {
+		echo '<div class="notice notice-warning inline"><p><strong>' . esc_html__('Public links are unavailable while this campaign is a draft.', 'backstage-outreach') . '</strong> ' . esc_html__('Saving a flyer design does not activate the campaign or send anything.', 'backstage-outreach') . ' <a href="#vms-outreach-campaign-status" data-vms-open-section-target="vms-outreach-campaign-status">' . esc_html__('Go to the existing campaign status control', 'backstage-outreach') . '</a>.</p></div>';
+	}
+	if ((string) $resolved['artwork_url'] !== '') {
+		echo '<p class="description">' . esc_html__('Current resolved design includes artwork.', 'backstage-outreach') . '</p>';
+	}
+	echo '</div>';
+}
 
 function backstage_outreach_render_business_distribution_panel(array $campaign): void
 {
@@ -1746,6 +1914,7 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		echo '<tr><th scope="row">' . esc_html__('Total admissions available across all businesses', 'backstage-outreach') . '</th><td>' . esc_html((string) absint($batch['total_admission_cap'] ?? 0)) . '</td></tr>';
 		echo '</tbody></table><p class="description">' . esc_html__('Admissions per customer limits how many people one customer can claim or purchase for. The per-business and overall limits count admitted people, not customers or orders. Shared overall capacity can run out before every business reaches its individual maximum. Business QR count is based on active Source memberships and does not generate individual claim links.', 'backstage-outreach') . '</p></div>';
 	}
+	backstage_outreach_render_flyer_design_panel($campaign);
 	echo '<ol class="vms-pass-business-steps vms-pass-business-steps--distribution" aria-label="' . esc_attr__('Business link workflow', 'backstage-outreach') . '"><li class="is-current"><span>1</span>' . esc_html__('Select businesses', 'backstage-outreach') . '</li><li' . (is_array($preview) ? ' class="is-current"' : '') . '><span>2</span>' . esc_html__('Review', 'backstage-outreach') . '</li><li' . (!empty($rows) && !is_array($preview) ? ' class="is-complete"' : '') . '><span>3</span>' . esc_html__('Save links', 'backstage-outreach') . '</li><li' . (!empty($rows) ? ' class="is-current"' : '') . '><span>4</span>' . esc_html__('Share with businesses', 'backstage-outreach') . '</li></ol>';
 	echo '<form id="backstage-outreach-business-selection" method="post" action="' . esc_url(admin_url('admin-post.php')) . '" data-vms-tour="outreach-business-selection"><input type="hidden" name="action" value="backstage_outreach_campaign_businesses"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="distribution_mode" value="preview">';
 	wp_nonce_field('backstage_outreach_campaign_businesses');
@@ -1796,7 +1965,7 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		echo '<button class="button button-primary">' . esc_html__('Save Reviewed Links', 'backstage-outreach') . '</button></form></div>';
 	}
 	if (!empty($rows)) {
-		echo '<table class="widefat striped vms-pass-business-results-table" data-vms-tour="outreach-business-results"><thead><tr><th>' . esc_html__('Business', 'backstage-outreach') . '</th><th>' . esc_html__('Status', 'backstage-outreach') . '</th><th>' . esc_html__('Referral Link / QR', 'backstage-outreach') . '</th><th>' . esc_html__('Results', 'backstage-outreach') . '</th></tr></thead><tbody>';
+		echo '<table class="widefat striped vms-pass-business-results-table" data-vms-tour="outreach-business-results"><thead><tr><th>' . esc_html__('Business', 'backstage-outreach') . '</th><th>' . esc_html__('Status', 'backstage-outreach') . '</th><th>' . esc_html__('Links and controls', 'backstage-outreach') . '</th><th>' . esc_html__('Results', 'backstage-outreach') . '</th></tr></thead><tbody>';
 		global $wpdb;
 		foreach ($rows as $row) {
 			$url = backstage_outreach_distribution_url($row);
@@ -1809,13 +1978,12 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 			$coupon_uses = $is_coupon && absint($row['coupon_id'] ?? 0) > 0 && class_exists('WC_Coupon') ? absint((new WC_Coupon(absint($row['coupon_id'])))->get_usage_count()) : 0;
 			$row_paid_terms = $is_coupon && function_exists('backstage_outreach_discount_terms_for_distribution') ? backstage_outreach_discount_terms_for_distribution(array_merge($row, array('related_batch_id' => absint($campaign['related_batch_id'] ?? 0)))) : null;
 			$row_type_label = $is_coupon && is_array($row_paid_terms) && function_exists('backstage_outreach_discount_terms_label') ? backstage_outreach_discount_terms_label($row_paid_terms) : __('Admission Offer', 'backstage-outreach');
-			echo '<tr><td data-label="' . esc_attr__('Business', 'backstage-outreach') . '"><strong>' . esc_html((string) $row['business_name']) . '</strong><div class="description">' . esc_html($is_coupon ? $row_type_label : __('Complimentary Guest Pass', 'backstage-outreach')) . ($is_coupon && !empty($row['coupon_code']) ? ' | ' . esc_html((string) $row['coupon_code']) : '') . '</div></td><td data-label="' . esc_attr__('Status', 'backstage-outreach') . '">' . esc_html((string) $row['status']) . '</td><td data-label="' . esc_attr__('Referral Link / QR', 'backstage-outreach') . '" data-vms-tour="outreach-qr-actions"><input id="' . esc_attr($link_input_id) . '" class="regular-text" readonly value="' . esc_attr($url) . '" data-backstage-copy-value> <button type="button" class="button button-small" data-backstage-copy data-backstage-copy-target="' . esc_attr($link_input_id) . '">' . esc_html__('Copy Link', 'backstage-outreach') . '</button>';
+			echo '<tr><td data-label="' . esc_attr__('Business', 'backstage-outreach') . '"><strong>' . esc_html((string) $row['business_name']) . '</strong><div class="description">' . esc_html($is_coupon ? $row_type_label : __('Complimentary Guest Pass', 'backstage-outreach')) . ($is_coupon && !empty($row['coupon_code']) ? ' | ' . esc_html((string) $row['coupon_code']) : '') . '</div></td><td data-label="' . esc_attr__('Status', 'backstage-outreach') . '">' . esc_html((string) $row['status']) . '</td><td data-label="' . esc_attr__('Links and controls', 'backstage-outreach') . '" data-vms-tour="outreach-qr-actions"><div class="vms-pass-business-action-groups"><fieldset><legend>' . esc_html__('Customer offer', 'backstage-outreach') . '</legend><p class="description">' . esc_html__('Share or download the QR for the customer-facing offer page.', 'backstage-outreach') . '</p><input id="' . esc_attr($link_input_id) . '" class="regular-text" readonly value="' . esc_attr($url) . '" data-backstage-copy-value aria-label="' . esc_attr__('Customer offer URL', 'backstage-outreach') . '"> <button type="button" class="button button-small" data-backstage-copy data-backstage-copy-target="' . esc_attr($link_input_id) . '">' . esc_html__('Copy link', 'backstage-outreach') . '</button>';
 			if ($qr !== '') {
-				echo ' <a class="button button-small" href="' . esc_url($qr) . '" target="_blank" rel="noopener" download>' . esc_html__('QR Download', 'backstage-outreach') . '</a>';
+				echo ' <a class="button button-small" href="' . esc_url($qr) . '" target="_blank" rel="noopener" download>' . esc_html__('Download QR', 'backstage-outreach') . '</a>';
 			}
 			$print = wp_nonce_url(add_query_arg(array('action' => 'backstage_outreach_distribution_print', 'distribution_id' => (int) $row['id']), admin_url('admin-post.php')), 'backstage_outreach_distribution_print_' . (int) $row['id']);
-			echo ' <a class="button button-small" href="' . esc_url($print) . '" target="_blank">' . esc_html__('Printable QR', 'backstage-outreach') . '</a>';
-			echo '<div class="vms-pass-business-flyer-actions"><input id="' . esc_attr($flyer_input_id) . '" class="regular-text" readonly value="' . esc_attr($flyer_url) . '" data-backstage-copy-value aria-label="' . esc_attr__('Shareable reception-desk flyer link', 'backstage-outreach') . '"> <button type="button" class="button button-small" data-backstage-copy data-backstage-copy-target="' . esc_attr($flyer_input_id) . '">' . esc_html__('Copy flyer link', 'backstage-outreach') . '</button> <a class="button button-small" href="' . esc_url($flyer_url) . '" target="_blank" rel="noopener">' . esc_html__('Open flyer', 'backstage-outreach') . '</a></div>';
+			echo ' <a class="button button-small" href="' . esc_url($print) . '" target="_blank">' . esc_html__('Print QR', 'backstage-outreach') . '</a></fieldset><fieldset><legend>' . esc_html__('Printable flyer', 'backstage-outreach') . '</legend><p class="description">' . esc_html__('This signed public page is safe to send to the business for reception-desk printing.', 'backstage-outreach') . '</p><div class="vms-pass-business-flyer-actions"><input id="' . esc_attr($flyer_input_id) . '" class="regular-text" readonly value="' . esc_attr($flyer_url) . '" data-backstage-copy-value aria-label="' . esc_attr__('Shareable reception-desk flyer URL', 'backstage-outreach') . '"> <button type="button" class="button button-small" data-backstage-copy data-backstage-copy-target="' . esc_attr($flyer_input_id) . '">' . esc_html__('Copy link', 'backstage-outreach') . '</button> <a class="button button-small" href="' . esc_url($flyer_url) . '" target="_blank" rel="noopener">' . esc_html__('Open flyer', 'backstage-outreach') . '</a></div></fieldset><fieldset><legend>' . esc_html__('Manage', 'backstage-outreach') . '</legend><p class="description">' . esc_html__('Pause temporarily, resume a paused link, or revoke it permanently.', 'backstage-outreach') . '</p>';
 			if ((string) $row['status'] !== 'revoked') {
 				$next_status = (string) $row['status'] === 'active' ? 'paused' : 'active';
 				$status_url = wp_nonce_url(add_query_arg(array('action' => 'backstage_outreach_distribution_status', 'distribution_id' => (int) $row['id'], 'status' => $next_status), admin_url('admin-post.php')), 'backstage_outreach_distribution_status_' . (int) $row['id'] . '_' . $next_status);
@@ -1824,6 +1992,7 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 			} else {
 				echo ' <span class="description" data-vms-tour="outreach-offer-lifecycle">' . esc_html__('Revocation is permanent for this link.', 'backstage-outreach') . '</span>';
 			}
+			echo '</fieldset></div>';
 			$currency = sanitize_text_field((string) ($stats['currency'] ?? ''));
 			$revenue = trim(($currency !== '' ? $currency . ' ' : '') . number_format_i18n((float) ($stats['order_revenue'] ?? 0), 2));
 			$results = $is_coupon
@@ -2061,6 +2230,23 @@ function backstage_outreach_distribution_effective_expiry(array $distribution): 
 	return $earliest ? wp_date('F j, Y \a\t g:i a T', $earliest->getTimestamp(), wp_timezone()) : '';
 }
 
+function backstage_outreach_render_public_offer_status(string $title, string $message, int $status = 410): void
+{
+	$status = $status === 404 ? 404 : 410;
+	$branding = backstage_outreach_flyer_branding();
+	status_header($status);
+	nocache_headers();
+	header('Content-Type: text/html; charset=' . get_option('blog_charset', 'UTF-8'));
+	echo '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>' . esc_html($title) . '</title><style>*{box-sizing:border-box}body{margin:0;background:#edf3f1;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.status{width:min(42rem,calc(100% - 32px));margin:10vh auto;padding:34px;text-align:center;background:#fff;border:1px solid #d9e2ef;border-radius:18px}.logo{display:block;max-width:min(320px,80vw);max-height:120px;width:auto;height:auto;margin:0 auto 24px}.venue{font-size:1.5rem;font-weight:850;color:#163c34}.message{color:#526174;line-height:1.6}.home{display:inline-flex;min-height:44px;align-items:center;margin-top:12px;padding:8px 18px;border-radius:8px;background:#146b55;color:#fff;text-decoration:none;font-weight:800}</style></head><body><main class="status">';
+	if ((string) $branding['logo_url'] !== '') {
+		echo '<img class="logo" src="' . esc_url((string) $branding['logo_url']) . '" alt="' . esc_attr((string) $branding['site_name']) . '">';
+	} else {
+		echo '<p class="venue">' . esc_html((string) $branding['site_name']) . '</p>';
+	}
+	echo '<h1>' . esc_html($title) . '</h1><p class="message">' . esc_html($message) . '</p><a class="home" href="' . esc_url((string) $branding['home_url']) . '">' . esc_html__('Visit the venue homepage', 'backstage-outreach') . '</a></main></body></html>';
+	exit;
+}
+
 function backstage_outreach_distribution_flyer_html(array $distribution): string
 {
 	$is_coupon = backstage_outreach_discount_distribution_type($distribution) === 'coupon_backed';
@@ -2081,34 +2267,37 @@ function backstage_outreach_distribution_flyer_html(array $distribution): string
 	} else {
 		$headline = sprintf(_n('Complimentary Guest Pass for up to %d person per customer', 'Complimentary Guest Passes for up to %d people per customer', $per_customer, 'backstage-outreach'), $per_customer);
 	}
-	$branding = function_exists('bvmgr_pass_claims_print_branding') ? bvmgr_pass_claims_print_branding() : array();
-	$logo_url = esc_url_raw((string) ($branding['logo_url'] ?? ''));
-	$site_name = sanitize_text_field((string) ($branding['site_name'] ?? get_bloginfo('name')));
+	$branding = backstage_outreach_flyer_branding();
+	$logo_url = (string) $branding['logo_url'];
+	$site_name = (string) $branding['site_name'];
+	$design = backstage_outreach_resolved_flyer_design(absint($distribution['campaign_id'] ?? 0));
 	$business_name = sanitize_text_field((string) ($distribution['business_name'] ?? ''));
 	$title = sprintf(__('%s Admission Offer', 'backstage-outreach'), $business_name);
 	$scarcity = '';
 	if ($per_business_cap > 0) {
 		$scarcity = $is_coupon
-			? sprintf(_n('This business link can provide up to %d discounted admission.', 'This business link can provide up to %d discounted admissions.', $per_business_cap, 'backstage-outreach'), $per_business_cap)
-			: sprintf(_n('This business link can provide up to %d Guest Pass admission.', 'This business link can provide up to %d Guest Pass admissions.', $per_business_cap, 'backstage-outreach'), $per_business_cap);
+			? sprintf(_n('Maximum through this business: %d discounted admission.', 'Maximum through this business: %d discounted admissions.', $per_business_cap, 'backstage-outreach'), $per_business_cap)
+			: sprintf(_n('Maximum through this business: %d Guest Pass admission.', 'Maximum through this business: %d Guest Pass admissions.', $per_business_cap, 'backstage-outreach'), $per_business_cap);
 		if ($overall_cap > 0) {
-			$scarcity .= ' ' . __('Availability is shared across participating businesses, so the offer may end before this maximum is reached.', 'backstage-outreach');
+			$scarcity .= ' ' . sprintf(_n('Up to %d admission is available across all participating businesses, shared first come, first served.', 'Up to %d admissions are available across all participating businesses, shared first come, first served.', $overall_cap, 'backstage-outreach'), $overall_cap);
 		}
 	} elseif ($overall_cap > 0) {
-		$scarcity = __('Availability is shared across participating businesses and is not a reserved allotment for this business.', 'backstage-outreach');
+		$scarcity = sprintf(_n('Up to %d admission is available across all participating businesses, shared first come, first served.', 'Up to %d admissions are available across all participating businesses, shared first come, first served.', $overall_cap, 'backstage-outreach'), $overall_cap);
 	}
 
 	ob_start();
 	?>
 	<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title><?php echo esc_html($title); ?></title><style>
-	@page{size:letter portrait;margin:.4in}*{box-sizing:border-box}body{margin:0;background:#eef2f5;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.actions{display:flex;justify-content:center;padding:18px}.actions button{min-height:44px;padding:8px 18px;border:1px solid #146b55;border-radius:8px;background:#146b55;color:#fff;font:inherit;font-weight:700;cursor:pointer}.sheet{width:min(7.6in,calc(100% - 24px));min-height:9.6in;margin:0 auto 24px;padding:.45in;text-align:center;background:#fff;border:1px solid #d9e2ef;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}.logo{display:block;max-width:220px;max-height:90px;width:auto;height:auto}.venue{font-weight:700;color:#146b55;letter-spacing:.08em;text-transform:uppercase}.business{overflow-wrap:anywhere;font-size:clamp(2rem,7vw,3.4rem);line-height:1.02;margin:0}.offer{font-size:clamp(1.2rem,3vw,1.65rem);line-height:1.35;margin:0;max-width:34rem}.qr{display:block;width:min(3.8in,78vw);height:auto}.scan{font-size:1.35rem;font-weight:800;margin:0}.details{width:100%;max-width:34rem;margin:0;padding:16px;border-radius:12px;background:#f3f8f6;text-align:left;list-style:none}.details li+li{margin-top:8px}.note{max-width:34rem;margin:0;color:#526174;line-height:1.5;overflow-wrap:anywhere}@media(max-width:480px){.sheet{min-height:0;padding:26px 18px}.details{padding:14px}.actions{position:sticky;top:0;background:#eef2f5;z-index:2}}@media print{body{background:#fff}.actions{display:none}.sheet{width:100%;min-height:0;margin:0;padding:.08in;border:0;border-radius:0;gap:5px;justify-content:flex-start;page-break-inside:avoid}.logo{max-height:.5in}.business{font-size:26pt}.offer{font-size:14pt}.qr{width:2.75in}.scan{font-size:14pt}.details{padding:8px;font-size:10pt}.details li+li{margin-top:3px}.note{font-size:9pt;line-height:1.25}}
+	@page{size:letter portrait;margin:.35in}*{box-sizing:border-box}body{margin:0;background:#e9efed;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.actions{display:flex;justify-content:center;padding:16px}.actions button{min-height:44px;padding:9px 18px;border:0;border-radius:9px;background:#146b55;color:#fff;font:inherit;font-weight:800;cursor:pointer}.sheet{width:min(7.6in,calc(100% - 24px));min-height:9.8in;margin:0 auto 24px;padding:.38in;text-align:center;background:#fff;border:1px solid #d9e2ef;border-radius:18px;display:grid;grid-template-columns:minmax(0,1fr);align-content:center;justify-items:center;gap:11px;overflow:hidden}.logo{display:block;max-width:330px;max-height:115px;width:auto;height:auto}.venue{font-size:1.5rem;font-weight:850;color:#163c34}.heading{font-size:clamp(1.85rem,5vw,3.15rem);line-height:1.05;margin:0;overflow-wrap:anywhere}.subheading{font-size:1.1rem;color:#526174;line-height:1.4;margin:0;max-width:36rem}.artwork{display:block;width:100%;max-width:6.55in;height:min(2.4in,28vh);object-fit:cover;border-radius:16px}.offer-card{width:100%;max-width:36rem;padding:16px 20px;border-radius:16px;background:#f1f8f5}.offer{font-size:clamp(1.2rem,3vw,1.6rem);line-height:1.3;margin:0}.business{margin:8px 0 0;color:#39534d;font-size:1rem;overflow-wrap:anywhere}.qr-wrap{display:inline-block;padding:14px;background:#fff;border:1px solid #dfe6e3;border-radius:14px}.qr{display:block;width:min(2.65in,62vw);height:auto}.scan{font-size:1.2rem;font-weight:850;margin:0}.details{width:100%;max-width:36rem;margin:0;padding:13px 16px;border-radius:12px;background:#f5f6f7;text-align:left;list-style:none;line-height:1.4}.details li+li{margin-top:6px}.note{max-width:36rem;margin:0;color:#526174;line-height:1.4;overflow-wrap:anywhere}@media(max-width:480px){.sheet{min-height:0;padding:24px 16px}.logo{max-width:min(280px,82vw);max-height:100px}.artwork{height:180px}.details{padding:13px}.actions{position:sticky;top:0;background:#e9efed;z-index:2}}@media print{body{background:#fff}.actions{display:none}.sheet{width:100%;min-height:0;height:9.95in;margin:0;padding:.05in;border:0;border-radius:0;gap:4px;align-content:start;page-break-inside:avoid}.logo{max-height:.68in;max-width:3in}.heading{font-size:25pt}.subheading{font-size:10.5pt}.artwork{height:1.72in;border-radius:8px}.offer-card{padding:7px 12px}.offer{font-size:13pt}.business{margin-top:3px;font-size:9pt}.qr-wrap{padding:9px}.qr{width:2.15in}.scan{font-size:12pt}.details{padding:6px 10px;font-size:8.5pt}.details li+li{margin-top:2px}.note{font-size:8.5pt;line-height:1.2}}
 	</style></head><body><div class="actions"><button type="button" onclick="window.print()"><?php echo esc_html__('Print / Save as PDF', 'backstage-outreach'); ?></button></div><main class="sheet">
 	<?php if ($logo_url !== '') : ?><img class="logo" src="<?php echo esc_url($logo_url); ?>" alt="<?php echo esc_attr($site_name); ?>"><?php else : ?><div class="venue"><?php echo esc_html($site_name); ?></div><?php endif; ?>
-	<h1 class="business"><?php echo esc_html($business_name); ?></h1><p class="offer"><?php echo esc_html($headline); ?></p>
-	<?php if ($qr !== '') : ?><img class="qr" src="<?php echo esc_attr($qr); ?>" alt="<?php echo esc_attr__('QR code for this business offer', 'backstage-outreach'); ?>"><?php endif; ?>
-	<p class="scan"><?php echo esc_html__('Scan to view this admission offer', 'backstage-outreach'); ?></p>
-	<ul class="details"><li><strong><?php echo esc_html__('Applies to:', 'backstage-outreach'); ?></strong> <?php echo esc_html($scope); ?></li><li><strong><?php echo esc_html__('Admissions per customer:', 'backstage-outreach'); ?></strong> <?php echo esc_html((string) $per_customer); ?></li><?php if ($per_business_cap > 0) : ?><li><strong><?php echo esc_html__('Total admissions allowed through this business:', 'backstage-outreach'); ?></strong> <?php echo esc_html((string) $per_business_cap); ?></li><?php endif; ?><?php if ($expiry !== '') : ?><li><strong><?php echo esc_html__('Offer expires:', 'backstage-outreach'); ?></strong> <?php echo esc_html($expiry); ?></li><?php endif; ?></ul>
-	<?php if ($scarcity !== '') : ?><p class="note"><?php echo esc_html($scarcity); ?></p><?php endif; ?><p class="note"><?php echo esc_html($is_coupon ? __('The discount applies to eligible admissions only. See the offer page for current availability and checkout details.', 'backstage-outreach') : __('Each guest receives a separate admission credential after a successful claim. This flyer is not an admission credential.', 'backstage-outreach')); ?></p>
+	<h1 class="heading"><?php echo esc_html((string) $design['heading']); ?></h1><?php if ((string) $design['subheading'] !== '') : ?><p class="subheading"><?php echo esc_html((string) $design['subheading']); ?></p><?php endif; ?>
+	<?php if ((string) $design['artwork_url'] !== '') : ?><img class="artwork" src="<?php echo esc_url((string) $design['artwork_url']); ?>" alt=""><?php endif; ?>
+	<div class="offer-card"><p class="offer"><strong><?php echo esc_html($headline); ?></strong></p><p class="business"><?php echo esc_html(sprintf(__('Available through %s', 'backstage-outreach'), $business_name)); ?></p></div>
+	<?php if ($qr !== '') : ?><div class="qr-wrap"><img class="qr" src="<?php echo esc_attr($qr); ?>" alt="<?php echo esc_attr__('QR code for this business offer', 'backstage-outreach'); ?>"></div><?php endif; ?>
+	<p class="scan"><?php echo esc_html__('Scan to see available events and use this offer', 'backstage-outreach'); ?></p>
+	<ul class="details"><li><strong><?php echo esc_html__('Events and dates:', 'backstage-outreach'); ?></strong> <?php echo esc_html($scope); ?></li><?php if ($expiry !== '') : ?><li><strong><?php echo esc_html__('Use by:', 'backstage-outreach'); ?></strong> <?php echo esc_html($expiry); ?></li><?php endif; ?></ul>
+	<?php if ($scarcity !== '') : ?><p class="note"><strong><?php echo esc_html__('Availability:', 'backstage-outreach'); ?></strong> <?php echo esc_html($scarcity); ?></p><?php endif; ?><p class="note"><?php echo esc_html($is_coupon ? __('Choose eligible tickets after scanning. The discount is applied automatically.', 'backstage-outreach') : __('Complete the short claim after scanning to receive separate Guest Pass credentials.', 'backstage-outreach')); ?></p>
 	</main></body></html>
 	<?php
 	return (string) ob_get_clean();
@@ -2123,9 +2312,7 @@ function backstage_outreach_distribution_flyer_router(): void
 	$distribution = backstage_outreach_distribution_flyer_context($token);
 	nocache_headers();
 	if (is_wp_error($distribution)) {
-		status_header($distribution->get_error_code() === 'partner_link_invalid' ? 404 : 410);
-		echo '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>' . esc_html__('Offer unavailable', 'backstage-outreach') . '</title></head><body><main style="max-width:42rem;margin:10vh auto;padding:24px;font-family:sans-serif"><h1>' . esc_html__('Offer unavailable', 'backstage-outreach') . '</h1><p>' . esc_html($distribution->get_error_message()) . '</p></main></body></html>';
-		exit;
+		backstage_outreach_render_public_offer_status(__('Offer unavailable', 'backstage-outreach'), $distribution->get_error_message(), $distribution->get_error_code() === 'partner_link_invalid' ? 404 : 410);
 	}
 	status_header(200);
 	header('Content-Type: text/html; charset=' . get_option('blog_charset', 'UTF-8'));
@@ -2372,9 +2559,8 @@ function backstage_outreach_partner_router(): void
 	if (is_wp_error($distribution)) {
 		$error_data = $distribution->get_error_data();
 		$error_type = is_array($error_data) ? sanitize_key((string) ($error_data['distribution_type'] ?? '')) : '';
-		$status_label = $error_type === 'coupon_backed' ? __('Admission Offer', 'backstage-outreach') : ($error_type === 'complimentary' ? __('Guest Pass', 'backstage-outreach') : __('Business Offer', 'backstage-outreach'));
 		$status_title = $error_type === 'coupon_backed' ? __('Admission Offer Unavailable', 'backstage-outreach') : ($error_type === 'complimentary' ? __('Guest Pass Unavailable', 'backstage-outreach') : __('Business Offer Unavailable', 'backstage-outreach'));
-		bvmgr_pass_claims_render_public_status_screen($status_label, $status_title, $distribution->get_error_message());
+		backstage_outreach_render_public_offer_status($status_title, $distribution->get_error_message(), $distribution->get_error_code() === 'partner_link_invalid' ? 404 : 410);
 	}
 	if (backstage_outreach_discount_distribution_type($distribution) === 'coupon_backed') {
 		backstage_outreach_discount_offer_router($distribution, $token);
@@ -2387,7 +2573,7 @@ function backstage_outreach_partner_router(): void
 		$events = vms_pass_outreach_filter_events_for_campaign($campaign, $events);
 	}
 	if (empty($events)) {
-		bvmgr_pass_claims_render_public_status_screen(__('Guest Pass', 'backstage-outreach'), __('No Eligible Events', 'backstage-outreach'), __('There are no eligible events for this Guest Pass right now.', 'backstage-outreach'));
+		backstage_outreach_render_public_offer_status(__('No Eligible Events', 'backstage-outreach'), __('There are no eligible events for this Guest Pass right now.', 'backstage-outreach'), 410);
 	}
 	$posted = array('first_name' => '', 'last_name' => '', 'phone' => '', 'email' => '', 'event_plan_id' => 0, 'party_size' => 1, 'opt_in' => 0);
 	$error = '';

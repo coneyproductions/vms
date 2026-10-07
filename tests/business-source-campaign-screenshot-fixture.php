@@ -35,6 +35,7 @@ if ($mode === 'cleanup') {
 				delete_transient(backstage_outreach_campaign_business_form_key($campaign_id));
 				delete_transient(backstage_outreach_campaign_business_share_key($campaign_id));
 				delete_option(backstage_outreach_business_share_template_key($campaign_id));
+				delete_option(backstage_outreach_flyer_design_option_key($campaign_id));
 			}
 		}
 		foreach ((array) ($fixture['business_ids'] ?? array()) as $business_id) {
@@ -65,6 +66,9 @@ if ($mode === 'cleanup') {
 		}
 		foreach ((array) ($fixture['extra_source_ids'] ?? array()) as $fixture_source_id) {
 			$wpdb->delete(bvmgr_admission_table_pass_sources(), array('id' => absint($fixture_source_id)));
+		}
+		if (!empty($fixture['artwork_id'])) {
+			wp_delete_attachment(absint($fixture['artwork_id']), true);
 		}
 		$user_id = absint($fixture['user_id'] ?? 1);
 		$wpdb->query($wpdb->prepare(
@@ -108,6 +112,19 @@ $wpdb->insert(bvmgr_admission_table_pass_sources(), array(
 $source_id = (int) $wpdb->insert_id;
 $extra_source_ids = array();
 $extra_batch_ids = array();
+$artwork_id = 0;
+$artwork_upload = wp_upload_bits('business-source-browser-fixture.png', null, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR42mNkYPj/n4GBgYGJAQoAHgQCAfznfQAAAABJRU5ErkJggg=='));
+if (empty($artwork_upload['error']) && !empty($artwork_upload['file'])) {
+	$artwork_id = wp_insert_attachment(array(
+		'post_mime_type' => 'image/png',
+		'post_title' => $marker . ' Artwork',
+		'post_status' => 'inherit',
+	), (string) $artwork_upload['file']);
+	if ($artwork_id > 0) {
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		wp_update_attachment_metadata($artwork_id, wp_generate_attachment_metadata($artwork_id, (string) $artwork_upload['file']));
+	}
+}
 $wpdb->insert(bvmgr_admission_table_pass_sources(), array(
 	'source_name' => $marker . ' Existing Eligible Batches',
 	'status' => 'active',
@@ -180,6 +197,7 @@ $fixture = array(
 	'extra_source_ids' => $extra_source_ids,
 	'extra_batch_ids' => $extra_batch_ids,
 	'business_ids' => $business_ids,
+	'artwork_id' => $artwork_id,
 	'admin_url' => vms_pass_outreach_admin_page_url(),
 	'source_name' => $marker,
 	'batch_name' => $marker . ' Created In Outreach',

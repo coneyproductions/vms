@@ -5,6 +5,12 @@ defined('ABSPATH') || exit;
 global $wpdb;
 $option = 'backstage_outreach_discount_screenshot_fixture';
 $mode = sanitize_key((string) ($args[0] ?? 'create'));
+$offer_type = sanitize_key((string) ($args[1] ?? 'percent'));
+if (!in_array($offer_type, array('percent', 'fixed'), true)) {
+	throw new RuntimeException('Offer type must be percent or fixed.');
+}
+$offer_amount = $offer_type === 'fixed' ? '12.35' : '50.00';
+$offer_text = $offer_type === 'fixed' ? '$12.35 off each admission' : '50% off admission';
 $fixture = get_option($option, array());
 
 if ($mode === 'cleanup') {
@@ -69,9 +75,9 @@ update_post_meta($ticket_id, '_vms_product_role', 'ga_ticket');
 
 $wpdb->insert(bvmgr_admission_table_pass_sources(), array('source_name' => $marker, 'status' => 'active', 'created_by' => 1, 'created_at' => $now));
 $source_id = (int) $wpdb->insert_id;
-$wpdb->insert(bvmgr_admission_table_pass_batches(), array('source_id' => $source_id, 'batch_name' => '50% Business Offer', 'quantity' => 100, 'validity_type' => 'single_event', 'single_event_plan_id' => $event_plan_id, 'venue_ids_json' => '[]', 'value_type' => 'percent', 'value_amount' => '50.00', 'applies_to' => 'entry_only', 'status' => 'active', 'checkin_open_mode' => 'same_day', 'max_per_phone' => 0, 'generated_count' => 0, 'created_by' => 1, 'created_at' => $now, 'admissions_per_link' => 2, 'total_admission_cap' => 40, 'max_per_email' => 0));
+$wpdb->insert(bvmgr_admission_table_pass_batches(), array('source_id' => $source_id, 'batch_name' => $offer_text . ' Business Offer', 'quantity' => 100, 'validity_type' => 'single_event', 'single_event_plan_id' => $event_plan_id, 'venue_ids_json' => '[]', 'value_type' => $offer_type, 'value_amount' => $offer_amount, 'applies_to' => 'entry_only', 'status' => 'active', 'checkin_open_mode' => 'same_day', 'max_per_phone' => 0, 'generated_count' => 0, 'created_by' => 1, 'created_at' => $now, 'admissions_per_link' => 2, 'total_admission_cap' => 40, 'max_per_email' => 0));
 $batch_id = (int) $wpdb->insert_id;
-$wpdb->insert(vms_admission_table_pass_outreach_campaigns(), array('campaign_name' => 'Neighborhood Partner 50% Ticket Offer', 'related_source_id' => $source_id, 'related_batch_id' => $batch_id, 'validity_type' => 'single_event', 'single_event_plan_id' => $event_plan_id, 'expires_at' => wp_date('Y-m-d H:i:s', time() + (30 * DAY_IN_SECONDS), wp_timezone()), 'admissions_per_recipient' => 2, 'total_admission_cap' => 40, 'status' => 'active', 'eligibility_mode' => 'anyone_with_invite', 'created_by' => 1, 'created_at' => $now, 'campaign_purpose' => 'guest_pass_invitation'));
+$wpdb->insert(vms_admission_table_pass_outreach_campaigns(), array('campaign_name' => $offer_text . ' Partner Offer', 'related_source_id' => $source_id, 'related_batch_id' => $batch_id, 'validity_type' => 'single_event', 'single_event_plan_id' => $event_plan_id, 'expires_at' => wp_date('Y-m-d H:i:s', time() + (30 * DAY_IN_SECONDS), wp_timezone()), 'admissions_per_recipient' => 2, 'total_admission_cap' => 40, 'status' => 'active', 'eligibility_mode' => 'anyone_with_invite', 'created_by' => 1, 'created_at' => $now, 'campaign_purpose' => 'guest_pass_invitation'));
 $campaign_id = (int) $wpdb->insert_id;
 $business_id = backstage_outreach_insert_business(array('business_name' => 'Main Street Coffee', 'contact_name' => 'Partner Manager'), 1);
 backstage_outreach_business_upsert_membership($source_id, $business_id, 'manual', null, 0, array(), 1);
@@ -89,6 +95,7 @@ $fixture = array(
 	'coupon_ids' => array((int) $coupon['coupon_id']), 'post_ids' => $post_ids, 'ticket_id' => $ticket_id,
 	'admin_url' => vms_pass_outreach_admin_page_url(array('campaign_id' => $campaign_id)) . '#backstage-outreach-partners',
 	'public_url' => backstage_outreach_distribution_url($distribution),
+	'offer_text' => $offer_text,
 	'cart_url' => add_query_arg('add-to-cart', $ticket_id, wc_get_cart_url()),
 );
 update_option($option, $fixture, false);

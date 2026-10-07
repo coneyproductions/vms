@@ -324,7 +324,7 @@ function backstage_outreach_discount_ensure_coupon(array $distribution, array $c
 	$coupon->set_exclude_sale_items(false);
 	$coupon->set_description(sprintf(
 		/* translators: 1: offer value, 2: campaign name, 3: business name. */
-		__('Managed Admission Offer: %1$s for %2$s / %3$s. Change through Backstage Outreach only.', 'backstage-outreach'),
+		__('Admission Offer: %1$s for %2$s / %3$s. Change through Backstage Outreach only.', 'backstage-outreach'),
 		backstage_outreach_discount_terms_label($configuration, false),
 		(string) ($campaign['campaign_name'] ?? ''),
 		(string) ($distribution['business_name'] ?? '')
@@ -638,10 +638,23 @@ function backstage_outreach_discount_validate_cart(): void
 		wc_add_notice(sprintf(__('This offer allows up to %d eligible tickets per order. Reduce the eligible ticket quantity to continue.', 'backstage-outreach'), $per_order_cap), 'error');
 	}
 	if ($excess_existing_discount) {
-		wc_add_notice(sprintf(__('An existing Commerce Discount would exceed this Admission Offer (%s). The offer will not stack beyond its advertised value; remove the conflicting discount before checkout.', 'backstage-outreach'), backstage_outreach_discount_terms_label($terms, false)), 'error');
+		wc_add_notice(sprintf(__('An existing automatic ticket discount would exceed this Admission Offer (%s). The offer will not stack beyond its advertised value; remove the conflicting discount before checkout.', 'backstage-outreach'), backstage_outreach_discount_terms_label($terms, false)), 'error');
 	}
 }
 add_action('woocommerce_check_cart_items', 'backstage_outreach_discount_validate_cart', 30);
+
+function backstage_outreach_discount_sort_offer_events(array $events): array
+{
+	usort($events, static function (array $left, array $right): int {
+		$left_date = trim((string) ($left['event_date'] ?? ''));
+		$right_date = trim((string) ($right['event_date'] ?? ''));
+		$left_key = ($left_date !== '' ? $left_date : '9999-12-31') . ' ' . trim((string) ($left['start_time'] ?? ''));
+		$right_key = ($right_date !== '' ? $right_date : '9999-12-31') . ' ' . trim((string) ($right['start_time'] ?? ''));
+		$comparison = strcmp($left_key, $right_key);
+		return $comparison !== 0 ? $comparison : absint($left['id'] ?? 0) <=> absint($right['id'] ?? 0);
+	});
+	return $events;
+}
 
 function backstage_outreach_discount_offer_events(array $row): array
 {
@@ -657,58 +670,129 @@ function backstage_outreach_discount_offer_events(array $row): array
 			continue;
 		}
 		$brief['ticket_url'] = $url;
+		$brief['start_time'] = sanitize_text_field((string) get_post_meta($event_plan_id, '_vms_start_time', true));
+		if ($tec_event_id > 0 && function_exists('tribe_get_start_date')) {
+			$tec_start = sanitize_text_field((string) tribe_get_start_date($tec_event_id, false, 'Y-m-d H:i:s'));
+			if ($tec_start !== '') {
+				try {
+					$tec_start_value = new DateTimeImmutable($tec_start, wp_timezone());
+					if ((string) ($brief['event_date'] ?? '') === '') {
+						$brief['event_date'] = $tec_start_value->format('Y-m-d');
+					}
+					if ((string) $brief['start_time'] === '') {
+						$brief['start_time'] = $tec_start_value->format('H:i');
+					}
+				} catch (Exception $error) {
+					// Keep the Event Plan display values when TEC start metadata is unavailable.
+				}
+			}
+		}
+		$featured_id = function_exists('get_post_thumbnail_id') ? absint(get_post_thumbnail_id($tec_event_id > 0 ? $tec_event_id : $event_plan_id)) : 0;
+		$featured_url = $featured_id > 0 && function_exists('wp_get_attachment_image_url') ? wp_get_attachment_image_url($featured_id, 'large') : '';
+		$brief['featured_image_url'] = is_string($featured_url) ? esc_url_raw($featured_url) : '';
 		$events[] = $brief;
 	}
-	return $events;
+	return backstage_outreach_discount_sort_offer_events($events);
+}
+
+function backstage_outreach_discount_offer_event_date_label(array $event): string
+{
+	$date = sanitize_text_field((string) ($event['event_date'] ?? ''));
+	$time = sanitize_text_field((string) ($event['start_time'] ?? ''));
+	if ($date === '') {
+		return '';
+	}
+	try {
+		$value = new DateTimeImmutable(trim($date . ' ' . $time), wp_timezone());
+		$format = get_option('date_format');
+		if ($time !== '') {
+			$format .= ' ' . get_option('time_format');
+		}
+		return wp_date((string) $format, $value->getTimestamp(), wp_timezone());
+	} catch (Exception $error) {
+		return function_exists('bvmgr_pass_claims_format_public_date') ? bvmgr_pass_claims_format_public_date($date) : $date;
+	}
 }
 
 function backstage_outreach_discount_offer_router(array $distribution, string $raw_token): void
 {
 	$error = backstage_outreach_discount_distribution_error($distribution);
 	if (is_wp_error($error)) {
-		bvmgr_pass_claims_render_public_status_screen(__('Admission Offer', 'backstage-outreach'), __('Offer Unavailable', 'backstage-outreach'), $error->get_error_message());
+		backstage_outreach_render_public_offer_status(__('Admission Offer Unavailable', 'backstage-outreach'), $error->get_error_message(), 410);
 	}
 	$terms = backstage_outreach_discount_terms_for_distribution($distribution);
 	if (is_wp_error($terms)) {
-		bvmgr_pass_claims_render_public_status_screen(__('Admission Offer', 'backstage-outreach'), __('Offer Unavailable', 'backstage-outreach'), $terms->get_error_message());
+		backstage_outreach_render_public_offer_status(__('Admission Offer Unavailable', 'backstage-outreach'), $terms->get_error_message(), 410);
 	}
 	backstage_outreach_discount_session_set($distribution, $raw_token);
 	backstage_outreach_discount_sync_cart_coupon();
 	$events = backstage_outreach_discount_offer_events($distribution);
 	if (empty($events)) {
-		bvmgr_pass_claims_render_public_status_screen(__('Admission Offer', 'backstage-outreach'), __('No Eligible Tickets', 'backstage-outreach'), __('There are no eligible admission tickets available for this offer right now.', 'backstage-outreach'));
+		backstage_outreach_render_public_offer_status(__('No Eligible Tickets', 'backstage-outreach'), __('There are no eligible admission tickets available for this offer right now.', 'backstage-outreach'), 410);
 	}
 	bvmgr_pass_claims_render_public_shell(__('Admission Offer', 'backstage-outreach'), static function () use ($distribution, $events, $terms): void {
 		$per_order_cap = max(1, absint($distribution['admissions_per_recipient'] ?? 1));
 		$value_label = backstage_outreach_discount_terms_label($terms, false);
-		echo '<h1>' . esc_html__('Admission Offer', 'backstage-outreach') . '</h1>';
-		echo '<p class="vms-pass-note"><strong>' . esc_html__('Offer from:', 'backstage-outreach') . '</strong> ' . esc_html((string) $distribution['business_name']) . '</p>';
-		echo '<p>' . esc_html(sprintf(__('Get %1$s for up to %2$d people per order. Choose an eligible event below; your Admission Offer is applied automatically in the cart and checkout.', 'backstage-outreach'), $value_label, $per_order_cap)) . '</p>';
-		echo '<div class="vms-pass-grid">';
+		$branding = backstage_outreach_flyer_branding();
+		$design = backstage_outreach_resolved_flyer_design(absint($distribution['campaign_id'] ?? 0));
+		$artwork_url = (string) $design['artwork_url'];
+		$fallback_image = $artwork_url !== '' ? $artwork_url : (string) $branding['logo_url'];
+		$expiry = backstage_outreach_distribution_effective_expiry($distribution);
+		$per_business_cap = absint($distribution['admission_cap'] ?? 0);
+		$overall_cap = absint(($distribution['batch']['total_admission_cap'] ?? 0));
+		echo '<style>.vms-offer-hero{text-align:center;margin-bottom:24px}.vms-offer-logo{display:block;max-width:min(340px,80vw);max-height:120px;width:auto;height:auto;margin:0 auto 18px}.vms-offer-venue{font-size:1.5rem;font-weight:800}.vms-offer-art{display:block;width:100%;max-height:340px;object-fit:cover;border-radius:16px;margin:18px 0}.vms-offer-benefit{font-size:clamp(1.5rem,5vw,2.3rem);line-height:1.15}.vms-offer-events{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px}.vms-offer-event{overflow:hidden}.vms-offer-event img,.vms-offer-event-fallback{display:flex;width:100%;aspect-ratio:16/9;align-items:center;justify-content:center;object-fit:cover;border-radius:10px}.vms-offer-event-fallback{padding:16px;background:#e8f2ee;color:#245548;text-align:center;font-weight:800}.vms-offer-event h2{margin-bottom:4px}.vms-offer-terms{margin-top:22px}.vms-offer-terms summary{cursor:pointer;font-weight:700}.vms-offer-availability{padding:12px 16px;border-radius:10px;background:#f3f8f6}.vms-pass-card .vms-offer-business{color:#526174}@media(max-width:390px){.vms-offer-events{grid-template-columns:1fr}.vms-offer-benefit{font-size:1.55rem}}</style>';
+		echo '<header class="vms-offer-hero">';
+		if ((string) $branding['logo_url'] !== '') {
+			echo '<img class="vms-offer-logo" src="' . esc_url((string) $branding['logo_url']) . '" alt="' . esc_attr((string) $branding['site_name']) . '">';
+		} else {
+			echo '<p class="vms-offer-venue">' . esc_html((string) $branding['site_name']) . '</p>';
+		}
+		echo '<h1>' . esc_html((string) $design['heading']) . '</h1>';
+		if ((string) $design['subheading'] !== '') {
+			echo '<p>' . esc_html((string) $design['subheading']) . '</p>';
+		}
+		if ($artwork_url !== '') {
+			echo '<img class="vms-offer-art" src="' . esc_url($artwork_url) . '" alt="">';
+		}
+		echo '<p class="vms-offer-benefit"><strong>' . esc_html(sprintf(__('%1$s for up to %2$d people', 'backstage-outreach'), $value_label, $per_order_cap)) . '</strong></p><p class="vms-offer-business">' . esc_html(sprintf(__('Shared by %s', 'backstage-outreach'), (string) $distribution['business_name'])) . '</p><p>' . esc_html__('Choose tickets for an eligible event. Your offer is applied automatically in the cart and checkout.', 'backstage-outreach') . '</p></header>';
+		if ($expiry !== '' || $per_business_cap > 0 || $overall_cap > 0) {
+			echo '<div class="vms-offer-availability"><strong>' . esc_html__('Availability', 'backstage-outreach') . '</strong><ul>';
+			if ($expiry !== '') {
+				echo '<li>' . esc_html(sprintf(__('Use this offer by %s.', 'backstage-outreach'), $expiry)) . '</li>';
+			}
+			if ($per_business_cap > 0) {
+				echo '<li>' . esc_html(sprintf(_n('Maximum through this business: %d discounted admission.', 'Maximum through this business: %d discounted admissions.', $per_business_cap, 'backstage-outreach'), $per_business_cap)) . '</li>';
+			}
+			if ($overall_cap > 0) {
+				echo '<li>' . esc_html(sprintf(_n('Up to %d admission is shared across all participating businesses and may be used first come, first served.', 'Up to %d admissions are shared across all participating businesses and may be used first come, first served.', $overall_cap, 'backstage-outreach'), $overall_cap)) . '</li>';
+			}
+			echo '</ul></div>';
+		}
+		echo '<h2>' . esc_html__('Choose tickets', 'backstage-outreach') . '</h2><div class="vms-offer-events">';
 		foreach ($events as $event) {
 			$label = (string) ($event['title'] ?? __('Event', 'backstage-outreach'));
-			$date = !empty($event['event_date']) ? bvmgr_pass_claims_format_public_date((string) $event['event_date']) : '';
-			echo '<article class="vms-pass-card"><h2>' . esc_html($label) . '</h2>';
+			$date = backstage_outreach_discount_offer_event_date_label($event);
+			$image_url = (string) ($event['featured_image_url'] ?? '') ?: $fallback_image;
+			echo '<article class="vms-pass-card vms-offer-event">';
+			if ($image_url !== '') {
+				echo '<img src="' . esc_url($image_url) . '" alt="">';
+			} else {
+				echo '<div class="vms-offer-event-fallback">' . esc_html((string) $branding['site_name']) . '</div>';
+			}
+			echo '<h2>' . esc_html($label) . '</h2>';
 			if ($date !== '') {
 				echo '<p>' . esc_html($date) . '</p>';
 			}
-			echo '<p><a class="button" href="' . esc_url((string) $event['ticket_url']) . '">' . esc_html__('Select Admission Tickets', 'backstage-outreach') . '</a></p></article>';
+			echo '<p><a class="button" href="' . esc_url((string) $event['ticket_url']) . '">' . esc_html__('Choose tickets', 'backstage-outreach') . '</a></p></article>';
 		}
-		echo '</div><h2>' . esc_html__('Offer Terms', 'backstage-outreach') . '</h2><ul>';
-		echo '<li>' . esc_html(sprintf(__('This offer provides %s on eligible tickets within the customer limit. Merchandise, food, rentals, add-ons, and unrelated tickets keep their normal pricing.', 'backstage-outreach'), $value_label)) . '</li>';
-		echo '<li>' . esc_html(sprintf(__('The offer cannot be combined with another coupon. Existing Commerce Discounts are topped up only to the advertised %s value, never stacked beyond it.', 'backstage-outreach'), $value_label)) . '</li>';
+		echo '</div><details class="vms-offer-terms"><summary>' . esc_html__('Offer terms', 'backstage-outreach') . '</summary><ul>';
+		echo '<li>' . esc_html(sprintf(__('%s applies only to eligible admission tickets. Merchandise, food, rentals, add-ons, and other tickets keep their normal pricing.', 'backstage-outreach'), $value_label)) . '</li>';
+		echo '<li>' . esc_html__('This offer cannot be combined with another coupon or a larger automatic ticket discount.', 'backstage-outreach') . '</li>';
 		echo '<li>' . esc_html(sprintf(__('%1$s for up to %2$d people per order. A fixed discount never reduces a ticket below $0.', 'backstage-outreach'), $value_label, $per_order_cap)) . '</li>';
 		if (absint($distribution['order_cap'] ?? 0) > 0) {
-			echo '<li>' . esc_html(sprintf(_n('%d paid order is available through this business link.', '%d paid orders are available through this business link.', absint($distribution['order_cap']), 'backstage-outreach'), absint($distribution['order_cap']))) . '</li>';
+			echo '<li>' . esc_html(sprintf(_n('This business link may be used for up to %d order.', 'This business link may be used for up to %d orders.', absint($distribution['order_cap']), 'backstage-outreach'), absint($distribution['order_cap']))) . '</li>';
 		}
-		if (absint($distribution['admission_cap'] ?? 0) > 0) {
-			echo '<li>' . esc_html(sprintf(_n('This business link is limited to %d discounted ticket.', 'This business link is limited to %d discounted tickets.', absint($distribution['admission_cap']), 'backstage-outreach'), absint($distribution['admission_cap']))) . '</li>';
-		}
-		if (!empty($distribution['expires_at'])) {
-			$expiry = new DateTimeImmutable((string) $distribution['expires_at'], wp_timezone());
-			echo '<li>' . esc_html(sprintf(__('Offer expires %s.', 'backstage-outreach'), wp_date(get_option('date_format') . ' ' . get_option('time_format'), $expiry->getTimestamp(), wp_timezone()))) . '</li>';
-		}
-		echo '</ul>';
+		echo '</ul></details>';
 		if (function_exists('WC') && WC() && WC()->cart && backstage_outreach_discount_cart_has_eligible_item($distribution)) {
 			echo '<p class="vms-pass-actions"><a class="button" href="' . esc_url(wc_get_checkout_url()) . '">' . esc_html__('Continue to Checkout', 'backstage-outreach') . '</a></p>';
 		}

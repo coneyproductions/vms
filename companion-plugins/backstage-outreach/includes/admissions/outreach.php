@@ -4650,7 +4650,7 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 				}
 				echo '</select>' . $render_messages($field_errors, array('related_batch_id')) . '</label>';
 			}
-			echo '<label class="' . (!empty($field_errors['status']) ? 'vms-pass-field-has-error' : '') . '">' . $render_label(__('Status', 'backstage-outreach'), array(
+			echo '<label id="vms-outreach-campaign-status" class="' . (!empty($field_errors['status']) ? 'vms-pass-field-has-error' : '') . '">' . $render_label(__('Status', 'backstage-outreach'), array(
 				'help' => __('Use Draft while preparing recipients. Active allows invite claims. Closed stops new claims.', 'backstage-outreach'),
 			)) . '<select name="status">';
 			foreach (vms_pass_outreach_status_labels() as $key => $label) {

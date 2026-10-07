@@ -414,8 +414,19 @@ try {
 	$flyer_row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id=%d', backstage_outreach_business_table('campaign_businesses'), $complimentary_distribution_id), ARRAY_A);
 	$flyer_context = backstage_outreach_distribution_flyer_context(backstage_outreach_distribution_token((array) $flyer_row));
 	backstage_business_source_runtime_assert(is_array($flyer_context), 'Active signed flyer context was rejected' . (is_wp_error($flyer_context) ? ': ' . $flyer_context->get_error_code() . ' — ' . $flyer_context->get_error_message() : '.'));
+	$default_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id);
+	$default_flyer_html = backstage_outreach_distribution_flyer_html($flyer_context);
+	backstage_business_source_runtime_assert((string) $default_design['heading'] !== '' && str_contains($default_flyer_html, (string) $default_design['heading']), 'The venue-default flyer design was not resolved on a campaign without overrides.');
+	update_option(backstage_outreach_flyer_design_option_key($complimentary_campaign_id), array(
+		'heading' => 'Café — Live Music ひらがな é',
+		'subheading' => 'You’ve found tonight’s offer.',
+		'artwork_mode' => 'none',
+		'artwork_id' => 0,
+	), false);
 	$flyer_html = backstage_outreach_distribution_flyer_html($flyer_context);
-	backstage_business_source_runtime_assert(str_contains($flyer_html, 'Print / Save as PDF') && str_contains($flyer_html, 'Complimentary Guest Passes') && str_contains($flyer_html, 'Total admissions allowed through this business') && str_contains($flyer_html, '@page{size:letter portrait'), 'Complimentary flyer omitted print, offer, limit, or US Letter output.');
+	backstage_business_source_runtime_assert(str_contains($flyer_html, 'Print / Save as PDF') && str_contains($flyer_html, 'Complimentary Guest Passes') && str_contains($flyer_html, 'Maximum through this business') && str_contains($flyer_html, '@page{size:letter portrait'), 'Complimentary flyer omitted print, offer, limit, or US Letter output.');
+	backstage_business_source_runtime_assert(str_contains($flyer_html, 'Café — Live Music ひらがな é') && str_contains($flyer_html, 'You’ve found tonight’s offer.'), 'Campaign flyer heading/subheading or UTF-8 did not survive resolution and rendering.');
+	backstage_business_source_runtime_assert(strpos($flyer_html, '<h1 class="heading"') < strpos($flyer_html, '<p class="business"'), 'Flyer did not lead with venue/live-music presentation before the business attribution.');
 	backstage_business_source_runtime_assert(str_contains($flyer_html, bvmgr_pass_claims_claim_qr_image_url(backstage_outreach_distribution_url($flyer_context))), 'Complimentary flyer QR was not generated from the actual customer offer URL.');
 	backstage_business_source_runtime_assert(str_contains($flyer_html, vms_pass_outreach_business_batch_scope_label((array) $flyer_context['batch'])), 'Complimentary flyer omitted its applicable event scope.');
 	$flyer_expiry_timestamp = time() + (2 * DAY_IN_SECONDS);
@@ -605,6 +616,7 @@ try {
 } finally {
 	remove_filter('pre_wp_mail', $backstage_business_source_delivery_block, PHP_INT_MAX);
 	if ($complimentary_campaign_id > 0) {
+		delete_option(backstage_outreach_flyer_design_option_key($complimentary_campaign_id));
 		delete_transient(vms_pass_outreach_business_distribution_handoff_key($complimentary_campaign_id));
 		$wpdb->delete(backstage_outreach_business_table('distribution_claims'), array('campaign_id' => $complimentary_campaign_id));
 		$wpdb->delete(backstage_outreach_business_table('campaign_businesses'), array('campaign_id' => $complimentary_campaign_id));

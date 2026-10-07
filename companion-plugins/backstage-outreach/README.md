@@ -144,6 +144,19 @@ campaign management no longer presents individual-recipient imports as required,
 and its dedicated business-sharing template does not overwrite historical
 individual-recipient templates.
 
+Version 1.2.9 adds a configurable public flyer presentation with venue defaults,
+campaign heading/subheading and artwork overrides, and Media Library preview,
+replacement, removal, and fallback controls. The venue logo, exact reviewed offer,
+business identity, scope, expiry, limits, and signed customer QR remain separate,
+readable content in responsive and one-page Letter output.
+
+Paid customer pages now lead with the venue and exact benefit, present the referring
+business as secondary context, sort the existing eligible event set chronologically,
+and use event imagery or a clean venue fallback. Important expiry and availability
+stay visible, secondary terms are expandable, unavailable links retain branded
+404/410 states, and existing eligibility, checkout, attribution, and capacity
+enforcement remain unchanged.
+
 ## Development checks
 
 From the Backstage Venue Manager repository root:

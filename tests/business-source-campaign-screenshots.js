@@ -19,6 +19,8 @@ function check(condition, message) {
   fs.mkdirSync(outputDir, { recursive: true });
   const browser = await chromium.launch({ headless: true });
   let publicFlyerUrl = '';
+  let publicOfferUrl = '';
+  let createdCampaignAdminUrl = '';
   let createdBatchIdForMobile = '';
   const cases = [
     { name: 'desktop', width: 1440, height: 1000, submit: true },
@@ -278,7 +280,38 @@ function check(condition, message) {
       const flyerLinks = reusableLinks.filter((value) => value.includes('/guest-pass/business-flyer/'));
       check(new Set(customerLinks).size === 35, 'mobile: reusable business links were not 35 unique signed partner URLs.');
       check(new Set(flyerLinks).size === 35, 'mobile: flyer links were not 35 unique signed public URLs.');
-      check(await resultRows.getByRole('button', { name: 'Copy flyer link' }).count() === 35, 'mobile: Copy flyer link actions are missing.');
+      check(await resultRows.getByRole('group', { name: 'Customer offer' }).count() === 35, 'mobile: customer-offer controls are not grouped per business.');
+      check(await resultRows.getByRole('group', { name: 'Printable flyer' }).count() === 35, 'mobile: flyer controls are not grouped per business.');
+      check(await resultRows.getByRole('group', { name: 'Manage' }).count() === 35, 'mobile: lifecycle controls are not grouped per business.');
+      check(await resultRows.getByRole('group', { name: 'Printable flyer' }).getByRole('button', { name: 'Copy link' }).count() === 35, 'mobile: flyer copy actions are missing.');
+      const printableQrUrl = await resultRows.first().getByRole('link', { name: 'Print QR' }).getAttribute('href');
+      const printableQrPage = await context.newPage();
+      await printableQrPage.goto(printableQrUrl, { waitUntil: 'networkidle' });
+      check(await printableQrPage.locator('img.logo, .venue').count() === 1, 'mobile: Printable QR is missing venue branding.');
+      check(await printableQrPage.locator('.qr-wrap img.qr').count() === 1, 'mobile: Printable QR is missing its scannable white quiet-zone presentation.');
+      await printableQrPage.screenshot({ path: path.join(outputDir, 'printable-customer-qr.png'), fullPage: true });
+      await printableQrPage.close();
+
+      const design = page.locator('#backstage-outreach-flyer-design');
+      await design.locator('input[name="campaign_flyer_heading"]').fill('Live Music at Café Serenade — ひらがな é');
+      await design.locator('input[name="campaign_flyer_subheading"]').fill('You’ve found a reception-desk offer for tonight’s stage.');
+      await design.getByRole('button', { name: 'Choose campaign artwork' }).click();
+      const mediaDialog = page.locator('.media-modal');
+      await mediaDialog.waitFor({ state: 'visible' });
+	  const mediaLibraryTab = mediaDialog.getByRole('tab', { name: 'Media Library' });
+	  if (await mediaLibraryTab.count()) {
+		await mediaLibraryTab.click();
+	  }
+	  const mediaSearch = mediaDialog.locator('input[type="search"]');
+	  if (await mediaSearch.count()) {
+		await mediaSearch.fill('Business Source Browser Fixture Artwork');
+	  }
+      await mediaDialog.locator(`.attachment[data-id="${fixture.artwork_id}"]`).click();
+      await mediaDialog.getByRole('button', { name: 'Use this artwork' }).click();
+      check(await design.locator('input[name="campaign_artwork_mode"][value="custom"]').isChecked(), 'mobile: selecting campaign artwork did not select the custom-artwork mode.');
+      await design.getByRole('button', { name: 'Save flyer design' }).click();
+      await page.waitForLoadState('domcontentloaded');
+      check(await page.locator('#backstage-outreach-flyer-design img').count() >= 1, 'mobile: saved campaign artwork preview is missing.');
       const routeAwarePanel = page.locator('#vms-outreach-recipients');
       check(await routeAwarePanel.getByRole('heading', { name: 'Business Contacts & Sharing' }).count() === 1, 'mobile: campaign management did not identify the reusable-business route.');
       check(await routeAwarePanel.getByText('Import from CSV', { exact: true }).count() === 0 && await routeAwarePanel.getByText('Select saved Outreach contacts', { exact: true }).count() === 0, 'mobile: reusable-business management still presents individual-recipient creation as a next step.');
@@ -296,6 +329,7 @@ function check(condition, message) {
       check(firstMessage.includes(customerLinks[0]) && firstMessage.includes(flyerLinks[0]), 'mobile: first business message did not use that business’s own offer and flyer links.');
       check(await shareReview.getByRole('button', { name: 'Hand Off Reviewed Business Emails' }).isDisabled(), 'mobile: draft campaign allowed business email delivery before activation.');
       publicFlyerUrl = flyerLinks[0] || '';
+      publicOfferUrl = customerLinks[0] || '';
       const campaignStatus = page.locator('select[name="status"]');
       const activationPost = await campaignStatus.evaluate((field) => {
         const form = field.form;
@@ -308,6 +342,7 @@ function check(condition, message) {
       check(activationResponse.status() === 302, 'mobile: disposable campaign activation did not return a safe redirect.');
       await page.goto(new URL(activationResponse.headers().location, fixture.admin_url).toString(), { waitUntil: 'domcontentloaded' });
       check(await page.locator('select[name="status"]').inputValue() === 'active', 'mobile: disposable campaign could not be activated for public flyer inspection.');
+      createdCampaignAdminUrl = page.url();
     }
 
     const geometry = await page.evaluate(() => {
@@ -350,8 +385,13 @@ function check(condition, message) {
     check(response && response.status() === 200, `${flyerCase.name}: public flyer did not return HTTP 200.`);
     check(!flyerPage.url().includes('wp-login.php'), `${flyerCase.name}: public flyer required WordPress login.`);
     check(await flyerPage.getByRole('button', { name: 'Print / Save as PDF' }).count() === 1, `${flyerCase.name}: print/PDF control is missing.`);
+    check(await flyerPage.getByRole('heading', { name: 'Live Music at Café Serenade — ひらがな é' }).count() === 1, `${flyerCase.name}: campaign flyer heading or UTF-8 is missing.`);
+    check(await flyerPage.getByText('You’ve found a reception-desk offer for tonight’s stage.', { exact: true }).count() === 1, `${flyerCase.name}: campaign flyer subheading is missing.`);
+    check(await flyerPage.locator('img.artwork').count() === 1, `${flyerCase.name}: selected Media Library artwork is missing from printable image content.`);
     check(await flyerPage.getByText('Complimentary Guest Passes for up to 2 people per customer', { exact: true }).count() === 1, `${flyerCase.name}: complimentary flyer wording is inaccurate.`);
-    check(await flyerPage.getByText('Total admissions allowed through this business:', { exact: true }).count() === 1, `${flyerCase.name}: capped flyer omits its real per-business limit.`);
+    const flyerText = await flyerPage.locator('body').innerText();
+    check(flyerText.includes('Maximum through this business: 2 Guest Pass admissions.'), `${flyerCase.name}: capped flyer omits its real per-business maximum.`);
+    check(!flyerText.includes('reserved'), `${flyerCase.name}: flyer uses reserved-allotment wording.`);
     check(await flyerPage.locator('img.qr').count() === 1 && (await flyerPage.locator('img.qr').getAttribute('src') || '').startsWith('data:image/png;base64,'), `${flyerCase.name}: flyer QR was not rendered from the actual customer offer link.`);
     const flyerGeometry = await flyerPage.evaluate(() => ({ overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth, sheetWidth: document.querySelector('.sheet').getBoundingClientRect().width }));
     check(flyerGeometry.overflow <= 1 && flyerGeometry.sheetWidth <= flyerCase.width, `${flyerCase.name}: flyer overflows its viewport.`);
@@ -363,6 +403,57 @@ function check(condition, message) {
     }
     await flyerContext.close();
   }
+
+  check(publicOfferUrl !== '', 'public customer offer URL was not captured from QR results.');
+
+  const removalContext = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1024, height: 768 } });
+  const removalPage = await removalContext.newPage();
+  await removalPage.goto(new URL('/wp-login.php', fixture.admin_url).toString(), { waitUntil: 'domcontentloaded' });
+  await removalPage.locator('#user_login').fill(user);
+  await removalPage.locator('#user_pass').fill(pass);
+  await removalPage.locator('#wp-submit').click();
+  await removalPage.waitForLoadState('domcontentloaded');
+  await removalPage.goto(createdCampaignAdminUrl, { waitUntil: 'domcontentloaded' });
+  const removalDesign = removalPage.locator('#backstage-outreach-flyer-design');
+  await removalDesign.locator('input[name="campaign_artwork_mode"][value="none"]').check();
+  await removalDesign.getByRole('button', { name: 'Save flyer design' }).click();
+  await removalPage.waitForLoadState('domcontentloaded');
+  const noArtworkContext = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1440, height: 1000 } });
+  const noArtworkPage = await noArtworkContext.newPage();
+  await noArtworkPage.goto(publicFlyerUrl, { waitUntil: 'networkidle' });
+  check(await noArtworkPage.locator('img.artwork').count() === 0, 'campaign artwork removal did not remove artwork from the public flyer.');
+  check(await noArtworkPage.getByRole('heading', { name: 'Live Music at Café Serenade — ひらがな é' }).count() === 1, 'artwork removal unexpectedly removed the campaign heading.');
+  await noArtworkPage.screenshot({ path: path.join(outputDir, 'desktop-public-flyer-no-artwork.png'), fullPage: true });
+
+	await removalPage.goto(createdCampaignAdminUrl, { waitUntil: 'domcontentloaded' });
+	const defaultDesign = removalPage.locator('#backstage-outreach-flyer-design');
+	await defaultDesign.locator('input[name="campaign_flyer_heading"]').fill('');
+	await defaultDesign.locator('input[name="campaign_flyer_subheading"]').fill('');
+	await defaultDesign.locator('input[name="campaign_artwork_mode"][value="inherit"]').check();
+	await defaultDesign.getByRole('button', { name: 'Save flyer design' }).click();
+	await removalPage.waitForLoadState('domcontentloaded');
+	await noArtworkPage.goto(publicFlyerUrl, { waitUntil: 'networkidle' });
+	const defaultHeading = await noArtworkPage.locator('h1.heading').innerText();
+	check(defaultHeading.startsWith('Live music at ') && !defaultHeading.includes('Café Serenade'), 'venue-default flyer heading did not replace the campaign override.');
+	await noArtworkPage.screenshot({ path: path.join(outputDir, 'desktop-public-flyer-default.png'), fullPage: true });
+
+  await removalPage.goto(createdCampaignAdminUrl, { waitUntil: 'domcontentloaded' });
+  const pauseUrl = await removalPage.getByRole('link', { name: 'Pause' }).first().getAttribute('href');
+  const pauseResponse = await removalPage.request.get(pauseUrl, { maxRedirects: 0 });
+  check(pauseResponse.status() === 302, 'paused-state setup did not use the protected lifecycle action.');
+  const pausedResponse = await noArtworkPage.goto(publicFlyerUrl, { waitUntil: 'domcontentloaded' });
+  check(pausedResponse && pausedResponse.status() === 410, 'paused flyer did not return HTTP 410.');
+  check(await noArtworkPage.getByRole('heading', { name: 'Offer unavailable' }).count() === 1 && await noArtworkPage.getByRole('link', { name: 'Visit the venue homepage' }).count() === 1, 'paused flyer did not show the branded plain-language unavailable state.');
+  await removalPage.goto(createdCampaignAdminUrl, { waitUntil: 'domcontentloaded' });
+  const resumeUrl = await removalPage.getByRole('link', { name: 'Resume' }).first().getAttribute('href');
+  const resumeResponse = await removalPage.request.get(resumeUrl, { maxRedirects: 0 });
+  check(resumeResponse.status() === 302, 'paused fixture link could not be restored after the state check.');
+  const tamperedFlyerUrl = publicFlyerUrl.slice(0, -1) + (publicFlyerUrl.endsWith('a') ? 'b' : 'a');
+  const tamperedResponse = await noArtworkPage.goto(tamperedFlyerUrl, { waitUntil: 'domcontentloaded' });
+  check(tamperedResponse && tamperedResponse.status() === 404, 'tampered flyer did not return HTTP 404.');
+  check(await noArtworkPage.getByRole('link', { name: 'Visit the venue homepage' }).count() === 1, 'tampered flyer did not retain branded venue navigation.');
+  await noArtworkContext.close();
+  await removalContext.close();
 
   const noScriptContext = await browser.newContext({
     ignoreHTTPSErrors: true,

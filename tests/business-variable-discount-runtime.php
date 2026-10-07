@@ -45,6 +45,20 @@ try {
 	update_post_meta((int) $event_plan_id, $status_key, 'published');
 	update_post_meta((int) $event_plan_id, '_vms_event_date', wp_date('Y-m-d', time() + (21 * DAY_IN_SECONDS)));
 	update_post_meta((int) $event_plan_id, '_vms_tec_event_id', (int) $tec_event_id);
+	update_post_meta((int) $event_plan_id, '_vms_start_time', '20:00');
+
+	$earlier_start = wp_date('Y-m-d 18:00:00', time() + (14 * DAY_IN_SECONDS), wp_timezone());
+	$earlier_end = wp_date('Y-m-d 21:00:00', time() + (14 * DAY_IN_SECONDS), wp_timezone());
+	$earlier_tec_event_id = tribe_create_event(array('post_status' => 'publish', 'post_title' => $marker . ' earlier event', 'EventStartDate' => $earlier_start, 'EventEndDate' => $earlier_end));
+	backstage_variable_discount_assert(!is_wp_error($earlier_tec_event_id) && $earlier_tec_event_id > 0, 'Could not create the earlier disposable event.');
+	$post_ids[] = (int) $earlier_tec_event_id;
+	$earlier_event_plan_id = wp_insert_post(array('post_type' => 'vms_event_plan', 'post_status' => 'publish', 'post_title' => $marker . ' earlier plan'), true);
+	backstage_variable_discount_assert(!is_wp_error($earlier_event_plan_id) && $earlier_event_plan_id > 0, 'Could not create the earlier disposable Event Plan.');
+	$post_ids[] = (int) $earlier_event_plan_id;
+	update_post_meta((int) $earlier_event_plan_id, $status_key, 'published');
+	update_post_meta((int) $earlier_event_plan_id, '_vms_event_date', wp_date('Y-m-d', time() + (14 * DAY_IN_SECONDS)));
+	update_post_meta((int) $earlier_event_plan_id, '_vms_tec_event_id', (int) $earlier_tec_event_id);
+	update_post_meta((int) $earlier_event_plan_id, '_vms_start_time', '18:00');
 
 	$ticket_provider = function_exists('tribe') ? tribe('tickets-plus.commerce.woo') : null;
 	$create_ticket = static function (string $name, string $price) use ($ticket_provider, $tec_event_id, $event_plan_id, &$post_ids): int {
@@ -136,8 +150,30 @@ try {
 	$fixed = $create_offer('fixed', 12.35);
 	$full_discount = $create_offer('percent', 100);
 	$over_value_fixed = $create_offer('fixed', 150);
+	update_post_meta((int) $event_plan_id, '_vms_event_date', wp_date('Y-m-d', time() + (21 * DAY_IN_SECONDS)));
+	update_post_meta((int) $event_plan_id, '_vms_start_time', '20:00');
+	update_post_meta((int) $earlier_event_plan_id, '_vms_event_date', wp_date('Y-m-d', time() + (14 * DAY_IN_SECONDS)));
+	update_post_meta((int) $earlier_event_plan_id, '_vms_start_time', '18:00');
+	$sorted_event_row = $percentage['distribution'];
+	$sorted_event_row['eligible_event_ids_json'] = backstage_outreach_discount_encode_ids(array($event_plan_id, $earlier_event_plan_id));
+	$sorted_events = backstage_outreach_discount_offer_events($sorted_event_row);
+	$sorted_event_ids = array_map(static fn(array $event): int => absint($event['id'] ?? 0), $sorted_events);
+	$expected_event_ids = array((int) $event_plan_id, (int) $earlier_event_plan_id);
+	sort($expected_event_ids, SORT_NUMERIC);
+	$actual_event_ids = $sorted_event_ids;
+	sort($actual_event_ids, SORT_NUMERIC);
+	backstage_variable_discount_assert(count($sorted_events) === 2 && $actual_event_ids === $expected_event_ids, 'Customer offer event resolution expanded or dropped the stored eligible set: ' . wp_json_encode($sorted_event_ids));
+	$chronological_probe = backstage_outreach_discount_sort_offer_events(array(
+		array('id' => 2, 'event_date' => '2030-03-05', 'start_time' => '20:00'),
+		array('id' => 3, 'event_date' => '2030-03-05', 'start_time' => '18:00'),
+		array('id' => 1, 'event_date' => '2030-03-04', 'start_time' => '22:00'),
+		array('id' => 4, 'event_date' => '', 'start_time' => ''),
+	));
+	backstage_variable_discount_assert(array_column($chronological_probe, 'id') === array(1, 3, 2, 4), 'Customer offer events were not sorted by date and then start time, with undated events last.');
+	backstage_variable_discount_assert(backstage_outreach_discount_offer_event_date_label($chronological_probe[0]) !== '', 'Customer offer event date/time formatting omitted the readable date.');
 	backstage_variable_discount_assert($percentage['coupon']->get_discount_type() === 'percent' && abs((float) $percentage['coupon']->get_amount() - 37.5) < 0.001, 'The percentage coupon did not use the reviewed 37.5% value.');
 	backstage_variable_discount_assert($fixed['coupon']->get_discount_type() === 'fixed_product' && abs((float) $fixed['coupon']->get_amount() - 12.35) < 0.001, 'The fixed coupon did not use the reviewed $12.35-per-admission value.');
+	backstage_variable_discount_assert(str_starts_with($fixed['coupon']->get_description(), 'Admission Offer:') && !str_contains($fixed['coupon']->get_description(), 'Neighborhood Offer'), 'The offer coupon description is not neutral Admission Offer wording.');
 	backstage_variable_discount_assert(backstage_outreach_discount_terms_label($percentage['configuration']) === 'Admission Offer — 37.5% off admission', 'Percentage customer wording is inaccurate.');
 	backstage_variable_discount_assert(backstage_outreach_discount_terms_label($fixed['configuration']) === 'Admission Offer — $12.35 off each admission', 'Fixed customer wording is inaccurate.');
 	$percentage_flyer_context = backstage_outreach_distribution_flyer_context(backstage_outreach_distribution_token($percentage['distribution']));
@@ -145,8 +181,8 @@ try {
 	backstage_variable_discount_assert(is_array($percentage_flyer_context) && is_array($fixed_flyer_context), 'Active paid flyer contexts were rejected.');
 	$percentage_flyer = backstage_outreach_distribution_flyer_html(array_merge($percentage_flyer_context, array('admission_cap' => 5)));
 	$fixed_flyer = backstage_outreach_distribution_flyer_html($fixed_flyer_context);
-	backstage_variable_discount_assert(str_contains($percentage_flyer, '37.5% off admission') && str_contains($percentage_flyer, 'discounted admissions') && str_contains($percentage_flyer, 'offer may end before this maximum is reached'), 'Percentage flyer omitted its actual value or shared-capacity explanation.');
-	backstage_variable_discount_assert(str_contains($fixed_flyer, '$12.35 off each admission') && !str_contains($fixed_flyer, 'Total admissions allowed through this business:'), 'Fixed-dollar flyer wording or uncapped scarcity display is inaccurate.');
+	backstage_variable_discount_assert(str_contains($percentage_flyer, '37.5% off admission') && str_contains($percentage_flyer, 'discounted admissions') && str_contains($percentage_flyer, 'shared first come, first served'), 'Percentage flyer omitted its actual value or shared-capacity explanation.');
+	backstage_variable_discount_assert(str_contains($fixed_flyer, '$12.35 off each admission') && !str_contains($fixed_flyer, 'Maximum through this business:'), 'Fixed-dollar flyer wording or uncapped per-business scarcity display is inaccurate.');
 	backstage_variable_discount_assert(backstage_outreach_discount_configuration_digest($percentage['configuration']) !== backstage_outreach_discount_configuration_digest($fixed['configuration']), 'Offer type/value are absent from the stale-configuration digest.');
 
 	$legacy_terms = backstage_outreach_discount_batch_terms(array('value_type' => 'free', 'value_amount' => 100));
