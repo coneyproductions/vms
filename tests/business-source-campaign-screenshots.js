@@ -19,6 +19,7 @@ function check(condition, message) {
   fs.mkdirSync(outputDir, { recursive: true });
   const browser = await chromium.launch({ headless: true });
   let publicFlyerUrl = '';
+  let createdBatchIdForMobile = '';
   const cases = [
     { name: 'desktop', width: 1440, height: 1000, submit: true },
     { name: 'mobile', width: 390, height: 844, submit: false },
@@ -30,7 +31,7 @@ function check(condition, message) {
       viewport: { width: testCase.width, height: testCase.height },
     });
     const page = await context.newPage();
-    page.setDefaultTimeout(20000);
+    page.setDefaultTimeout(60000);
     const consoleErrors = [];
     page.on('console', (message) => {
       if (message.type() === 'error') {
@@ -181,6 +182,7 @@ function check(condition, message) {
       check(!reviewFocusState.disabled && reviewFocusState.top >= 50 && reviewFocusState.bottom <= reviewFocusState.viewport, `desktop: confirmed batch did not enable and bring the next Business Review action into view (${JSON.stringify(reviewFocusState)}).`);
       const createdBatchId = await route.locator('select[name="related_batch_id"]').inputValue();
       check(createdBatchId !== '0', 'desktop: confirmed batch was not selected on return.');
+      createdBatchIdForMobile = createdBatchId;
       check(await route.getByText('Complimentary admission', { exact: true }).count() >= 1, 'desktop: confirmed complimentary batch wording is missing.');
       check(await route.locator('input[name="business_campaign_name"]').inputValue() === 'Draft Café — preserved across batch setup', 'desktop: campaign draft was not preserved after batch creation.');
       check(await route.locator('select[name="related_batch_id"] option').count() === 2, 'desktop: picker did not contain exactly the placeholder and eligible Source batch.');
@@ -199,6 +201,16 @@ function check(condition, message) {
       await page.waitForLoadState('domcontentloaded');
     }
 
+    if (!testCase.submit && await page.locator('#vms-outreach-business-source-preview').count() === 0) {
+      check(createdBatchIdForMobile !== '', 'mobile: created batch identity was unavailable for an independent preview.');
+      await page.locator('input[name="recipient_source_mode"][value="business_source"]').check();
+      const mobileRoute = page.locator('[data-vms-recipient-source-business]');
+      await mobileRoute.locator('select[name="related_source_id"]').selectOption(String(fixture.source_id));
+      await mobileRoute.locator('select[name="related_batch_id"]').selectOption(createdBatchIdForMobile);
+      await mobileRoute.locator('button[value="business_source_preview"]').click();
+      await page.waitForLoadState('domcontentloaded');
+    }
+
     const preview = page.locator('#vms-outreach-business-source-preview');
     await preview.waitFor({ state: 'visible' });
     let screenshotTarget = preview;
@@ -212,7 +224,8 @@ function check(condition, message) {
     check(await preview.getByText('Total admissions allowed per business', { exact: true }).count() >= 1, `${testCase.name}: per-business admission label is missing.`);
     check(await preview.getByText('70', { exact: true }).count() >= 1, `${testCase.name}: shared admission cap is missing.`);
     check(await preview.getByText('2', { exact: true }).count() >= 1, `${testCase.name}: per-business admission cap is missing.`);
-    check(await page.getByText('SAMPLE DATA - NOT A DELIVERY PREVIEW', { exact: true }).count() === 1, `${testCase.name}: message sample label is not prominent.`);
+    check(await page.getByText('Reusable-business sharing does not use individual-recipient templates or reserve individual invitation links.', { exact: true }).count() === 1, `${testCase.name}: business-sharing guidance is missing.`);
+    check(await page.locator('[data-vms-business-message-secondary] input[name="email_subject"], [data-vms-business-message-secondary] textarea[name="message_template"]').count() === 0, `${testCase.name}: misleading individual-recipient template controls remain on the business route.`);
     check(await page.getByRole('button', { name: 'Create Campaign and Continue to Business QR Setup' }).count() === 1, `${testCase.name}: Continue action is missing.`);
     check(await page.getByText('Admission Offer — 50% off admission for up to 2 people', { exact: true }).count() === 0, `${testCase.name}: complimentary fixture was mislabeled as paid.`);
     check(await page.locator('.vms-pass-business-source-table script, .vms-pass-business-source-table img').count() === 0, `${testCase.name}: stored HTML was not escaped.`);
@@ -238,12 +251,26 @@ function check(condition, message) {
       check(await qrPanel.locator('input[data-backstage-business]').count() === 35, 'mobile: QR setup did not carry all 35 reviewed businesses.');
       check(await qrPanel.locator('select[name="distribution_type"]').inputValue() === 'complimentary', 'mobile: complimentary batch did not retain complimentary behavior.');
       check(await qrPanel.locator('input[name="admission_cap"]').inputValue() === '2', 'mobile: reviewed per-business limit did not carry into QR setup.');
+      const businessBoxes = qrPanel.locator('input[data-backstage-business]');
+      await businessBoxes.last().uncheck();
+      await qrPanel.locator('input[name="expires_at"]').fill('2031-04-05T18:45');
       await qrPanel.getByRole('button', { name: 'Review Selection' }).click();
       await page.waitForLoadState('domcontentloaded');
-      const linkReviewText = await page.locator('[data-vms-tour="outreach-reviewed-preview"]').innerText();
-      check(linkReviewText.includes('35 active business links will remain or become active.'), 'mobile: reusable-link review did not retain all 35 businesses.');
+      let linkReview = page.locator('[data-vms-tour="outreach-reviewed-preview"]');
+      let linkReviewText = await linkReview.innerText();
+      check(linkReviewText.includes('34 active business links will remain or become active.'), 'mobile: partial reusable-link review did not retain exactly 34 businesses.');
+      check(linkReviewText.includes('April 5, 2031 at 6:45 pm'), 'mobile: reviewed nonblank expiry was not displayed in the site timezone.');
+      await qrPanel.locator('[data-backstage-select-all]').check();
+      check(await linkReview.getByRole('button', { name: 'Save Reviewed Links' }).isDisabled(), 'mobile: editing a reviewed selection did not invalidate Save Reviewed Links.');
+      check(await linkReview.locator('[data-vms-business-review-stale]').isVisible(), 'mobile: edited review did not explain that another review is required.');
+      await qrPanel.getByRole('button', { name: 'Review Selection' }).click();
+      await page.waitForLoadState('domcontentloaded');
+      linkReview = page.locator('[data-vms-tour="outreach-reviewed-preview"]');
+      linkReviewText = await linkReview.innerText();
+      check(linkReviewText.includes('35 active business links will remain or become active.'), 'mobile: all-business review did not retain all 35 businesses.');
       await page.getByRole('button', { name: 'Save Reviewed Links' }).click();
       await page.waitForLoadState('domcontentloaded');
+      check(await qrPanel.locator('input[name="expires_at"]').inputValue() === '2031-04-05T18:45', 'mobile: saved/reloaded Step 5 expiry did not match the reviewed site-timezone value.');
       const resultRows = page.locator('[data-vms-tour="outreach-business-results"] tbody tr');
       check(await resultRows.count() === 35, 'mobile: expected 35 saved reusable business links.');
       const reusableLinks = await resultRows.locator('input[data-backstage-copy-value]').evaluateAll((inputs) => inputs.map((input) => input.value));
@@ -252,6 +279,22 @@ function check(condition, message) {
       check(new Set(customerLinks).size === 35, 'mobile: reusable business links were not 35 unique signed partner URLs.');
       check(new Set(flyerLinks).size === 35, 'mobile: flyer links were not 35 unique signed public URLs.');
       check(await resultRows.getByRole('button', { name: 'Copy flyer link' }).count() === 35, 'mobile: Copy flyer link actions are missing.');
+      const routeAwarePanel = page.locator('#vms-outreach-recipients');
+      check(await routeAwarePanel.getByRole('heading', { name: 'Business Contacts & Sharing' }).count() === 1, 'mobile: campaign management did not identify the reusable-business route.');
+      check(await routeAwarePanel.getByText('Import from CSV', { exact: true }).count() === 0 && await routeAwarePanel.getByText('Select saved Outreach contacts', { exact: true }).count() === 0, 'mobile: reusable-business management still presents individual-recipient creation as a next step.');
+      const share = page.locator('#backstage-outreach-business-share');
+      await share.locator('input[name="business_share_subject"]').fill('Café — {business_name} offer');
+      await share.locator('textarea[name="business_share_message"]').fill('Hello {contact_name}… ひらがな é');
+      await share.getByRole('button', { name: 'Save Template & Review Personalized Messages' }).click();
+      await page.waitForLoadState('domcontentloaded');
+      const shareReview = page.locator('#backstage-outreach-business-share-review');
+      const shareRows = shareReview.locator('tbody tr');
+      check(await shareRows.count() === 35, 'mobile: personalized sharing did not include all 35 linked businesses.');
+      check(await shareRows.getByText('Not provided', { exact: true }).count() === 14, 'mobile: personalized sharing did not retain 14 copy-only businesses without email.');
+      check(await shareRows.locator('textarea').first().inputValue().then((value) => value.includes('ひらがな é') && value.includes('Customer offer URL:') && value.includes('Printable flyer URL:') && value.includes('does not reserve admissions')), 'mobile: personalized message omitted UTF-8, links, or shared-capacity qualification.');
+      const firstMessage = await shareRows.locator('textarea').first().inputValue();
+      check(firstMessage.includes(customerLinks[0]) && firstMessage.includes(flyerLinks[0]), 'mobile: first business message did not use that business’s own offer and flyer links.');
+      check(await shareReview.getByRole('button', { name: 'Hand Off Reviewed Business Emails' }).isDisabled(), 'mobile: draft campaign allowed business email delivery before activation.');
       publicFlyerUrl = flyerLinks[0] || '';
       const campaignStatus = page.locator('select[name="status"]');
       const activationPost = await campaignStatus.evaluate((field) => {

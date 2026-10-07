@@ -32,6 +32,9 @@ if ($mode === 'cleanup') {
 				$wpdb->delete(vms_pass_outreach_recipient_table(), array('campaign_id' => $campaign_id));
 				$wpdb->delete(vms_admission_table_pass_outreach_campaigns(), array('id' => $campaign_id));
 				delete_transient(backstage_outreach_campaign_business_preview_key($campaign_id));
+				delete_transient(backstage_outreach_campaign_business_form_key($campaign_id));
+				delete_transient(backstage_outreach_campaign_business_share_key($campaign_id));
+				delete_option(backstage_outreach_business_share_template_key($campaign_id));
 			}
 		}
 		foreach ((array) ($fixture['business_ids'] ?? array()) as $business_id) {
@@ -64,6 +67,12 @@ if ($mode === 'cleanup') {
 			$wpdb->delete(bvmgr_admission_table_pass_sources(), array('id' => absint($fixture_source_id)));
 		}
 		$user_id = absint($fixture['user_id'] ?? 1);
+		$wpdb->query($wpdb->prepare(
+			'DELETE FROM %i WHERE option_name LIKE %s OR option_name LIKE %s',
+			$wpdb->options,
+			$wpdb->esc_like('_transient_backstage_outreach_partner_') . '%' . $wpdb->esc_like('_' . $user_id . '_') . '%',
+			$wpdb->esc_like('_transient_timeout_backstage_outreach_partner_') . '%' . $wpdb->esc_like('_' . $user_id . '_') . '%'
+		));
 		vms_pass_outreach_clear_upload_preview($user_id);
 		vms_pass_outreach_clear_upload_mapping($user_id);
 		vms_pass_outreach_clear_business_batch_review($user_id);

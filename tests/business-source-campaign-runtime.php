@@ -542,6 +542,48 @@ try {
 	$tokens = array_map('backstage_outreach_distribution_token', $distributions);
 	backstage_business_source_runtime_assert(count($distributions) === 35 && count(array_unique($tokens)) === 35, 'All 35 independent reusable links were not created.');
 	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE campaign_id=%d', $recipient_table, $campaign_id)) === 0, 'Reusable link creation produced recipient records.');
+	backstage_business_source_runtime_assert(backstage_outreach_is_reusable_business_campaign((array) $created['campaign']), 'Explicit business campaign was not identified from its creation audit.');
+	$review_expiry_input = '2031-04-05T18:45';
+	$review_expiry = bvmgr_pass_claims_parse_local_datetime($review_expiry_input);
+	$review_token = backstage_outreach_business_review_token();
+	set_transient(backstage_outreach_campaign_business_preview_key($campaign_id), array(
+		'business_ids' => array_slice($business_ids, 0, 3),
+		'distribution_type' => 'complimentary',
+		'admission_cap' => 9,
+		'order_cap' => 0,
+		'expires_at' => $review_expiry,
+		'expires_input' => $review_expiry_input,
+		'membership_digest' => backstage_outreach_business_membership_digest($business_ids),
+		'review_token' => $review_token,
+		'reviewed_at' => time(),
+		'configuration_digest' => '',
+	), 30 * MINUTE_IN_SECONDS);
+	ob_start();
+	backstage_outreach_render_business_distribution_panel((array) $created['campaign']);
+	$panel_html = (string) ob_get_clean();
+	delete_transient(backstage_outreach_campaign_business_preview_key($campaign_id));
+	backstage_business_source_runtime_assert(str_contains($panel_html, 'value="9"') && str_contains($panel_html, 'value="2031-04-05T18:45"'), 'Step 5 did not render pending reviewed caps and expiry instead of saved values.');
+	backstage_business_source_runtime_assert(str_contains($panel_html, 'id="backstage-outreach-business-review"') && !str_contains($panel_html, 'notice notice-info inline" data-vms-tour="outreach-reviewed-preview'), 'The Step 5 review card was not retained as workflow content.');
+	backstage_business_source_runtime_assert(str_contains($panel_html, 'Share with businesses') && str_contains($panel_html, 'This workflow does not create Outreach recipients'), 'Saved business links did not continue to route-aware sharing.');
+
+	$first_distribution = $distributions[0];
+	$wpdb->update(backstage_outreach_business_table('campaign_businesses'), array('admission_cap' => 4, 'expires_at' => $review_expiry), array('id' => (int) $first_distribution['id']));
+	$updated_distributions = backstage_outreach_distribution_rows($campaign_id);
+	$first_distribution = $updated_distributions[0];
+	$share_context = backstage_outreach_business_share_context((array) $first_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), 'Café — {business_name}', 'Hello {contact_name}…');
+	backstage_business_source_runtime_assert(str_contains((string) $share_context['subject'], 'Café —') && str_contains((string) $share_context['message'], 'Hello') && str_contains((string) $share_context['message'], 'Total admissions allowed per business: 4'), 'UTF-8 or personalized limit details were lost from business sharing.');
+	backstage_business_source_runtime_assert(str_contains((string) $share_context['message'], backstage_outreach_distribution_url((array) $first_distribution)) && str_contains((string) $share_context['message'], backstage_outreach_distribution_flyer_url((array) $first_distribution)), 'A personalized business message did not contain that business\'s own offer and flyer links.');
+	backstage_business_source_runtime_assert(str_contains((string) $share_context['message'], 'does not reserve admissions') && str_contains((string) $share_context['message'], backstage_outreach_business_format_local_datetime($review_expiry)), 'Shared-capacity qualification or site-timezone expiry was missing from business sharing.');
+	$email_count = count(array_filter($distributions, static fn(array $row): bool => sanitize_email((string) ($row['email'] ?? '')) !== ''));
+	backstage_business_source_runtime_assert($email_count === 21, 'Business sharing did not retain 21 email-eligible and 14 copy-only businesses.');
+	$delivery_review = array('subject' => 'Café — {business_name}', 'message' => 'Hello {contact_name}…');
+	$delivery_result = backstage_outreach_attempt_business_share_email($first_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), $delivery_review, array());
+	backstage_business_source_runtime_assert((string) ($delivery_result['status'] ?? '') === 'handed_off' && (string) ($delivery_result['code'] ?? '') === 'accepted_by_mailer', 'Intercepted reviewed business email was not handed off through the delivery path.');
+	$sent_map = backstage_outreach_business_share_sent_map($campaign_id);
+	backstage_business_source_runtime_assert(isset($sent_map[(int) $first_distribution['id']]), 'Business delivery audit was not recognized for duplicate-send prevention.');
+	$duplicate_delivery = backstage_outreach_attempt_business_share_email($first_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), $delivery_review, $sent_map);
+	backstage_business_source_runtime_assert((string) ($duplicate_delivery['status'] ?? '') === 'skipped' && (string) ($duplicate_delivery['code'] ?? '') === 'already_sent', 'A retried business email was not blocked after its sent audit.');
+	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE campaign_id=%d', $recipient_table, $campaign_id)) === 0, 'Business sharing created individual Outreach recipients.');
 
 	echo "Business Source campaign runtime PASS\n";
 	echo wp_json_encode(array(
@@ -550,6 +592,9 @@ try {
 		'missing_email' => 14,
 		'historical_recipients' => 0,
 		'reusable_links' => 35,
+		'personalized_business_messages' => 35,
+		'email_eligible_businesses' => 21,
+		'copy_only_businesses' => 14,
 		'ordinary_individual_links_generated' => 3,
 		'new_definition_individual_claim_links' => 0,
 		'complimentary_claim_internal_tokens' => 1,
@@ -574,6 +619,18 @@ try {
 		$wpdb->delete(bvmgr_admission_table_pass_batches(), array('id' => $complimentary_batch_id));
 	}
 	if ($campaign_id > 0) {
+		delete_transient(backstage_outreach_campaign_business_preview_key($campaign_id));
+		delete_transient(backstage_outreach_campaign_business_form_key($campaign_id));
+		delete_transient(backstage_outreach_campaign_business_share_key($campaign_id));
+		delete_option(backstage_outreach_business_share_template_key($campaign_id));
+		$wpdb->query($wpdb->prepare(
+			'DELETE FROM %i WHERE action IN (%s,%s,%s) AND details LIKE %s',
+			bvmgr_admission_table_audit(),
+			'outreach_business_share_email_handed_off',
+			'outreach_business_share_email_sent',
+			'outreach_business_share_email_failed',
+			'%' . $wpdb->esc_like('"campaign_id":' . $campaign_id) . '%'
+		));
 		$wpdb->delete(backstage_outreach_business_table('distribution_claims'), array('campaign_id' => $campaign_id));
 		$wpdb->delete(backstage_outreach_business_table('campaign_businesses'), array('campaign_id' => $campaign_id));
 		$wpdb->delete(vms_admission_table_pass_outreach_campaigns(), array('id' => $campaign_id));

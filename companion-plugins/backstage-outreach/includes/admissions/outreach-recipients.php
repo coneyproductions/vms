@@ -6522,9 +6522,23 @@ if (!function_exists('vms_pass_outreach_render_recipients_panel')) {
 		if (!is_array($campaign)) {
 			return;
 		}
+		$is_business_campaign = function_exists('backstage_outreach_is_reusable_business_campaign') && backstage_outreach_is_reusable_business_campaign($campaign);
+		$historical_recipient_count = 0;
+		if ($is_business_campaign) {
+			global $wpdb;
+			$historical_recipient_count = absint($wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE campaign_id = %d', vms_pass_outreach_recipient_table(), $campaign_id)));
+		}
 
 		echo '<section id="vms-outreach-recipients" class="vms-pass-card">';
-		echo '<h2>' . esc_html__('Outreach Recipients', 'backstage-outreach') . '</h2>';
+		echo '<h2>' . esc_html($is_business_campaign ? __('Business Contacts & Sharing', 'backstage-outreach') : __('Outreach Recipients', 'backstage-outreach')) . '</h2>';
+		if ($is_business_campaign) {
+			echo '<div class="vms-pass-callout vms-pass-callout-info"><h3>' . esc_html__('Use the linked Source businesses', 'backstage-outreach') . '</h3><p>' . esc_html__('This reusable-business campaign does not require a recipient CSV, copied Outreach contacts, or individual invitation links. Select and save Source businesses in Step 5, then use Share with businesses for personalized customer-offer and flyer links.', 'backstage-outreach') . '</p><p><a class="button button-primary" href="#backstage-outreach-partners">' . esc_html__('Continue to Business Links & Sharing', 'backstage-outreach') . '</a></p></div>';
+			if ($historical_recipient_count <= 0) {
+				echo '</section>';
+				return;
+			}
+			echo '<p class="description">' . esc_html__('Historical individual recipient records are shown below for continuity. They are not prerequisites for reusable business links and cannot be expanded from this campaign screen.', 'backstage-outreach') . '</p>';
+		}
 
 		if (!vms_pass_outreach_campaign_supports_recipients($campaign)) {
 			$choose_batch_url = function_exists('vms_pass_outreach_admin_page_url')
@@ -6657,6 +6671,7 @@ if (!function_exists('vms_pass_outreach_render_recipients_panel')) {
 		)) . '>';
 		echo vms_pass_outreach_render_collapsible_summary(__('Import from CSV', 'backstage-outreach'), $import_summary_meta);
 		echo '<p>' . esc_html__('Upload a CSV to reserve one unique invite link per recipient from the linked Guest Pass Batch / Invite Link Pool.', 'backstage-outreach') . '</p>';
+		echo '<p class="description"><strong>' . esc_html__('Required column:', 'backstage-outreach') . '</strong> <code>email</code>. <strong>' . esc_html__('Optional columns:', 'backstage-outreach') . '</strong> <code>first_name,last_name,name,phone,company,group,notes,expires_at</code>. ' . esc_html__('Use either full name or first/last name. The next screen previews the detected mapping before any recipient is created.', 'backstage-outreach') . '</p><details><summary>' . esc_html__('Recipient CSV template / example', 'backstage-outreach') . '</summary><pre>email,first_name,last_name,phone,company,group,notes,expires_at\nalex@example.com,Alex,Rivera,555-0100,Example Company,Partners,Preferred contact,2030-12-31 17:00:00</pre></details>';
 			echo '<form id="' . esc_attr($import_form_id) . '" method="post" enctype="multipart/form-data" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-pass-form">';
 			echo '<input type="hidden" name="action" value="vms_pass_outreach_recipient_import">';
 			echo '<input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '">';
@@ -6684,14 +6699,17 @@ if (!function_exists('vms_pass_outreach_render_recipients_panel')) {
 			'default_open' => $contact_audience_has_preview,
 			'anchor' => 'vms-outreach-contact-audience',
 		)) . '>';
-		echo vms_pass_outreach_render_collapsible_summary(__('Add from Contacts', 'backstage-outreach'), $contact_audience_summary_meta);
-		echo '<p>' . esc_html__('Filter reusable Outreach contacts, preview who can be added, then reserve invite links only for eligible contacts.', 'backstage-outreach') . '</p>';
+		echo vms_pass_outreach_render_collapsible_summary(__('Select saved Outreach contacts', 'backstage-outreach'), $contact_audience_summary_meta);
+		echo '<p>' . esc_html__('Use the search filters below to find reusable records already stored in Outreach Contacts. Preview shows the saved name, business, email, status, and source before you explicitly select anyone.', 'backstage-outreach') . '</p>';
+		if (function_exists('vms_outreach_contacts_admin_url')) {
+			echo '<p class="description">' . wp_kses_post(sprintf(__('Create, approve, or edit saved contacts on the <a href="%s">Outreach Contacts screen</a>. Browser suggestions in these filter fields are not application contact selections.', 'backstage-outreach'), esc_url(vms_outreach_contacts_admin_url()))) . '</p>';
+		}
 		echo '<form id="' . esc_attr($contact_audience_form_id) . '" method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-pass-form">';
 		echo '<input type="hidden" name="action" value="vms_pass_outreach_contact_audience">';
 		echo '<input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '">';
 		vms_outreach_nonce_field('vms_pass_outreach_contact_audience', $contact_audience_form_id . '-nonce');
-		echo '<div class="vms-pass-grid">';
-		echo '<label class="vms-pass-span-2">' . esc_html__('Search', 'backstage-outreach') . '<input type="search" name="search" value="' . esc_attr((string) ($contact_audience_filters['search'] ?? '')) . '" placeholder="' . esc_attr__('name, email, business, city, source', 'backstage-outreach') . '"></label>';
+		echo '<fieldset class="vms-pass-grid vms-pass-section-fieldset"><legend>' . esc_html__('Search filters', 'backstage-outreach') . '</legend>';
+		echo '<label class="vms-pass-span-2">' . esc_html__('Search name, email, or business', 'backstage-outreach') . '<input type="search" name="search" autocomplete="off" value="' . esc_attr((string) ($contact_audience_filters['search'] ?? '')) . '" placeholder="' . esc_attr__('name, email, business, city, source', 'backstage-outreach') . '"></label>';
 		echo '<label>' . esc_html__('Type', 'backstage-outreach') . '<select name="contact_type"><option value="">' . esc_html__('All types', 'backstage-outreach') . '</option>';
 		foreach ($contact_type_labels as $type_key => $type_label) {
 			echo '<option value="' . esc_attr((string) $type_key) . '"' . selected((string) ($contact_audience_filters['contact_type'] ?? ''), (string) $type_key, false) . '>' . esc_html((string) $type_label) . '</option>';
@@ -6704,8 +6722,8 @@ if (!function_exists('vms_pass_outreach_render_recipients_panel')) {
 		echo '</select></label>';
 		echo '<label>' . esc_html__('City', 'backstage-outreach') . '<input type="text" name="city" value="' . esc_attr((string) ($contact_audience_filters['city'] ?? '')) . '" placeholder="' . esc_attr__('Austin', 'backstage-outreach') . '"></label>';
 		echo '<label>' . esc_html__('Source', 'backstage-outreach') . '<input type="text" name="source" value="' . esc_attr((string) ($contact_audience_filters['source'] ?? '')) . '" placeholder="' . esc_attr__('broker list', 'backstage-outreach') . '"></label>';
-		echo '<label class="vms-pass-span-2">' . esc_html__('Tag', 'backstage-outreach') . '<input type="text" name="tag" value="' . esc_attr((string) ($contact_audience_filters['tag'] ?? '')) . '" placeholder="' . esc_attr__('luxury, preferred, north shore', 'backstage-outreach') . '"></label>';
-		echo '</div>';
+		echo '<label class="vms-pass-span-2">' . esc_html__('Tag filter', 'backstage-outreach') . '<input type="text" name="tag" value="' . esc_attr((string) ($contact_audience_filters['tag'] ?? '')) . '" placeholder="' . esc_attr__('luxury, preferred, north shore', 'backstage-outreach') . '"></label>';
+		echo '</fieldset>';
 		echo '<p class="vms-pass-actions">';
 		echo '<button type="submit" class="' . esc_attr($contact_audience_has_preview ? 'button' : 'button button-primary') . '" name="contact_audience_mode" value="preview">' . esc_html($contact_audience_has_preview ? __('Refresh Preview', 'backstage-outreach') : __('Preview Contacts', 'backstage-outreach')) . '</button> ';
 		if ($contact_audience_has_preview && absint($contact_audience_preview['eligible_count'] ?? 0) > 0) {
@@ -6966,7 +6984,7 @@ if (!function_exists('vms_pass_outreach_render_recipients_panel')) {
 			}
 			echo '</div>';
 			$add_recipients_panel_html = (string) ob_get_clean();
-			if ($total_recipients <= 0) {
+			if ($total_recipients <= 0 && !$is_business_campaign) {
 				echo $add_recipients_panel_html;
 			}
 
@@ -7409,7 +7427,7 @@ if (!function_exists('vms_pass_outreach_render_recipients_panel')) {
 			echo '</select> <button type="button" class="button" data-vms-select-visible-unsent="1">' . esc_html__('Select Visible Unsent', 'backstage-outreach') . '</button> <button type="submit" class="button">' . esc_html__('Apply', 'backstage-outreach') . '</button></p>';
 			echo '</form>';
 			echo '</details>';
-			if ($total_recipients > 0) {
+			if ($total_recipients > 0 && !$is_business_campaign) {
 				echo $add_recipients_panel_html;
 			}
 			echo '<script>(function(){function updateSendButtonLabel(){var button=document.querySelector("[data-vms-send-batch-button]");var input=document.querySelector("[data-vms-send-batch-size]");if(!button||!input){return;}var queued=parseInt(button.getAttribute("data-vms-queued-count")||"0",10)||0;var value=parseInt(input.value||"0",10)||1;if(value<1){value=1;}if(queued<=0){button.textContent=button.getAttribute("data-vms-empty-label")||"Send Next Batch Now";return;}var count=Math.min(value,queued);var template=(count===1?(button.getAttribute("data-vms-batch-label-singular")||"Send Next %d Invite"):(button.getAttribute("data-vms-batch-label-plural")||"Send Next %d Invites"));button.textContent=template.replace("%d",String(count));}function getBulkAction(form){var select=form.querySelector(\'select[name="bulk_action"]\');if(select){return select.value||"";}var hidden=form.querySelector(\'input[name="bulk_action"]\');return hidden?hidden.value||"":"";}function syncBulkActionSelects(form,source){if(!form){return;}var selects=form.querySelectorAll("[data-vms-bulk-action-select]");if(!selects.length){return;}var value=source?source.value:(getBulkAction(form)||"");selects.forEach(function(select){if(select!==source){select.value=value;}});var primary=form.querySelector(\'select[name="bulk_action"]\');if(primary&&primary!==source){primary.value=value;}}function syncSelectAll(form){if(!form){return;}var selectAll=form.querySelector("[data-vms-outreach-select-all]");if(!selectAll){return;}var boxes=form.querySelectorAll("[data-vms-outreach-recipient]");if(!boxes.length){selectAll.checked=false;return;}var allChecked=true;boxes.forEach(function(box){if(!box.checked){allChecked=false;}});selectAll.checked=allChecked;}document.addEventListener("change",function(event){if(event.target.matches("[data-vms-outreach-select-all]")){var checked=!!event.target.checked;var form=event.target.form||event.target.closest("form");if(!form){return;}form.querySelectorAll("[data-vms-outreach-recipient]").forEach(function(box){box.checked=checked;});syncSelectAll(form);}if(event.target.matches("[data-vms-outreach-recipient]")){syncSelectAll(event.target.form||event.target.closest("form"));}if(event.target.matches("[data-vms-send-batch-size]")){updateSendButtonLabel();}if(event.target.matches("[data-vms-bulk-action-select]")){syncBulkActionSelects(event.target.form||event.target.closest("form"),event.target);}});document.addEventListener("click",function(event){var unsentButton=event.target.closest("[data-vms-select-visible-unsent]");if(unsentButton){var form=unsentButton.closest("form");if(!form){return;}form.querySelectorAll("[data-vms-outreach-recipient]").forEach(function(box){box.checked=box.getAttribute("data-vms-send-status")==="not_sent";});syncSelectAll(form);}});document.addEventListener("input",function(event){if(event.target.matches("[data-vms-send-batch-size]")){updateSendButtonLabel();}});document.querySelectorAll("[data-vms-outreach-bulk-form]").forEach(function(form){form.addEventListener("submit",function(event){var action=getBulkAction(form);var activateField=form.querySelector(\'input[name="activate_campaign"]\');var resendField=form.querySelector(\'input[name="confirm_resend"]\');if(activateField){activateField.value="";}if(resendField){resendField.value="";}if(action==="resend_selected"){if(!window.confirm("This will send another invite email to recipients who were already contacted. Continue?")){event.preventDefault();return;}if(resendField){resendField.value="1";}}if(["queue_selected","queue_selected_confirm","queue_all_unsent","retry_failed_selected","resend_selected"].indexOf(action)!==-1&&form.getAttribute("data-vms-campaign-draft")==="1"){var promptMessage=form.getAttribute("data-vms-activation-prompt")||"";if(promptMessage!==""&&!window.confirm(promptMessage)){event.preventDefault();return;}if(activateField){activateField.value="1";}}});syncSelectAll(form);syncBulkActionSelects(form,null);});updateSendButtonLabel();})();</script>';

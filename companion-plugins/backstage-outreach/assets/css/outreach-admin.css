@@ -1152,6 +1152,45 @@
   width: min(100%, 32rem);
 }
 
+#vms-pass-claims-wrap .vms-pass-limit-group {
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid #d8e2f0;
+  border-radius: 12px;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-review,
+#vms-pass-claims-wrap .vms-pass-business-share {
+  scroll-margin-top: 72px;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-review.is-stale {
+  border-color: #dba617;
+  background: #fffaf0;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-share-table {
+  min-width: 960px;
+  table-layout: fixed;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-share-table th,
+#vms-pass-claims-wrap .vms-pass-business-share-table td {
+  vertical-align: top;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-share-table input.regular-text,
+#vms-pass-claims-wrap .vms-pass-business-share-table textarea {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 6px;
+}
+
 #vms-pass-claims-wrap .vms-pass-business-email-state {
   display: block;
   margin-top: 4px;
@@ -2230,8 +2269,32 @@
     background: transparent;
   }
 
+  #vms-pass-claims-wrap .vms-pass-business-share .vms-pass-table-scroll {
+    max-height: none;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-share .vms-pass-business-share-table {
+    min-width: 0;
+    table-layout: auto;
+    background: transparent;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-share > form > p .button {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 40px;
+    box-sizing: border-box;
+    white-space: normal;
+    line-height: 1.3;
+  }
+
   #vms-pass-claims-wrap .vms-pass-business-source-table thead,
-  #vms-pass-claims-wrap .vms-pass-business-results-table thead {
+  #vms-pass-claims-wrap .vms-pass-business-results-table thead,
+  #vms-pass-claims-wrap .vms-pass-business-share-table thead {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -2245,14 +2308,18 @@
   #vms-pass-claims-wrap .vms-pass-business-source-table td,
   #vms-pass-claims-wrap .vms-pass-business-results-table tbody,
   #vms-pass-claims-wrap .vms-pass-business-results-table tr,
-  #vms-pass-claims-wrap .vms-pass-business-results-table td {
+  #vms-pass-claims-wrap .vms-pass-business-results-table td,
+  #vms-pass-claims-wrap .vms-pass-business-share-table tbody,
+  #vms-pass-claims-wrap .vms-pass-business-share-table tr,
+  #vms-pass-claims-wrap .vms-pass-business-share-table td {
     display: block;
     width: 100%;
     box-sizing: border-box;
   }
 
   #vms-pass-claims-wrap .vms-pass-business-source-table tr,
-  #vms-pass-claims-wrap .vms-pass-business-results-table tr {
+  #vms-pass-claims-wrap .vms-pass-business-results-table tr,
+  #vms-pass-claims-wrap .vms-pass-business-share-table tr {
     margin-bottom: 12px;
     border: 1px solid #d8e2f0;
     border-radius: 10px;
@@ -2261,7 +2328,8 @@
   }
 
   #vms-pass-claims-wrap .vms-pass-business-source-table td,
-  #vms-pass-claims-wrap .vms-pass-business-results-table td {
+  #vms-pass-claims-wrap .vms-pass-business-results-table td,
+  #vms-pass-claims-wrap .vms-pass-business-share-table td {
     display: grid;
     grid-template-columns: minmax(112px, 36%) minmax(0, 1fr);
     gap: 10px;
@@ -2270,12 +2338,14 @@
   }
 
   #vms-pass-claims-wrap .vms-pass-business-source-table td:last-child,
-  #vms-pass-claims-wrap .vms-pass-business-results-table td:last-child {
+  #vms-pass-claims-wrap .vms-pass-business-results-table td:last-child,
+  #vms-pass-claims-wrap .vms-pass-business-share-table td:last-child {
     border-bottom: 0;
   }
 
   #vms-pass-claims-wrap .vms-pass-business-source-table td::before,
-  #vms-pass-claims-wrap .vms-pass-business-results-table td::before {
+  #vms-pass-claims-wrap .vms-pass-business-results-table td::before,
+  #vms-pass-claims-wrap .vms-pass-business-share-table td::before {
     content: attr(data-label);
     font-weight: 600;
     color: #26364a;

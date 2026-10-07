@@ -128,6 +128,22 @@ Each saved business distribution also provides a signed, public, read-only
 reception-desk flyer with accurate offer terms, scope, expiry, scarcity wording,
 the existing venue logo, and a QR for that business's customer offer link.
 
+Version 1.2.8 keeps the business selection, review, saved-link, and sharing work
+inside Step 5. Pending selections, per-business limits, paid-order caps, and
+site-timezone expiry survive review and validation, while an exact review token
+and Source/batch/membership/configuration digests prevent stale saves. Admission
+limits are grouped with explicit shared-capacity guidance.
+
+After links are saved, every linked business receives a personalized, copyable
+business-contact message with its own customer-offer and flyer URLs. Reviewed
+email handoff is limited to selected, valid, unsuppressed addresses and records
+audited mail-system acceptance (not confirmed delivery) so accepted handoffs
+cannot be repeated accidentally. Businesses
+without email remain fully supported through copyable messages. Reusable-business
+campaign management no longer presents individual-recipient imports as required,
+and its dedicated business-sharing template does not overwrite historical
+individual-recipient templates.
+
 ## Development checks
 
 From the Backstage Venue Manager repository root:

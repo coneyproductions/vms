@@ -4,6 +4,7 @@ declare(strict_types=1);
 $root = dirname(__DIR__);
 $outreach = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/admissions/outreach.php');
 $distribution = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/business-distribution.php');
+$recipients = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/admissions/outreach-recipients.php');
 $db = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/outreach/db.php');
 $css = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/assets/css/outreach-admin.css');
 $js = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/assets/js/outreach-admin.js');
@@ -40,7 +41,15 @@ $assertions = array(
 	'Conditional business scope controls are server and client enforced' => strpos($outreach, 'data-vms-business-scope="single_event"') !== false && strpos($outreach, 'data-vms-business-scope="date_range season"') !== false && strpos($outreach, 'function updateBusinessBatchScope') !== false && strpos($claims, 'Definition-only workflows ignore fields outside the selected scope.') !== false,
 	'Complimentary business claims use internal transactional tokens' => strpos($distribution, 'bvmgr_pass_claims_create_internal_claim_token') !== false && strpos($claims, 'does not change the') !== false,
 	'Create action continues to QR setup' => strpos($outreach, 'Create Campaign and Continue to Business QR Setup') !== false && strpos($outreach, "'#backstage-outreach-partners'") !== false,
-	'New QR setup reviews all active businesses by default' => strpos($distribution, '$checked = empty($rows) ||') !== false,
+	'New QR setup reviews all active businesses by default' => strpos($distribution, 'empty($rows) || (isset($by_business[$id])') !== false,
+	'Step 5 renders pending review values inside workflow content' => strpos($distribution, '$pending = is_array($preview) ? $preview') !== false && strpos($distribution, 'id="backstage-outreach-business-review" class="vms-pass-preview-summary') !== false && strpos($distribution, 'notice notice-info inline" data-vms-tour="outreach-reviewed-preview') === false,
+	'Step 5 review is exact, expiring, and membership-bound' => strpos($distribution, 'review_token') !== false && strpos($distribution, 'membership_digest') !== false && strpos($distribution, 'backstage_outreach_business_membership_digest($allowed)') !== false,
+	'Admission limits are grouped with shared-pool qualification' => strpos($outreach, 'data-vms-business-limit-group') !== false && strpos($distribution, 'class="vms-pass-span-2 vms-pass-limit-group"') !== false && substr_count($outreach, 'A per-business maximum does not reserve admissions') >= 1,
+	'Business route is identified independently of recipient count' => strpos($distribution, 'function backstage_outreach_is_reusable_business_campaign') !== false && strpos($distribution, "'pass_outreach_business_campaign_create'") !== false && strpos($recipients, '$historical_recipient_count <= 0') !== false,
+	'Business campaign management replaces recipient-import prerequisites' => strpos($recipients, 'Use the linked Source businesses') !== false && strpos($recipients, 'Continue to Business Links & Sharing') !== false && strpos($recipients, '!$is_business_campaign') !== false,
+	'Business sharing is personalized and does not create recipients' => strpos($distribution, 'function backstage_outreach_business_share_context') !== false && strpos($distribution, 'Customer offer URL') !== false && strpos($distribution, 'Printable flyer URL') !== false && strpos($distribution, 'This workflow does not create Outreach recipients') !== false,
+	'Business email delivery is reviewed, suppressed, audited, duplicate-safe, and reports mail handoff accurately' => strpos($distribution, 'share_review_token') !== false && strpos($distribution, 'vms_outreach_email_is_suppressed') !== false && strpos($distribution, 'outreach_business_share_email_handed_off') !== false && strpos($distribution, 'delivery not confirmed') !== false && strpos($distribution, 'isset($sent_map[$distribution_id])') !== false,
+	'Individual recipient tools document CSV and saved-contact selection' => strpos($recipients, 'Required column:') !== false && strpos($recipients, 'Recipient CSV template / example') !== false && strpos($recipients, 'Select saved Outreach contacts') !== false && strpos($recipients, 'autocomplete="off"') !== false,
 	'Paid offers have neutral value-specific wording' => strpos($outreach, 'Admission Offer — %1$s%% off admission') !== false && strpos($outreach, 'Admission Offer — $%1$s off each admission') !== false && strpos($distribution, '$paid_type_label') !== false,
 	'Percentage and fixed batches default to the paid setup path' => strpos($distribution, '$batch_defaults_to_paid') !== false && strpos($distribution, "array('percent', 'fixed')") !== false && strpos($distribution, "'coupon_backed' : 'complimentary'") !== false,
 	'Offer amount is conditional and accessible' => strpos($outreach, 'data-vms-business-offer-amount') !== false && strpos($outreach, 'function updateBusinessOffer') !== false && strpos($outreach, 'greater than 0 and up to 100') !== false,
@@ -55,7 +64,7 @@ $assertions = array(
 	'Narrow-screen business rows use labeled cards' => strpos($css, '.vms-pass-business-source-table td::before') !== false && strpos($css, 'content: attr(data-label)') !== false,
 	'Narrow-screen workflow does not overflow' => strpos($css, '.vms-pass-business-steps') !== false && strpos($css, 'grid-template-columns: 1fr') !== false && strpos($css, 'overflow-wrap: anywhere') !== false,
 	'Business identity remains independent of email' => strpos($distribution, 'UNIQUE KEY public_id (public_id)') !== false && strpos($distribution, 'UNIQUE KEY email') === false,
-	'Outreach 1.2.7 owns reproducible asset cache keys' => strpos($plugin, 'Version: 1.2.7') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.7'") !== false && substr_count($integration, 'BACKSTAGE_OUTREACH_VERSION') >= 2 && strpos($integration, 'filemtime(') === false,
+	'Outreach 1.2.8 owns reproducible asset cache keys' => strpos($plugin, 'Version: 1.2.8') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.8'") !== false && substr_count($integration, 'BACKSTAGE_OUTREACH_VERSION') >= 2 && strpos($integration, 'filemtime(') === false,
 	'Schema versions remain unchanged' => strpos($distribution, "\$target = '1.2.1';") !== false && strpos($db, "return '1.1.0';") !== false,
 );
 
