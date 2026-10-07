@@ -38,8 +38,10 @@ $assertions = array(
 	'Complimentary business claims use internal transactional tokens' => strpos($distribution, 'bvmgr_pass_claims_create_internal_claim_token') !== false && strpos($claims, 'does not change the') !== false,
 	'Create action continues to QR setup' => strpos($outreach, 'Create Campaign and Continue to Business QR Setup') !== false && strpos($outreach, "'#backstage-outreach-partners'") !== false,
 	'New QR setup reviews all active businesses by default' => strpos($distribution, '$checked = empty($rows) ||') !== false,
-	'Paid offer has explicit discount wording' => strpos($outreach, 'Neighborhood Offer — 50%% off admission for up to %d people') !== false && strpos($distribution, '$paid_type_label') !== false,
-	'Fifty-percent batches default to the paid setup path' => strpos($distribution, '$batch_defaults_to_paid') !== false && strpos($distribution, "'coupon_backed' : 'complimentary'") !== false,
+	'Paid offers have neutral value-specific wording' => strpos($outreach, 'Admission Offer — %1$s%% off admission') !== false && strpos($outreach, 'Admission Offer — $%1$s off each admission') !== false && strpos($distribution, '$paid_type_label') !== false,
+	'Percentage and fixed batches default to the paid setup path' => strpos($distribution, '$batch_defaults_to_paid') !== false && strpos($distribution, "array('percent', 'fixed')") !== false && strpos($distribution, "'coupon_backed' : 'complimentary'") !== false,
+	'Offer amount is conditional and accessible' => strpos($outreach, 'data-vms-business-offer-amount') !== false && strpos($outreach, 'function updateBusinessOffer') !== false && strpos($outreach, 'greater than 0 and up to 100') !== false,
+	'Date and expiry fields stay compact on mobile' => strpos($css, 'width: min(12rem, 100%)') !== false && strpos($css, 'width: min(19rem, 100%)') !== false,
 	'Message preview is prominently sample-only' => strpos($outreach, 'SAMPLE DATA - NOT A DELIVERY PREVIEW') !== false,
 	'Current defaults avoid transport-sensitive punctuation' => strpos($outreach, "'You\\'ve been invited") !== false && strpos($outreach, 'You’ve been invited') === false,
 	'Legacy mojibake is repaired for display without a bulk update' => strpos($outreach, 'function vms_pass_outreach_display_text') !== false && strpos($outreach, 'Stored campaign history is not rewritten') !== false && strpos($helper, '$wpdb->update') === false,
@@ -47,7 +49,7 @@ $assertions = array(
 	'Narrow-screen business rows use labeled cards' => strpos($css, '.vms-pass-business-source-table td::before') !== false && strpos($css, 'content: attr(data-label)') !== false,
 	'Narrow-screen workflow does not overflow' => strpos($css, '.vms-pass-business-steps') !== false && strpos($css, 'grid-template-columns: 1fr') !== false && strpos($css, 'overflow-wrap: anywhere') !== false,
 	'Business identity remains independent of email' => strpos($distribution, 'UNIQUE KEY public_id (public_id)') !== false && strpos($distribution, 'UNIQUE KEY email') === false,
-	'Outreach 1.2.5 owns reproducible asset cache keys' => strpos($plugin, 'Version: 1.2.5') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.5'") !== false && substr_count($integration, 'BACKSTAGE_OUTREACH_VERSION') >= 2 && strpos($integration, 'filemtime(') === false,
+	'Outreach 1.2.6 owns reproducible asset cache keys' => strpos($plugin, 'Version: 1.2.6') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.6'") !== false && substr_count($integration, 'BACKSTAGE_OUTREACH_VERSION') >= 2 && strpos($integration, 'filemtime(') === false,
 	'Schema versions remain unchanged' => strpos($distribution, "\$target = '1.2.1';") !== false && strpos($db, "return '1.1.0';") !== false,
 );
 

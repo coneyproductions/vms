@@ -130,9 +130,9 @@ $insert_batch = static function (int $fixture_source_id, string $name, string $s
 	return (int) $wpdb->insert_id;
 };
 $extra_batch_ids[] = $insert_batch($source_id, $marker . ' Inactive', 'paused', 'free', 0.0);
-$extra_batch_ids[] = $insert_batch($source_id, $marker . ' Unsupported 25%', 'active', 'percent', 25.0);
+$extra_batch_ids[] = $insert_batch($source_id, $marker . ' Invalid 125%', 'active', 'percent', 125.0);
 $existing_free_batch_id = $insert_batch($existing_source_id, $marker . ' Existing Complimentary', 'active', 'free', 0.0);
-$existing_paid_batch_id = $insert_batch($existing_source_id, $marker . ' Existing Neighborhood Offer', 'active', 'percent', 50.0);
+$existing_paid_batch_id = $insert_batch($existing_source_id, $marker . ' Existing Admission Offer', 'active', 'percent', 50.0);
 $extra_batch_ids[] = $existing_free_batch_id;
 $extra_batch_ids[] = $existing_paid_batch_id;
 $business_ids = array();

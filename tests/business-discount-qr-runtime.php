@@ -100,7 +100,9 @@ try {
 	$campaign = vms_pass_outreach_get_campaign_by_id($campaign_id);
 	$batch = bvmgr_pass_claims_get_batch_by_id($batch_id);
 	backstage_discount_runtime_assert(is_array($campaign) && is_array($batch), 'Synthetic campaign or batch did not reload.');
-	$configuration = backstage_outreach_discount_offer_configuration($campaign, $batch, 'coupon_backed');
+	$new_configuration = backstage_outreach_discount_offer_configuration($campaign, $batch, 'coupon_backed');
+	backstage_discount_runtime_assert(is_wp_error($new_configuration) && $new_configuration->get_error_code() === 'partner_coupon_legacy_batch_new_distribution', 'A new paid configuration silently reused a Free capacity batch.');
+	$configuration = backstage_outreach_discount_offer_configuration($campaign, $batch, 'coupon_backed', true);
 	backstage_discount_runtime_assert(is_array($configuration) && in_array($ticket_id, $configuration['product_ids'], true), 'Server-side eligible ticket resolution failed.');
 	backstage_discount_runtime_assert(!in_array($unrelated_id, $configuration['product_ids'], true), 'Unrelated product entered eligible scope.');
 

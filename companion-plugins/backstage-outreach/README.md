@@ -31,13 +31,15 @@ Version 1.2 keeps the Version 1.1 complimentary Guest Pass flow intact and adds
 an explicit coupon-backed distribution type. Each business still receives one
 reviewed, reusable signed referral link. A coupon-backed link establishes a
 server-validated WooCommerce session, presents eligible events and terms, and
-automatically applies a managed native 50% percentage coupon after an eligible
+automatically applies a managed native percentage or fixed-product coupon after an eligible
 Event Tickets product enters the existing cart. It does not empty the cart,
 replace checkout/payment, or create a ticket outside Event Tickets fulfillment.
 
-Coupon-backed distribution requires either the shared active Free Guest Pass
-capacity batch or an active Percent Off batch set to exactly 50%. The discount
-is always the managed native 50% coupon; eligible event plans and ticket product
+New coupon-backed distributions use an active Percentage Off or Fixed Amount Off
+batch and derive the exact managed coupon value from that reviewed batch. Legacy
+paid 50% distributions may continue to share an active Free capacity batch; they
+remain explicitly treated as 50% compatibility distributions rather than having
+their stored data rewritten. Eligible event plans and ticket product
 IDs are snapshotted from the reviewed server-side campaign/batch scope. One managed coupon per business
 is intentional: WooCommerce can then enforce per-business order use and retain
 an unambiguous coupon/order attribution. Outreach reuses only the coupon already
@@ -82,14 +84,14 @@ Campaign creation revalidates the Source, batch, active memberships, and the
 reviewed digest before saving. It creates no historical recipient/contact rows,
 preserves independent business identity, carries the Source and batch directly
 into business QR setup, and defaults all reviewed active businesses for the
-next review step. Complimentary batches and Percent Off batches set to exactly
-50% retain their distinct distribution behavior. Message previews are labeled
+next review step. Complimentary, Percentage Off, and Fixed Amount Off batches
+retain their distinct distribution behavior. Message previews are labeled
 as sample data, and display-time punctuation repair leaves historical stored
 records unchanged.
 
 Version 1.2.4 guides the operator through the reusable-business prerequisites
 inside Outreach. The batch picker exposes only active batches owned by the
-selected Source whose offer is complimentary or exactly 50% off. A Source with
+selected Source whose offer is complimentary, percentage off, or fixed amount off. A Source with
 no eligible batch has an explicit reviewed batch-definition flow that preserves
 the campaign draft and creates no individual claim links. Preview and campaign
 creation retain server-side Source, batch, membership, and review drift checks
@@ -111,6 +113,12 @@ It labels per-customer and across-business admission limits in plain language.
 Together with Backstage Venue Manager 1.3.4, complimentary reusable-business
 claims create and immediately claim an internal transactional token without
 exposing or counting it as an individual claim link.
+
+Version 1.2.6 gives reusable-business paid offers neutral “Admission Offer” wording. Percentage
+offers accept a reviewed value greater than 0 and up to 100; fixed offers deduct
+the reviewed dollar amount from each eligible admission within the customer
+limit and never reduce a ticket below zero. The managed coupon, cart and checkout
+validation, public offer page, printable QR, and export all report the same value.
 
 ## Development checks
 

@@ -84,7 +84,7 @@ if (!function_exists('backstage_outreach_register_contextual_help_tours')) {
 					'id' => 'batch-value',
 					'selector' => 'select[name="value_type"]',
 					'title' => __('Choose the batch value', 'backstage-outreach'),
-					'body' => __('Complimentary Guest Passes use Free. A Neighborhood Offer may share an active Free capacity batch or use Percent Off set to exactly 50%. The managed WooCommerce coupon is still created later in Outreach.', 'backstage-outreach'),
+					'body' => __('Complimentary Guest Passes use Free. Paid Admission Offers use a reviewed Percentage Off or Fixed Amount Off value. Existing paid 50% distributions that share a Free capacity batch remain compatible. The managed WooCommerce coupon is created later in Outreach.', 'backstage-outreach'),
 					'placement' => 'right',
 				),
 				array(
@@ -107,13 +107,13 @@ if (!function_exists('backstage_outreach_register_contextual_help_tours')) {
 			'audience' => $audience,
 			'auto_run' => false,
 			'allow_restart' => true,
-			'tags' => array('guest-pass', 'neighborhood-offer', 'business-qr'),
+			'tags' => array('guest-pass', 'admission-offer', 'business-qr'),
 			'steps' => array(
 				array(
 					'id' => 'outreach-sequence',
 					'selector' => '[data-vms-tour="outreach-qr-help"]',
 					'title' => __('Use this setup sequence', 'backstage-outreach'),
-					'body' => __('Create the batch with eligible events and limits; link its Source and batch to an Outreach campaign; select businesses; choose Neighborhood Offer; Review Selection; then Save Reviewed Links. Save the campaign first if no campaign is open.', 'backstage-outreach'),
+					'body' => __('Create the batch with eligible events, its complimentary/percentage/fixed value, and limits; link its Source and batch to an Outreach campaign; select businesses; review the selection; then Save Reviewed Links. Save the campaign first if no campaign is open.', 'backstage-outreach'),
 					'placement' => 'bottom',
 				),
 				array(
@@ -134,21 +134,21 @@ if (!function_exists('backstage_outreach_register_contextual_help_tours')) {
 					'id' => 'offer-type',
 					'selector' => '[data-vms-tour="outreach-distribution-type"]',
 					'title' => __('Choose free or paid', 'backstage-outreach'),
-					'body' => __('Complimentary Guest Pass issues free admissions. Neighborhood Offer gives customers 50% off eligible paid tickets: they scan, select eligible tickets, receive the automatic discount, and complete normal checkout. Change the offer here in Outreach—not by directly editing its managed WooCommerce coupon.', 'backstage-outreach'),
+					'body' => __('Complimentary Guest Pass issues free admissions. A paid Admission Offer gives the batch’s reviewed percentage or fixed amount off each eligible ticket: customers scan, select tickets, receive the automatic discount, and complete normal checkout. Change the offer through Outreach—not by directly editing its managed WooCommerce coupon.', 'backstage-outreach'),
 					'placement' => 'left',
 				),
 				array(
 					'id' => 'offer-limits',
 					'selector' => '[data-vms-tour="outreach-business-limits"]',
 					'title' => __('Understand the limits', 'backstage-outreach'),
-					'body' => __('Set Passes Per Recipient to 2 for “50% off admission for up to 2 people” per order. Optional ticket cap per business counts discounted tickets; Optional paid-order cap per business counts paid orders. Campaign and batch caps count eligible ticket quantities across businesses.', 'backstage-outreach'),
+					'body' => __('Admissions per customer limits eligible tickets in one order. Optional ticket cap per business counts discounted tickets; Optional paid-order cap per business counts paid orders. Campaign and batch caps count eligible ticket quantities across businesses.', 'backstage-outreach'),
 					'placement' => 'left',
 				),
 				array(
 					'id' => 'review-selection',
 					'selector' => '[data-vms-tour="outreach-review-selection"]',
 					'title' => __('Review before saving', 'backstage-outreach'),
-					'body' => __('Review Selection does not change campaign state or create a coupon. Saving the reviewed Neighborhood Offer creates or safely reuses its managed native 50% coupon. Creating the batch alone does not.', 'backstage-outreach'),
+					'body' => __('Review Selection does not change campaign state or create a coupon. Saving the reviewed Admission Offer creates or safely reuses a managed native coupon with the reviewed batch value. Creating the batch alone does not.', 'backstage-outreach'),
 					'placement' => 'top',
 				),
 				array(

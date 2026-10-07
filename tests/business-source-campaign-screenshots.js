@@ -53,7 +53,7 @@ function check(condition, message) {
       check(await route.locator(`select[name="related_batch_id"] option[value="${fixture.existing_free_batch_id}"]`).count() === 1, 'desktop: existing complimentary batch is unavailable.');
       check(await route.locator(`select[name="related_batch_id"] option[value="${fixture.existing_paid_batch_id}"]`).count() === 1, 'desktop: existing 50%-off batch is unavailable.');
       await route.locator('select[name="related_batch_id"]').selectOption(String(fixture.existing_paid_batch_id));
-      check(await route.getByText('Neighborhood Offer — 50% off admission for up to 2 people', { exact: true }).count() >= 1, 'desktop: existing paid batch wording is not explicit.');
+      check(await route.getByText('Admission Offer — 50% off admission for up to 2 people', { exact: true }).count() >= 1, 'desktop: existing paid batch wording is not explicit.');
       await route.locator('select[name="related_source_id"]').selectOption(String(fixture.source_id));
       check(await route.locator('select[name="related_batch_id"] option').count() === 1, 'desktop: 35-business Source exposed an inactive, unsupported, or unrelated batch.');
       check(await route.locator('[data-vms-business-empty]').isVisible(), 'desktop: guided no-batch empty state is missing.');
@@ -61,6 +61,18 @@ function check(condition, message) {
       check(await route.getByRole('button', { name: 'Create an offer batch for this Source' }).count() === 1, 'desktop: in-Outreach batch action is missing.');
       check(await route.locator('button[value="business_source_preview"]').isDisabled(), 'desktop: Preview remained enabled without an eligible pair.');
       await route.getByRole('button', { name: 'Create an offer batch for this Source' }).click();
+      await route.locator('select[name="business_batch_validity_type"]').selectOption('date_range');
+      const compactWidths = await route.evaluate((root) => {
+        const date = root.querySelector('input[name="business_batch_start_date"]');
+        const expiry = root.querySelector('input[name="business_batch_expires_at"]');
+        return {
+          date: date ? date.getBoundingClientRect().width : 0,
+          expiry: expiry ? expiry.getBoundingClientRect().width : 0,
+        };
+      });
+      check(compactWidths.date > 0 && compactWidths.date <= 193, `desktop: date input is not compact (${compactWidths.date}px).`);
+      check(compactWidths.expiry > compactWidths.date && compactWidths.expiry <= 305, `desktop: expiry input width is not appropriately distinct (${compactWidths.expiry}px).`);
+      await route.locator('select[name="business_batch_validity_type"]').selectOption('any_event');
       await route.locator('button[value="business_batch_preview"]').click();
       await page.waitForLoadState('domcontentloaded');
       check(new URL(page.url()).hash === '#vms-outreach-business-source-setup', 'desktop: batch validation did not return to the stable workflow anchor.');
@@ -69,6 +81,14 @@ function check(condition, message) {
       check(await page.locator('[data-vms-business-batch-create]').getAttribute('open') !== null, 'desktop: relevant batch section did not reopen after validation.');
       await route.locator('input[name="business_campaign_name"]').fill('Draft Café — preserved across batch setup');
       await route.locator('input[name="business_batch_name"]').fill('Business Source Browser Fixture Created In Outreach');
+      await route.locator('select[name="business_batch_offer_type"]').selectOption('free');
+      check(await route.locator('[data-vms-business-offer-amount]').isHidden() && await route.locator('input[name="business_batch_offer_amount"]').isDisabled(), 'desktop: complimentary offer exposed a discount amount.');
+      await route.locator('select[name="business_batch_offer_type"]').selectOption('percent');
+      check(await route.locator('[data-vms-business-offer-amount]').isVisible() && !(await route.locator('input[name="business_batch_offer_amount"]').isDisabled()), 'desktop: percentage offer did not expose its amount.');
+      check(await route.locator('[data-vms-business-offer-suffix]').isVisible() && await route.locator('input[name="business_batch_offer_amount"]').getAttribute('max') === '100', 'desktop: percentage amount did not expose percent units and bounds.');
+      await route.locator('input[name="business_batch_offer_amount"]').fill('37.5');
+      await route.locator('select[name="business_batch_offer_type"]').selectOption('fixed');
+      check(await route.locator('[data-vms-business-offer-prefix]').isVisible() && await route.locator('input[name="business_batch_offer_amount"]').inputValue() === '37.5' && await route.locator('input[name="business_batch_offer_amount"]').getAttribute('max') === '99999999.99', 'desktop: fixed offer did not preserve the switched draft amount or currency bound.');
       await route.locator('select[name="business_batch_offer_type"]').selectOption('free');
       check(await route.locator('input[name="business_batch_quantity"]').count() === 0, 'desktop: reusable-business setup still requests an individual claim-link quantity.');
       await route.locator('input[name="business_batch_admissions_per_link"]').fill('2');
@@ -144,7 +164,7 @@ function check(condition, message) {
     check(await preview.getByText('70', { exact: true }).count() >= 1, `${testCase.name}: shared admission cap is missing.`);
     check(await page.getByText('SAMPLE DATA - NOT A DELIVERY PREVIEW', { exact: true }).count() === 1, `${testCase.name}: message sample label is not prominent.`);
     check(await page.getByRole('button', { name: 'Create Campaign and Continue to Business QR Setup' }).count() === 1, `${testCase.name}: Continue action is missing.`);
-    check(await page.getByText('Neighborhood Offer — 50% off admission for up to 2 people', { exact: true }).count() === 0, `${testCase.name}: complimentary fixture was mislabeled as paid.`);
+    check(await page.getByText('Admission Offer — 50% off admission for up to 2 people', { exact: true }).count() === 0, `${testCase.name}: complimentary fixture was mislabeled as paid.`);
     check(await page.locator('.vms-pass-business-source-table script, .vms-pass-business-source-table img').count() === 0, `${testCase.name}: stored HTML was not escaped.`);
 
     if (testCase.name === 'mobile') {
@@ -204,6 +224,7 @@ function check(condition, message) {
 
     await screenshotTarget.scrollIntoViewIfNeeded();
     await screenshotTarget.screenshot({ path: path.join(outputDir, `${testCase.name}-business-review.png`) });
+    await page.screenshot({ path: path.join(outputDir, `${testCase.name}-business-review-viewport.png`), fullPage: false });
     await context.close();
   }
 

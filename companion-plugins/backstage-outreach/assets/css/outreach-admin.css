@@ -2124,6 +2124,28 @@
   font-weight: 600;
 }
 
+#vms-pass-claims-wrap .vms-pass-business-batch-create input[type="date"] {
+  width: min(12rem, 100%);
+  justify-self: start;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-batch-create input[type="datetime-local"] {
+  width: min(19rem, 100%);
+  justify-self: start;
+}
+
+#vms-pass-claims-wrap .vms-pass-inline-value-field {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  max-width: 16rem;
+}
+
+#vms-pass-claims-wrap .vms-pass-inline-value-field input[type="number"] {
+  width: min(12rem, 100%);
+}
+
 #vms-pass-claims-wrap .vms-pass-business-campaign-step label {
   display: grid;
   gap: 6px;

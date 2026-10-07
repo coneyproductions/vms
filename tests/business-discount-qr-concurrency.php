@@ -97,7 +97,7 @@ try {
 	$paid_campaign = vms_pass_outreach_get_campaign_by_id($campaign_ids['paid']);
 	$free_campaign = vms_pass_outreach_get_campaign_by_id($campaign_ids['free']);
 	$batch = bvmgr_pass_claims_get_batch_by_id($batch_id);
-	$configuration = backstage_outreach_discount_offer_configuration($paid_campaign, $batch, 'coupon_backed');
+	$configuration = backstage_outreach_discount_offer_configuration($paid_campaign, $batch, 'coupon_backed', true);
 	backstage_discount_concurrency_assert(is_array($configuration) && in_array($ticket_id, $configuration['product_ids'], true), 'The paid offer did not resolve its eligible ticket from the shared free batch.');
 	$paid_distribution_id = backstage_outreach_create_distribution($campaign_ids['paid'], $source_id, $business_ids['paid'], 'coupon_backed', 1, 0, '', $configuration['event_ids'], $configuration['product_ids'], 1);
 	$free_distribution_id = backstage_outreach_create_distribution($campaign_ids['free'], $source_id, $business_ids['free'], 'complimentary', 1, 0, '', array(), array(), 1);

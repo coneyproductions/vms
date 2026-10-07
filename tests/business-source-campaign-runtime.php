@@ -23,6 +23,7 @@ $user_id = get_current_user_id() ?: 1;
 $source_id = 0;
 $batch_id = 0;
 $paid_batch_id = 0;
+$fixed_batch_id = 0;
 $inactive_batch_id = 0;
 $unsupported_batch_id = 0;
 $unrelated_batch_id = 0;
@@ -146,8 +147,9 @@ try {
 		return $inserted === false ? 0 : (int) $wpdb->insert_id;
 	};
 	$inactive_batch_id = $insert_fixture_batch($source_id, $marker . ' inactive', 'paused', 'free', 0.0);
-	$unsupported_batch_id = $insert_fixture_batch($source_id, $marker . ' unsupported', 'active', 'percent', 25.0);
-	backstage_business_source_runtime_assert($inactive_batch_id > 0 && $unsupported_batch_id > 0, 'Could not create ineligible batch fixtures.');
+	$fixed_batch_id = $insert_fixture_batch($source_id, $marker . ' fixed 12.35', 'active', 'fixed', 12.35);
+	$unsupported_batch_id = $insert_fixture_batch($source_id, $marker . ' unsupported', 'active', 'percent', 125.0);
+	backstage_business_source_runtime_assert($inactive_batch_id > 0 && $fixed_batch_id > 0 && $unsupported_batch_id > 0, 'Could not create eligibility fixtures.');
 
 	foreach (array('no eligible', 'unrelated') as $source_suffix) {
 		backstage_business_source_runtime_assert($wpdb->insert($source_table, array(
@@ -168,12 +170,13 @@ try {
 	$fixture_batches = array(
 		bvmgr_pass_claims_get_batch_by_id($batch_id),
 		bvmgr_pass_claims_get_batch_by_id($paid_batch_id),
+		bvmgr_pass_claims_get_batch_by_id($fixed_batch_id),
 		bvmgr_pass_claims_get_batch_by_id($inactive_batch_id),
 		bvmgr_pass_claims_get_batch_by_id($unsupported_batch_id),
 		bvmgr_pass_claims_get_batch_by_id($unrelated_batch_id),
 	);
 	$eligible_for_source = vms_pass_outreach_eligible_business_batches($fixture_batches, $source_id);
-	backstage_business_source_runtime_assert(count($eligible_for_source) === 2, 'Initial batch filtering did not exclude unrelated, inactive, or unsupported batches.');
+	backstage_business_source_runtime_assert(count($eligible_for_source) === 3, 'Initial batch filtering did not retain percentage/fixed batches or exclude unrelated, inactive, and invalid batches.');
 	backstage_business_source_runtime_assert(vms_pass_outreach_eligible_business_batches($fixture_batches, $no_eligible_source_id) === array(), 'A Source with no eligible batch did not produce the empty state.');
 	$forged_setup = vms_pass_outreach_sanitize_upload_first_campaign_setup(array(
 		'recipient_source_mode' => 'business_source',
@@ -216,7 +219,8 @@ try {
 		'related_source_id' => $source_id,
 		'business_campaign_name' => $marker . ' preserved Café campaign',
 		'business_batch_name' => $marker . ' reviewed batch',
-		'business_batch_offer_type' => 'percent_50',
+		'business_batch_offer_type' => 'percent',
+		'business_batch_offer_amount' => '37.50',
 		'business_batch_admissions_per_link' => 2,
 		'business_batch_total_admission_cap' => 70,
 		'business_batch_validity_type' => 'any_event',
@@ -237,7 +241,51 @@ try {
 	backstage_business_source_runtime_assert(absint($created_batch['generated_count'] ?? 0) === 0, 'New batch setup silently generated individual claim links.');
 	backstage_business_source_runtime_assert(absint($created_batch['quantity'] ?? 1) === 0, 'New batch definition stored a hidden individual claim-link quantity.');
 	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE batch_id=%d', bvmgr_admission_table_pass_tokens(), $created_batch_id)) === 0, 'New batch setup inserted individual claim-link tokens.');
-	backstage_business_source_runtime_assert(vms_pass_outreach_business_batch_offer_label($created_batch) === 'Neighborhood Offer — 50% off admission for up to 2 people', 'Paid offer wording does not reflect reviewed settings exactly.');
+	backstage_business_source_runtime_assert(vms_pass_outreach_business_batch_offer_label($created_batch) === 'Admission Offer — 37.5% off admission for up to 2 people', 'Percentage offer wording does not reflect reviewed settings exactly.');
+	$fixed_review = vms_pass_outreach_prepare_business_batch_review(array(
+		'recipient_source_mode' => 'business_source',
+		'tracking_category_mode' => 'existing',
+		'related_source_id' => $source_id,
+		'business_campaign_name' => $marker . ' fixed draft',
+		'business_batch_name' => $marker . ' fixed reviewed batch',
+		'business_batch_offer_type' => 'fixed',
+		'business_batch_offer_amount' => '12.345',
+		'business_batch_admissions_per_link' => 2,
+		'business_batch_total_admission_cap' => 70,
+		'business_batch_validity_type' => 'any_event',
+	), $user_id);
+	backstage_business_source_runtime_assert(is_array($fixed_review) && abs((float) $fixed_review['batch_payload']['value_amount'] - 12.35) < 0.001, 'Fixed offer amount was not rounded to the stored currency precision.');
+	backstage_business_source_runtime_assert(vms_pass_outreach_business_batch_offer_label(array_merge($fixed_review['batch_payload'], array('id' => 1))) === 'Admission Offer — $12.35 off each admission for up to 2 people', 'Fixed offer wording is not per admission.');
+	$rounded_percentage = vms_pass_outreach_prepare_business_batch_review(array_merge((array) $fixed_review['form_payload'], array(
+		'related_source_id' => $source_id,
+		'business_batch_name' => $marker . ' rounded percentage',
+		'business_batch_offer_type' => 'percent',
+		'business_batch_offer_amount' => '37.555',
+		'business_batch_admissions_per_link' => 2,
+		'business_batch_total_admission_cap' => 70,
+		'business_batch_validity_type' => 'any_event',
+	)), $user_id);
+	backstage_business_source_runtime_assert(is_array($rounded_percentage) && abs((float) $rounded_percentage['batch_payload']['value_amount'] - 37.56) < 0.001, 'Percentage amount was not rounded to reviewed precision.');
+	$invalid_percentage = vms_pass_outreach_prepare_business_batch_review(array_merge((array) $fixed_review['form_payload'], array(
+		'related_source_id' => $source_id,
+		'business_batch_name' => $marker . ' invalid percent',
+		'business_batch_offer_type' => 'percent',
+		'business_batch_offer_amount' => '100.01',
+		'business_batch_admissions_per_link' => 2,
+		'business_batch_total_admission_cap' => 70,
+		'business_batch_validity_type' => 'any_event',
+	)), $user_id);
+	backstage_business_source_runtime_assert(is_wp_error($invalid_percentage) && $invalid_percentage->get_error_code() === 'invalid_percent_value', 'Percentage values above 100 were accepted.');
+	$oversized_fixed = vms_pass_outreach_prepare_business_batch_review(array_merge((array) $fixed_review['form_payload'], array(
+		'related_source_id' => $source_id,
+		'business_batch_name' => $marker . ' oversized fixed',
+		'business_batch_offer_type' => 'fixed',
+		'business_batch_offer_amount' => '100000000',
+		'business_batch_admissions_per_link' => 2,
+		'business_batch_total_admission_cap' => 70,
+		'business_batch_validity_type' => 'any_event',
+	)), $user_id);
+	backstage_business_source_runtime_assert(is_wp_error($oversized_fixed) && $oversized_fixed->get_error_code() === 'invalid_fixed_value', 'A fixed value beyond storage precision was accepted.');
 
 	$scope_base = array(
 		'recipient_source_mode' => 'business_source',
@@ -310,7 +358,9 @@ try {
 	backstage_business_source_runtime_assert(str_contains((string) $preview['rows'][0]['address'], 'Preview Lane'), 'Mapped address is absent from business preview.');
 	backstage_business_source_runtime_assert(str_contains((string) $preview['rows'][0]['notes'], 'Research note'), 'Research Notes were not retained.');
 	$paid_preview = vms_pass_outreach_build_business_source_preview($source_id, $paid_batch_id);
-	backstage_business_source_runtime_assert(is_array($paid_preview) && $paid_preview['batch_offer_type'] === 'paid_discount' && (int) $paid_preview['link_eligible_count'] === 35, 'The 50% paid Neighborhood Offer route did not preserve all 35 link-eligible businesses.');
+	backstage_business_source_runtime_assert(is_array($paid_preview) && $paid_preview['batch_offer_type'] === 'paid_discount' && (int) $paid_preview['link_eligible_count'] === 35, 'The percentage Admission Offer route did not preserve all 35 link-eligible businesses.');
+	$fixed_preview = vms_pass_outreach_build_business_source_preview($source_id, $fixed_batch_id);
+	backstage_business_source_runtime_assert(is_array($fixed_preview) && $fixed_preview['batch_offer_type'] === 'paid_discount' && str_contains((string) $fixed_preview['batch_offer_label'], '$12.35 off each admission'), 'The fixed Admission Offer route was not eligible or accurately labeled.');
 	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE campaign_id > 0 AND campaign_id IN (SELECT id FROM %i WHERE related_source_id=%d)', $recipient_table, $campaign_table, $source_id)) === 0, 'Fixture unexpectedly has historical recipients.');
 
 	$complimentary_preview = vms_pass_outreach_build_business_source_preview($source_id, $complimentary_batch_id);
@@ -489,7 +539,7 @@ try {
 	if ($paid_batch_id > 0) {
 		$wpdb->delete(bvmgr_admission_table_pass_batches(), array('id' => $paid_batch_id));
 	}
-	foreach (array($inactive_batch_id, $unsupported_batch_id, $unrelated_batch_id, $created_batch_id) as $fixture_batch_id) {
+	foreach (array($inactive_batch_id, $fixed_batch_id, $unsupported_batch_id, $unrelated_batch_id, $created_batch_id) as $fixture_batch_id) {
 		if ($fixture_batch_id > 0) {
 			$wpdb->delete(bvmgr_admission_table_pass_batches(), array('id' => $fixture_batch_id));
 		}
