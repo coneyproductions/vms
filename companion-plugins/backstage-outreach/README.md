@@ -185,6 +185,12 @@ also explain when a Source has no reusable businesses to review. Individual-reci
 campaigns remain complimentary Guest Pass invitations; paid recipient checkout is
 not exposed without a distinct supported redemption and attribution architecture.
 
+Version 1.2.14.1 requires at least one currently active business membership before
+Business Review can be opened or a reusable-business campaign can be created. The
+gate is enforced in the initial page, live browser state, server preview, and final
+creation checks. A zero-member Source may still review and explicitly create a batch
+definition without generating links, recipients, or a campaign.
+
 Version 1.2.10 gives public business flyers fixed US Letter compositions that stay
 consistent between preview, print, and direct PDF download. Portrait full flyers
 stack proportional artwork above the offer. Landscape full flyers use a compact,

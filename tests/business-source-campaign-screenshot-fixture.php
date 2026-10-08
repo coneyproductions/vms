@@ -241,8 +241,12 @@ $extra_batch_ids[] = $insert_batch($source_id, $marker . ' Inactive', 'paused', 
 $extra_batch_ids[] = $insert_batch($source_id, $marker . ' Invalid 125%', 'active', 'percent', 125.0);
 $existing_free_batch_id = $insert_batch($existing_source_id, $marker . ' Existing Complimentary', 'active', 'free', 0.0);
 $existing_paid_batch_id = $insert_batch($existing_source_id, $marker . ' Existing Admission Offer', 'active', 'percent', 50.0);
+$empty_free_batch_id = $insert_batch($empty_source_id, $marker . ' Zero-member Complimentary', 'active', 'free', 0.0);
+$empty_paid_batch_id = $insert_batch($empty_source_id, $marker . ' Zero-member Admission Offer', 'active', 'percent', 50.0);
 $extra_batch_ids[] = $existing_free_batch_id;
 $extra_batch_ids[] = $existing_paid_batch_id;
+$extra_batch_ids[] = $empty_free_batch_id;
+$extra_batch_ids[] = $empty_paid_batch_id;
 $business_ids = array();
 for ($index = 1; $index <= 35; $index++) {
 	$business_id = backstage_outreach_insert_business(array(
@@ -267,6 +271,18 @@ for ($index = 1; $index <= 35; $index++) {
 if (!backstage_outreach_business_upsert_membership($existing_source_id, $business_ids[0], 'manual', null, 0, array('fixture' => true), $user_id)) {
 	throw new RuntimeException('Could not link a business to the existing-batch Source.');
 }
+$paused_membership_business_id = backstage_outreach_insert_business(array('business_name' => $marker . ' Paused Membership'), $user_id);
+$inactive_business_id = backstage_outreach_insert_business(array('business_name' => $marker . ' Inactive Business'), $user_id);
+if ($paused_membership_business_id <= 0
+	|| $inactive_business_id <= 0
+	|| !backstage_outreach_business_upsert_membership($empty_source_id, $paused_membership_business_id, 'manual', null, 0, array('fixture' => true), $user_id)
+	|| !backstage_outreach_business_upsert_membership($empty_source_id, $inactive_business_id, 'manual', null, 0, array('fixture' => true), $user_id)) {
+	throw new RuntimeException('Could not create inactive zero-membership controls.');
+}
+$wpdb->update(backstage_outreach_business_table('source_businesses'), array('status' => 'paused'), array('source_id' => $empty_source_id, 'business_id' => $paused_membership_business_id));
+$wpdb->update(backstage_outreach_business_table('businesses'), array('status' => 'inactive'), array('id' => $inactive_business_id));
+$business_ids[] = $paused_membership_business_id;
+$business_ids[] = $inactive_business_id;
 
 $fixture = array(
 	'user_id' => $user_id,
@@ -276,6 +292,8 @@ $fixture = array(
 	'empty_source_id' => $empty_source_id,
 	'existing_free_batch_id' => $existing_free_batch_id,
 	'existing_paid_batch_id' => $existing_paid_batch_id,
+	'empty_free_batch_id' => $empty_free_batch_id,
+	'empty_paid_batch_id' => $empty_paid_batch_id,
 	'unrelated_batch_id' => $existing_free_batch_id,
 	'extra_source_ids' => $extra_source_ids,
 	'extra_batch_ids' => $extra_batch_ids,

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Backstage Outreach
  * Description: Restores the Guest Pass Outreach campaign and recipient workflow for Backstage Venue Manager.
- * Version: 1.2.14
+ * Version: 1.2.14.1
  * Requires at least: 6.8
  * Requires PHP: 8.3
  * Requires Plugins: backstage-venue-manager
@@ -14,7 +14,7 @@
 
 defined('ABSPATH') || exit;
 
-define('BACKSTAGE_OUTREACH_VERSION', '1.2.14');
+define('BACKSTAGE_OUTREACH_VERSION', '1.2.14.1');
 define('BACKSTAGE_OUTREACH_PLUGIN_FILE', __FILE__);
 define('BACKSTAGE_OUTREACH_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('BACKSTAGE_OUTREACH_PLUGIN_URL', plugin_dir_url(__FILE__));

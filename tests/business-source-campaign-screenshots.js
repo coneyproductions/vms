@@ -93,7 +93,27 @@ function check(condition, message) {
       check(await route.locator('button[value="business_source_preview"]').isDisabled(), 'desktop: Preview was enabled before selecting prerequisites.');
 	  await route.locator('select[name="related_source_id"]').selectOption(String(fixture.empty_source_id));
 	  check((await route.locator('[data-vms-business-membership-guidance]').textContent()).includes('no active reusable businesses'), 'desktop: zero-membership Source did not explain why Business Review and campaign creation remain unavailable.');
-	  check(await route.locator('button[value="business_source_preview"]').isDisabled(), 'desktop: zero-membership Source enabled Business Review without an offer batch.');
+	  check(await route.locator('select[name="related_batch_id"] option').count() === 3, 'desktop: zero-membership Source did not expose its two eligible existing batches.');
+	  await route.locator('select[name="related_batch_id"]').selectOption(String(fixture.empty_free_batch_id));
+	  check(await route.locator('button[value="business_source_preview"]').isDisabled(), 'desktop: zero-membership Source plus existing complimentary batch enabled Business Review.');
+	  await route.locator('select[name="related_batch_id"]').selectOption(String(fixture.empty_paid_batch_id));
+	  check(await route.locator('button[value="business_source_preview"]').isDisabled(), 'desktop: zero-membership Source plus existing 50%-off batch enabled Business Review.');
+	  await route.locator('[data-vms-business-batch-create] summary').click();
+	  await route.locator('input[name="business_batch_name"]').fill('Business Source Browser Fixture Created In Outreach Zero Member');
+	  await route.locator('select[name="business_batch_offer_type"]').selectOption('percent');
+	  await route.locator('input[name="business_batch_offer_amount"]').fill('50');
+	  await route.locator('input[name="business_batch_admissions_per_link"]').fill('2');
+	  await route.locator('input[name="business_batch_total_admission_cap"]').fill('10');
+	  await route.locator('select[name="business_batch_validity_type"]').selectOption('any_event');
+	  await route.locator('button[value="business_batch_preview"]').click();
+	  await page.waitForLoadState('domcontentloaded');
+	  check(await route.locator('input[name="business_batch_name"]').inputValue() === 'Business Source Browser Fixture Created In Outreach Zero Member', 'desktop: zero-member new-batch draft was not preserved through review.');
+	  check(await route.locator('input[name="business_batch_offer_amount"]').inputValue() === '50', 'desktop: zero-member percentage amount was not preserved through review.');
+	  await route.locator('button[value="business_batch_commit"]').click();
+	  await page.waitForLoadState('domcontentloaded');
+	  check(await route.locator('select[name="related_source_id"]').inputValue() === String(fixture.empty_source_id), 'desktop: zero-member Source was not preserved after explicit batch creation.');
+	  check(await route.locator('select[name="related_batch_id"]').inputValue() !== '0', 'desktop: explicitly created zero-member batch was not selected on return.');
+	  check(await route.locator('button[value="business_source_preview"]').isDisabled(), 'desktop: creating a batch incorrectly bypassed the active-business prerequisite.');
       await route.locator('select[name="related_source_id"]').selectOption(String(fixture.existing_source_id));
       check(await route.locator('select[name="related_batch_id"] option').count() === 3, 'desktop: existing Source did not expose exactly its two eligible batches.');
 	  check((await route.locator('[data-vms-business-membership-guidance]').textContent()).includes('1 active reusable business'), 'desktop: active reusable-business count did not update after Source change.');
@@ -715,6 +735,20 @@ function check(condition, message) {
     maxRedirects: 0,
   });
   check(forgedResponse.status() === 302 && (forgedResponse.headers().location || '').endsWith('#vms-outreach-business-source-setup'), 'no-script: forged Source/batch mismatch did not fail closed at the stable anchor.');
+  const zeroMemberNonce = await noScriptPage.locator('button[value="business_source_preview"]').locator('xpath=ancestor::form').locator('input[name="_wpnonce"]').inputValue();
+  const zeroMemberResponse = await noScriptContext.request.post(noScriptPost.action, {
+    form: {
+      action: 'vms_pass_outreach_campaign_save',
+      _wpnonce: zeroMemberNonce,
+      campaign_id: '0',
+      save_mode: 'business_source_preview',
+      recipient_source_mode: 'business_source',
+      related_source_id: String(fixture.empty_source_id),
+      related_batch_id: String(fixture.empty_free_batch_id),
+    },
+    maxRedirects: 0,
+  });
+  check(zeroMemberResponse.status() === 302 && (zeroMemberResponse.headers().location || '').endsWith('#vms-outreach-business-source-setup'), 'no-script: zero-membership Source plus eligible batch did not fail closed at the stable anchor.');
   await noScriptContext.close();
 
   await browser.close();
