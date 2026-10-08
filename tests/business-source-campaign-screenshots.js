@@ -34,6 +34,7 @@ function check(condition, message) {
       ignoreHTTPSErrors: true,
       viewport: { width: testCase.width, height: testCase.height },
 	  storageState: loginStorageState || undefined,
+	  permissions: ['clipboard-read', 'clipboard-write'],
     });
     const page = await context.newPage();
     page.setDefaultTimeout(60000);
@@ -335,17 +336,22 @@ function check(condition, message) {
       check(await routeAwarePanel.getByRole('heading', { name: 'Business Contacts & Sharing' }).count() === 1, 'mobile: campaign management did not identify the reusable-business route.');
       check(await routeAwarePanel.getByText('Import from CSV', { exact: true }).count() === 0 && await routeAwarePanel.getByText('Select saved Outreach contacts', { exact: true }).count() === 0, 'mobile: reusable-business management still presents individual-recipient creation as a next step.');
       const share = page.locator('#backstage-outreach-business-share');
+	  const multilineIntroduction = 'Hello {contact_name}… ひらがな é\n\nFirst paragraph for {business_name}.\n\nSecond paragraph keeps a blank line.\n\n**Bold markers stay literal.**';
       await share.locator('input[name="business_share_subject"]').fill('Café — {business_name} offer');
-      await share.locator('textarea[name="business_share_message"]').fill('Hello {contact_name}… ひらがな é');
+      await share.locator('textarea[name="business_share_message"]').fill(multilineIntroduction);
       await share.getByRole('button', { name: 'Save Template & Review Personalized Messages' }).click();
       await page.waitForLoadState('domcontentloaded');
+	  check(await page.locator('#backstage-outreach-business-share textarea[name="business_share_message"]').inputValue() === multilineIntroduction, 'mobile: saved multiline business introduction did not survive reload exactly.');
+	  check(await page.locator('#backstage-outreach-business-share').getByText('Emails are plain text. Paragraphs and blank lines are preserved', { exact: false }).count() === 1, 'mobile: plain-text and Markdown guidance is missing.');
       const shareReview = page.locator('#backstage-outreach-business-share-review');
       const shareRows = shareReview.locator('tbody tr');
       check(await shareRows.count() === 35, 'mobile: personalized sharing did not include all 35 linked businesses.');
       check(await shareRows.getByText('Not provided', { exact: true }).count() === 14, 'mobile: personalized sharing did not retain 14 copy-only businesses without email.');
-      check(await shareRows.locator('textarea').first().inputValue().then((value) => value.includes('ひらがな é') && value.includes('Customer offer URL:') && value.includes('Printable flyer URL:') && value.includes('does not reserve admissions')), 'mobile: personalized message omitted UTF-8, links, or shared-capacity qualification.');
+      check(await shareRows.locator('textarea').first().inputValue().then((value) => value.includes('ひらがな é\n\nFirst paragraph') && value.includes('\n\nSecond paragraph keeps a blank line.\n\n**Bold markers stay literal.**\n\nOffer:') && value.includes('Customer offer URL:') && value.includes('Printable flyer URL:') && value.includes('does not reserve admissions')), 'mobile: personalized message omitted multiline formatting, UTF-8, links, or shared-capacity qualification.');
       const firstMessage = await shareRows.locator('textarea').first().inputValue();
       check(firstMessage.includes(customerLinks[0]) && firstMessage.includes(flyerLinks[0]), 'mobile: first business message did not use that business’s own offer and flyer links.');
+	  await shareRows.first().getByRole('button', { name: 'Copy message' }).click();
+	  check(await page.evaluate(() => navigator.clipboard.readText()) === firstMessage, 'mobile: copied business invitation did not retain the exact multiline preview body.');
       check(await shareReview.getByRole('button', { name: 'Hand Off Reviewed Business Emails' }).isDisabled(), 'mobile: draft campaign allowed business email delivery before activation.');
       publicFlyerUrl = flyerLinks[0] || '';
       publicOfferUrl = customerLinks[0] || '';

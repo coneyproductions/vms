@@ -6,8 +6,12 @@
 
 defined('ABSPATH') || exit;
 
-$backstage_business_source_delivery_block = static fn() => true;
-add_filter('pre_wp_mail', $backstage_business_source_delivery_block, PHP_INT_MAX);
+$backstage_business_source_mock_mail = array();
+$backstage_business_source_delivery_block = static function ($return, array $atts) use (&$backstage_business_source_mock_mail) {
+	$backstage_business_source_mock_mail[] = $atts;
+	return true;
+};
+add_filter('pre_wp_mail', $backstage_business_source_delivery_block, PHP_INT_MAX, 2);
 
 function backstage_business_source_runtime_assert(bool $condition, string $message): void
 {
@@ -642,15 +646,33 @@ try {
 	$wpdb->update(backstage_outreach_business_table('campaign_businesses'), array('admission_cap' => 4, 'expires_at' => $review_expiry), array('id' => (int) $first_distribution['id']));
 	$updated_distributions = backstage_outreach_distribution_rows($campaign_id);
 	$first_distribution = $updated_distributions[0];
-	$share_context = backstage_outreach_business_share_context((array) $first_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), 'Café — {business_name}', 'Hello {contact_name}…');
+	$multiline_input = "Hello {contact_name},\n\nFirst paragraph for {business_name}.\n\nSecond paragraph keeps a blank line.\n\n**Bold markers stay literal.**\n<strong>HTML is removed.</strong>";
+	$sanitized_multiline = backstage_outreach_request_textarea(array('business_share_message' => wp_slash($multiline_input)), 'business_share_message');
+	$expected_multiline = "Hello {contact_name},\n\nFirst paragraph for {business_name}.\n\nSecond paragraph keeps a blank line.\n\n**Bold markers stay literal.**\nHTML is removed.";
+	backstage_business_source_runtime_assert($sanitized_multiline === $expected_multiline, 'The dedicated business-share textarea sanitizer did not preserve paragraphs and blank lines safely.');
+	$subject_input = backstage_outreach_request_text(array('business_share_subject' => "Café — {business_name}\nInjected line"), 'business_share_subject');
+	backstage_business_source_runtime_assert(!str_contains($subject_input, "\n"), 'The business-share subject stopped being single-line.');
+	update_option(backstage_outreach_business_share_template_key($campaign_id), array('subject' => 'Café — {business_name}', 'message' => $sanitized_multiline), false);
+	$reloaded_template = backstage_outreach_business_share_template($campaign_id);
+	backstage_business_source_runtime_assert((string) $reloaded_template['message'] === $expected_multiline, 'The saved business-share template did not reload with its multiline formatting intact.');
+	$share_context = backstage_outreach_business_share_context((array) $first_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), (string) $reloaded_template['subject'], (string) $reloaded_template['message']);
 	backstage_business_source_runtime_assert(str_contains((string) $share_context['subject'], 'Café —') && str_contains((string) $share_context['message'], 'Hello') && str_contains((string) $share_context['message'], 'Total admissions allowed per business: 4'), 'UTF-8 or personalized limit details were lost from business sharing.');
+	$personalized_intro = str_replace(array('{contact_name}', '{business_name}'), array((string) ($first_distribution['contact_name'] ?: $first_distribution['business_name']), (string) $first_distribution['business_name']), $expected_multiline);
+	backstage_business_source_runtime_assert(str_starts_with((string) $share_context['message'], $personalized_intro . "\n\nOffer:"), 'Personalized merge did not preserve all introduction paragraphs and the blank line before appended offer details.');
+	backstage_business_source_runtime_assert(str_contains((string) $share_context['message'], '**Bold markers stay literal.**') && !str_contains((string) $share_context['message'], '<strong>'), 'Plain-text business sharing introduced formatting or retained unsafe HTML.');
 	backstage_business_source_runtime_assert(str_contains((string) $share_context['message'], backstage_outreach_distribution_url((array) $first_distribution)) && str_contains((string) $share_context['message'], backstage_outreach_distribution_flyer_url((array) $first_distribution)), 'A personalized business message did not contain that business\'s own offer and flyer links.');
 	backstage_business_source_runtime_assert(str_contains((string) $share_context['message'], 'does not reserve admissions') && str_contains((string) $share_context['message'], backstage_outreach_business_format_local_datetime($review_expiry)), 'Shared-capacity qualification or site-timezone expiry was missing from business sharing.');
+	$second_distribution = $updated_distributions[1];
+	$second_context = backstage_outreach_business_share_context((array) $second_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), (string) $reloaded_template['subject'], (string) $reloaded_template['message']);
+	backstage_business_source_runtime_assert(!str_contains((string) $share_context['message'], backstage_outreach_distribution_url((array) $second_distribution)) && !str_contains((string) $second_context['message'], backstage_outreach_distribution_url((array) $first_distribution)), 'Personalized business invitations leaked another business\'s signed customer URL.');
 	$email_count = count(array_filter($distributions, static fn(array $row): bool => sanitize_email((string) ($row['email'] ?? '')) !== ''));
 	backstage_business_source_runtime_assert($email_count === 21, 'Business sharing did not retain 21 email-eligible and 14 copy-only businesses.');
-	$delivery_review = array('subject' => 'Café — {business_name}', 'message' => 'Hello {contact_name}…');
+	$delivery_review = array('subject' => (string) $reloaded_template['subject'], 'message' => (string) $reloaded_template['message']);
 	$delivery_result = backstage_outreach_attempt_business_share_email($first_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), $delivery_review, array());
 	backstage_business_source_runtime_assert((string) ($delivery_result['status'] ?? '') === 'handed_off' && (string) ($delivery_result['code'] ?? '') === 'accepted_by_mailer', 'Intercepted reviewed business email was not handed off through the delivery path.');
+	$captured_mail = end($backstage_business_source_mock_mail);
+	backstage_business_source_runtime_assert(is_array($captured_mail) && (string) ($captured_mail['message'] ?? '') === (string) $share_context['message'], 'Mocked final email body did not exactly match the reviewed personalized multiline message.');
+	backstage_business_source_runtime_assert(in_array('Content-Type: text/plain; charset=UTF-8', (array) ($captured_mail['headers'] ?? array()), true), 'Business invitation email stopped using UTF-8 plain text.');
 	$sent_map = backstage_outreach_business_share_sent_map($campaign_id);
 	backstage_business_source_runtime_assert(isset($sent_map[(int) $first_distribution['id']]), 'Business delivery audit was not recognized for duplicate-send prevention.');
 	$duplicate_delivery = backstage_outreach_attempt_business_share_email($first_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), $delivery_review, $sent_map);

@@ -186,6 +186,11 @@ function backstage_outreach_request_text(array $source, string $key, string $def
 	return isset($source[$key]) && is_scalar($source[$key]) ? sanitize_text_field((string) wp_unslash($source[$key])) : $default;
 }
 
+function backstage_outreach_request_textarea(array $source, string $key, string $default = ''): string
+{
+	return isset($source[$key]) && is_scalar($source[$key]) ? sanitize_textarea_field((string) wp_unslash($source[$key])) : $default;
+}
+
 function backstage_outreach_request_absint(array $source, string $key, int $default = 0): int
 {
 	return isset($source[$key]) && is_scalar($source[$key]) ? absint((string) $source[$key]) : $default;
@@ -1787,8 +1792,8 @@ function backstage_outreach_handle_business_share(): void
 	if (!is_array($campaign) || !is_array($batch) || !backstage_outreach_is_reusable_business_campaign($campaign)) {
 		wp_die(esc_html__('Reusable-business campaign not found.', 'backstage-outreach'));
 	}
-	$subject = sanitize_text_field(backstage_outreach_request_text($_POST, 'business_share_subject'));
-	$message = sanitize_textarea_field(backstage_outreach_request_text($_POST, 'business_share_message'));
+	$subject = backstage_outreach_request_text($_POST, 'business_share_subject');
+	$message = backstage_outreach_request_textarea($_POST, 'business_share_message');
 	if ($subject === '') {
 		$subject = backstage_outreach_business_share_default_subject();
 	}
@@ -2184,7 +2189,7 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		echo '<div id="backstage-outreach-business-share" class="vms-pass-preview-summary vms-pass-business-share" tabindex="-1"><h3>' . esc_html__('Share with businesses', 'backstage-outreach') . '</h3><p>' . esc_html__('Review a campaign-specific introduction, then inspect each personalized message. Every linked business has copyable content; email delivery is available only for valid, unsuppressed addresses and requires an explicit reviewed send.', 'backstage-outreach') . '</p><p class="description">' . esc_html__('This workflow does not create Outreach recipients or individual Guest Pass claim links.', 'backstage-outreach') . '</p>';
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_business_share"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="share_mode" value="preview">';
 		wp_nonce_field('backstage_outreach_business_share');
-		echo '<div class="vms-pass-grid"><label class="vms-pass-span-2">' . esc_html__('Business-contact subject', 'backstage-outreach') . '<input type="text" name="business_share_subject" value="' . esc_attr($share_subject) . '" required><span class="description">' . esc_html__('Available tags: {business_name}, {contact_name}, {offer_terms}, {customer_url}, {flyer_url}.', 'backstage-outreach') . '</span></label><label class="vms-pass-span-2">' . esc_html__('Business-contact introduction', 'backstage-outreach') . '<textarea name="business_share_message" rows="5" required>' . esc_textarea($share_message) . '</textarea><span class="description">' . esc_html__('The exact reviewed offer, limits, dates, expiry, customer link, and flyer link are appended automatically to every message.', 'backstage-outreach') . '</span></label></div><p><button class="button button-primary">' . esc_html__('Save Template & Review Personalized Messages', 'backstage-outreach') . '</button></p></form>';
+		echo '<div class="vms-pass-grid"><label class="vms-pass-span-2">' . esc_html__('Business-contact subject', 'backstage-outreach') . '<input type="text" name="business_share_subject" value="' . esc_attr($share_subject) . '" required><span class="description">' . esc_html__('Available tags: {business_name}, {contact_name}, {offer_terms}, {customer_url}, {flyer_url}.', 'backstage-outreach') . '</span></label><label class="vms-pass-span-2">' . esc_html__('Business-contact introduction', 'backstage-outreach') . '<textarea name="business_share_message" rows="8" required>' . esc_textarea($share_message) . '</textarea><span class="description">' . esc_html__('Emails are plain text. Paragraphs and blank lines are preserved, but pasted Markdown markers such as **bold** do not create formatting. The exact reviewed offer, limits, dates, expiry, customer link, and flyer link are appended automatically to every message.', 'backstage-outreach') . '</span></label></div><p><button class="button button-primary">' . esc_html__('Save Template & Review Personalized Messages', 'backstage-outreach') . '</button></p></form>';
 		if (is_array($share_review)) {
 			echo '<div id="backstage-outreach-business-share-review" tabindex="-1"><h4>' . esc_html__('Reviewed personalized messages', 'backstage-outreach') . '</h4><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" data-vms-business-share-send><input type="hidden" name="action" value="backstage_outreach_business_share"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="share_mode" value="send"><input type="hidden" name="share_review_token" value="' . esc_attr((string) ($share_review['token'] ?? '')) . '">';
 			wp_nonce_field('backstage_outreach_business_share');

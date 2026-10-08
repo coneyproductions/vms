@@ -157,6 +157,11 @@ stay visible, secondary terms are expandable, unavailable links retain branded
 404/410 states, and existing eligibility, checkout, attribution, and capacity
 enforcement remain unchanged.
 
+Version 1.2.11 preserves multiline plain-text business-contact introductions from
+the invitation editor through saved templates, personalized previews, clipboard
+copying, and UTF-8 email handoff. Subjects remain single-line, and the editor
+clarifies that Markdown markers are sent literally rather than rendered.
+
 Version 1.2.10 gives public business flyers fixed US Letter compositions that stay
 consistent between preview, print, and direct PDF download. Portrait full flyers
 stack proportional artwork above the offer. Landscape full flyers use a compact,
