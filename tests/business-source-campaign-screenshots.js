@@ -49,8 +49,10 @@ function check(condition, message) {
 	  await page.goto(new URL('/wp-login.php', fixture.admin_url).toString(), { waitUntil: 'domcontentloaded' });
 	  await page.locator('#user_login').fill(user);
 	  await page.locator('#user_pass').fill(pass);
-	  await page.locator('#wp-submit').click();
-	  await page.waitForLoadState('domcontentloaded');
+	  await Promise.all([
+		page.waitForURL((url) => !url.pathname.endsWith('/wp-login.php')),
+		page.locator('#wp-submit').click(),
+	  ]);
 	  check(!new URL(page.url()).pathname.endsWith('/wp-login.php'), 'browser fixture login failed.');
 	  loginStorageState = await context.storageState();
 	}
@@ -336,24 +338,27 @@ function check(condition, message) {
       check(await routeAwarePanel.getByRole('heading', { name: 'Business Contacts & Sharing' }).count() === 1, 'mobile: campaign management did not identify the reusable-business route.');
       check(await routeAwarePanel.getByText('Import from CSV', { exact: true }).count() === 0 && await routeAwarePanel.getByText('Select saved Outreach contacts', { exact: true }).count() === 0, 'mobile: reusable-business management still presents individual-recipient creation as a next step.');
       const share = page.locator('#backstage-outreach-business-share');
+	  const templateEditor = share.locator('.vms-pass-business-template-editor');
+	  await templateEditor.evaluate((details) => { details.open = true; });
 	  const multilineIntroduction = 'Hello {contact_name}… ひらがな é\n\nFirst paragraph for {business_name}.\n\nSecond paragraph keeps a blank line.\n\n**Bold markers stay literal.**';
-      await share.locator('input[name="business_share_subject"]').fill('Café — {business_name} offer');
-      await share.locator('textarea[name="business_share_message"]').fill(multilineIntroduction);
-      await share.getByRole('button', { name: 'Save Template & Review Personalized Messages' }).click();
+      await templateEditor.locator('input[name="business_share_subject"]').fill('Café — {business_name} offer');
+      await templateEditor.locator('textarea[name="business_share_message"]').fill(multilineIntroduction);
+      await templateEditor.getByRole('button', { name: 'Save Invitation Template' }).click();
       await page.waitForLoadState('domcontentloaded');
+	  await page.locator('#backstage-outreach-business-share .vms-pass-business-template-editor').evaluate((details) => { details.open = true; });
 	  check(await page.locator('#backstage-outreach-business-share textarea[name="business_share_message"]').inputValue() === multilineIntroduction, 'mobile: saved multiline business introduction did not survive reload exactly.');
 	  check(await page.locator('#backstage-outreach-business-share').getByText('Emails are plain text. Paragraphs and blank lines are preserved', { exact: false }).count() === 1, 'mobile: plain-text and Markdown guidance is missing.');
       const shareReview = page.locator('[data-vms-business-contact-dashboard]');
       const shareRows = shareReview.locator('[data-contact-card]');
       check(await shareRows.count() === 35, 'mobile: personalized sharing did not include all 35 linked businesses.');
-      check(await shareRows.locator('.vms-pass-contact-card__select').getByText('Copy only', { exact: true }).count() === 14, 'mobile: personalized sharing did not retain 14 copy-only businesses without email.');
+      check(await shareRows.locator('.vms-pass-contact-card__select').getByText('No email', { exact: true }).count() === 14, 'mobile: personalized sharing did not retain 14 copy-only businesses without email.');
       await shareRows.first().evaluate((details) => { details.open = true; });
       check(await shareRows.first().locator('textarea[readonly]').inputValue().then((value) => value.includes('ひらがな é\n\nFirst paragraph') && value.includes('\n\nSecond paragraph keeps a blank line.\n\n**Bold markers stay literal.**\n\nOffer:') && value.includes('Customer offer URL:') && value.includes('Printable flyer URL:') && value.includes('does not reserve admissions')), 'mobile: personalized message omitted multiline formatting, UTF-8, links, or shared-capacity qualification.');
       const firstMessage = await shareRows.first().locator('textarea[readonly]').inputValue();
       check(firstMessage.includes(customerLinks[0]) && firstMessage.includes(flyerLinks[0]), 'mobile: first business message did not use that business’s own offer and flyer links.');
 	  await shareRows.first().getByRole('button', { name: 'Copy message' }).click();
 	  check(await page.evaluate(() => navigator.clipboard.readText()) === firstMessage, 'mobile: copied business invitation did not retain the exact multiline preview body.');
-      check(await shareReview.getByRole('button', { name: 'Hand Off Selected Business Emails' }).isDisabled(), 'mobile: draft campaign allowed business email delivery before activation.');
+      check(await shareReview.getByRole('button', { name: 'Review Selected First-Time Emails' }).isDisabled(), 'mobile: draft campaign allowed business email review before an eligible selection.');
       publicFlyerUrl = flyerLinks[0] || '';
       publicOfferUrl = customerLinks[0] || '';
       const campaignStatus = page.locator('select[name="status"]');
@@ -378,11 +383,18 @@ function check(condition, message) {
       check(await contactDashboard.locator('[data-vms-email-eligible]').count() === 21, 'mobile: first-time email selection did not expose exactly 21 eligible fixture addresses.');
       check(await contactDashboard.locator('[data-vms-email-eligible]:checked').count() === 0, 'mobile: first-time email recipients were selected automatically.');
       check(await contactDashboard.locator('[data-vms-email-submit]').isDisabled(), 'mobile: email handoff was enabled before an explicit selection.');
-      await contactDashboard.locator('[data-vms-select-all-eligible]').check();
-      check(await contactDashboard.locator('[data-vms-email-eligible]:checked').count() === 21, 'mobile: Select All Eligible did not select exactly the email-capable businesses.');
+      await contactDashboard.locator('[data-vms-select-all-visible-eligible]').click();
+      check(await contactDashboard.locator('[data-vms-email-eligible]:checked').count() === 21, 'mobile: Select All Visible Eligible did not select exactly the visible email-capable businesses.');
       check(await contactDashboard.locator('[data-vms-email-selected-count]').innerText() === '21 recipients selected', 'mobile: selected-recipient feedback is inaccurate.');
-      await contactDashboard.locator('[data-vms-select-all-eligible]').uncheck();
-      check(await contactDashboard.locator('[data-vms-email-eligible]:checked').count() === 0 && await contactDashboard.locator('[data-vms-email-submit]').isDisabled(), 'mobile: clearing Select All Eligible did not return the handoff to a safe state.');
+      await contactDashboard.locator('[data-vms-clear-email-selection]').click();
+      check(await contactDashboard.locator('[data-vms-email-eligible]:checked').count() === 0 && await contactDashboard.locator('[data-vms-email-submit]').isDisabled(), 'mobile: Clear Selection did not return the handoff to a safe state.');
+	  await contactDashboard.locator('[data-vms-contact-filter]').selectOption('needs_first_email');
+	  check(await contactDashboard.locator('[data-contact-card]:visible').count() === 21, 'mobile: Needs First Email did not isolate email-capable businesses without a prior handoff.');
+	  await contactDashboard.locator('[data-vms-select-all-visible-eligible]').click();
+	  await contactDashboard.locator('[data-vms-contact-search]').fill('no matching fixture business');
+	  check(await contactDashboard.locator('[data-vms-email-eligible]:checked').count() === 0, 'mobile: filtering silently retained hidden first-email selections.');
+	  await contactDashboard.locator('[data-vms-contact-search]').fill('');
+	  await contactDashboard.locator('[data-vms-contact-filter]').selectOption('all');
 
       const firstContactCard = contactDashboard.locator('[data-contact-card]').first();
       const contactCardId = await firstContactCard.getAttribute('id');

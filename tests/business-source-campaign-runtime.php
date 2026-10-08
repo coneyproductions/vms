@@ -7,9 +7,10 @@
 defined('ABSPATH') || exit;
 
 $backstage_business_source_mock_mail = array();
-$backstage_business_source_delivery_block = static function ($return, array $atts) use (&$backstage_business_source_mock_mail) {
+$backstage_business_source_mock_fail_emails = array();
+$backstage_business_source_delivery_block = static function ($return, array $atts) use (&$backstage_business_source_mock_mail, &$backstage_business_source_mock_fail_emails) {
 	$backstage_business_source_mock_mail[] = $atts;
-	return true;
+	return !in_array(sanitize_email((string) ($atts['to'] ?? '')), $backstage_business_source_mock_fail_emails, true);
 };
 add_filter('pre_wp_mail', $backstage_business_source_delivery_block, PHP_INT_MAX, 2);
 
@@ -45,6 +46,7 @@ $tec_event_ids = array();
 $flyer_artwork_ids = array();
 $business_ids = array();
 $drift_business_id = 0;
+$suppression_id = 0;
 
 try {
 	$switched_draft = vms_pass_outreach_normalize_business_route_request(array(
@@ -679,6 +681,10 @@ try {
 	backstage_business_source_runtime_assert((string) ($duplicate_delivery['status'] ?? '') === 'skipped' && (string) ($duplicate_delivery['code'] ?? '') === 'already_sent', 'A retried business email was not blocked after its sent audit.');
 	$resend_delivery = backstage_outreach_attempt_business_share_email($first_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), $delivery_review, $sent_map, true);
 	backstage_business_source_runtime_assert((string) ($resend_delivery['status'] ?? '') === 'handed_off', 'The explicit resend adapter did not permit a separately audited mocked handoff.');
+	$backstage_business_source_mock_fail_emails[] = sanitize_email((string) $first_distribution['email']);
+	$failed_resend = backstage_outreach_attempt_business_share_email($first_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), $delivery_review, $sent_map, true);
+	$backstage_business_source_mock_fail_emails = array();
+	backstage_business_source_runtime_assert((string) ($failed_resend['status'] ?? '') === 'failed' && (string) ($failed_resend['code'] ?? '') === 'wp_mail_failed', 'A mocked mail rejection was not recorded as a failed handoff.');
 	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE campaign_id=%d', $recipient_table, $campaign_id)) === 0, 'Business sharing created individual Outreach recipients.');
 
 	$email_distributions = array_values(array_filter($updated_distributions, static fn(array $row): bool => sanitize_email((string) ($row['email'] ?? '')) !== ''));
@@ -701,14 +707,42 @@ try {
 	$historical_event_keys = array_column((array) $historical_dashboard['events'], 'event_key');
 	backstage_business_source_runtime_assert(count($historical_event_keys) === count(array_unique($historical_event_keys)), 'Historical email audits were duplicated in the projected contact history.');
 
-	$manual_distribution = null;
+	$newly_eligible_distribution = null;
 	foreach ($updated_distributions as $candidate) {
 		if (sanitize_email((string) ($candidate['email'] ?? '')) === '') {
-			$manual_distribution = $candidate;
+			$newly_eligible_distribution = $candidate;
 			break;
 		}
 	}
-	backstage_business_source_runtime_assert(is_array($manual_distribution), 'Could not identify a copy-only business for manual contact tests.');
+	backstage_business_source_runtime_assert(is_array($newly_eligible_distribution), 'Could not identify a copy-only business for the newly eligible email test.');
+	$newly_eligible_email = 'newly-eligible-' . absint($newly_eligible_distribution['business_id']) . '@example.test';
+	backstage_business_source_runtime_assert($wpdb->update(backstage_outreach_business_table('businesses'), array('email' => $newly_eligible_email, 'updated_at' => backstage_outreach_business_now()), array('id' => (int) $newly_eligible_distribution['business_id'])) === 1, 'Could not add the disposable newly eligible email address.');
+	$updated_distributions = backstage_outreach_distribution_rows($campaign_id);
+	$newly_eligible_distribution = array_values(array_filter($updated_distributions, static fn(array $row): bool => (int) ($row['id'] ?? 0) === (int) $newly_eligible_distribution['id']))[0] ?? null;
+	backstage_business_source_runtime_assert(is_array($newly_eligible_distribution), 'Newly eligible distribution disappeared after its business email was saved.');
+	$updated_dashboard = backstage_outreach_business_contact_dashboard($campaign_id, $updated_distributions);
+	$updated_sent_map = backstage_outreach_business_share_sent_map($campaign_id);
+	$first_email_eligible = array_values(array_filter($updated_distributions, static fn(array $row): bool => backstage_outreach_business_first_email_block_reason($row, (array) $created['campaign'], isset($updated_sent_map[(int) ($row['id'] ?? 0)])) === ''));
+	$missing_email_count = count(array_filter($updated_distributions, static fn(array $row): bool => sanitize_email((string) ($row['email'] ?? '')) === ''));
+	backstage_business_source_runtime_assert(count($first_email_eligible) === 1 && (int) $first_email_eligible[0]['id'] === (int) $newly_eligible_distribution['id'], 'A newly saved email did not become the one and only first-time eligible business without rebuilding links.');
+	backstage_business_source_runtime_assert($missing_email_count === 13 && (int) $updated_dashboard['summary']['email_handed_off'] === 21 && (int) $updated_dashboard['summary']['no_contact'] === 14, 'The critical 35-business fixture did not retain 21 handoffs, 13 missing emails, one newly eligible email, and 14 businesses without activity.');
+	$previously_handed_off = $updated_distributions[0];
+	$wpdb->update(backstage_outreach_business_table('businesses'), array('email' => 'changed-after-handoff@example.test'), array('id' => (int) $previously_handed_off['business_id']));
+	$changed_handoff_row = array_values(array_filter(backstage_outreach_distribution_rows($campaign_id), static fn(array $row): bool => (int) ($row['id'] ?? 0) === (int) $previously_handed_off['id']))[0] ?? array();
+	backstage_business_source_runtime_assert(backstage_outreach_business_first_email_block_reason($changed_handoff_row, (array) $created['campaign'], true) === 'already_handed_off', 'Changing a previously handed-off email incorrectly restored ordinary first-time eligibility.');
+	$wpdb->update(backstage_outreach_business_table('businesses'), array('email' => (string) $previously_handed_off['email']), array('id' => (int) $previously_handed_off['business_id']));
+	$wpdb->update(backstage_outreach_business_table('businesses'), array('email' => ''), array('id' => (int) $newly_eligible_distribution['business_id']));
+	$removed_email_row = array_values(array_filter(backstage_outreach_distribution_rows($campaign_id), static fn(array $row): bool => (int) ($row['id'] ?? 0) === (int) $newly_eligible_distribution['id']))[0] ?? array();
+	backstage_business_source_runtime_assert(backstage_outreach_business_first_email_block_reason($removed_email_row, (array) $created['campaign'], false) === 'missing_email', 'Removing an address before handoff did not invalidate first-email eligibility.');
+	$wpdb->update(backstage_outreach_business_table('businesses'), array('email' => $newly_eligible_email), array('id' => (int) $newly_eligible_distribution['business_id']));
+	$newly_eligible_distribution = array_values(array_filter(backstage_outreach_distribution_rows($campaign_id), static fn(array $row): bool => (int) ($row['id'] ?? 0) === (int) $newly_eligible_distribution['id']))[0] ?? null;
+	$suppression = vms_outreach_upsert_suppression(array('email' => $newly_eligible_email, 'reason' => 'manual_admin', 'scope' => vms_outreach_default_suppression_scope(), 'source_label' => $marker, 'notes' => 'Disposable first-email eligibility check.'), $user_id);
+	backstage_business_source_runtime_assert(is_array($suppression), 'Could not create the disposable suppression fixture.');
+	$suppression_id = absint($suppression['id'] ?? 0);
+	backstage_business_source_runtime_assert(backstage_outreach_business_first_email_block_reason((array) $newly_eligible_distribution, (array) $created['campaign'], false) === 'suppressed', 'A suppressed address remained first-email eligible.');
+	vms_outreach_remove_suppression($suppression_id);
+	$suppression_id = 0;
+	$manual_distribution = $newly_eligible_distribution;
 	$manual_one = backstage_outreach_business_contact_insert(array(
 		'campaign_id' => $campaign_id,
 		'distribution_id' => (int) $manual_distribution['id'],
@@ -738,6 +772,7 @@ try {
 	$manual_state = (array) $manual_dashboard['states'][(int) $manual_distribution['id']];
 	backstage_business_source_runtime_assert(count((array) $manual_state['history']) === 2 && (string) $manual_state['history'][0]['method'] === 'phone' && !empty($manual_state['follow_up_needed']), 'Multiple manual methods did not survive reload in chronological order or retain follow-up state.');
 	backstage_business_source_runtime_assert((int) $manual_dashboard['summary']['manual_contacts'] === 2 && (int) $manual_dashboard['summary']['no_contact'] === 13 && (int) $manual_dashboard['summary']['follow_up_needed'] === 1, 'Manual contact dashboard totals are inaccurate.');
+	backstage_business_source_runtime_assert(backstage_outreach_business_first_email_block_reason((array) $manual_distribution, (array) $created['campaign'], false) === '', 'Manual contact history incorrectly disqualified a business from its first email handoff.');
 	$before_copy_count = count(backstage_outreach_business_contact_events($campaign_id));
 	backstage_outreach_business_share_context((array) $manual_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), (string) $reloaded_template['subject'], (string) $reloaded_template['message']);
 	backstage_business_source_runtime_assert(count(backstage_outreach_business_contact_events($campaign_id)) === $before_copy_count, 'Message/link preview incorrectly logged contact activity.');
@@ -754,12 +789,13 @@ try {
 		'created_at' => $now,
 	));
 	backstage_business_source_runtime_assert(count(backstage_outreach_business_manual_contact_events($campaign_id)) === 2, 'Manual activity from another campaign leaked into this dashboard.');
-	$initial_review = array('mode' => 'initial', 'token' => backstage_outreach_business_review_token(), 'subject' => (string) $reloaded_template['subject'], 'message' => (string) $reloaded_template['message'], 'configuration_digest' => backstage_outreach_business_share_configuration_digest((array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), $updated_distributions), 'reviewed_at' => time());
 	ob_start();
-	backstage_outreach_render_business_contact_dashboard((array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), $updated_distributions, $initial_review);
+	backstage_outreach_render_business_contact_dashboard((array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), $updated_distributions, null);
 	$dashboard_html = (string) ob_get_clean();
-	backstage_business_source_runtime_assert(substr_count($dashboard_html, 'data-contact-card') === 35 && str_contains($dashboard_html, 'Business Contacts &amp; Activity') && str_contains($dashboard_html, 'Select All Eligible'), 'Compact dashboard did not render all 35 collapsed businesses or safe selection controls.');
-	backstage_business_source_runtime_assert(str_contains($dashboard_html, 'Café — first contact') && str_contains($dashboard_html, 'Copy only') && str_contains($dashboard_html, 'Previously handed off'), 'Dashboard history, UTF-8, or email-state distinctions were lost.');
+	backstage_business_source_runtime_assert(substr_count($dashboard_html, 'data-contact-card') === 35 && str_contains($dashboard_html, 'Business Contacts &amp; Activity') && str_contains($dashboard_html, 'Select All Visible Eligible') && str_contains($dashboard_html, 'Needs First Email'), 'Compact dashboard did not render all 35 businesses or persistent first-email controls without a review transient.');
+	backstage_business_source_runtime_assert(substr_count($dashboard_html, 'data-vms-email-eligible') === 1 && str_contains($dashboard_html, 'Café — first contact') && str_contains($dashboard_html, 'No email') && str_contains($dashboard_html, 'Previously handed off'), 'Dashboard history, UTF-8, or exact email-state distinctions were lost.');
+	$snapshot = backstage_outreach_business_share_recipient_snapshot((array) $manual_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), (string) $reloaded_template['subject'], (string) $reloaded_template['message']);
+	backstage_business_source_runtime_assert((string) $snapshot['email'] === $newly_eligible_email && str_contains((string) $snapshot['message'], backstage_outreach_distribution_url((array) $manual_distribution)) && (string) $snapshot['digest'] !== '', 'First-email review snapshot did not bind the exact current address, personalized content, and business URL.');
 	$synthetic_rows = array();
 	for ($index = 1; $index <= 200; $index++) {
 		$synthetic_rows[] = array('id' => 900000 + $index, 'business_id' => 800000 + $index, 'business_name' => 'Scale Business ' . $index);
@@ -772,13 +808,13 @@ try {
 	echo "Business Source campaign runtime PASS\n";
 	echo wp_json_encode(array(
 		'businesses' => 35,
-		'with_email_reference' => 21,
-		'missing_email' => 14,
+		'with_email_reference' => 22,
+		'missing_email' => 13,
 		'historical_recipients' => 0,
 		'reusable_links' => 35,
 		'personalized_business_messages' => 35,
-		'email_eligible_businesses' => 21,
-		'copy_only_businesses' => 14,
+		'email_eligible_businesses' => 1,
+		'copy_only_businesses' => 13,
 		'projected_email_handoffs' => 21,
 		'manual_contact_entries' => 2,
 		'follow_ups_needed' => 1,
@@ -792,6 +828,9 @@ try {
 	), JSON_PRETTY_PRINT) . "\n";
 } finally {
 	remove_filter('pre_wp_mail', $backstage_business_source_delivery_block, PHP_INT_MAX);
+	if ($suppression_id > 0) {
+		vms_outreach_remove_suppression($suppression_id);
+	}
 	if ($complimentary_campaign_id > 0) {
 		delete_option(backstage_outreach_flyer_design_option_key($complimentary_campaign_id));
 		delete_transient(vms_pass_outreach_business_distribution_handoff_key($complimentary_campaign_id));

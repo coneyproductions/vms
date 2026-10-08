@@ -169,6 +169,14 @@ stored in an additive Outreach-owned activity table. First-time email selection,
 explicit resend review, campaign progress, and Results navigation are now
 business-route aware; no individual invitation links are created by this workflow.
 
+Version 1.2.13 keeps first-time business-email eligibility and selection directly
+available in that dashboard without requiring a template save or a surviving review
+transient. Visible-only bulk selection, exact recipient/content review snapshots,
+an independent Needs First Email filter, structured deliberate resends, and local
+handoff results make recipient intent explicit while preserving audit and replay
+protections. Established business-link settings and invitation-template editing are
+secondary disclosures; they remain independent from email recipient selection.
+
 Version 1.2.10 gives public business flyers fixed US Letter compositions that stay
 consistent between preview, print, and direct PDF download. Portrait full flyers
 stack proportional artwork above the offer. Landscape full flyers use a compact,

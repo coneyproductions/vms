@@ -1927,6 +1927,44 @@ function backstage_outreach_business_share_sent_map(int $campaign_id): array
 	return $sent;
 }
 
+function backstage_outreach_business_first_email_block_reason(array $row, array $campaign, bool $handed_off): string
+{
+	$email = sanitize_email((string) ($row['email'] ?? ''));
+	$expiry = backstage_outreach_distribution_effective_expiry($row);
+	if ($email === '') {
+		return 'missing_email';
+	}
+	if ($handed_off) {
+		return 'already_handed_off';
+	}
+	if (function_exists('vms_outreach_email_is_suppressed') && vms_outreach_email_is_suppressed($email)) {
+		return 'suppressed';
+	}
+	if ($expiry !== '' && backstage_outreach_business_now() > $expiry) {
+		return 'expired';
+	}
+	if (sanitize_key((string) ($campaign['status'] ?? '')) !== 'active') {
+		return 'campaign_inactive';
+	}
+	return '';
+}
+
+function backstage_outreach_business_share_recipient_snapshot(array $row, array $campaign, array $batch, string $subject, string $message): array
+{
+	$context = backstage_outreach_business_share_context($row, $campaign, $batch, $subject, $message);
+	$snapshot = array(
+		'distribution_id' => absint($row['id'] ?? 0),
+		'business_id' => absint($row['business_id'] ?? 0),
+		'business_name' => sanitize_text_field((string) ($row['business_name'] ?? '')),
+		'contact_name' => sanitize_text_field((string) ($row['contact_name'] ?? '')),
+		'email' => sanitize_email((string) ($context['email'] ?? '')),
+		'subject' => sanitize_text_field((string) ($context['subject'] ?? '')),
+		'message' => sanitize_textarea_field((string) ($context['message'] ?? '')),
+	);
+	$snapshot['digest'] = hash('sha256', wp_json_encode($snapshot, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+	return $snapshot;
+}
+
 function backstage_outreach_business_share_configuration_digest(array $campaign, array $batch, array $rows): string
 {
 	return hash('sha256', wp_json_encode(array(
@@ -2100,30 +2138,65 @@ function backstage_outreach_handle_business_share(): void
 	$rows = array_values(array_filter(backstage_outreach_distribution_rows($campaign_id), static fn(array $row): bool => (string) ($row['status'] ?? '') === 'active'));
 	$configuration_digest = backstage_outreach_business_share_configuration_digest($campaign, $batch, $rows);
 	$key = backstage_outreach_campaign_business_share_key($campaign_id);
+	$template_digest = hash('sha256', $subject . "\n" . $message);
 	if ($mode === 'preview') {
 		update_option(backstage_outreach_business_share_template_key($campaign_id), array('subject' => $subject, 'message' => $message), false);
-		set_transient($key, array('mode' => 'initial', 'token' => backstage_outreach_business_review_token(), 'subject' => $subject, 'message' => $message, 'configuration_digest' => $configuration_digest, 'reviewed_at' => time()), 30 * MINUTE_IN_SECONDS);
-		backstage_outreach_business_message(sprintf(_n('%d personalized business message is ready for review. Nothing was sent.', '%d personalized business messages are ready for review. Nothing was sent.', count($rows), 'backstage-outreach'), count($rows)));
-		backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-share-review');
+		delete_transient($key);
+		backstage_outreach_business_message(__('Business invitation template saved. Select first-time recipients in Email Invitations when you are ready to review a handoff.', 'backstage-outreach'));
+		backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-contacts');
 	}
 	$selected = array_values(array_unique(array_filter(array_map('absint', (array) ($_POST['distribution_ids'] ?? array())))));
-	if ($mode === 'resend_preview') {
-		$sent_map = backstage_outreach_business_share_sent_map($campaign_id);
+	$row_map = array();
+	foreach ($rows as $row) {
+		$row_map[absint($row['id'] ?? 0)] = $row;
+	}
+	$sent_map = backstage_outreach_business_share_sent_map($campaign_id);
+	if (in_array($mode, array('initial_preview', 'resend_preview'), true)) {
+		$review_mode = $mode === 'resend_preview' ? 'resend' : 'initial';
 		$eligible = array();
-		foreach ($rows as $row) {
-			$id = absint($row['id'] ?? 0);
-			$email = sanitize_email((string) ($row['email'] ?? ''));
-			if (in_array($id, $selected, true) && isset($sent_map[$id]) && $email !== '' && !(function_exists('vms_outreach_email_is_suppressed') && vms_outreach_email_is_suppressed($email))) {
-				$eligible[] = $id;
+		$recipient_snapshots = array();
+		foreach ($selected as $selected_id) {
+			$row = $row_map[$selected_id] ?? null;
+			if (!is_array($row)) {
+				continue;
 			}
+			$email = sanitize_email((string) ($row['email'] ?? ''));
+			$expiry = backstage_outreach_distribution_effective_expiry($row);
+			$expired = $expiry !== '' && backstage_outreach_business_now() > $expiry;
+			$suppressed = $email !== '' && function_exists('vms_outreach_email_is_suppressed') && vms_outreach_email_is_suppressed($email);
+			$handed_off = isset($sent_map[$selected_id]);
+			$valid = $review_mode === 'resend'
+				? $handed_off && $email !== '' && !$suppressed && !$expired && sanitize_key((string) ($campaign['status'] ?? '')) === 'active'
+				: backstage_outreach_business_first_email_block_reason($row, $campaign, $handed_off) === '';
+			if (!$valid) {
+				continue;
+			}
+			$eligible[] = $selected_id;
+			$recipient_snapshots[$selected_id] = backstage_outreach_business_share_recipient_snapshot($row, $campaign, $batch, $subject, $message);
 		}
 		if (empty($eligible) || count($eligible) !== count($selected)) {
-			backstage_outreach_business_message(__('Choose one or more previously handed-off, currently eligible addresses for deliberate resend review.', 'backstage-outreach'), 'error');
+			$message_text = $review_mode === 'resend'
+				? __('Choose one or more previously handed-off, currently eligible addresses for deliberate resend review.', 'backstage-outreach')
+				: __('Choose one or more currently eligible businesses for first-time email review. Refresh if an address, suppression, campaign, or expiry changed.', 'backstage-outreach');
+			backstage_outreach_business_message($message_text, 'error');
 			backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-contacts');
 		}
-		set_transient($key, array('mode' => 'resend', 'token' => backstage_outreach_business_review_token(), 'subject' => $subject, 'message' => $message, 'configuration_digest' => $configuration_digest, 'distribution_ids' => $eligible, 'reviewed_at' => time()), 15 * MINUTE_IN_SECONDS);
-		backstage_outreach_business_message(sprintf(_n('%d prior recipient is ready for explicit resend confirmation. Nothing was sent.', '%d prior recipients are ready for explicit resend confirmation. Nothing was sent.', count($eligible), 'backstage-outreach'), count($eligible)));
-		backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-resend-review');
+		sort($eligible);
+		set_transient($key, array(
+			'mode' => $review_mode,
+			'token' => backstage_outreach_business_review_token(),
+			'subject' => $subject,
+			'message' => $message,
+			'template_digest' => $template_digest,
+			'configuration_digest' => $configuration_digest,
+			'distribution_ids' => $eligible,
+			'recipient_snapshots' => $recipient_snapshots,
+			'reviewed_at' => time(),
+		), ($review_mode === 'resend' ? 15 : 30) * MINUTE_IN_SECONDS);
+		backstage_outreach_business_message($review_mode === 'resend'
+			? sprintf(_n('%d prior recipient is ready for explicit resend confirmation. Nothing was sent.', '%d prior recipients are ready for explicit resend confirmation. Nothing was sent.', count($eligible), 'backstage-outreach'), count($eligible))
+			: sprintf(_n('%d first-time recipient is ready for final review. Nothing was sent.', '%d first-time recipients are ready for final review. Nothing was sent.', count($eligible), 'backstage-outreach'), count($eligible)));
+		backstage_outreach_business_redirect_to_step($campaign_id, $review_mode === 'resend' ? 'backstage-outreach-business-resend-review' : 'backstage-outreach-business-email-review');
 	}
 	if (!in_array($mode, array('send', 'resend_send'), true)) {
 		wp_die(esc_html__('Invalid business email action.', 'backstage-outreach'));
@@ -2132,54 +2205,74 @@ function backstage_outreach_handle_business_share(): void
 	$token = sanitize_text_field(backstage_outreach_request_text($_POST, 'share_review_token'));
 	$expected_review_mode = $mode === 'resend_send' ? 'resend' : 'initial';
 	$review_age = is_array($review) ? time() - absint($review['reviewed_at'] ?? 0) : PHP_INT_MAX;
-	if (!is_array($review) || (string) ($review['mode'] ?? '') !== $expected_review_mode || $review_age < 0 || $review_age > ($mode === 'resend_send' ? 15 : 30) * MINUTE_IN_SECONDS || $token === '' || !hash_equals((string) ($review['token'] ?? ''), $token) || !hash_equals((string) ($review['configuration_digest'] ?? ''), $configuration_digest)) {
+	if (!is_array($review) || (string) ($review['mode'] ?? '') !== $expected_review_mode || $review_age < 0 || $review_age > ($mode === 'resend_send' ? 15 : 30) * MINUTE_IN_SECONDS || $token === '' || !hash_equals((string) ($review['token'] ?? ''), $token) || !hash_equals((string) ($review['configuration_digest'] ?? ''), $configuration_digest) || !hash_equals((string) ($review['template_digest'] ?? ''), hash('sha256', (string) $stored_template['subject'] . "\n" . (string) $stored_template['message']))) {
 		delete_transient($key);
-		backstage_outreach_business_message(__('The personalized message review expired or linked businesses changed. Review messages again before sending.', 'backstage-outreach'), 'error');
-		backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-share');
+		backstage_outreach_business_message(__('The email review expired, or the invitation template, linked businesses, addresses, or offer configuration changed. Review the current recipients again before sending.', 'backstage-outreach'), 'error');
+		backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-contacts');
 	}
 	if (sanitize_key((string) ($campaign['status'] ?? '')) !== 'active') {
 		backstage_outreach_business_message(__('Activate the campaign before sending business-contact email. Copyable messages remain available while the campaign is a draft.', 'backstage-outreach'), 'error');
-		backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-share-review');
+		backstage_outreach_business_redirect_to_step($campaign_id, $mode === 'resend_send' ? 'backstage-outreach-business-resend-review' : 'backstage-outreach-business-email-review');
 	}
 	if (empty($selected)) {
 		backstage_outreach_business_message(__('Select at least one eligible business email after reviewing the personalized recipients and links.', 'backstage-outreach'), 'error');
-		backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-share-review');
-	}
-	$row_map = array();
-	foreach ($rows as $row) {
-		$row_map[absint($row['id'] ?? 0)] = $row;
+		backstage_outreach_business_redirect_to_step($campaign_id, $mode === 'resend_send' ? 'backstage-outreach-business-resend-review' : 'backstage-outreach-business-email-review');
 	}
 	if (count(array_intersect($selected, array_keys($row_map))) !== count($selected)) {
 		backstage_outreach_business_message(__('Email handoff was blocked because the submitted business selection was not part of the reviewed campaign.', 'backstage-outreach'), 'error');
 		backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-contacts');
 	}
+	$reviewed_ids = array_values(array_unique(array_map('absint', (array) ($review['distribution_ids'] ?? array()))));
+	sort($reviewed_ids);
+	$posted_ids = $selected;
+	sort($posted_ids);
+	if (empty($reviewed_ids) || $posted_ids !== $reviewed_ids) {
+		backstage_outreach_business_message(__('Email handoff was blocked because the submitted recipients did not exactly match the reviewed selection.', 'backstage-outreach'), 'error');
+		backstage_outreach_business_redirect_to_step($campaign_id, $mode === 'resend_send' ? 'backstage-outreach-business-resend-review' : 'backstage-outreach-business-email-review');
+	}
+	$reviewed_snapshots = is_array($review['recipient_snapshots'] ?? null) ? (array) $review['recipient_snapshots'] : array();
+	foreach ($reviewed_ids as $reviewed_id) {
+		$current_snapshot = backstage_outreach_business_share_recipient_snapshot($row_map[$reviewed_id], $campaign, $batch, (string) ($review['subject'] ?? ''), (string) ($review['message'] ?? ''));
+		$reviewed_snapshot = is_array($reviewed_snapshots[$reviewed_id] ?? null) ? (array) $reviewed_snapshots[$reviewed_id] : array();
+		if (empty($reviewed_snapshot['digest']) || !hash_equals((string) $reviewed_snapshot['digest'], (string) $current_snapshot['digest'])) {
+			delete_transient($key);
+			backstage_outreach_business_message(__('Email handoff was blocked because a reviewed recipient address or personalized message changed. Review the current recipients again.', 'backstage-outreach'), 'error');
+			backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-contacts');
+		}
+	}
 	if ($mode === 'send') {
 		$current_sent = backstage_outreach_business_share_sent_map($campaign_id);
 		foreach ($selected as $selected_id) {
 			$row = $row_map[$selected_id];
-			$email = sanitize_email((string) ($row['email'] ?? ''));
-			$expiry = backstage_outreach_distribution_effective_expiry($row);
-			if ($email === '' || isset($current_sent[$selected_id]) || ($expiry !== '' && backstage_outreach_business_now() > $expiry) || (function_exists('vms_outreach_email_is_suppressed') && vms_outreach_email_is_suppressed($email))) {
+			if (backstage_outreach_business_first_email_block_reason($row, $campaign, isset($current_sent[$selected_id])) !== '') {
 				backstage_outreach_business_message(__('Email handoff was blocked because at least one submitted recipient is missing, suppressed, expired, or already handed off. Refresh and review the current eligible list.', 'backstage-outreach'), 'error');
 				backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-contacts');
 			}
 		}
 	}
 	if ($mode === 'resend_send') {
-		$reviewed_ids = array_values(array_unique(array_map('absint', (array) ($review['distribution_ids'] ?? array()))));
-		sort($reviewed_ids);
-		$posted_ids = $selected;
-		sort($posted_ids);
-		if (empty($_POST['confirm_resend']) || $posted_ids !== $reviewed_ids) {
+		if (empty($_POST['confirm_resend'])) {
 			backstage_outreach_business_message(__('Resend was blocked because the explicit confirmation or exact reviewed recipient selection was missing.', 'backstage-outreach'), 'error');
 			backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-resend-review');
+		}
+		$current_sent = backstage_outreach_business_share_sent_map($campaign_id);
+		foreach ($selected as $selected_id) {
+			$row = $row_map[$selected_id];
+			$email = sanitize_email((string) ($row['email'] ?? ''));
+			$expiry = backstage_outreach_distribution_effective_expiry($row);
+			$expired = $expiry !== '' && backstage_outreach_business_now() > $expiry;
+			$suppressed = $email !== '' && function_exists('vms_outreach_email_is_suppressed') && vms_outreach_email_is_suppressed($email);
+			if (!isset($current_sent[$selected_id]) || $email === '' || $expired || $suppressed) {
+				backstage_outreach_business_message(__('Resend was blocked because at least one reviewed prior recipient is no longer eligible. Refresh and review the current resend list.', 'backstage-outreach'), 'error');
+				backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-resend-review');
+			}
 		}
 	}
 	global $wpdb;
 	$lock_name = 'outreach-business-share-' . $campaign_id;
 	if ((int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, %d)', $lock_name, 5)) !== 1) {
 		backstage_outreach_business_message(__('Business messages are already being processed. Try again after the current send finishes.', 'backstage-outreach'), 'error');
-		backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-share-review');
+		backstage_outreach_business_redirect_to_step($campaign_id, $mode === 'resend_send' ? 'backstage-outreach-business-resend-review' : 'backstage-outreach-business-email-review');
 	}
 	$locked_review = get_transient($key);
 	if (!is_array($locked_review) || !hash_equals((string) ($locked_review['token'] ?? ''), $token)) {
@@ -2209,10 +2302,18 @@ function backstage_outreach_handle_business_share(): void
 		}
 	}
 	$wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock_name));
-	$result_message = sprintf(__('Business email handoff result at %1$s: %2$d accepted by the mail system, %3$d failed, %4$d skipped. Mail-system acceptance is not confirmation of inbox delivery.', 'backstage-outreach'), backstage_outreach_business_format_local_datetime(backstage_outreach_business_now()), $handoff_count, $failed_count, $skipped_count);
-	set_transient(backstage_outreach_business_contact_result_key($campaign_id), array('type' => $failed_count > 0 ? 'error' : 'info', 'message' => $result_message), 30 * MINUTE_IN_SECONDS);
+	$result_at = backstage_outreach_business_now();
+	$result_message = sprintf(__('Business email handoff result at %1$s: %2$d accepted by the mail system, %3$d failed, %4$d skipped. Mail-system acceptance is not confirmation of inbox delivery.', 'backstage-outreach'), backstage_outreach_business_format_local_datetime($result_at), $handoff_count, $failed_count, $skipped_count);
+	set_transient(backstage_outreach_business_contact_result_key($campaign_id), array(
+		'type' => $failed_count > 0 ? 'error' : 'info',
+		'message' => $result_message,
+		'accepted' => $handoff_count,
+		'failed' => $failed_count,
+		'skipped' => $skipped_count,
+		'handoff_at' => $result_at,
+	), 30 * MINUTE_IN_SECONDS);
 	backstage_outreach_business_message($result_message, $failed_count > 0 ? 'error' : 'info');
-	backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-contacts');
+	backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-email-result');
 }
 add_action('admin_post_backstage_outreach_business_share', 'backstage_outreach_handle_business_share');
 
@@ -2449,6 +2550,9 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 	}
 	backstage_outreach_render_flyer_design_panel($campaign);
 	echo '<ol class="vms-pass-business-steps vms-pass-business-steps--distribution" aria-label="' . esc_attr__('Business link workflow', 'backstage-outreach') . '"><li class="is-current"><span>1</span>' . esc_html__('Select businesses', 'backstage-outreach') . '</li><li' . (is_array($preview) ? ' class="is-current"' : '') . '><span>2</span>' . esc_html__('Review', 'backstage-outreach') . '</li><li' . (!empty($rows) && !is_array($preview) ? ' class="is-complete"' : '') . '><span>3</span>' . esc_html__('Save links', 'backstage-outreach') . '</li><li' . (!empty($rows) ? ' class="is-current"' : '') . '><span>4</span>' . esc_html__('Share with businesses', 'backstage-outreach') . '</li></ol>';
+	$manage_links_open = empty($rows) || is_array($preview) || is_array($form_flash);
+	$active_link_count = count(array_filter($rows, static fn(array $row): bool => (string) ($row['status'] ?? '') === 'active'));
+	echo '<details class="vms-pass-business-link-settings"' . ($manage_links_open ? ' open' : '') . '><summary><strong>' . esc_html__('Manage Business Links & Distribution Settings', 'backstage-outreach') . '</strong><span>' . esc_html(sprintf(_n('%d active business link', '%d active business links', $active_link_count, 'backstage-outreach'), $active_link_count)) . '</span></summary><p class="description">' . esc_html__('These controls manage which Source businesses have active reusable links and the terms saved on those links. Changing membership can pause existing active links. Email recipients are selected separately in Business Contacts & Activity.', 'backstage-outreach') . '</p>';
 	echo '<form id="backstage-outreach-business-selection" method="post" action="' . esc_url(admin_url('admin-post.php')) . '" data-vms-tour="outreach-business-selection"><input type="hidden" name="action" value="backstage_outreach_campaign_businesses"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="distribution_mode" value="preview">';
 	wp_nonce_field('backstage_outreach_campaign_businesses');
 	$all_selected = !empty($businesses) && (!empty($pending_ids) ? count($pending_ids) === count($businesses) : (empty($rows) || count(array_filter($rows, static fn(array $row): bool => (string) ($row['status'] ?? '') === 'active')) === count($businesses)));
@@ -2497,6 +2601,7 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		wp_nonce_field('backstage_outreach_campaign_businesses');
 		echo '<button class="button button-primary">' . esc_html__('Save Reviewed Links', 'backstage-outreach') . '</button></form></div>';
 	}
+	echo '</details>';
 	if (!empty($rows)) {
 		echo '<details class="vms-pass-secondary-business-controls"><summary>' . esc_html__('QR, flyer, lifecycle, and redemption details', 'backstage-outreach') . '</summary><p class="description">' . esc_html__('These established controls remain available for link management and customer results. Business outreach activity is tracked in the contact dashboard below.', 'backstage-outreach') . '</p><table class="widefat striped vms-pass-business-results-table" data-vms-tour="outreach-business-results"><thead><tr><th>' . esc_html__('Business', 'backstage-outreach') . '</th><th>' . esc_html__('Status', 'backstage-outreach') . '</th><th>' . esc_html__('Links and controls', 'backstage-outreach') . '</th><th>' . esc_html__('Results', 'backstage-outreach') . '</th></tr></thead><tbody>';
 		global $wpdb;
@@ -2543,49 +2648,16 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		$share_review = get_transient(backstage_outreach_campaign_business_share_key($campaign_id));
 		$share_subject = is_array($share_review) ? sanitize_text_field((string) ($share_review['subject'] ?? $stored_subject)) : $stored_subject;
 		$share_message = is_array($share_review) ? sanitize_textarea_field((string) ($share_review['message'] ?? $stored_message)) : $stored_message;
-		$sent_map = backstage_outreach_business_share_sent_map($campaign_id);
 		echo '<div id="backstage-outreach-business-share" class="vms-pass-preview-summary vms-pass-business-share" tabindex="-1"><h3>' . esc_html__('Share with businesses', 'backstage-outreach') . '</h3><p>' . esc_html__('Review a campaign-specific introduction, then inspect each personalized message. Every linked business has copyable content; email delivery is available only for valid, unsuppressed addresses and requires an explicit reviewed send.', 'backstage-outreach') . '</p><p class="description">' . esc_html__('This workflow does not create Outreach recipients or individual Guest Pass claim links.', 'backstage-outreach') . '</p>';
-		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_business_share"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="share_mode" value="preview">';
-		wp_nonce_field('backstage_outreach_business_share');
-		echo '<div class="vms-pass-grid"><label class="vms-pass-span-2">' . esc_html__('Business-contact subject', 'backstage-outreach') . '<input type="text" name="business_share_subject" value="' . esc_attr($share_subject) . '" required><span class="description">' . esc_html__('Available tags: {business_name}, {contact_name}, {offer_terms}, {customer_url}, {flyer_url}.', 'backstage-outreach') . '</span></label><label class="vms-pass-span-2">' . esc_html__('Business-contact introduction', 'backstage-outreach') . '<textarea name="business_share_message" rows="8" required>' . esc_textarea($share_message) . '</textarea><span class="description">' . esc_html__('Emails are plain text. Paragraphs and blank lines are preserved, but pasted Markdown markers such as **bold** do not create formatting. The exact reviewed offer, limits, dates, expiry, customer link, and flyer link are appended automatically to every message.', 'backstage-outreach') . '</span></label></div><p><button class="button button-primary">' . esc_html__('Save Template & Review Personalized Messages', 'backstage-outreach') . '</button></p></form>';
-		if (is_array($share_review) && !function_exists('backstage_outreach_render_business_contact_dashboard')) {
-			echo '<div id="backstage-outreach-business-share-review" tabindex="-1"><h4>' . esc_html__('Reviewed personalized messages', 'backstage-outreach') . '</h4><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" data-vms-business-share-send><input type="hidden" name="action" value="backstage_outreach_business_share"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="share_mode" value="send"><input type="hidden" name="share_review_token" value="' . esc_attr((string) ($share_review['token'] ?? '')) . '">';
-			wp_nonce_field('backstage_outreach_business_share');
-			echo '<div class="vms-pass-table-scroll"><table class="widefat striped vms-pass-business-share-table"><thead><tr><th>' . esc_html__('Email', 'backstage-outreach') . '</th><th>' . esc_html__('Business / contact', 'backstage-outreach') . '</th><th>' . esc_html__('Personalized message and links', 'backstage-outreach') . '</th><th>' . esc_html__('Delivery status', 'backstage-outreach') . '</th></tr></thead><tbody>';
-			$sendable_count = 0;
-			foreach ($active_share_rows as $row) {
-				$distribution_id = absint($row['id'] ?? 0);
-				$context = backstage_outreach_business_share_context($row, $campaign, $batch, (string) $share_review['subject'], (string) $share_review['message']);
-				$email = (string) $context['email'];
-				$suppressed = $email !== '' && function_exists('vms_outreach_email_is_suppressed') && vms_outreach_email_is_suppressed($email);
-				$already_sent = isset($sent_map[$distribution_id]);
-				$effective_expiry = backstage_outreach_distribution_effective_expiry($row);
-				$expired = $effective_expiry !== '' && backstage_outreach_business_now() > $effective_expiry;
-				$sendable = $email !== '' && !$suppressed && !$already_sent && !$expired;
-				if ($sendable) {
-					$sendable_count++;
-				}
-				$subject_id = 'backstage-business-share-subject-' . $distribution_id;
-				$message_id = 'backstage-business-share-message-' . $distribution_id;
-				$status = $already_sent
-					? sprintf(__('Handed off to mail system %s (delivery not confirmed)', 'backstage-outreach'), (string) $sent_map[$distribution_id])
-					: ($expired ? __('Expired — email blocked', 'backstage-outreach') : ($suppressed ? __('Suppressed — email blocked', 'backstage-outreach') : ($email === '' ? __('No email — copy manually', 'backstage-outreach') : __('Eligible — not handed off', 'backstage-outreach'))));
-				echo '<tr><td data-label="' . esc_attr__('Email', 'backstage-outreach') . '">';
-				if ($sendable) {
-					echo '<label><input type="checkbox" name="distribution_ids[]" value="' . esc_attr((string) $distribution_id) . '"> <span class="screen-reader-text">' . esc_html(sprintf(__('Send to %s', 'backstage-outreach'), (string) $row['business_name'])) . '</span>' . esc_html($email) . '</label>';
-				} else {
-					echo esc_html($email !== '' ? $email : __('Not provided', 'backstage-outreach'));
-				}
-				echo '</td><td data-label="' . esc_attr__('Business / contact', 'backstage-outreach') . '"><strong>' . esc_html((string) $row['business_name']) . '</strong><div class="description">' . esc_html((string) ($row['contact_name'] ?? '') !== '' ? (string) $row['contact_name'] : __('Contact name not provided', 'backstage-outreach')) . '</div></td><td data-label="' . esc_attr__('Personalized message and links', 'backstage-outreach') . '"><label class="screen-reader-text" for="' . esc_attr($subject_id) . '">' . esc_html__('Personalized subject', 'backstage-outreach') . '</label><input id="' . esc_attr($subject_id) . '" class="regular-text" readonly value="' . esc_attr((string) $context['subject']) . '"><button type="button" class="button button-small" data-backstage-copy data-backstage-copy-target="' . esc_attr($subject_id) . '">' . esc_html__('Copy subject', 'backstage-outreach') . '</button><label class="screen-reader-text" for="' . esc_attr($message_id) . '">' . esc_html__('Personalized message', 'backstage-outreach') . '</label><textarea id="' . esc_attr($message_id) . '" rows="12" readonly>' . esc_textarea((string) $context['message']) . '</textarea><button type="button" class="button button-small" data-backstage-copy data-backstage-copy-target="' . esc_attr($message_id) . '">' . esc_html__('Copy message', 'backstage-outreach') . '</button> <a class="button button-small" href="' . esc_url((string) $context['customer_url']) . '" target="_blank" rel="noopener">' . esc_html__('Open customer offer', 'backstage-outreach') . '</a> <a class="button button-small" href="' . esc_url((string) $context['flyer_url']) . '" target="_blank" rel="noopener">' . esc_html__('Open flyer', 'backstage-outreach') . '</a></td><td data-label="' . esc_attr__('Delivery status', 'backstage-outreach') . '">' . esc_html($status) . '</td></tr>';
-			}
-			echo '</tbody></table></div><p class="description">' . esc_html__('Only checked, visible addresses are handed to the configured mail system. Mail-system acceptance is recorded for duplicate prevention, but it does not confirm inbox delivery. Missing or suppressed addresses remain copyable.', 'backstage-outreach') . '</p><p><button class="button button-primary"' . disabled($sendable_count <= 0 || sanitize_key((string) ($campaign['status'] ?? '')) !== 'active', true, false) . '>' . esc_html__('Hand Off Reviewed Business Emails', 'backstage-outreach') . '</button>' . (sanitize_key((string) ($campaign['status'] ?? '')) !== 'active' ? ' <span class="description">' . esc_html__('Activate the campaign before email handoff. Copy actions remain available.', 'backstage-outreach') . '</span>' : '') . '</p></form></div>';
-			}
 		if (function_exists('backstage_outreach_render_business_contact_dashboard')) {
 			backstage_outreach_render_business_contact_dashboard($campaign, $batch, $active_share_rows, is_array($share_review) ? $share_review : null);
 		}
+		echo '<details class="vms-pass-business-template-editor"><summary><strong>' . esc_html__('Edit Invitation Template', 'backstage-outreach') . '</strong></summary><p class="description">' . esc_html__('The saved template supplies the introduction for personalized business invitations. Saving it does not select recipients or send email.', 'backstage-outreach') . '</p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_business_share"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="share_mode" value="preview">';
+		wp_nonce_field('backstage_outreach_business_share');
+		echo '<div class="vms-pass-grid"><label class="vms-pass-span-2">' . esc_html__('Business-contact subject', 'backstage-outreach') . '<input type="text" name="business_share_subject" value="' . esc_attr($share_subject) . '" required><span class="description">' . esc_html__('Available tags: {business_name}, {contact_name}, {offer_terms}, {customer_url}, {flyer_url}.', 'backstage-outreach') . '</span></label><label class="vms-pass-span-2">' . esc_html__('Business-contact introduction', 'backstage-outreach') . '<textarea name="business_share_message" rows="8" required>' . esc_textarea($share_message) . '</textarea><span class="description">' . esc_html__('Emails are plain text. Paragraphs and blank lines are preserved, but pasted Markdown markers such as **bold** do not create formatting. The exact reviewed offer, limits, dates, expiry, customer link, and flyer link are appended automatically to every message.', 'backstage-outreach') . '</span></label></div><p><button class="button button-primary">' . esc_html__('Save Invitation Template', 'backstage-outreach') . '</button></p></form></details>';
 		echo '</div>';
 	}
-	echo '<script>(function(){var section=document.getElementById("backstage-outreach-partners");if(!section){return;}var selection=section.querySelector("#backstage-outreach-business-selection");var review=section.querySelector("#backstage-outreach-business-review");var commit=section.querySelector("[data-vms-business-review-commit]");var stale=section.querySelector("[data-vms-business-review-stale]");var dirty=false;function invalidateReview(){if(!review||dirty){return;}dirty=true;review.classList.add("is-stale");if(stale){stale.hidden=false;}if(commit){commit.querySelectorAll("button,input").forEach(function(el){el.disabled=true;});}}var all=section.querySelector("[data-backstage-select-all]");if(all){all.addEventListener("change",function(){section.querySelectorAll("[data-backstage-business]").forEach(function(el){el.checked=all.checked;});invalidateReview();});}if(selection){selection.querySelectorAll("input,select").forEach(function(field){if(field.type!=="hidden"&&field.type!=="submit"){field.addEventListener("change",invalidateReview);field.addEventListener("input",invalidateReview);}});}section.querySelectorAll("[data-backstage-copy]").forEach(function(btn){btn.addEventListener("click",function(){var input=document.getElementById(btn.getAttribute("data-backstage-copy-target")||"");if(input&&navigator.clipboard){navigator.clipboard.writeText(input.value);btn.textContent="Copied";}});});var target=null;if(window.location.hash==="#backstage-outreach-business-review"){target=review;}else if(window.location.hash==="#backstage-outreach-business-share-review"){target=section.querySelector("#backstage-outreach-business-share-review");}else if(window.location.hash==="#backstage-outreach-business-share"){target=section.querySelector("#backstage-outreach-business-share");}if(target){window.setTimeout(function(){target.focus({preventScroll:true});var reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;var top=target.getBoundingClientRect().top+window.scrollY-(document.getElementById("wpadminbar")?document.getElementById("wpadminbar").offsetHeight:0)-16;window.scrollTo({top:Math.max(0,top),behavior:reduced?"auto":"smooth"});},100);}})();</script></section>';
+	echo '<script>(function(){var section=document.getElementById("backstage-outreach-partners");if(!section){return;}var selection=section.querySelector("#backstage-outreach-business-selection");var review=section.querySelector("#backstage-outreach-business-review");var commit=section.querySelector("[data-vms-business-review-commit]");var stale=section.querySelector("[data-vms-business-review-stale]");var dirty=false;function invalidateReview(){if(!review||dirty){return;}dirty=true;review.classList.add("is-stale");if(stale){stale.hidden=false;}if(commit){commit.querySelectorAll("button,input").forEach(function(el){el.disabled=true;});}}var all=section.querySelector("[data-backstage-select-all]");if(all){all.addEventListener("change",function(){section.querySelectorAll("[data-backstage-business]").forEach(function(el){el.checked=all.checked;});invalidateReview();});}if(selection){selection.querySelectorAll("input,select").forEach(function(field){if(field.type!=="hidden"&&field.type!=="submit"){field.addEventListener("change",invalidateReview);field.addEventListener("input",invalidateReview);}});}section.querySelectorAll("[data-backstage-copy]").forEach(function(btn){btn.addEventListener("click",function(){var input=document.getElementById(btn.getAttribute("data-backstage-copy-target")||"");if(input&&navigator.clipboard){navigator.clipboard.writeText(input.value);btn.textContent="Copied";}});});var target=null;var hash=window.location.hash;if(hash==="#backstage-outreach-business-review"){target=review;}else if(hash==="#backstage-outreach-business-share"||hash==="#backstage-outreach-business-contacts"||hash==="#backstage-outreach-business-email-review"||hash==="#backstage-outreach-business-resend-review"||hash==="#backstage-outreach-business-email-result"){target=section.querySelector(hash);}if(target){window.setTimeout(function(){target.focus({preventScroll:true});var reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;var top=target.getBoundingClientRect().top+window.scrollY-(document.getElementById("wpadminbar")?document.getElementById("wpadminbar").offsetHeight:0)-16;window.scrollTo({top:Math.max(0,top),behavior:reduced?"auto":"smooth"});},100);}})();</script></section>';
 }
 
 function backstage_outreach_csv_safe(string $value): string
