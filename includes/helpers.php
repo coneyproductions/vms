@@ -4732,6 +4732,27 @@ if (!function_exists('bvmgr_ticketing_ui_addons_section_subtext')) {
 	}
 }
 
+if (!function_exists('bvmgr_ticketing_ui_addons_heading_background_default')) {
+	function bvmgr_ticketing_ui_addons_heading_background_default(): string
+	{
+		return '#f2f2f3';
+	}
+}
+
+if (!function_exists('bvmgr_ticketing_ui_addons_heading_background')) {
+	function bvmgr_ticketing_ui_addons_heading_background(): string
+	{
+		$settings = (array) get_option('vms_settings', array());
+		$value = trim((string) ($settings['ticket_ui_addons_heading_background'] ?? ''));
+		$sanitized = function_exists('sanitize_hex_color') ? sanitize_hex_color($value) : null;
+		if (is_string($sanitized) && $sanitized !== '') {
+			return $sanitized;
+		}
+
+		return preg_match('/^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/', $value) ? strtolower($value) : '';
+	}
+}
+
 if (!function_exists('bvmgr_ticketing_ui_addons_section_heading_effective')) {
 	function bvmgr_ticketing_ui_addons_section_heading_effective(int $event_plan_id): string
 	{

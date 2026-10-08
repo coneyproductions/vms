@@ -17,6 +17,28 @@ add_action('admin_post_vms_ticketing_stock_commit', 'bvmgr_handle_ticketing_stoc
 add_action('admin_post_vms_ticketing_stock_csv', 'bvmgr_handle_ticketing_stock_csv');
 add_action('admin_post_vms_ticketing_stock_clear_preview', 'bvmgr_handle_ticketing_stock_clear_preview');
 
+if (!function_exists('bvmgr_settings_page_enqueue_ticketing_color_picker')) {
+	function bvmgr_settings_page_enqueue_ticketing_color_picker(): void
+	{
+		$page = function_exists('bvmgr_request_read_key')
+			? bvmgr_request_read_key($_GET, 'page') // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Passive page state only scopes admin assets.
+			: '';
+		if ($page !== 'vms-settings') {
+			return;
+		}
+
+		wp_enqueue_style('wp-color-picker');
+		wp_enqueue_script(
+			'bvmgr-settings-color-picker',
+			BVMGR_PLUGIN_URL . 'assets/js/vms-settings-color-picker.js',
+			array('wp-color-picker'),
+			function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : ''),
+			true
+		);
+	}
+}
+add_action('admin_enqueue_scripts', 'bvmgr_settings_page_enqueue_ticketing_color_picker', 45);
+
 // Back-compat: older Settings button action
 add_action('admin_post_vms_reconcile_ticketing_stock', 'bvmgr_handle_reconcile_ticketing_stock');
 
@@ -672,6 +694,12 @@ function bvmgr_sanitize_settings($input)
     : '';
   $out['ticket_ui_addons_subtext'] = isset($input['ticket_ui_addons_subtext'])
     ? sanitize_text_field((string) $input['ticket_ui_addons_subtext'])
+    : '';
+  $ticket_ui_addons_heading_background = isset($input['ticket_ui_addons_heading_background'])
+    ? sanitize_hex_color((string) $input['ticket_ui_addons_heading_background'])
+    : '';
+  $out['ticket_ui_addons_heading_background'] = is_string($ticket_ui_addons_heading_background)
+    ? $ticket_ui_addons_heading_background
     : '';
 
   // default venue
@@ -1852,6 +1880,12 @@ function bvmgr_render_settings_page_content(bool $include_ticketing_stock_notice
   if ($ticket_ui_addons_subtext === '') {
     $ticket_ui_addons_subtext = function_exists('bvmgr_ticketing_ui_addons_section_subtext_default') ? bvmgr_ticketing_ui_addons_section_subtext_default() : 'Click here to add a fire pit or table to your order.';
   }
+  $ticket_ui_addons_heading_background = function_exists('bvmgr_ticketing_ui_addons_heading_background')
+    ? bvmgr_ticketing_ui_addons_heading_background()
+    : '';
+  $ticket_ui_addons_heading_background_default = function_exists('bvmgr_ticketing_ui_addons_heading_background_default')
+    ? bvmgr_ticketing_ui_addons_heading_background_default()
+    : '#f2f2f3';
 
   echo '<h2 class="vms-mt-24">' . esc_html__('Ticketing', 'backstage-venue-manager') . '</h2>';
   echo '<table class="form-table" role="presentation">';
@@ -1894,6 +1928,11 @@ function bvmgr_render_settings_page_content(bool $include_ticketing_stock_notice
   echo '<p>';
   echo '<label for="vms_ticket_ui_addons_subtext"><strong>' . esc_html__('Add-on section subtext', 'backstage-venue-manager') . '</strong></label><br />';
   echo '<input id="vms_ticket_ui_addons_subtext" type="text" class="large-text" name="vms_settings[ticket_ui_addons_subtext]" value="' . esc_attr($ticket_ui_addons_subtext) . '" />';
+  echo '</p>';
+  echo '<p>';
+  echo '<label for="vms_ticket_ui_addons_heading_background"><strong>' . esc_html__('Add-on heading background color', 'backstage-venue-manager') . '</strong></label><br />';
+  echo '<input id="vms_ticket_ui_addons_heading_background" type="text" class="vms-color-picker" name="vms_settings[ticket_ui_addons_heading_background]" value="' . esc_attr($ticket_ui_addons_heading_background) . '" data-default-color="' . esc_attr($ticket_ui_addons_heading_background_default) . '" />';
+  echo '<span class="description vms-ml-10">' . esc_html__('Use Default or clear the value to restore the built-in Amenities heading color.', 'backstage-venue-manager') . '</span>';
   echo '</p>';
   echo '<p data-vms-tour="ticketing-ui.admin-preview">';
   echo '<label>';

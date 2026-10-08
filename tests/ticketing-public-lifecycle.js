@@ -15,10 +15,10 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 let checks = 0;
 function check(value, message) { assert.ok(value, message); checks++; }
 
-async function installRoutes(page, mode, layout, requests, failRef) {
+async function installRoutes(page, mode, layout, requests, failRef, options = {}) {
   await page.route('**/*', async route => {
     const url = new URL(route.request().url());
-    if (url.pathname === '/event/') return route.fulfill({body: fixture(mode, layout), contentType: 'text/html'});
+    if (url.pathname === '/event/') return route.fulfill({body: fixture(mode, layout, options), contentType: 'text/html'});
     if (url.pathname.startsWith('/assets/css/')) {
       return route.fulfill({body: fs.readFileSync(path.join(assetRoot, 'css', path.basename(url.pathname)), 'utf8'), contentType: 'text/css'});
     }
@@ -74,6 +74,25 @@ async function runLifecycle(browser, mode, contextOptions, label) {
   await page.waitForFunction(() => document.querySelectorAll('.vms-qualified-ticket-more-info').length === 2);
   await sleep(350);
 
+  const addonSection = page.locator('.vms-ticket-ui-addons');
+  const addonToggle = addonSection.locator('.vms-ticket-progressive-toggle');
+  const addonContent = addonSection.locator('.vms-ticket-progressive-content');
+  const addonTheme = await addonSection.evaluate(node => ({
+    background: node.style.getPropertyValue('--vms-amenities-heading-bg').trim(),
+    foreground: node.style.getPropertyValue('--vms-amenities-heading-fg').trim()
+  }));
+  check((await addonSection.locator('.vms-ticket-progressive-title').textContent()).trim() === 'Premium Amenities', `${label}/${mode}: configured Amenities heading renders`);
+  check((await addonSection.locator('.vms-ticket-progressive-description').textContent()).trim() === 'Make this event more comfortable.', `${label}/${mode}: configured Amenities subtext renders`);
+  check((await addonSection.locator('#vms-ticket-ui-help-addons').textContent()).trim() === 'Reserve only the extras your group wants.', `${label}/${mode}: configured Amenities help renders`);
+  check(addonTheme.background === '#dda6a6' && addonTheme.foreground === '#111827', `${label}/${mode}: #dda6a6 receives readable dark heading text`);
+  check(await addonToggle.getAttribute('aria-expanded') === 'true', `${label}/${mode}: zero-selection Amenities initializes open`);
+  check(!(await addonContent.evaluate(node => node.hidden)), `${label}/${mode}: open Amenities content is visible`);
+  await addonToggle.focus();
+  await addonToggle.press('Enter');
+  await sleep(80);
+  check(await addonToggle.getAttribute('aria-expanded') === 'false', `${label}/${mode}: keyboard activation manually collapses Amenities`);
+  check(await addonContent.evaluate(node => node.hidden), `${label}/${mode}: collapsed Amenities content is hidden`);
+
   const sample = () => page.evaluate(() => ({calls: {...window.__test.calls}, mutations: window.__test.mutations, callbacks: window.__test.callbacks, nodes: document.querySelectorAll('*').length}));
   const idleStart = await sample(); await sleep(900); const idleEnd = await sample();
   check(JSON.stringify(idleStart) === JSON.stringify(idleEnd), `${label}/${mode}: page settles when idle`);
@@ -99,14 +118,16 @@ async function runLifecycle(browser, mode, contextOptions, label) {
   check(await page.evaluate(() => window.__test.childMutations === window.__beforeChildren), `${label}/${mode}: unchanged refresh does not rebuild markup`);
 
   await qty(6996).fill('1'); await qty(6996).dispatchEvent('change');
-  await qty(6997).fill('4'); await qty(6997).dispatchEvent('change'); await sleep(120);
-  check(await qty(6997).inputValue() === '3', `${label}/${mode}: one GA permits three Child tickets`);
+  await qty(6997).fill('4'); await qty(6997).dispatchEvent('change'); await sleep(250);
+  const childQtyAfterClamp = await qty(6997).inputValue();
+  check(childQtyAfterClamp === '3', `${label}/${mode}: one GA permits three Child tickets (received ${childQtyAfterClamp})`);
   await qty(6996).fill('0'); await qty(6996).dispatchEvent('change'); await sleep(120);
   check(await qty(6997).inputValue() === '0', `${label}/${mode}: Child tickets cannot self-qualify`);
   await qty(6996).fill('2'); await qty(6996).dispatchEvent('change'); await sleep(100);
 
-  const addonToggle = page.locator('.vms-ticket-ui-addons .vms-ticket-progressive-toggle');
+  check(await addonToggle.getAttribute('aria-expanded') === 'false', `${label}/${mode}: re-enhancement preserves manually collapsed Amenities`);
   await addonToggle.click();
+  check(await addonToggle.getAttribute('aria-expanded') === 'true', `${label}/${mode}: Amenities can be manually reopened`);
   await page.locator('[data-vms-product-id="7000"] .vms-addon-checkbox-wrap').first().click();
   await page.locator('[data-vms-product-id="7006"] .vms-addon-plus').first().click();
   await page.locator('[data-test-extension-qty]').fill('1');
@@ -196,6 +217,47 @@ async function runOwnershipVariants(browser) {
   }
 }
 
+async function runAmenitiesVisualVariants(browser) {
+  for (const variant of [
+    {label: 'dark custom', value: '#123456', foreground: '#ffffff'},
+    {label: 'light custom', value: '#f5e8a4', foreground: '#111827'},
+    {label: 'short custom', value: '#abc', background: '#aabbcc', foreground: '#111827'},
+    {label: 'invalid fallback', value: 'not-a-color', background: '', foreground: ''},
+    {label: 'empty fallback', value: '', background: '', foreground: ''}
+  ]) {
+    const context = await browser.newContext({viewport: {width: 390, height: 844}});
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', error => errors.push(String(error)));
+    await page.addInitScript(() => { window.__test = {calls: {}}; });
+    await installRoutes(page, 'guest', 'progressive', [], {value: false}, {addonHeadingBackground: variant.value});
+    await page.goto('https://ticketing.example.test/event/');
+    const section = page.locator('.vms-ticket-ui-addons');
+    await section.waitFor();
+    const theme = await section.evaluate(node => ({
+      background: node.style.getPropertyValue('--vms-amenities-heading-bg').trim(),
+      foreground: node.style.getPropertyValue('--vms-amenities-heading-fg').trim(),
+      computedBackground: getComputedStyle(node).getPropertyValue('--vms-amenities-heading-bg').trim(),
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
+    }));
+    check(theme.background === (variant.background ?? variant.value) && theme.foreground === variant.foreground, `${variant.label}: heading theme is safely normalized with readable contrast`);
+    if (!theme.background) check(theme.computedBackground === '#f2f2f3', `${variant.label}: CSS fallback remains authoritative`);
+    check(theme.overflow <= 0, `${variant.label}: 390px layout has no horizontal overflow`);
+    check(errors.length === 0, `${variant.label}: no uncaught browser errors (${errors.join('; ')})`);
+    await context.close();
+  }
+
+  const context = await browser.newContext({viewport: {width: 390, height: 844}});
+  const page = await context.newPage();
+  await page.addInitScript(() => { window.__test = {calls: {}}; });
+  await installRoutes(page, 'guest', 'progressive', [], {value: false}, {noAddons: true});
+  await page.goto('https://ticketing.example.test/event/');
+  await page.waitForSelector('#tribe-tickets__tickets-form');
+  await sleep(350);
+  check(await page.locator('.vms-ticket-ui-addons:not([hidden])').count() === 0, 'no eligible Amenities: no visible add-on section renders');
+  await context.close();
+}
+
 function isComputedVisible(node) {
   if (!node || !node.isConnected || node.hidden) return false;
   let current = node;
@@ -256,7 +318,8 @@ async function runSettledVisibilityMatrix(browser) {
           rentalsOutsideForm: form ? Array.from(document.querySelectorAll('[data-bvmgr-purchase-extension="bvm-rentals"]')).filter(node => !form.contains(node)).length : 0,
           sponsorshipPrecedesForm: !!(form && document.querySelector('[data-test-sponsorship]') && (document.querySelector('[data-test-sponsorship]').compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING)),
           ticketPrecedesRental: !!(form && form.querySelector('.tribe-tickets__tickets-item') && form.querySelector('[data-bvmgr-purchase-extension="bvm-rentals"]') && (form.querySelector('.tribe-tickets__tickets-item').compareDocumentPosition(form.querySelector('[data-bvmgr-purchase-extension="bvm-rentals"]')) & Node.DOCUMENT_POSITION_FOLLOWING)),
-          progressiveRentalContainment: !!document.querySelector('.vms-ticket-ui-addons #vms-addon-mount [data-bvmgr-purchase-extension="bvm-rentals"]')
+          progressiveRentalContainment: !!document.querySelector('.vms-ticket-ui-addons #vms-addon-mount [data-bvmgr-purchase-extension="bvm-rentals"]'),
+          horizontalOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
         };
       }, isComputedVisible.toString());
       check(visibility.formCount === 1 && visibility.rowCount === 4, `${label}: exactly one native form and four ticket rows remain connected`);
@@ -264,6 +327,9 @@ async function runSettledVisibilityMatrix(browser) {
       check(visibility.purchaseMounts === 1 && visibility.rentals === 1, `${label}: exactly one purchase mount and one rental extension remain`);
       check(visibility.rentalsInForm === 1 && visibility.rentalsOutsideForm === 0, `${label}: rental is server-contained by the native ticket form with no stray old-location block`);
       check(visibility.sponsorshipPrecedesForm && visibility.ticketPrecedesRental, `${label}: sponsorship, tickets, and rental retain canonical DOM order`);
+      if (layout === 'progressive') {
+        check(visibility.horizontalOverflow <= 0, `${label}: viewport has no horizontal overflow (${visibility.horizontalOverflow}px)`);
+      }
       if (layout === 'classic') {
         check(visibility.owner === 'tec-native', `${label}: TEC is the sole ticket-surface owner`);
         check(visibility.fallbackOwners === 1 && visibility.addonOwners === 1, `${label}: fallback owns only the server-controls add-ons`);
@@ -364,6 +430,7 @@ async function runPostCart(browser) {
     }
     for (const mode of ['guest', 'unverified', 'verified']) await runLifecycle(browser, mode, {viewport: {width: 1280, height: 900}}, 'desktop');
     await runLifecycle(browser, 'guest', {...playwright.devices['iPhone 13']}, 'mobile');
+    await runAmenitiesVisualVariants(browser);
     await runOwnershipVariants(browser);
     await runSettledVisibilityMatrix(browser);
     await runPostCart(browser);

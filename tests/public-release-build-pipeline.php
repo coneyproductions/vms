@@ -830,11 +830,11 @@ $tests['current repository public metadata and exclusion boundary are read-only'
     $metadata = (new ReflectionMethod(VMS_Public_Release_Tooling::class, 'collectSourceMetadata'))->invoke(null, $root);
     vms_public_release_test_assert($metadata['public_plugin_slug'] === 'backstage-venue-manager', 'Canonical public package identity must remain stable.');
     vms_public_release_test_assert($metadata['version'] !== '' && $metadata['header_version'] === $metadata['version'] && $metadata['build_version'] === $metadata['version'], 'Public header, constants, and build marker must agree.');
-    vms_public_release_test_assert($metadata['version'] === '1.3.4', 'Unified release marker must be 1.3.4.');
+    vms_public_release_test_assert($metadata['version'] === '1.3.5', 'Unified release marker must be 1.3.5.');
     $bridge = (string) file_get_contents($root . '/vendor-management-system.php');
     $readme = (string) file_get_contents($root . '/readme.txt');
     vms_public_release_test_assert($bridge !== '' && preg_match('/^\\s*\\*\\s*Plugin Name:/m', $bridge) !== 1, 'Legacy bridge must remain headerless.');
-    vms_public_release_test_assert(str_contains($readme, 'Stable tag: 1.3.4') && substr_count($readme, '= 1.3.4 =') >= 2, 'Readme must contain the 1.3.4 stable tag, changelog and upgrade notice.');
+    vms_public_release_test_assert(str_contains($readme, 'Stable tag: 1.3.5') && substr_count($readme, '= 1.3.5 =') >= 2, 'Readme must contain the 1.3.5 stable tag, changelog and upgrade notice.');
     $patterns = (new ReflectionMethod(VMS_Public_Release_Tooling::class, 'loadExcludeManifest'))->invoke(null, $metadata['exclude_manifest']);
     $matcher = new ReflectionMethod(VMS_Public_Release_Tooling::class, 'firstMatchingPattern');
     foreach (array('AGENTS.md', 'docs/', 'tests/', 'scripts/', 'includes/safety/', 'includes/social-share/providers/class-provider-mock.php') as $path) {
