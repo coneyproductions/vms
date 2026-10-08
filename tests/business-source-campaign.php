@@ -99,7 +99,7 @@ $assertions = array(
 	'Established business links and the invitation template are secondary disclosures' => strpos($distribution, 'Manage Business Links & Distribution Settings') !== false && strpos($distribution, 'Edit Invitation Template') !== false && strpos($distribution, 'Save Invitation Template') !== false && strpos($distribution, 'Save Template & Review Personalized Messages') === false,
 	'Campaign status and Results navigation are reusable-business aware' => strpos($outreach, 'Outreach in progress') !== false && strpos($outreach, "'#backstage-outreach-business-contacts'") !== false && strpos($outreach, 'email handed off') !== false,
 	'Optional social contact URLs remain explicit business fields' => strpos($distribution, 'facebook_url VARCHAR(255)') !== false && strpos($distribution, 'instagram_url VARCHAR(255)') !== false && strpos($distribution, 'Facebook URL (optional)') !== false,
-	'Outreach 1.2.15 owns reproducible asset cache keys' => strpos($plugin, 'Version: 1.2.15') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.15'") !== false && substr_count($integration, 'BACKSTAGE_OUTREACH_VERSION') >= 2 && strpos($integration, 'filemtime(') === false,
+	'Outreach 1.2.16 owns reproducible asset cache keys' => strpos($plugin, 'Version: 1.2.16') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.16'") !== false && substr_count($integration, 'BACKSTAGE_OUTREACH_VERSION') >= 2 && strpos($integration, 'filemtime(') === false,
 	'Outreach contact schema is additive while the base Outreach schema remains unchanged' => strpos($distribution, "\$target = '1.3.0';") !== false && strpos($distribution, 'CREATE TABLE {$contact_activities}') !== false && strpos($db, "return '1.1.0';") !== false,
 );
 

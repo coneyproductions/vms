@@ -3074,7 +3074,9 @@ function backstage_outreach_partner_claim(array $distribution, array $event, arr
 		$campaign_cap = absint($fresh_distribution['campaign_ticket_cap'] ?? 0);
 		if ($campaign_cap > 0) {
 			$campaign_free = (int) $wpdb->get_var($wpdb->prepare("SELECT COALESCE(SUM(e.party_size),0) FROM %i e INNER JOIN %i pc ON pc.id=e.pass_claim_id WHERE pc.outreach_campaign_id=%d AND e.status<>'canceled'", bvmgr_admission_table_entries(), bvmgr_admission_table_pass_claims(), $campaign_id));
-			$campaign_paid = (int) $wpdb->get_var($wpdb->prepare("SELECT COALESCE(SUM(ticket_quantity),0) FROM %i WHERE campaign_id=%d AND (status='paid' OR (status='pending' AND reservation_expires_at>%s))", backstage_outreach_business_table('paid_redemptions'), $campaign_id, $now));
+			$campaign_paid = function_exists('backstage_outreach_discount_paid_capacity_sum')
+				? backstage_outreach_discount_paid_capacity_sum('campaign', $campaign_id, $now)
+				: (int) $wpdb->get_var($wpdb->prepare("SELECT COALESCE(SUM(ticket_quantity),0) FROM %i WHERE campaign_id=%d AND (status='paid' OR (status='pending' AND reservation_expires_at>%s))", backstage_outreach_business_table('paid_redemptions'), $campaign_id, $now));
 			if ($campaign_free + $campaign_paid + $party_size > $campaign_cap) {
 				$wpdb->query('ROLLBACK');
 				return new WP_Error('campaign_capacity_limit', __('This campaign has reached its combined ticket limit.', 'backstage-outreach'));
@@ -3083,7 +3085,9 @@ function backstage_outreach_partner_claim(array $distribution, array $event, arr
 		$batch_cap = absint($fresh_batch['total_admission_cap'] ?? 0);
 		if ($batch_cap > 0) {
 			$batch_free = (int) $wpdb->get_var($wpdb->prepare("SELECT COALESCE(SUM(party_size),0) FROM %i WHERE pass_batch_id=%d AND status<>'canceled'", bvmgr_admission_table_entries(), $batch_id));
-			$batch_paid = (int) $wpdb->get_var($wpdb->prepare("SELECT COALESCE(SUM(pr.ticket_quantity),0) FROM %i pr INNER JOIN %i c ON c.id=pr.campaign_id WHERE c.related_batch_id=%d AND (pr.status='paid' OR (pr.status='pending' AND pr.reservation_expires_at>%s))", backstage_outreach_business_table('paid_redemptions'), vms_admission_table_pass_outreach_campaigns(), $batch_id, $now));
+			$batch_paid = function_exists('backstage_outreach_discount_paid_capacity_sum')
+				? backstage_outreach_discount_paid_capacity_sum('batch', $batch_id, $now)
+				: (int) $wpdb->get_var($wpdb->prepare("SELECT COALESCE(SUM(pr.ticket_quantity),0) FROM %i pr INNER JOIN %i c ON c.id=pr.campaign_id WHERE c.related_batch_id=%d AND (pr.status='paid' OR (pr.status='pending' AND pr.reservation_expires_at>%s))", backstage_outreach_business_table('paid_redemptions'), vms_admission_table_pass_outreach_campaigns(), $batch_id, $now));
 			if ($batch_free + $batch_paid + $party_size > $batch_cap) {
 				$wpdb->query('ROLLBACK');
 				return new WP_Error('batch_capacity_limit', __('This pass batch has reached its combined ticket limit.', 'backstage-outreach'));

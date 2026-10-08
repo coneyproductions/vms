@@ -21,7 +21,7 @@ $campaign_ids = array();
 $recipient_ids = array();
 $suppression_id = 0;
 $legacy_counts = array();
-$party_tables = array('identity_audit', 'legacy_links', 'campaign_roles', 'sources', 'affiliations', 'contact_methods', 'parties');
+$party_tables = array('referral_redemptions', 'referral_distributions', 'identity_audit', 'legacy_links', 'campaign_roles', 'sources', 'affiliations', 'contact_methods', 'parties');
 
 $count = static function (string $table) use ($wpdb): int {
 	return (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i', $table));
@@ -41,7 +41,7 @@ foreach (array(
 
 try {
 	backstage_outreach_party_schema_upgrade();
-	outreach_party_runtime_assert(get_option('backstage_outreach_party_db_version') === '1.0.0', 'Party schema marker was not installed.');
+	outreach_party_runtime_assert(get_option('backstage_outreach_party_db_version') === '1.1.0', 'Party schema marker was not installed.');
 	outreach_party_runtime_assert(get_option('vms_outreach_db_version') === '1.1.0' && get_option('backstage_outreach_business_db_version') === '1.3.0', 'Existing Outreach schema markers changed.');
 	foreach ($party_tables as $suffix) {
 		$table = backstage_outreach_party_table($suffix);

@@ -13,6 +13,8 @@ const BACKSTAGE_OUTREACH_DISCOUNT_SESSION_KEY = 'backstage_outreach_discount_off
 const BACKSTAGE_OUTREACH_COUPON_MANAGED_META = '_backstage_outreach_managed';
 const BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META = '_backstage_outreach_distribution_id';
 const BACKSTAGE_OUTREACH_COUPON_CONFIG_HASH_META = '_backstage_outreach_configuration_hash';
+const BACKSTAGE_OUTREACH_COUPON_OWNER_TYPE_META = '_backstage_outreach_owner_type';
+const BACKSTAGE_OUTREACH_COUPON_PARTY_DISTRIBUTION_META = '_backstage_outreach_party_distribution_id';
 
 function backstage_outreach_discount_json_ids(string $json): array
 {
@@ -230,14 +232,29 @@ function backstage_outreach_discount_configuration_digest(array $configuration):
 
 function backstage_outreach_discount_coupon_code(array $distribution): string
 {
+	if (backstage_outreach_discount_owner_type($distribution) === 'party') {
+		return 'sr-party-' . substr(sanitize_key((string) ($distribution['public_key'] ?? '')), 0, 12);
+	}
 	return 'sr-biz50-' . substr(sanitize_key((string) ($distribution['public_key'] ?? '')), 0, 12);
+}
+
+function backstage_outreach_discount_owner_type(array $row): string
+{
+	return sanitize_key((string) ($row['owner_type'] ?? '')) === 'party' ? 'party' : 'business';
+}
+
+function backstage_outreach_discount_redemptions_table(array $row): string
+{
+	return backstage_outreach_discount_owner_type($row) === 'party'
+		? backstage_outreach_party_table('referral_redemptions')
+		: backstage_outreach_business_table('paid_redemptions');
 }
 
 function backstage_outreach_discount_coupon_state_hash(WC_Coupon $coupon): string
 {
 	$product_ids = array_values(array_unique(array_filter(array_map('absint', (array) $coupon->get_product_ids()))));
 	sort($product_ids, SORT_NUMERIC);
-	return hash('sha256', wp_json_encode(array(
+	$state = array(
 		'code' => (string) $coupon->get_code(),
 		'discount_type' => (string) $coupon->get_discount_type(),
 		'amount' => (string) $coupon->get_amount(),
@@ -248,17 +265,27 @@ function backstage_outreach_discount_coupon_state_hash(WC_Coupon $coupon): strin
 		'free_shipping' => (bool) $coupon->get_free_shipping(),
 		'exclude_sale_items' => (bool) $coupon->get_exclude_sale_items(),
 		'distribution_id' => absint($coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META, true)),
-	)));
+	);
+	if ((string) $coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_OWNER_TYPE_META, true) === 'party') {
+		$state['owner_type'] = 'party';
+		$state['party_distribution_id'] = absint($coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_PARTY_DISTRIBUTION_META, true));
+	}
+	return hash('sha256', wp_json_encode($state));
 }
 
-function backstage_outreach_discount_set_coupon_status(int $coupon_id, string $status, int $distribution_id = 0): bool
+function backstage_outreach_discount_set_coupon_status(int $coupon_id, string $status, int $distribution_id = 0, string $owner_type = 'business'): bool
 {
 	if ($coupon_id <= 0 || !class_exists('WC_Coupon')) {
 		return $coupon_id <= 0;
 	}
 	$coupon = new WC_Coupon($coupon_id);
+	$owner_type = $owner_type === 'party' ? 'party' : 'business';
+	$stored_owner = (string) $coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_OWNER_TYPE_META, true) === 'party' ? 'party' : 'business';
+	$owner_id = $stored_owner === 'party'
+		? absint($coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_PARTY_DISTRIBUTION_META, true))
+		: absint($coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META, true));
 	if ($coupon->get_id() <= 0 || (string) $coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_MANAGED_META, true) !== '1'
-		|| ($distribution_id > 0 && absint($coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META, true)) !== $distribution_id)) {
+		|| $stored_owner !== $owner_type || ($distribution_id > 0 && $owner_id !== $distribution_id)) {
 		return false;
 	}
 	$coupon->set_status($status === 'publish' ? 'publish' : 'draft');
@@ -268,9 +295,10 @@ function backstage_outreach_discount_set_coupon_status(int $coupon_id, string $s
 
 function backstage_outreach_discount_ensure_coupon(array $distribution, array $campaign, array $configuration)
 {
+	$owner_type = backstage_outreach_discount_owner_type($distribution);
 	if (backstage_outreach_discount_distribution_type($distribution) !== 'coupon_backed') {
 		$coupon_id = absint($distribution['coupon_id'] ?? 0);
-		return backstage_outreach_discount_set_coupon_status($coupon_id, 'draft', absint($distribution['id'] ?? 0))
+		return backstage_outreach_discount_set_coupon_status($coupon_id, 'draft', absint($distribution['id'] ?? 0), $owner_type)
 			? array('coupon_id' => $coupon_id, 'coupon_code' => sanitize_text_field((string) ($distribution['coupon_code'] ?? '')))
 			: new WP_Error('managed_coupon_disable_failed', __('The prior managed coupon could not be disabled safely.', 'backstage-outreach'));
 	}
@@ -283,10 +311,14 @@ function backstage_outreach_discount_ensure_coupon(array $distribution, array $c
 	$coupon = $coupon_id > 0 ? new WC_Coupon($coupon_id) : new WC_Coupon();
 
 	if ($coupon_id > 0) {
+		$stored_owner = (string) $coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_OWNER_TYPE_META, true) === 'party' ? 'party' : 'business';
+		$stored_distribution_id = $stored_owner === 'party'
+			? absint($coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_PARTY_DISTRIBUTION_META, true))
+			: absint($coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META, true));
 		if ($coupon->get_id() !== $coupon_id
 			|| (string) $coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_MANAGED_META, true) !== '1'
-			|| absint($coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META, true)) !== $distribution_id) {
-			return new WP_Error('managed_coupon_ownership_mismatch', __('The linked coupon is not owned by this business distribution. It was not modified.', 'backstage-outreach'));
+			|| $stored_owner !== $owner_type || $stored_distribution_id !== $distribution_id) {
+			return new WP_Error('managed_coupon_ownership_mismatch', __('The linked coupon is not owned by this distribution. It was not modified.', 'backstage-outreach'));
 		}
 		$stored_hash = (string) $coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_CONFIG_HASH_META, true);
 		if ($stored_hash === '' || !hash_equals($stored_hash, backstage_outreach_discount_coupon_state_hash($coupon))) {
@@ -297,8 +329,12 @@ function backstage_outreach_discount_ensure_coupon(array $distribution, array $c
 		$existing_id = function_exists('wc_get_coupon_id_by_code') ? absint(wc_get_coupon_id_by_code($code)) : 0;
 		if ($existing_id > 0) {
 			$existing = new WC_Coupon($existing_id);
+			$existing_owner = (string) $existing->get_meta(BACKSTAGE_OUTREACH_COUPON_OWNER_TYPE_META, true) === 'party' ? 'party' : 'business';
+			$existing_distribution_id = $existing_owner === 'party'
+				? absint($existing->get_meta(BACKSTAGE_OUTREACH_COUPON_PARTY_DISTRIBUTION_META, true))
+				: absint($existing->get_meta(BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META, true));
 			if ((string) $existing->get_meta(BACKSTAGE_OUTREACH_COUPON_MANAGED_META, true) !== '1'
-				|| absint($existing->get_meta(BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META, true)) !== $distribution_id) {
+				|| $existing_owner !== $owner_type || $existing_distribution_id !== $distribution_id) {
 				return new WP_Error('managed_coupon_code_collision', __('A different coupon already uses the generated offer code. No coupon was changed.', 'backstage-outreach'));
 			}
 			$coupon = $existing;
@@ -323,17 +359,29 @@ function backstage_outreach_discount_ensure_coupon(array $distribution, array $c
 	$coupon->set_free_shipping(false);
 	$coupon->set_exclude_sale_items(false);
 	$coupon->set_description(sprintf(
-		/* translators: 1: offer value, 2: campaign name, 3: business name. */
+		/* translators: 1: offer value, 2: campaign name, 3: referring partner name. */
 		__('Admission Offer: %1$s for %2$s / %3$s. Change through Backstage Outreach only.', 'backstage-outreach'),
 		backstage_outreach_discount_terms_label($configuration, false),
 		(string) ($campaign['campaign_name'] ?? ''),
-		(string) ($distribution['business_name'] ?? '')
+		(string) ($distribution['party_name'] ?? ($distribution['business_name'] ?? ''))
 	));
 	$coupon->update_meta_data(BACKSTAGE_OUTREACH_COUPON_MANAGED_META, '1');
-	$coupon->update_meta_data(BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META, $distribution_id);
+	if ($owner_type === 'party') {
+		$coupon->update_meta_data(BACKSTAGE_OUTREACH_COUPON_OWNER_TYPE_META, 'party');
+		$coupon->update_meta_data(BACKSTAGE_OUTREACH_COUPON_PARTY_DISTRIBUTION_META, $distribution_id);
+		$coupon->delete_meta_data(BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META);
+	} else {
+		$coupon->delete_meta_data(BACKSTAGE_OUTREACH_COUPON_OWNER_TYPE_META);
+		$coupon->delete_meta_data(BACKSTAGE_OUTREACH_COUPON_PARTY_DISTRIBUTION_META);
+		$coupon->update_meta_data(BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META, $distribution_id);
+	}
 	$coupon->update_meta_data('_backstage_outreach_campaign_id', absint($distribution['campaign_id'] ?? 0));
 	$coupon->update_meta_data('_backstage_outreach_source_id', absint($distribution['source_id'] ?? 0));
-	$coupon->update_meta_data('_backstage_outreach_business_id', absint($distribution['business_id'] ?? 0));
+	if ($owner_type === 'party') {
+		$coupon->update_meta_data('_backstage_outreach_party_id', absint($distribution['party_id'] ?? 0));
+	} else {
+		$coupon->update_meta_data('_backstage_outreach_business_id', absint($distribution['business_id'] ?? 0));
+	}
 	$coupon->set_status((string) ($distribution['status'] ?? '') === 'active' ? 'publish' : 'draft');
 	$coupon_id = $coupon->save();
 	if ($coupon_id <= 0) {
@@ -345,10 +393,15 @@ function backstage_outreach_discount_ensure_coupon(array $distribution, array $c
 	return array('coupon_id' => $coupon_id, 'coupon_code' => (string) $coupon->get_code());
 }
 
-function backstage_outreach_discount_get_distribution(int $distribution_id): ?array
+function backstage_outreach_discount_get_distribution(int $distribution_id, string $owner_type = 'business'): ?array
 {
 	if ($distribution_id <= 0) {
 		return null;
+	}
+	if ($owner_type === 'party') {
+		return function_exists('backstage_outreach_party_referral_get_distribution')
+			? backstage_outreach_party_referral_get_distribution($distribution_id)
+			: null;
 	}
 	global $wpdb;
 	$row = $wpdb->get_row($wpdb->prepare(
@@ -364,16 +417,21 @@ function backstage_outreach_discount_get_distribution(int $distribution_id): ?ar
 		vms_admission_table_pass_outreach_campaigns(),
 		$distribution_id
 	), ARRAY_A);
+	if (is_array($row)) {
+		$row['owner_type'] = 'business';
+		$row['partner_name'] = (string) ($row['business_name'] ?? '');
+	}
 	return is_array($row) ? $row : null;
 }
 
 function backstage_outreach_discount_distribution_error(array $row)
 {
+	$owner_type = backstage_outreach_discount_owner_type($row);
 	if (backstage_outreach_discount_distribution_type($row) !== 'coupon_backed') {
 		return new WP_Error('partner_coupon_wrong_type', __('This link is not configured as an Admission Offer.', 'backstage-outreach'));
 	}
 	if ((string) ($row['status'] ?? '') !== 'active'
-		|| (string) ($row['business_status'] ?? '') !== 'active'
+		|| ($owner_type === 'party' ? (string) ($row['party_status'] ?? '') !== 'active' : (string) ($row['business_status'] ?? '') !== 'active')
 		|| (string) ($row['membership_status'] ?? '') !== 'active') {
 		return new WP_Error('partner_link_paused', __('This Admission Offer is paused or revoked.', 'backstage-outreach'));
 	}
@@ -402,6 +460,14 @@ function backstage_outreach_discount_distribution_error(array $row)
 		|| is_wp_error($terms)) {
 		return new WP_Error('partner_coupon_batch_inactive', __('This Admission Offer is not currently available.', 'backstage-outreach'));
 	}
+	if ($owner_type === 'party') {
+		$campaign = vms_pass_outreach_get_campaign_by_id(absint($row['campaign_id'] ?? 0));
+		$current_configuration = is_array($campaign) ? backstage_outreach_discount_offer_configuration($campaign, $batch, 'coupon_backed') : null;
+		$current_hash = is_array($current_configuration) ? backstage_outreach_discount_configuration_digest($current_configuration) : '';
+		if (!is_array($current_configuration) || empty($row['configuration_hash']) || !hash_equals((string) $row['configuration_hash'], $current_hash)) {
+			return new WP_Error('partner_offer_stale', __('This Partner Admission Offer changed after review and must be reviewed again.', 'backstage-outreach'));
+		}
+	}
 	if (!empty($batch['expires_at'])) {
 		try {
 			if ((new DateTimeImmutable((string) $batch['expires_at'], wp_timezone()))->getTimestamp() <= time()) {
@@ -417,11 +483,15 @@ function backstage_outreach_discount_distribution_error(array $row)
 	}
 	$coupon = new WC_Coupon($coupon_id);
 	$stored_hash = (string) $coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_CONFIG_HASH_META, true);
+	$stored_owner = (string) $coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_OWNER_TYPE_META, true) === 'party' ? 'party' : 'business';
+	$stored_distribution_id = $stored_owner === 'party'
+		? absint($coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_PARTY_DISTRIBUTION_META, true))
+		: absint($coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META, true));
 	$expected_coupon_type = is_array($terms) ? (string) ($terms['coupon_type'] ?? '') : '';
 	$expected_amount = is_array($terms) ? (float) ($terms['value_amount'] ?? 0) : 0.0;
 	if ($coupon->get_id() !== $coupon_id || (string) $coupon->get_status() !== 'publish'
 		|| (string) $coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_MANAGED_META, true) !== '1'
-		|| absint($coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META, true)) !== absint($row['id'] ?? 0)
+		|| $stored_owner !== $owner_type || $stored_distribution_id !== absint($row['id'] ?? 0)
 		|| (string) $coupon->get_discount_type() !== $expected_coupon_type
 		|| abs((float) $coupon->get_amount() - $expected_amount) > 0.00001
 		|| $stored_hash === '' || !hash_equals($stored_hash, backstage_outreach_discount_coupon_state_hash($coupon))) {
@@ -446,6 +516,7 @@ function backstage_outreach_discount_session_set(array $distribution, string $ra
 	}
 	WC()->session->set(BACKSTAGE_OUTREACH_DISCOUNT_SESSION_KEY, array(
 		'distribution_id' => absint($distribution['id'] ?? 0),
+		'owner_type' => backstage_outreach_discount_owner_type($distribution),
 		'token_hash' => hash('sha256', $raw_token),
 		'activated_at' => time(),
 	));
@@ -464,7 +535,7 @@ function backstage_outreach_discount_session_clear(): void
 function backstage_outreach_discount_session_distribution(): ?array
 {
 	$session = backstage_outreach_discount_session_get();
-	$row = backstage_outreach_discount_get_distribution(absint($session['distribution_id'] ?? 0));
+	$row = backstage_outreach_discount_get_distribution(absint($session['distribution_id'] ?? 0), sanitize_key((string) ($session['owner_type'] ?? 'business')));
 	if (!is_array($row) || empty($session['token_hash']) || !hash_equals((string) ($row['token_hash'] ?? ''), (string) $session['token_hash'])) {
 		return null;
 	}
@@ -476,7 +547,11 @@ function backstage_outreach_discount_managed_coupon_distribution($coupon): ?arra
 	if (!($coupon instanceof WC_Coupon) || (string) $coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_MANAGED_META, true) !== '1') {
 		return null;
 	}
-	$row = backstage_outreach_discount_get_distribution(absint($coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META, true)));
+	$owner_type = (string) $coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_OWNER_TYPE_META, true) === 'party' ? 'party' : 'business';
+	$distribution_id = $owner_type === 'party'
+		? absint($coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_PARTY_DISTRIBUTION_META, true))
+		: absint($coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META, true));
+	$row = backstage_outreach_discount_get_distribution($distribution_id, $owner_type);
 	return is_array($row) && absint($row['coupon_id'] ?? 0) === $coupon->get_id() ? $row : null;
 }
 
@@ -492,7 +567,11 @@ function backstage_outreach_discount_coupon_is_valid($valid, $coupon, $discounts
 	}
 	$object = is_object($discounts) && method_exists($discounts, 'get_object') ? $discounts->get_object() : null;
 	if ($object instanceof WC_Order) {
-		return absint($object->get_meta('_backstage_outreach_distribution_id', true)) === absint($row['id'] ?? 0);
+		return backstage_outreach_discount_owner_type($row) === 'party'
+			? (string) $object->get_meta('_backstage_outreach_owner_type', true) === 'party'
+				&& absint($object->get_meta('_backstage_outreach_party_distribution_id', true)) === absint($row['id'] ?? 0)
+			: (string) $object->get_meta('_backstage_outreach_owner_type', true) !== 'party'
+				&& absint($object->get_meta('_backstage_outreach_distribution_id', true)) === absint($row['id'] ?? 0);
 	}
 	$session_row = backstage_outreach_discount_session_distribution();
 	return is_array($session_row) && absint($session_row['id'] ?? 0) === absint($row['id'] ?? 0);
@@ -731,6 +810,8 @@ function backstage_outreach_discount_offer_router(array $distribution, string $r
 		backstage_outreach_render_public_offer_status(__('No Eligible Tickets', 'backstage-outreach'), __('There are no eligible admission tickets available for this offer right now.', 'backstage-outreach'), 410);
 	}
 	bvmgr_pass_claims_render_public_shell(__('Admission Offer', 'backstage-outreach'), static function () use ($distribution, $events, $terms): void {
+		$is_party = backstage_outreach_discount_owner_type($distribution) === 'party';
+		$partner_name = (string) ($distribution['party_name'] ?? ($distribution['business_name'] ?? ''));
 		$per_order_cap = max(1, absint($distribution['admissions_per_recipient'] ?? 1));
 		$value_label = backstage_outreach_discount_terms_label($terms, false);
 		$branding = backstage_outreach_flyer_branding();
@@ -757,17 +838,21 @@ function backstage_outreach_discount_offer_router(array $distribution, string $r
 		if ($artwork_url !== '') {
 			echo '<img class="vms-offer-art" src="' . esc_url($artwork_url) . '" alt="">';
 		}
-		echo '<p class="vms-offer-benefit"><strong>' . esc_html(sprintf(__('%1$s for up to %2$d people', 'backstage-outreach'), $value_label, $per_order_cap)) . '</strong></p><p class="vms-offer-business">' . esc_html(sprintf(__('Shared by %s', 'backstage-outreach'), (string) $distribution['business_name'])) . '</p><p>' . esc_html__('Choose tickets for an eligible event. Your offer is applied automatically in the cart and checkout.', 'backstage-outreach') . '</p></header>';
+		echo '<p class="vms-offer-benefit"><strong>' . esc_html(sprintf(__('%1$s for up to %2$d people', 'backstage-outreach'), $value_label, $per_order_cap)) . '</strong></p><p class="vms-offer-business">' . esc_html(sprintf(__('Shared by %s', 'backstage-outreach'), $partner_name)) . '</p><p>' . esc_html__('Choose tickets for an eligible event. Your offer is applied automatically in the cart and checkout.', 'backstage-outreach') . '</p></header>';
 		if ($expiry !== '' || $per_business_cap > 0 || $overall_cap > 0) {
 			echo '<div class="vms-offer-availability"><strong>' . esc_html__('Availability', 'backstage-outreach') . '</strong><ul>';
 			if ($expiry !== '') {
 				echo '<li>' . esc_html(sprintf(__('Use this offer by %s.', 'backstage-outreach'), $expiry)) . '</li>';
 			}
 			if ($per_business_cap > 0) {
-				echo '<li>' . esc_html(sprintf(_n('Maximum through this business: %d discounted admission.', 'Maximum through this business: %d discounted admissions.', $per_business_cap, 'backstage-outreach'), $per_business_cap)) . '</li>';
+				echo '<li>' . esc_html($is_party
+					? sprintf(_n('Maximum through this Partner: %d discounted admission.', 'Maximum through this Partner: %d discounted admissions.', $per_business_cap, 'backstage-outreach'), $per_business_cap)
+					: sprintf(_n('Maximum through this business: %d discounted admission.', 'Maximum through this business: %d discounted admissions.', $per_business_cap, 'backstage-outreach'), $per_business_cap)) . '</li>';
 			}
 			if ($overall_cap > 0) {
-				echo '<li>' . esc_html(sprintf(_n('Up to %d admission is shared across all participating businesses and may be used first come, first served.', 'Up to %d admissions are shared across all participating businesses and may be used first come, first served.', $overall_cap, 'backstage-outreach'), $overall_cap)) . '</li>';
+				echo '<li>' . esc_html($is_party
+					? sprintf(_n('Up to %d admission is shared across the campaign and may be used first come, first served.', 'Up to %d admissions are shared across the campaign and may be used first come, first served.', $overall_cap, 'backstage-outreach'), $overall_cap)
+					: sprintf(_n('Up to %d admission is shared across all participating businesses and may be used first come, first served.', 'Up to %d admissions are shared across all participating businesses and may be used first come, first served.', $overall_cap, 'backstage-outreach'), $overall_cap)) . '</li>';
 			}
 			echo '</ul></div>';
 		}
@@ -793,7 +878,9 @@ function backstage_outreach_discount_offer_router(array $distribution, string $r
 		echo '<li>' . esc_html__('This offer cannot be combined with another coupon or a larger automatic ticket discount.', 'backstage-outreach') . '</li>';
 		echo '<li>' . esc_html(sprintf(__('%1$s for up to %2$d people per order. A fixed discount never reduces a ticket below $0.', 'backstage-outreach'), $value_label, $per_order_cap)) . '</li>';
 		if (absint($distribution['order_cap'] ?? 0) > 0) {
-			echo '<li>' . esc_html(sprintf(_n('This business link may be used for up to %d order.', 'This business link may be used for up to %d orders.', absint($distribution['order_cap']), 'backstage-outreach'), absint($distribution['order_cap']))) . '</li>';
+			echo '<li>' . esc_html($is_party
+				? sprintf(_n('This Partner link may be used for up to %d order.', 'This Partner link may be used for up to %d orders.', absint($distribution['order_cap']), 'backstage-outreach'), absint($distribution['order_cap']))
+				: sprintf(_n('This business link may be used for up to %d order.', 'This business link may be used for up to %d orders.', absint($distribution['order_cap']), 'backstage-outreach'), absint($distribution['order_cap']))) . '</li>';
 		}
 		echo '</ul></details>';
 		if (function_exists('WC') && WC() && WC()->cart && backstage_outreach_discount_cart_has_eligible_item($distribution)) {
@@ -807,16 +894,22 @@ function backstage_outreach_discount_order_context($order): ?array
 	if (!($order instanceof WC_Order)) {
 		return null;
 	}
-	$distribution_id = absint($order->get_meta('_backstage_outreach_distribution_id', true));
-	$row = $distribution_id > 0 ? backstage_outreach_discount_get_distribution($distribution_id) : backstage_outreach_discount_session_distribution();
+	$owner_type = (string) $order->get_meta('_backstage_outreach_owner_type', true) === 'party' ? 'party' : 'business';
+	$distribution_id = $owner_type === 'party'
+		? absint($order->get_meta('_backstage_outreach_party_distribution_id', true))
+		: absint($order->get_meta('_backstage_outreach_distribution_id', true));
+	$row = $distribution_id > 0 ? backstage_outreach_discount_get_distribution($distribution_id, $owner_type) : backstage_outreach_discount_session_distribution();
 	if (!is_array($row)) {
 		return null;
 	}
 	if ($distribution_id > 0) {
-		$matches = (string) $order->get_meta('_backstage_outreach_offer_type', true) === 'coupon_backed'
+		$matches = backstage_outreach_discount_owner_type($row) === $owner_type
+			&& (string) $order->get_meta('_backstage_outreach_offer_type', true) === 'coupon_backed'
 			&& absint($order->get_meta('_backstage_outreach_campaign_id', true)) === absint($row['campaign_id'] ?? 0)
 			&& absint($order->get_meta('_backstage_outreach_source_id', true)) === absint($row['source_id'] ?? 0)
-			&& absint($order->get_meta('_backstage_outreach_business_id', true)) === absint($row['business_id'] ?? 0)
+			&& ($owner_type === 'party'
+				? absint($order->get_meta('_backstage_outreach_party_id', true)) === absint($row['party_id'] ?? 0)
+				: absint($order->get_meta('_backstage_outreach_business_id', true)) === absint($row['business_id'] ?? 0))
 			&& absint($order->get_meta('_backstage_outreach_coupon_id', true)) === absint($row['coupon_id'] ?? 0);
 		return $matches ? $row : null;
 	}
@@ -834,10 +927,21 @@ function backstage_outreach_discount_stamp_order($order, $posted_data = array())
 	if (!is_array($row)) {
 		return;
 	}
-	$order->update_meta_data('_backstage_outreach_distribution_id', absint($row['id']));
 	$order->update_meta_data('_backstage_outreach_campaign_id', absint($row['campaign_id']));
 	$order->update_meta_data('_backstage_outreach_source_id', absint($row['source_id']));
-	$order->update_meta_data('_backstage_outreach_business_id', absint($row['business_id']));
+	if (backstage_outreach_discount_owner_type($row) === 'party') {
+		$order->update_meta_data('_backstage_outreach_owner_type', 'party');
+		$order->update_meta_data('_backstage_outreach_party_distribution_id', absint($row['id']));
+		$order->update_meta_data('_backstage_outreach_party_id', absint($row['party_id']));
+		$order->delete_meta_data('_backstage_outreach_distribution_id');
+		$order->delete_meta_data('_backstage_outreach_business_id');
+	} else {
+		$order->delete_meta_data('_backstage_outreach_owner_type');
+		$order->delete_meta_data('_backstage_outreach_party_distribution_id');
+		$order->delete_meta_data('_backstage_outreach_party_id');
+		$order->update_meta_data('_backstage_outreach_distribution_id', absint($row['id']));
+		$order->update_meta_data('_backstage_outreach_business_id', absint($row['business_id']));
+	}
 	$order->update_meta_data('_backstage_outreach_coupon_id', absint($row['coupon_id']));
 	$order->update_meta_data('_backstage_outreach_offer_type', 'coupon_backed');
 	$terms = backstage_outreach_discount_terms_for_distribution($row);
@@ -864,10 +968,16 @@ function backstage_outreach_discount_stamp_line_item($item, string $cart_item_ke
 	if (!in_array($product_id, $allowed, true) && !in_array($parent_id, $allowed, true)) {
 		return;
 	}
-	$item->add_meta_data('_backstage_outreach_distribution_id', absint($row['id']), true);
 	$item->add_meta_data('_backstage_outreach_campaign_id', absint($row['campaign_id']), true);
 	$item->add_meta_data('_backstage_outreach_source_id', absint($row['source_id']), true);
-	$item->add_meta_data('_backstage_outreach_business_id', absint($row['business_id']), true);
+	if (backstage_outreach_discount_owner_type($row) === 'party') {
+		$item->add_meta_data('_backstage_outreach_owner_type', 'party', true);
+		$item->add_meta_data('_backstage_outreach_party_distribution_id', absint($row['id']), true);
+		$item->add_meta_data('_backstage_outreach_party_id', absint($row['party_id']), true);
+	} else {
+		$item->add_meta_data('_backstage_outreach_distribution_id', absint($row['id']), true);
+		$item->add_meta_data('_backstage_outreach_business_id', absint($row['business_id']), true);
+	}
 	$item->add_meta_data('_backstage_outreach_coupon_id', absint($row['coupon_id']), true);
 	$terms = backstage_outreach_discount_terms_for_distribution($row);
 	if (is_array($terms)) {
@@ -876,6 +986,29 @@ function backstage_outreach_discount_stamp_line_item($item, string $cart_item_ke
 	}
 }
 add_action('woocommerce_checkout_create_order_line_item', 'backstage_outreach_discount_stamp_line_item', 30, 4);
+
+function backstage_outreach_discount_paid_capacity_sum(string $scope, int $scope_id, string $now, int $exclude_order_id = 0): int
+{
+	if (!in_array($scope, array('campaign', 'batch'), true) || $scope_id <= 0) {
+		return 0;
+	}
+	global $wpdb;
+	$total = 0;
+	foreach (array(backstage_outreach_business_table('paid_redemptions'), backstage_outreach_party_table('referral_redemptions')) as $table) {
+		if ($scope === 'campaign') {
+			$total += (int) $wpdb->get_var($wpdb->prepare(
+				"SELECT COALESCE(SUM(ticket_quantity),0) FROM %i WHERE campaign_id=%d AND order_id<>%d AND (status='paid' OR (status='pending' AND reservation_expires_at>%s))",
+				$table, $scope_id, $exclude_order_id, $now
+			));
+		} else {
+			$total += (int) $wpdb->get_var($wpdb->prepare(
+				"SELECT COALESCE(SUM(pr.ticket_quantity),0) FROM %i pr INNER JOIN %i c ON c.id=pr.campaign_id WHERE c.related_batch_id=%d AND pr.order_id<>%d AND (pr.status='paid' OR (pr.status='pending' AND pr.reservation_expires_at>%s))",
+				$table, vms_admission_table_pass_outreach_campaigns(), $scope_id, $exclude_order_id, $now
+			));
+		}
+	}
+	return $total;
+}
 
 function backstage_outreach_discount_order_ticket_snapshot(WC_Order $order, array $row): array
 {
@@ -985,7 +1118,8 @@ function backstage_outreach_discount_reserve_order(WC_Order $order): void
 		return;
 	}
 	global $wpdb;
-	$table = backstage_outreach_business_table('paid_redemptions');
+	$table = backstage_outreach_discount_redemptions_table($row);
+	$owner_type = backstage_outreach_discount_owner_type($row);
 	$batch_id = absint($row['related_batch_id'] ?? 0);
 	if ($batch_id <= 0) {
 		throw new Exception(__('The offer batch could not be validated.', 'backstage-outreach'));
@@ -995,7 +1129,7 @@ function backstage_outreach_discount_reserve_order(WC_Order $order): void
 		throw new Exception(__('The offer limit is being updated. Please try checkout again.', 'backstage-outreach'));
 	}
 	try {
-		$row = backstage_outreach_discount_get_distribution(absint($row['id'] ?? 0));
+		$row = backstage_outreach_discount_get_distribution(absint($row['id'] ?? 0), $owner_type);
 		$error = is_array($row) ? backstage_outreach_discount_distribution_error($row) : new WP_Error('offer_missing', __('This Admission Offer is no longer available.', 'backstage-outreach'));
 		if (is_wp_error($error)) {
 			throw new Exception($error->get_error_message());
@@ -1016,18 +1150,23 @@ function backstage_outreach_discount_reserve_order(WC_Order $order): void
 			"SELECT COALESCE(SUM(ticket_quantity),0) FROM %i WHERE distribution_id=%d AND order_id<>%d AND (status='paid' OR (status='pending' AND reservation_expires_at>%s))",
 			$table, absint($row['id']), $order->get_id(), $now
 		));
-		$per_business_complimentary = (int) $wpdb->get_var($wpdb->prepare(
+		$order_cap = absint($row['order_cap'] ?? 0);
+		$used_orders = $order_cap > 0 ? (int) $wpdb->get_var($wpdb->prepare(
+			"SELECT COUNT(DISTINCT order_id) FROM %i WHERE distribution_id=%d AND order_id<>%d AND (status='paid' OR (status='pending' AND reservation_expires_at>%s))",
+			$table, absint($row['id']), $order->get_id(), $now
+		)) : 0;
+		if ($order_cap > 0 && $used_orders >= $order_cap) {
+			throw new Exception(__('This Admission Offer has reached its paid-order limit.', 'backstage-outreach'));
+		}
+		$per_business_complimentary = $owner_type === 'business' ? (int) $wpdb->get_var($wpdb->prepare(
 			"SELECT COALESCE(SUM(party_size),0) FROM %i WHERE distribution_id=%d AND status='fulfilled'",
 			backstage_outreach_business_table('distribution_claims'), absint($row['id'])
-		));
+		)) : 0;
 		$business_cap = absint($row['admission_cap'] ?? 0);
 		if ($business_cap > 0 && $per_business_used + $per_business_complimentary + $ticket_quantity > $business_cap) {
 			throw new Exception(__('This Admission Offer has reached its discounted-ticket limit.', 'backstage-outreach'));
 		}
-		$paid_or_held = (int) $wpdb->get_var($wpdb->prepare(
-			"SELECT COALESCE(SUM(ticket_quantity),0) FROM %i WHERE campaign_id=%d AND order_id<>%d AND (status='paid' OR (status='pending' AND reservation_expires_at>%s))",
-			$table, $campaign_id, $order->get_id(), $now
-		));
+		$paid_or_held = backstage_outreach_discount_paid_capacity_sum('campaign', $campaign_id, $now, $order->get_id());
 		$complimentary = (int) $wpdb->get_var($wpdb->prepare(
 			"SELECT COALESCE(SUM(e.party_size),0) FROM %i e INNER JOIN %i pc ON pc.id=e.pass_claim_id WHERE pc.outreach_campaign_id=%d AND e.status<>'canceled'",
 			bvmgr_admission_table_entries(), bvmgr_admission_table_pass_claims(), $campaign_id
@@ -1043,10 +1182,7 @@ function backstage_outreach_discount_reserve_order(WC_Order $order): void
 				"SELECT COALESCE(SUM(party_size),0) FROM %i WHERE pass_batch_id=%d AND status<>'canceled'",
 				bvmgr_admission_table_entries(), absint($row['related_batch_id'])
 			));
-			$batch_paid_or_held = (int) $wpdb->get_var($wpdb->prepare(
-				"SELECT COALESCE(SUM(pr.ticket_quantity),0) FROM %i pr INNER JOIN %i c ON c.id=pr.campaign_id WHERE c.related_batch_id=%d AND pr.order_id<>%d AND (pr.status='paid' OR (pr.status='pending' AND pr.reservation_expires_at>%s))",
-				$table, vms_admission_table_pass_outreach_campaigns(), absint($row['related_batch_id']), $order->get_id(), $now
-			));
+			$batch_paid_or_held = backstage_outreach_discount_paid_capacity_sum('batch', absint($row['related_batch_id']), $now, $order->get_id());
 			if ($batch_paid_or_held + $batch_complimentary + $ticket_quantity > $batch_cap) {
 				throw new Exception(__('This offer batch has reached its combined ticket limit.', 'backstage-outreach'));
 			}
@@ -1056,7 +1192,7 @@ function backstage_outreach_discount_reserve_order(WC_Order $order): void
 		$financial = backstage_outreach_discount_order_financial_snapshot($order, $row);
 		$data = array(
 			'distribution_id' => absint($row['id']), 'campaign_id' => $campaign_id,
-			'source_id' => absint($row['source_id']), 'business_id' => absint($row['business_id']),
+			'source_id' => absint($row['source_id']),
 			'coupon_id' => absint($row['coupon_id']), 'coupon_code' => (string) $row['coupon_code'],
 			'order_id' => $order->get_id(), 'status' => 'pending', 'ticket_quantity' => $ticket_quantity,
 			'discount_total' => backstage_outreach_discount_order_coupon_total($order, (string) $row['coupon_code']),
@@ -1070,6 +1206,7 @@ function backstage_outreach_discount_reserve_order(WC_Order $order): void
 			'eligible_ticket_ids_json' => backstage_outreach_discount_encode_ids((array) $snapshot['product_ids']),
 			'updated_at' => $now, 'reservation_expires_at' => $expires,
 		);
+		$data[$owner_type === 'party' ? 'party_id' : 'business_id'] = absint($owner_type === 'party' ? ($row['party_id'] ?? 0) : ($row['business_id'] ?? 0));
 		$existing_id = absint($wpdb->get_var($wpdb->prepare('SELECT id FROM %i WHERE order_id=%d', $table, $order->get_id())));
 		if ($existing_id > 0) {
 			$written = $wpdb->update($table, $data, array('id' => $existing_id));
@@ -1119,7 +1256,7 @@ function backstage_outreach_discount_sync_redemption_status(int $order_id, strin
 		return;
 	}
 	global $wpdb;
-	$table = backstage_outreach_business_table('paid_redemptions');
+	$table = backstage_outreach_discount_redemptions_table($row);
 	$batch_id = absint($row['related_batch_id'] ?? 0);
 	$lock_name = $batch_id > 0 ? 'bvm-pass-batch-' . $batch_id : '';
 	if ($lock_name === '' || (int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, %d)', $lock_name, 15)) !== 1) {
@@ -1214,14 +1351,17 @@ function backstage_outreach_discount_validate_order_before_payment($order, $erro
 	if (!($order instanceof WC_Order) || $order->is_paid()) {
 		return;
 	}
-	$distribution_id = absint($order->get_meta('_backstage_outreach_distribution_id', true));
+	$owner_type = (string) $order->get_meta('_backstage_outreach_owner_type', true) === 'party' ? 'party' : 'business';
+	$distribution_id = $owner_type === 'party'
+		? absint($order->get_meta('_backstage_outreach_party_distribution_id', true))
+		: absint($order->get_meta('_backstage_outreach_distribution_id', true));
 	if ($distribution_id <= 0) {
 		return;
 	}
-	$row = backstage_outreach_discount_get_distribution($distribution_id);
+	$row = backstage_outreach_discount_get_distribution($distribution_id, $owner_type);
 	$error = is_array($row) ? backstage_outreach_discount_distribution_error($row) : new WP_Error('offer_missing', __('This Admission Offer is no longer available.', 'backstage-outreach'));
 	if (!is_wp_error($error) && !is_array(backstage_outreach_discount_order_context($order))) {
-		$error = new WP_Error('offer_attribution_mismatch', __('This unpaid order no longer matches its server-owned Admission Offer attribution. Reopen the signed business link and start checkout again.', 'backstage-outreach'));
+		$error = new WP_Error('offer_attribution_mismatch', __('This unpaid order no longer matches its server-owned Admission Offer attribution. Reopen the signed offer link and start checkout again.', 'backstage-outreach'));
 	}
 	if (!is_wp_error($error) && is_array($row)) {
 		$expected_code = wc_format_coupon_code((string) ($row['coupon_code'] ?? ''));
@@ -1252,7 +1392,7 @@ function backstage_outreach_discount_validate_order_pay_action($order): void
 }
 add_action('woocommerce_before_pay_action', 'backstage_outreach_discount_validate_order_pay_action', 20, 1);
 
-function backstage_outreach_discount_paid_stats(int $distribution_id): array
+function backstage_outreach_discount_paid_stats(int $distribution_id, string $owner_type = 'business'): array
 {
 	global $wpdb;
 	$row = $wpdb->get_row($wpdb->prepare(
@@ -1269,7 +1409,7 @@ function backstage_outreach_discount_paid_stats(int $distribution_id): array
 		COUNT(DISTINCT CASE WHEN settlement_review_code IS NOT NULL THEN order_id END) review_required_orders,
 		MAX(currency) currency
 		FROM %i WHERE distribution_id=%d",
-		backstage_outreach_business_table('paid_redemptions'), $distribution_id
+		$owner_type === 'party' ? backstage_outreach_party_table('referral_redemptions') : backstage_outreach_business_table('paid_redemptions'), $distribution_id
 	), ARRAY_A);
 	return is_array($row) ? $row : array('paid_orders' => 0, 'discounted_tickets' => 0, 'discount_total' => 0, 'eligible_ticket_gross_total' => 0, 'admission_revenue' => 0, 'order_revenue' => 0, 'refunded_total' => 0, 'refunded_orders' => 0, 'cancelled_orders' => 0, 'review_required_orders' => 0, 'currency' => '');
 }

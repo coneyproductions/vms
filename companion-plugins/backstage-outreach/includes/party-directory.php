@@ -15,7 +15,7 @@ function backstage_outreach_party_schema_option_key(): string
 
 function backstage_outreach_party_schema_target(): string
 {
-	return '1.0.0';
+	return '1.1.0';
 }
 
 function backstage_outreach_party_table(string $suffix): string
@@ -171,6 +171,68 @@ function backstage_outreach_party_schema_upgrade(): void
 		KEY from_party (from_party_id),
 		KEY to_party (to_party_id),
 		KEY action_created (action, created_at)
+	) {$collate};");
+
+	dbDelta('CREATE TABLE ' . backstage_outreach_party_table('referral_distributions') . " (
+		id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+		campaign_id BIGINT(20) UNSIGNED NOT NULL,
+		source_id BIGINT(20) UNSIGNED NOT NULL,
+		party_id BIGINT(20) UNSIGNED NOT NULL,
+		public_key VARCHAR(64) NOT NULL,
+		token_hash CHAR(64) NOT NULL,
+		status VARCHAR(20) NOT NULL DEFAULT 'active',
+		admission_cap INT(10) UNSIGNED NOT NULL DEFAULT 0,
+		order_cap INT(10) UNSIGNED NOT NULL DEFAULT 0,
+		coupon_id BIGINT(20) UNSIGNED NULL,
+		coupon_code VARCHAR(100) NULL,
+		eligible_event_ids_json LONGTEXT NULL,
+		eligible_product_ids_json LONGTEXT NULL,
+		configuration_hash CHAR(64) NOT NULL,
+		expires_at DATETIME NULL,
+		created_by BIGINT(20) UNSIGNED NOT NULL,
+		created_at DATETIME NOT NULL,
+		updated_by BIGINT(20) UNSIGNED NULL,
+		updated_at DATETIME NULL,
+		PRIMARY KEY (id),
+		UNIQUE KEY campaign_party (campaign_id, party_id),
+		UNIQUE KEY public_key (public_key),
+		KEY campaign_status (campaign_id, status),
+		KEY source_party (source_id, party_id)
+	) {$collate};");
+
+	dbDelta('CREATE TABLE ' . backstage_outreach_party_table('referral_redemptions') . " (
+		id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+		distribution_id BIGINT(20) UNSIGNED NOT NULL,
+		campaign_id BIGINT(20) UNSIGNED NOT NULL,
+		source_id BIGINT(20) UNSIGNED NOT NULL,
+		party_id BIGINT(20) UNSIGNED NOT NULL,
+		coupon_id BIGINT(20) UNSIGNED NOT NULL,
+		coupon_code VARCHAR(100) NOT NULL,
+		order_id BIGINT(20) UNSIGNED NOT NULL,
+		status VARCHAR(24) NOT NULL DEFAULT 'pending',
+		ticket_quantity INT(10) UNSIGNED NOT NULL DEFAULT 0,
+		discount_total DECIMAL(18,6) NOT NULL DEFAULT 0,
+		eligible_ticket_gross_total DECIMAL(18,6) NOT NULL DEFAULT 0,
+		eligible_ticket_net_total DECIMAL(18,6) NOT NULL DEFAULT 0,
+		eligible_ticket_refunded_total DECIMAL(18,6) NOT NULL DEFAULT 0,
+		order_total DECIMAL(18,6) NOT NULL DEFAULT 0,
+		refunded_total DECIMAL(18,6) NOT NULL DEFAULT 0,
+		settlement_review_code VARCHAR(80) NULL,
+		currency VARCHAR(12) NULL,
+		eligible_ticket_ids_json LONGTEXT NULL,
+		created_at DATETIME NOT NULL,
+		updated_at DATETIME NULL,
+		paid_at DATETIME NULL,
+		failed_at DATETIME NULL,
+		cancelled_at DATETIME NULL,
+		refunded_at DATETIME NULL,
+		reservation_expires_at DATETIME NULL,
+		PRIMARY KEY (id),
+		UNIQUE KEY order_id (order_id),
+		KEY distribution_status (distribution_id, status),
+		KEY campaign_status (campaign_id, status),
+		KEY party_status (party_id, status),
+		KEY coupon_id (coupon_id)
 	) {$collate};");
 
 	update_option(backstage_outreach_party_schema_option_key(), backstage_outreach_party_schema_target(), false);
@@ -339,8 +401,26 @@ function backstage_outreach_party_save(array $raw, int $user_id, int $party_id =
 	}
 	$now = backstage_outreach_party_now();
 	if ($party_id > 0) {
-		if (backstage_outreach_party_get($party_id) === null) {
+		$existing_party = backstage_outreach_party_get($party_id);
+		if ($existing_party === null) {
 			return new WP_Error('party_not_found', __('The selected Party no longer exists.', 'backstage-outreach'));
+		}
+		if ((string) $existing_party['party_type'] !== (string) $payload['party_type']) {
+			$association_count = (int) $wpdb->get_var($wpdb->prepare(
+				'SELECT (
+					(SELECT COUNT(*) FROM %i WHERE (person_party_id=%d OR organization_party_id=%d) AND status=%s) +
+					(SELECT COUNT(*) FROM %i WHERE party_id=%d AND status=%s) +
+					(SELECT COUNT(*) FROM %i WHERE party_id=%d AND status=%s) +
+					(SELECT COUNT(*) FROM %i WHERE party_id=%d)
+				)',
+				backstage_outreach_party_table('affiliations'), $party_id, $party_id, 'active',
+				backstage_outreach_party_table('sources'), $party_id, 'active',
+				backstage_outreach_party_table('campaign_roles'), $party_id, 'active',
+				backstage_outreach_party_table('referral_distributions'), $party_id
+			));
+			if ($association_count > 0) {
+				return new WP_Error('party_type_associations_exist', __('Remove or resolve this Party’s active affiliations, Source/campaign associations, and Partner offers before changing between Person and Organization.', 'backstage-outreach'));
+			}
 		}
 		$payload['updated_by'] = $user_id;
 		$payload['updated_at'] = $now;

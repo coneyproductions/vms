@@ -158,7 +158,11 @@ function backstage_outreach_party_render_directory_screen(): void
 		}
 	}
 	echo '</tbody></table></div>';
-	echo '</section></div>';
+	echo '</section>';
+	if (function_exists('backstage_outreach_party_referral_render_panel')) {
+		backstage_outreach_party_referral_render_panel($party);
+	}
+	echo '</div>';
 }
 
 function backstage_outreach_party_render_detail_sections(array $party): void
