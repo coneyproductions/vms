@@ -2323,6 +2323,22 @@
   margin: 14px 0;
 }
 
+#vms-pass-claims-wrap .vms-pass-contact-result {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-left: 4px solid #2271b1;
+  background: #f0f6fc;
+}
+
+#vms-pass-claims-wrap .vms-pass-contact-result--error {
+  border-left-color: #d63638;
+  background: #fcf0f1;
+}
+
+#vms-pass-claims-wrap .vms-pass-contact-result p {
+  margin: 0;
+}
+
 #vms-pass-claims-wrap .vms-pass-contact-summary > div {
   padding: 12px;
   border: 1px solid #d8e2f0;
