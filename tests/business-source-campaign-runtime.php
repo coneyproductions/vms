@@ -35,6 +35,10 @@ $campaign_id = 0;
 $complimentary_campaign_id = 0;
 $complimentary_claim_id = 0;
 $event_plan_id = 0;
+$alternate_event_plan_id = 0;
+$missing_art_event_plan_id = 0;
+$tec_event_ids = array();
+$flyer_artwork_ids = array();
 $business_ids = array();
 $drift_business_id = 0;
 
@@ -70,6 +74,36 @@ try {
 	$status_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
 	update_post_meta((int) $event_plan_id, $status_key, 'published');
 	update_post_meta((int) $event_plan_id, '_vms_event_date', wp_date('Y-m-d', time() + (14 * DAY_IN_SECONDS)));
+	$create_flyer_artwork = static function (string $filename, string $title) use (&$flyer_artwork_ids): int {
+		$png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFElEQVR42mNkYGD4z8DAwMDAxAADAA0EAQDRfRYAAAAASUVORK5CYII=', true);
+		$upload = is_string($png) ? wp_upload_bits($filename, null, $png) : array('error' => 'decode');
+		if (!empty($upload['error']) || empty($upload['file'])) {
+			return 0;
+		}
+		$attachment_id = wp_insert_attachment(array('post_mime_type' => 'image/png', 'post_title' => $title, 'post_status' => 'inherit'), (string) $upload['file']);
+		if (is_wp_error($attachment_id) || absint($attachment_id) <= 0) {
+			return 0;
+		}
+		$flyer_artwork_ids[] = absint($attachment_id);
+		return absint($attachment_id);
+	};
+	$event_artwork_id = $create_flyer_artwork('outreach-event-artwork-primary.png', $marker . ' primary event artwork');
+	$alternate_event_artwork_id = $create_flyer_artwork('outreach-event-artwork-alternate.png', $marker . ' alternate event artwork');
+	backstage_business_source_runtime_assert($event_artwork_id > 0 && $alternate_event_artwork_id > 0, 'Could not create disposable automatic-artwork images.');
+	$primary_tec_event_id = wp_insert_post(array('post_type' => 'tribe_events', 'post_status' => 'publish', 'post_title' => $marker . ' linked public event'), true);
+	$alternate_tec_event_id = wp_insert_post(array('post_type' => 'tribe_events', 'post_status' => 'publish', 'post_title' => $marker . ' alternate linked public event'), true);
+	$alternate_event_plan_id = wp_insert_post(array('post_type' => 'vms_event_plan', 'post_status' => 'publish', 'post_title' => $marker . ' alternate Event Plan'), true);
+	$missing_art_event_plan_id = wp_insert_post(array('post_type' => 'vms_event_plan', 'post_status' => 'publish', 'post_title' => $marker . ' Event Plan without artwork'), true);
+	backstage_business_source_runtime_assert(!is_wp_error($primary_tec_event_id) && !is_wp_error($alternate_tec_event_id) && !is_wp_error($alternate_event_plan_id) && !is_wp_error($missing_art_event_plan_id), 'Could not create disposable automatic-artwork event relationships.');
+	$tec_event_ids = array(absint($primary_tec_event_id), absint($alternate_tec_event_id));
+	update_post_meta((int) $event_plan_id, '_vms_tec_event_id', absint($primary_tec_event_id));
+	update_post_meta(absint($primary_tec_event_id), '_thumbnail_id', $event_artwork_id);
+	foreach (array($alternate_event_plan_id, $missing_art_event_plan_id) as $fixture_event_plan_id) {
+		update_post_meta(absint($fixture_event_plan_id), $status_key, 'published');
+		update_post_meta(absint($fixture_event_plan_id), '_vms_event_date', wp_date('Y-m-d', time() + (21 * DAY_IN_SECONDS)));
+	}
+	update_post_meta((int) $alternate_event_plan_id, '_vms_tec_event_id', absint($alternate_tec_event_id));
+	update_post_meta(absint($alternate_tec_event_id), '_thumbnail_id', $alternate_event_artwork_id);
 
 	backstage_business_source_runtime_assert($wpdb->insert($source_table, array(
 		'source_name' => $marker,
@@ -414,17 +448,44 @@ try {
 	$flyer_row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id=%d', backstage_outreach_business_table('campaign_businesses'), $complimentary_distribution_id), ARRAY_A);
 	$flyer_context = backstage_outreach_distribution_flyer_context(backstage_outreach_distribution_token((array) $flyer_row));
 	backstage_business_source_runtime_assert(is_array($flyer_context), 'Active signed flyer context was rejected' . (is_wp_error($flyer_context) ? ': ' . $flyer_context->get_error_code() . ' — ' . $flyer_context->get_error_message() : '.'));
-	$default_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id);
+	$default_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id, (array) $flyer_context['batch']);
 	$default_flyer_html = backstage_outreach_distribution_flyer_html($flyer_context);
 	backstage_business_source_runtime_assert((string) $default_design['heading'] !== '' && str_contains($default_flyer_html, (string) $default_design['heading']), 'The venue-default flyer design was not resolved on a campaign without overrides.');
+	backstage_business_source_runtime_assert((string) $default_design['artwork_source'] === 'event' && (int) $default_design['artwork_id'] === $event_artwork_id, 'Automatic artwork did not follow the One Event batch through its linked TEC event image.');
+	$alternate_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id, array_merge((array) $flyer_context['batch'], array('single_event_plan_id' => $alternate_event_plan_id)));
+	backstage_business_source_runtime_assert((string) $alternate_design['artwork_source'] === 'event' && (int) $alternate_design['artwork_id'] === $alternate_event_artwork_id, 'Changing the reviewed Event Plan did not change automatic artwork.');
+	$missing_event_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id, array_merge((array) $flyer_context['batch'], array('single_event_plan_id' => $missing_art_event_plan_id)));
+	backstage_business_source_runtime_assert((string) $missing_event_design['artwork_source'] !== 'event', 'A One Event batch without event artwork did not fall back safely.');
+	$non_single_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id, array_merge((array) $flyer_context['batch'], array('validity_type' => 'date_range', 'single_event_plan_id' => $event_plan_id)));
+	backstage_business_source_runtime_assert((string) $non_single_design['artwork_source'] !== 'event', 'A non-single-event scope incorrectly used an Event Plan image.');
+	update_option(backstage_outreach_flyer_design_option_key($complimentary_campaign_id), array('artwork_mode' => 'custom', 'artwork_id' => $event_artwork_id), false);
+	$custom_primary_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id, (array) $flyer_context['batch']);
+	$custom_alternate_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id, array_merge((array) $flyer_context['batch'], array('single_event_plan_id' => $alternate_event_plan_id)));
+	backstage_business_source_runtime_assert((string) $custom_primary_design['artwork_source'] === 'campaign' && (int) $custom_primary_design['artwork_id'] === $event_artwork_id && (int) $custom_alternate_design['artwork_id'] === $event_artwork_id, 'Changing the selected event overwrote an explicit campaign artwork override.');
+	update_option(backstage_outreach_flyer_design_option_key($complimentary_campaign_id), array('artwork_mode' => 'none', 'artwork_id' => $event_artwork_id), false);
+	$explicit_none_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id, (array) $flyer_context['batch']);
+	backstage_business_source_runtime_assert((string) $explicit_none_design['artwork_source'] === 'none' && (int) $explicit_none_design['artwork_id'] === 0, 'Explicit No artwork did not override automatic event artwork.');
+	delete_option(backstage_outreach_flyer_design_option_key($complimentary_campaign_id));
+	$portrait_layout = backstage_outreach_normalize_flyer_layout('portrait', 'panels', 'right');
+	$landscape_layout = backstage_outreach_normalize_flyer_layout('landscape', 'panels', 'right');
+	backstage_business_source_runtime_assert($portrait_layout['orientation'] === 'portrait' && $portrait_layout['panel_position'] === 'bottom', 'Legacy portrait side-by-side flyer settings were not normalized to stacked layout.');
+	backstage_business_source_runtime_assert($landscape_layout['orientation'] === 'landscape' && $landscape_layout['panel_position'] === 'bottom', 'Legacy landscape side-by-side flyer settings were not normalized to the horizontal offer band.');
 	update_option(backstage_outreach_flyer_design_option_key($complimentary_campaign_id), array(
 		'heading' => 'Café — Live Music ひらがな é',
 		'subheading' => 'You’ve found tonight’s offer.',
 		'artwork_mode' => 'none',
 		'artwork_id' => 0,
+		'layout_mode' => 'custom',
+		'orientation' => 'landscape',
+		'composition' => 'full',
+		'panel_position' => 'right',
+		'show_heading' => 1,
+		'show_subheading' => 1,
+		'show_logo' => 0,
 	), false);
 	$flyer_html = backstage_outreach_distribution_flyer_html($flyer_context);
-	backstage_business_source_runtime_assert(str_contains($flyer_html, 'Print / Save as PDF') && str_contains($flyer_html, 'Complimentary Guest Passes') && str_contains($flyer_html, 'Maximum through this business') && str_contains($flyer_html, '@page{size:letter portrait'), 'Complimentary flyer omitted print, offer, limit, or US Letter output.');
+	backstage_business_source_runtime_assert(str_contains($flyer_html, 'Print full flyer') && str_contains($flyer_html, 'Download full-flyer PDF') && str_contains($flyer_html, 'Print Landscape Letter offer only') && str_contains($flyer_html, 'Download Landscape Letter offer-only PDF') && str_contains($flyer_html, 'Complimentary Guest Passes') && str_contains($flyer_html, 'Maximum through this business') && str_contains($flyer_html, '@page{size:letter landscape') && str_contains($flyer_html, 'flyer-composition-full flyer-panel-bottom'), 'Complimentary flyer omitted full/Landscape Letter offer-only print/PDF actions, offer, limit, or normalized Letter composition.');
+	backstage_business_source_runtime_assert(str_contains($flyer_html, 'Scan to choose an eligible event and claim your passes') && !str_contains($flyer_html, 'Guest Pass credentials'), 'Complimentary flyer retained internal terminology instead of plain scan guidance.');
 	backstage_business_source_runtime_assert(str_contains($flyer_html, 'Café — Live Music ひらがな é') && str_contains($flyer_html, 'You’ve found tonight’s offer.'), 'Campaign flyer heading/subheading or UTF-8 did not survive resolution and rendering.');
 	backstage_business_source_runtime_assert(strpos($flyer_html, '<h1 class="heading"') < strpos($flyer_html, '<p class="business"'), 'Flyer did not lead with venue/live-music presentation before the business attribution.');
 	backstage_business_source_runtime_assert(str_contains($flyer_html, bvmgr_pass_claims_claim_qr_image_url(backstage_outreach_distribution_url($flyer_context))), 'Complimentary flyer QR was not generated from the actual customer offer URL.');
@@ -667,9 +728,21 @@ try {
 			$wpdb->delete(bvmgr_admission_table_pass_batches(), array('id' => $fixture_batch_id));
 		}
 	}
-	if ($event_plan_id > 0) {
-		$wpdb->delete(bvmgr_admission_table_audit(), array('event_plan_id' => $event_plan_id));
-		wp_delete_post($event_plan_id, true);
+	foreach (array($event_plan_id, $alternate_event_plan_id, $missing_art_event_plan_id) as $fixture_event_plan_id) {
+		if ($fixture_event_plan_id > 0) {
+			$wpdb->delete(bvmgr_admission_table_audit(), array('event_plan_id' => $fixture_event_plan_id));
+			wp_delete_post($fixture_event_plan_id, true);
+		}
+	}
+	foreach ($tec_event_ids as $fixture_tec_event_id) {
+		if ($fixture_tec_event_id > 0) {
+			wp_delete_post($fixture_tec_event_id, true);
+		}
+	}
+	foreach ($flyer_artwork_ids as $fixture_artwork_id) {
+		if ($fixture_artwork_id > 0) {
+			wp_delete_attachment($fixture_artwork_id, true);
+		}
 	}
 	if ($source_id > 0) {
 		$wpdb->delete(bvmgr_admission_table_pass_sources(), array('id' => $source_id));

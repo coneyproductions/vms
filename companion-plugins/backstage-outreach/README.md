@@ -157,6 +157,19 @@ stay visible, secondary terms are expandable, unavailable links retain branded
 404/410 states, and existing eligibility, checkout, attribution, and capacity
 enforcement remain unchanged.
 
+Version 1.2.10 gives public business flyers fixed US Letter compositions that stay
+consistent between preview, print, and direct PDF download. Portrait full flyers
+stack proportional artwork above the offer. Landscape full flyers use a compact,
+opaque offer band with the venue logo, readable offer details, and customer QR in
+separate horizontal regions. Landscape Letter also provides a transient ink-saving
+offer-only output; portrait offer-only output is not part of this release.
+
+Automatic artwork now resolves a campaign override first, then the linked One Event
+artwork, then the venue default, and finally a branded no-artwork fallback. Operators
+can explicitly choose no artwork, and saved legacy layout combinations normalize to
+compatible Letter output without changing campaign terms, business links, or signed
+customer URLs.
+
 ## Development checks
 
 From the Backstage Venue Manager repository root:

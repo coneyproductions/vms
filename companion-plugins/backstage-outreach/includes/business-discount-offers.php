@@ -734,7 +734,10 @@ function backstage_outreach_discount_offer_router(array $distribution, string $r
 		$per_order_cap = max(1, absint($distribution['admissions_per_recipient'] ?? 1));
 		$value_label = backstage_outreach_discount_terms_label($terms, false);
 		$branding = backstage_outreach_flyer_branding();
-		$design = backstage_outreach_resolved_flyer_design(absint($distribution['campaign_id'] ?? 0));
+		$design = backstage_outreach_resolved_flyer_design(
+			absint($distribution['campaign_id'] ?? 0),
+			is_array($distribution['batch'] ?? null) ? (array) $distribution['batch'] : array()
+		);
 		$artwork_url = (string) $design['artwork_url'];
 		$fallback_image = $artwork_url !== '' ? $artwork_url : (string) $branding['logo_url'];
 		$expiry = backstage_outreach_distribution_effective_expiry($distribution);

@@ -67,8 +67,15 @@ if ($mode === 'cleanup') {
 		foreach ((array) ($fixture['extra_source_ids'] ?? array()) as $fixture_source_id) {
 			$wpdb->delete(bvmgr_admission_table_pass_sources(), array('id' => absint($fixture_source_id)));
 		}
-		if (!empty($fixture['artwork_id'])) {
-			wp_delete_attachment(absint($fixture['artwork_id']), true);
+		foreach ((array) ($fixture['artwork_ids'] ?? array($fixture['artwork_id'] ?? 0)) as $fixture_artwork_id) {
+			if (absint($fixture_artwork_id) > 0) {
+				wp_delete_attachment(absint($fixture_artwork_id), true);
+			}
+		}
+		foreach (array('event_plan_id', 'tec_event_id') as $fixture_post_key) {
+			if (absint($fixture[$fixture_post_key] ?? 0) > 0) {
+				wp_delete_post(absint($fixture[$fixture_post_key]), true);
+			}
 		}
 		$user_id = absint($fixture['user_id'] ?? 1);
 		$wpdb->query($wpdb->prepare(
@@ -112,19 +119,85 @@ $wpdb->insert(bvmgr_admission_table_pass_sources(), array(
 $source_id = (int) $wpdb->insert_id;
 $extra_source_ids = array();
 $extra_batch_ids = array();
-$artwork_id = 0;
-$artwork_upload = wp_upload_bits('business-source-browser-fixture.png', null, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR42mNkYPj/n4GBgYGJAQoAHgQCAfznfQAAAABJRU5ErkJggg=='));
-if (empty($artwork_upload['error']) && !empty($artwork_upload['file'])) {
-	$artwork_id = wp_insert_attachment(array(
-		'post_mime_type' => 'image/png',
-		'post_title' => $marker . ' Artwork',
-		'post_status' => 'inherit',
-	), (string) $artwork_upload['file']);
-	if ($artwork_id > 0) {
-		require_once ABSPATH . 'wp-admin/includes/image.php';
-		wp_update_attachment_metadata($artwork_id, wp_generate_attachment_metadata($artwork_id, (string) $artwork_upload['file']));
+$artwork_ids = array();
+$create_artwork = static function (string $filename, string $title, int $width, int $height, array $colors) use ($marker): int {
+	if (!function_exists('imagecreatetruecolor')) {
+		return 0;
 	}
+	$image = imagecreatetruecolor($width, $height);
+	$background = imagecolorallocate($image, $colors[0][0], $colors[0][1], $colors[0][2]);
+	$accent = imagecolorallocate($image, $colors[1][0], $colors[1][1], $colors[1][2]);
+	$white = imagecolorallocate($image, 255, 255, 255);
+	$gold = imagecolorallocate($image, 244, 198, 92);
+	$soft = imagecolorallocate($image, 231, 240, 237);
+	$ink = imagecolorallocate($image, 20, 34, 42);
+	imagefilledrectangle($image, 0, 0, $width, $height, $background);
+	imagefilledellipse($image, (int) ($width * .76), (int) ($height * .31), (int) ($width * .67), (int) ($width * .67), $accent);
+	imagefilledellipse($image, (int) ($width * .18), (int) ($height * .51), (int) ($width * .24), (int) ($width * .24), $gold);
+	imagefilledrectangle($image, 0, (int) ($height * .73), $width, $height, $soft);
+	imagefilledrectangle($image, (int) ($width * .055), (int) ($height * .055), (int) ($width * .945), (int) ($height * .69), $background);
+	$bold_font = '/System/Library/Fonts/Supplemental/Arial Bold.ttf';
+	$regular_font = '/System/Library/Fonts/Supplemental/Arial.ttf';
+	$draw_text = static function (string $text, int $size, int $x, int $y, int $color, bool $bold = false) use ($image, $bold_font, $regular_font): void {
+		$font = $bold ? $bold_font : $regular_font;
+		if (function_exists('imagettftext') && is_readable($font)) {
+			imagettftext($image, $size, 0, $x, $y, $color, $font, $text);
+			return;
+		}
+		imagestring($image, $bold ? 5 : 4, $x, max(0, $y - 18), $text, $color);
+	};
+	$left = (int) ($width * .09);
+	$draw_text('SUMMER NIGHTS', max(34, (int) ($width * .048)), $left, (int) ($height * .23), $white, true);
+	$draw_text('LIVE', max(48, (int) ($width * .07)), $left, (int) ($height * .37), $white, true);
+	$draw_text('THE LAKESIDE REVUE', max(22, (int) ($width * .026)), $left, (int) ($height * .45), $gold, true);
+	$draw_text('Saturday, October 18  |  7:30 PM', max(18, (int) ($width * .018)), $left, (int) ($height * .485), $white);
+	$draw_text('Doors 6:00 PM  •  Music under the stars', max(16, (int) ($width * .014)), $left, (int) ($height * .515), $white);
+	$draw_text('RESERVED OFFER AREA', max(16, (int) ($width * .017)), $left, (int) ($height * .82), $ink, true);
+	$draw_text('Business admission details and QR appear here.', max(15, (int) ($width * .016)), $left, (int) ($height * .865), $ink);
+	$draw_text('Fixture artwork — not a real event', max(13, (int) ($width * .014)), $left, (int) ($height * .925), $ink);
+	ob_start();
+	imagepng($image);
+	$png = (string) ob_get_clean();
+	imagedestroy($image);
+	$upload = wp_upload_bits($filename, null, $png);
+	if (!empty($upload['error']) || empty($upload['file'])) {
+		return 0;
+	}
+	$attachment_id = wp_insert_attachment(array(
+		'post_mime_type' => 'image/png',
+		'post_title' => $marker . ' ' . $title,
+		'post_status' => 'inherit',
+	), (string) $upload['file']);
+	if ($attachment_id > 0) {
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		wp_update_attachment_metadata($attachment_id, wp_generate_attachment_metadata($attachment_id, (string) $upload['file']));
+	}
+	return (int) $attachment_id;
+};
+$portrait_artwork_id = $create_artwork('business-source-browser-fixture-portrait.png', 'Portrait Artwork', 1200, 1600, array(array(16, 50, 63), array(13, 109, 87)));
+$landscape_artwork_id = $create_artwork('business-source-browser-fixture-landscape.png', 'Landscape Artwork', 1600, 900, array(array(49, 36, 85), array(197, 83, 57)));
+$event_artwork_id = $create_artwork('business-source-browser-fixture-event.png', 'Selected Event Artwork', 1800, 1200, array(array(66, 26, 43), array(178, 92, 52)));
+$artwork_ids = array_values(array_filter(array($portrait_artwork_id, $landscape_artwork_id, $event_artwork_id)));
+$artwork_id = $portrait_artwork_id;
+$tec_event_id = wp_insert_post(array(
+	'post_type' => 'tribe_events',
+	'post_status' => 'publish',
+	'post_title' => $marker . ' Linked Public Event',
+), true);
+$event_plan_id = wp_insert_post(array(
+	'post_type' => 'vms_event_plan',
+	'post_status' => 'publish',
+	'post_title' => $marker . ' One Event — Café ひらがな',
+), true);
+if (is_wp_error($tec_event_id) || is_wp_error($event_plan_id) || absint($tec_event_id) <= 0 || absint($event_plan_id) <= 0 || $event_artwork_id <= 0) {
+	throw new RuntimeException('Could not create the disposable event-artwork fixture.');
 }
+update_post_meta((int) $event_plan_id, function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status', 'published');
+update_post_meta((int) $event_plan_id, '_vms_tec_event_id', (int) $tec_event_id);
+update_post_meta((int) $tec_event_id, '_thumbnail_id', $event_artwork_id);
+delete_post_meta((int) $event_plan_id, '_vms_event_date');
+$wpdb->insert($wpdb->postmeta, array('post_id' => (int) $event_plan_id, 'meta_key' => '_vms_event_date', 'meta_value' => wp_date('Y-m-d', time() + (21 * DAY_IN_SECONDS))));
+wp_cache_delete((int) $event_plan_id, 'post_meta');
 $wpdb->insert(bvmgr_admission_table_pass_sources(), array(
 	'source_name' => $marker . ' Existing Eligible Batches',
 	'status' => 'active',
@@ -198,6 +271,12 @@ $fixture = array(
 	'extra_batch_ids' => $extra_batch_ids,
 	'business_ids' => $business_ids,
 	'artwork_id' => $artwork_id,
+	'portrait_artwork_id' => $portrait_artwork_id,
+	'landscape_artwork_id' => $landscape_artwork_id,
+	'event_artwork_id' => $event_artwork_id,
+	'artwork_ids' => $artwork_ids,
+	'event_plan_id' => (int) $event_plan_id,
+	'tec_event_id' => (int) $tec_event_id,
 	'admin_url' => vms_pass_outreach_admin_page_url(),
 	'source_name' => $marker,
 	'batch_name' => $marker . ' Created In Outreach',

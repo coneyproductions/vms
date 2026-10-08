@@ -12,6 +12,33 @@
     }
   }
 
+  function syncFlyerLayoutOverride() {
+    var custom = document.querySelector('#vms-pass-claims-wrap input[name="campaign_layout_mode"][value="custom"]');
+    var fields = document.querySelector('#vms-pass-claims-wrap [data-vms-flyer-layout-fields="campaign"]');
+    if (!custom || !fields) {
+      return;
+    }
+    fields.querySelectorAll('input, select').forEach(function (control) {
+      control.disabled = !custom.checked;
+    });
+    fields.setAttribute('aria-disabled', custom.checked ? 'false' : 'true');
+  }
+
+  function syncFlyerLayoutCompatibility(changed) {
+    ['venue', 'campaign'].forEach(function (prefix) {
+      var orientation = document.querySelector('#vms-pass-claims-wrap [data-vms-flyer-orientation="' + prefix + '"]');
+      var position = document.querySelector('#vms-pass-claims-wrap [data-vms-flyer-panel-position="' + prefix + '"]');
+      if (!orientation || !position) {
+        return;
+      }
+      if (changed === position && position.value === 'right') {
+        orientation.value = 'landscape';
+      } else if (orientation.value === 'portrait') {
+        position.value = 'bottom';
+      }
+    });
+  }
+
   function sectionStorageKey(section) {
     if (!section) {
       return '';
@@ -628,6 +655,16 @@
       return;
     }
 
+    if (target.matches('#vms-pass-claims-wrap [data-vms-flyer-layout-mode]')) {
+      syncFlyerLayoutOverride();
+      return;
+    }
+
+    if (target.matches('#vms-pass-claims-wrap [data-vms-flyer-orientation], #vms-pass-claims-wrap [data-vms-flyer-panel-position]')) {
+      syncFlyerLayoutCompatibility(target);
+      return;
+    }
+
     if (target.matches('#vms-pass-claims-wrap [data-vms-contact-audience-select-all]')) {
       var selectAllTable = target.closest('table');
       if (!selectAllTable) {
@@ -651,11 +688,15 @@
       initStickyTables();
       initCollapsibleSections();
       syncAllContactAudienceSelectAll();
+      syncFlyerLayoutCompatibility(null);
+      syncFlyerLayoutOverride();
     }, { once: true });
   } else {
     initStickyTables();
     initCollapsibleSections();
     syncAllContactAudienceSelectAll();
+    syncFlyerLayoutCompatibility(null);
+    syncFlyerLayoutOverride();
   }
 
   window.addEventListener('load', syncAllStickyTables);
