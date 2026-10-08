@@ -2857,3 +2857,128 @@
     width: 100%;
   }
 }
+.vms-outreach-party-detail-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px;
+	margin-top: 18px;
+}
+
+.vms-outreach-party-inline-editor {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	gap: 10px;
+	margin-top: 12px;
+}
+
+.vms-outreach-party-inline-editor label {
+	display: grid;
+	gap: 4px;
+	min-width: 10rem;
+}
+
+.vms-outreach-party-inline-editor__wide {
+	flex: 1 1 18rem;
+}
+
+.vms-outreach-party-checkbox {
+	display: flex !important;
+	grid-template-columns: none !important;
+	align-items: center;
+	min-width: min(100%, 18rem) !important;
+}
+
+.vms-outreach-party-detail-list,
+.vms-outreach-party-suggestions {
+	margin: 10px 0;
+	padding-left: 20px;
+}
+
+.vms-outreach-party-detail-list li,
+.vms-outreach-party-suggestions li {
+	margin-bottom: 8px;
+	overflow-wrap: anywhere;
+}
+
+.vms-outreach-party-snapshot dl {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 10px;
+}
+
+.vms-outreach-party-snapshot dl > div {
+	min-width: 0;
+	padding: 10px;
+	background: #f6f7f7;
+	border-radius: 6px;
+}
+
+.vms-outreach-party-snapshot dt {
+	font-weight: 600;
+}
+
+.vms-outreach-party-snapshot dd {
+	margin: 4px 0 0;
+	overflow-wrap: anywhere;
+}
+
+.vms-outreach-party-warning {
+	margin-top: 6px;
+	color: #8a4b08;
+	font-weight: 600;
+}
+
+.vms-outreach-party-table td {
+	vertical-align: top;
+	overflow-wrap: anywhere;
+}
+
+@media (max-width: 782px) {
+	.vms-outreach-party-detail-grid,
+	.vms-outreach-party-snapshot dl {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.vms-outreach-party-inline-editor {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.vms-outreach-party-inline-editor label,
+	.vms-outreach-party-inline-editor input,
+	.vms-outreach-party-inline-editor select,
+	.vms-outreach-party-inline-editor button {
+		width: 100%;
+		max-width: 100%;
+	}
+
+	.vms-outreach-party-table thead {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+	}
+
+	.vms-outreach-party-table,
+	.vms-outreach-party-table tbody,
+	.vms-outreach-party-table tr,
+	.vms-outreach-party-table td {
+		display: block;
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	.vms-outreach-party-table tr {
+		padding: 8px 0;
+		border-bottom: 1px solid #dcdcde;
+	}
+
+	.vms-outreach-party-table td::before {
+		content: attr(data-label);
+		display: block;
+		margin-bottom: 3px;
+		font-weight: 600;
+	}
+}

@@ -1,5 +1,7 @@
 # Backstage Outreach
 
+Current release: **1.2.15**. This release adds the additive canonical Contacts & Partners foundation. Existing Contacts, reusable businesses, recipients, distributions, signed links, coupons, and delivery history remain authoritative for their current workflows.
+
 Backstage Outreach is the recovered Guest Pass Outreach workflow for Backstage
 Venue Manager 1.2.0 and newer. It is intentionally maintained as a companion
 plugin so the public Backstage Venue Manager package does not absorb the

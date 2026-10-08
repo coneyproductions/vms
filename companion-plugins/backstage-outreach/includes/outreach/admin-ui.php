@@ -6,7 +6,8 @@ if (!function_exists('vms_outreach_admin_sections')) {
 	{
 		return array(
 			'campaigns' => __('Campaigns', 'backstage-outreach'),
-			'contacts' => __('Contacts / Prospects', 'backstage-outreach'),
+			'directory' => __('Contacts & Partners', 'backstage-outreach'),
+			'contacts' => __('Legacy Contacts / Prospects', 'backstage-outreach'),
 			'suppression' => __('Suppression', 'backstage-outreach'),
 		);
 	}
@@ -342,7 +343,10 @@ if (!function_exists('vms_outreach_admin_actions_html')) {
 		$section = vms_outreach_current_admin_section();
 		$actions = array();
 
-		if ($section === 'contacts') {
+		if ($section === 'directory') {
+			$actions[] = '<a class="button vms-outreach-admin-action is-primary is-contacts" href="' . esc_url(backstage_outreach_party_admin_url(array('view' => 'new'))) . '#outreach-party-editor">' . esc_html__('New Person or Organization', 'backstage-outreach') . '</a>';
+			$actions[] = '<a class="button vms-outreach-admin-action is-secondary is-contacts" href="' . esc_url(backstage_outreach_party_admin_url()) . '#outreach-party-legacy-review">' . esc_html__('Review Historical Association', 'backstage-outreach') . '</a>';
+		} elseif ($section === 'contacts') {
 			$filter_args = vms_outreach_contacts_filter_args_from_request();
 			$actions[] = '<a class="button vms-outreach-admin-action is-primary is-contacts" href="' . esc_url(vms_outreach_contacts_form_url($filter_args)) . '" data-vms-open-section-target="' . esc_attr(vms_outreach_contacts_form_anchor()) . '">' . esc_html__('New Contact', 'backstage-outreach') . '</a>';
 			$actions[] = '<a class="button vms-outreach-admin-action is-secondary is-contacts" href="' . esc_url(vms_outreach_contacts_import_url($filter_args)) . '" data-vms-open-section-target="' . esc_attr(vms_outreach_contacts_import_anchor()) . '">' . esc_html__('Import CSV', 'backstage-outreach') . '</a>';
@@ -366,6 +370,8 @@ if (!function_exists('vms_outreach_admin_actions_label')) {
 	function vms_outreach_admin_actions_label(string $section): string
 	{
 		switch (vms_outreach_normalize_admin_section($section)) {
+			case 'directory':
+				return __('Directory Actions', 'backstage-outreach');
 			case 'contacts':
 				return __('Contact Actions', 'backstage-outreach');
 			default:
@@ -399,6 +405,10 @@ if (!function_exists('vms_outreach_render_admin_screen')) {
 		}
 		echo '</div>';
 
+		if ($section === 'directory') {
+			backstage_outreach_party_render_directory_screen();
+			return;
+		}
 		if ($section === 'contacts') {
 			vms_outreach_render_contacts_screen();
 			return;
