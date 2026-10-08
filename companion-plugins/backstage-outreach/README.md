@@ -162,6 +162,13 @@ the invitation editor through saved templates, personalized previews, clipboard
 copying, and UTF-8 email handoff. Subjects remain single-line, and the editor
 clarifies that Markdown markers are sent literally rather than rendered.
 
+Version 1.2.12 adds a compact, campaign-specific Business Contacts & Activity
+dashboard for reusable-business campaigns. Historical mail-system handoffs remain
+a read-only projection of BVM admission audit records, while manual outreach is
+stored in an additive Outreach-owned activity table. First-time email selection,
+explicit resend review, campaign progress, and Results navigation are now
+business-route aware; no individual invitation links are created by this workflow.
+
 Version 1.2.10 gives public business flyers fixed US Letter compositions that stay
 consistent between preview, print, and direct PDF download. Portrait full flyers
 stack proportional artwork above the offer. Landscape full flyers use a compact,

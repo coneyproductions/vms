@@ -256,6 +256,24 @@ if (!function_exists('vms_pass_outreach_campaign_display_status')) {
 		if (!is_array($summary)) {
 			$summary = array();
 		}
+		if (function_exists('backstage_outreach_is_reusable_business_campaign')
+			&& function_exists('backstage_outreach_business_contact_dashboard')
+			&& backstage_outreach_is_reusable_business_campaign($campaign)) {
+			$contact_dashboard = backstage_outreach_business_contact_dashboard(absint($campaign['id'] ?? 0));
+			$contact_summary = (array) ($contact_dashboard['summary'] ?? array());
+			$total_businesses = absint($contact_summary['total_businesses'] ?? 0);
+			$without_contact = absint($contact_summary['no_contact'] ?? 0);
+			$contacted = max(0, $total_businesses - $without_contact);
+			if (absint($contact_summary['follow_up_needed'] ?? 0) > 0 || absint($contact_summary['email_failed'] ?? 0) > 0) {
+				return array('key' => 'needs_attention', 'label' => __('Needs Attention', 'backstage-outreach'), 'variant' => 'failed');
+			}
+			if ($contacted > 0 && $without_contact > 0) {
+				return array('key' => 'outreach_in_progress', 'label' => __('Outreach in progress', 'backstage-outreach'), 'variant' => 'partially_sent');
+			}
+			if ($contacted > 0 && $without_contact === 0) {
+				return array('key' => 'outreach_recorded', 'label' => __('Outreach recorded', 'backstage-outreach'), 'variant' => 'complete');
+			}
+		}
 
 		$stored_status = sanitize_key((string) ($campaign['status'] ?? 'draft'));
 		$total = absint($summary['total_recipients'] ?? 0);
@@ -5350,18 +5368,36 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 						(string) (vms_pass_outreach_eligibility_labels()[(string) ($row['eligibility_mode'] ?? '')] ?? (string) ($row['eligibility_mode'] ?? '')),
 					));
 					$edit_url = vms_pass_outreach_admin_page_url(array('campaign_id' => $row_id));
-					$results_url = $edit_url . '#vms-outreach-delivery-status';
-					$delivery_line = function_exists('vms_pass_outreach_campaign_counts_line')
-						? vms_pass_outreach_campaign_counts_line($campaign_summary)
-						: sprintf(__('Recipients %d', 'backstage-outreach'), absint($campaign_summary['total_recipients'] ?? 0));
-					$results_line = function_exists('vms_pass_outreach_campaign_results_line')
-						? vms_pass_outreach_campaign_results_line($row, $campaign_summary, array('include_total_admissions' => false))
-						: sprintf(
-							__('Claimed %1$d · Checked in %2$d', 'backstage-outreach'),
-							absint($campaign_summary['claimed_recipients'] ?? 0),
-							absint($campaign_summary['admissions_checked_in'] ?? 0)
-						);
-					$results_popover_html = '<p class="vms-pass-floating-popover__eyebrow">' . esc_html__('Delivery & Results', 'backstage-outreach') . '</p><p class="vms-pass-floating-popover__counts"><strong>' . esc_html($delivery_line) . '</strong></p><p class="vms-pass-floating-popover__counts"><strong>' . esc_html($results_line) . '</strong></p><p class="vms-pass-floating-popover__next-step">' . esc_html($campaign_next_action_message($campaign_summary)) . '</p><div class="vms-pass-floating-popover__actions"><a class="button button-small" href="' . esc_url($results_url) . '">' . esc_html__('Open Delivery & Results', 'backstage-outreach') . '</a></div>';
+					$is_business_campaign = function_exists('backstage_outreach_is_reusable_business_campaign') && backstage_outreach_is_reusable_business_campaign($row);
+					$contact_dashboard = $is_business_campaign && function_exists('backstage_outreach_business_contact_dashboard') ? backstage_outreach_business_contact_dashboard($row_id) : array();
+					$contact_summary = (array) ($contact_dashboard['summary'] ?? array());
+					$business_results_anchor = absint($contact_summary['total_businesses'] ?? 0) > 0 ? '#backstage-outreach-business-contacts' : '#backstage-outreach-partners';
+					$results_url = $edit_url . ($is_business_campaign ? $business_results_anchor : '#vms-outreach-delivery-status');
+					$delivery_line = $is_business_campaign
+						? sprintf(
+							__('%1$d businesses · %2$d email handed off · %3$d manual contacts', 'backstage-outreach'),
+							absint($contact_summary['total_businesses'] ?? 0),
+							absint($contact_summary['email_handed_off'] ?? 0),
+							absint($contact_summary['manual_contacts'] ?? 0)
+						)
+						: (function_exists('vms_pass_outreach_campaign_counts_line')
+							? vms_pass_outreach_campaign_counts_line($campaign_summary)
+							: sprintf(__('Recipients %d', 'backstage-outreach'), absint($campaign_summary['total_recipients'] ?? 0)));
+					$results_line = $is_business_campaign
+						? sprintf(
+							__('%1$d no contact · %2$d follow-ups needed', 'backstage-outreach'),
+							absint($contact_summary['no_contact'] ?? 0),
+							absint($contact_summary['follow_up_needed'] ?? 0)
+						)
+						: (function_exists('vms_pass_outreach_campaign_results_line')
+							? vms_pass_outreach_campaign_results_line($row, $campaign_summary, array('include_total_admissions' => false))
+							: sprintf(
+								__('Claimed %1$d · Checked in %2$d', 'backstage-outreach'),
+								absint($campaign_summary['claimed_recipients'] ?? 0),
+								absint($campaign_summary['admissions_checked_in'] ?? 0)
+							));
+					$next_step = $is_business_campaign ? __('Open the business contact dashboard to log outreach, review history, and share personalized links.', 'backstage-outreach') : $campaign_next_action_message($campaign_summary);
+					$results_popover_html = '<p class="vms-pass-floating-popover__eyebrow">' . esc_html__('Delivery & Results', 'backstage-outreach') . '</p><p class="vms-pass-floating-popover__counts"><strong>' . esc_html($delivery_line) . '</strong></p><p class="vms-pass-floating-popover__counts"><strong>' . esc_html($results_line) . '</strong></p><p class="vms-pass-floating-popover__next-step">' . esc_html($next_step) . '</p><div class="vms-pass-floating-popover__actions"><a class="button button-small" href="' . esc_url($results_url) . '">' . esc_html__('Open Delivery & Results', 'backstage-outreach') . '</a></div>';
 					$passes_url = !empty($row['related_batch_id']) && function_exists('vms_pass_claims_admin_page_url')
 						? vms_pass_claims_admin_page_url(array('tab' => 'passes', 'batch_id' => (int) $row['related_batch_id']))
 					: '';

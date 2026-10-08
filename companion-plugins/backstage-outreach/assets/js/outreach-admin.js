@@ -133,6 +133,12 @@
       window.requestAnimationFrame(function () {
         invalid.focus({ preventScroll: true });
       });
+	  return;
+	}
+	if (target.hasAttribute && target.hasAttribute('tabindex') && target.focus) {
+	  window.requestAnimationFrame(function () {
+		target.focus({ preventScroll: true });
+	  });
     }
   }
 
@@ -460,6 +466,79 @@
     positionActionMenu();
   }
 
+  function contactDashboard() {
+    return document.querySelector('#vms-pass-claims-wrap [data-vms-business-contact-dashboard]');
+  }
+
+  function syncContactEmailSelection() {
+    var dashboard = contactDashboard();
+    if (!dashboard) {
+      return;
+    }
+    var eligible = Array.prototype.slice.call(dashboard.querySelectorAll('[data-vms-email-eligible]'));
+    var selected = eligible.filter(function (checkbox) { return checkbox.checked; });
+    var selectAll = dashboard.querySelector('[data-vms-select-all-eligible]');
+    var count = dashboard.querySelector('[data-vms-email-selected-count]');
+    var submit = dashboard.querySelector('[data-vms-email-submit]');
+    if (selectAll) {
+      selectAll.checked = eligible.length > 0 && selected.length === eligible.length;
+      selectAll.indeterminate = selected.length > 0 && selected.length < eligible.length;
+    }
+    if (count) {
+      count.textContent = selected.length === 1 ? '1 recipient selected' : selected.length + ' recipients selected';
+    }
+    if (submit) {
+      submit.disabled = selected.length === 0;
+    }
+  }
+
+  function syncContactDashboard() {
+    var dashboard = contactDashboard();
+    if (!dashboard) {
+      return;
+    }
+    var search = dashboard.querySelector('[data-vms-contact-search]');
+    var filter = dashboard.querySelector('[data-vms-contact-filter]');
+    var sort = dashboard.querySelector('[data-vms-contact-sort]');
+    var list = dashboard.querySelector('.vms-pass-contact-list');
+    if (!list) {
+      return;
+    }
+    var query = String(search ? search.value : '').trim().toLowerCase();
+    var status = String(filter ? filter.value : 'attention');
+    var order = String(sort ? sort.value : 'attention');
+    var cards = Array.prototype.slice.call(list.querySelectorAll('[data-contact-card]'));
+    cards.sort(function (left, right) {
+      if (order === 'name') {
+        return String(left.dataset.contactName || '').localeCompare(String(right.dataset.contactName || ''));
+      }
+      if (order === 'recent') {
+        return String(right.dataset.contactTime || '').localeCompare(String(left.dataset.contactTime || ''));
+      }
+      var rank = Number(left.dataset.contactRank || 0) - Number(right.dataset.contactRank || 0);
+      return rank || String(left.dataset.contactName || '').localeCompare(String(right.dataset.contactName || ''));
+    });
+    var visible = 0;
+    cards.forEach(function (card) {
+      list.appendChild(card);
+      var matchesText = !query || String(card.dataset.contactSearch || '').indexOf(query) !== -1;
+      var matchesStatus = status === 'all' || status === 'attention'
+        || (status === 'no_contact' && card.dataset.contactNoContact === '1')
+        || (status === 'follow_up' && card.dataset.contactFollowUp === '1')
+        || (status === 'email_handed_off' && card.dataset.contactEmail === '1')
+        || (status === 'manual' && card.dataset.contactManual === '1');
+      card.hidden = !(matchesText && matchesStatus);
+      if (!card.hidden) {
+        visible += 1;
+      }
+    });
+    var count = dashboard.querySelector('[data-vms-contact-visible-count]');
+    if (count) {
+      count.textContent = visible === 1 ? '1 business shown' : visible + ' businesses shown';
+    }
+    syncContactEmailSelection();
+  }
+
   document.addEventListener('click', function (event) {
     var helpToggle = event.target && event.target.closest ? event.target.closest('#vms-pass-claims-wrap .vms-pass-help__toggle') : null;
     if (helpToggle) {
@@ -680,7 +759,35 @@
 
     if (target.matches('#vms-pass-claims-wrap [data-vms-contact-audience-select]')) {
       syncContactAudienceSelectAll(target.closest('table'));
+	  return;
+	}
+
+	if (target.matches('#vms-pass-claims-wrap [data-vms-select-all-eligible]')) {
+	  var dashboard = contactDashboard();
+	  if (dashboard) {
+		dashboard.querySelectorAll('[data-vms-email-eligible]').forEach(function (checkbox) {
+		  checkbox.checked = !!target.checked;
+		});
+	  }
+	  syncContactEmailSelection();
+	  return;
+	}
+
+	if (target.matches('#vms-pass-claims-wrap [data-vms-email-eligible]')) {
+	  syncContactEmailSelection();
+	  return;
+	}
+
+	if (target.matches('#vms-pass-claims-wrap [data-vms-contact-filter], #vms-pass-claims-wrap [data-vms-contact-sort]')) {
+	  syncContactDashboard();
     }
+  });
+
+  document.addEventListener('input', function (event) {
+	var target = event.target;
+	if (target && target.matches && target.matches('#vms-pass-claims-wrap [data-vms-contact-search]')) {
+	  syncContactDashboard();
+	}
   });
 
   if (document.readyState === 'loading') {
@@ -690,6 +797,7 @@
       syncAllContactAudienceSelectAll();
       syncFlyerLayoutCompatibility(null);
       syncFlyerLayoutOverride();
+	  syncContactDashboard();
     }, { once: true });
   } else {
     initStickyTables();
@@ -697,6 +805,7 @@
     syncAllContactAudienceSelectAll();
     syncFlyerLayoutCompatibility(null);
     syncFlyerLayoutOverride();
+	syncContactDashboard();
   }
 
   window.addEventListener('load', syncAllStickyTables);
@@ -709,6 +818,7 @@
     }
     syncAllStickyTables();
     syncAllContactAudienceSelectAll();
+	syncContactDashboard();
   });
   window.addEventListener('resize', function () {
     closeActionMenu();
@@ -719,6 +829,7 @@
     scrollToAdminTarget(target, true);
     syncAllStickyTables();
     syncAllContactAudienceSelectAll();
+	syncContactDashboard();
   });
   document.addEventListener('scroll', function () {
     if (actionMenuTrigger) {

@@ -22,6 +22,7 @@ if ($mode === 'cleanup') {
 			));
 			foreach ((array) $campaign_ids as $campaign_id) {
 				$campaign_id = absint($campaign_id);
+				$wpdb->delete(backstage_outreach_business_table('contact_activities'), array('campaign_id' => $campaign_id));
 				$wpdb->query($wpdb->prepare(
 					'DELETE FROM %i WHERE details LIKE %s',
 					bvmgr_admission_table_audit(),

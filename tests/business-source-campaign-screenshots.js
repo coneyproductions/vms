@@ -49,10 +49,9 @@ function check(condition, message) {
 	  await page.goto(new URL('/wp-login.php', fixture.admin_url).toString(), { waitUntil: 'domcontentloaded' });
 	  await page.locator('#user_login').fill(user);
 	  await page.locator('#user_pass').fill(pass);
-	  await Promise.all([
-		page.waitForURL((url) => !url.pathname.endsWith('/wp-login.php'), { waitUntil: 'domcontentloaded' }),
-		page.locator('#loginform').evaluate((form) => form.submit()),
-	  ]);
+	  await page.locator('#wp-submit').click();
+	  await page.waitForLoadState('domcontentloaded');
+	  check(!new URL(page.url()).pathname.endsWith('/wp-login.php'), 'browser fixture login failed.');
 	  loginStorageState = await context.storageState();
 	}
     await page.goto(fixture.admin_url, { waitUntil: 'domcontentloaded' });
@@ -285,6 +284,7 @@ function check(condition, message) {
       check(await qrPanel.locator('input[name="expires_at"]').inputValue() === '2031-04-05T18:45', 'mobile: saved/reloaded Step 5 expiry did not match the reviewed site-timezone value.');
       const resultRows = page.locator('[data-vms-tour="outreach-business-results"] tbody tr');
       check(await resultRows.count() === 35, 'mobile: expected 35 saved reusable business links.');
+      await resultRows.first().locator('xpath=ancestor::details').evaluate((details) => { details.open = true; });
       const reusableLinks = await resultRows.locator('input[data-backstage-copy-value]').evaluateAll((inputs) => inputs.map((input) => input.value));
       const customerLinks = reusableLinks.filter((value) => value.includes('/guest-pass/partner/'));
       const flyerLinks = reusableLinks.filter((value) => value.includes('/guest-pass/business-flyer/'));
@@ -343,16 +343,17 @@ function check(condition, message) {
       await page.waitForLoadState('domcontentloaded');
 	  check(await page.locator('#backstage-outreach-business-share textarea[name="business_share_message"]').inputValue() === multilineIntroduction, 'mobile: saved multiline business introduction did not survive reload exactly.');
 	  check(await page.locator('#backstage-outreach-business-share').getByText('Emails are plain text. Paragraphs and blank lines are preserved', { exact: false }).count() === 1, 'mobile: plain-text and Markdown guidance is missing.');
-      const shareReview = page.locator('#backstage-outreach-business-share-review');
-      const shareRows = shareReview.locator('tbody tr');
+      const shareReview = page.locator('[data-vms-business-contact-dashboard]');
+      const shareRows = shareReview.locator('[data-contact-card]');
       check(await shareRows.count() === 35, 'mobile: personalized sharing did not include all 35 linked businesses.');
-      check(await shareRows.getByText('Not provided', { exact: true }).count() === 14, 'mobile: personalized sharing did not retain 14 copy-only businesses without email.');
-      check(await shareRows.locator('textarea').first().inputValue().then((value) => value.includes('ひらがな é\n\nFirst paragraph') && value.includes('\n\nSecond paragraph keeps a blank line.\n\n**Bold markers stay literal.**\n\nOffer:') && value.includes('Customer offer URL:') && value.includes('Printable flyer URL:') && value.includes('does not reserve admissions')), 'mobile: personalized message omitted multiline formatting, UTF-8, links, or shared-capacity qualification.');
-      const firstMessage = await shareRows.locator('textarea').first().inputValue();
+      check(await shareRows.locator('.vms-pass-contact-card__select').getByText('Copy only', { exact: true }).count() === 14, 'mobile: personalized sharing did not retain 14 copy-only businesses without email.');
+      await shareRows.first().evaluate((details) => { details.open = true; });
+      check(await shareRows.first().locator('textarea[readonly]').inputValue().then((value) => value.includes('ひらがな é\n\nFirst paragraph') && value.includes('\n\nSecond paragraph keeps a blank line.\n\n**Bold markers stay literal.**\n\nOffer:') && value.includes('Customer offer URL:') && value.includes('Printable flyer URL:') && value.includes('does not reserve admissions')), 'mobile: personalized message omitted multiline formatting, UTF-8, links, or shared-capacity qualification.');
+      const firstMessage = await shareRows.first().locator('textarea[readonly]').inputValue();
       check(firstMessage.includes(customerLinks[0]) && firstMessage.includes(flyerLinks[0]), 'mobile: first business message did not use that business’s own offer and flyer links.');
 	  await shareRows.first().getByRole('button', { name: 'Copy message' }).click();
 	  check(await page.evaluate(() => navigator.clipboard.readText()) === firstMessage, 'mobile: copied business invitation did not retain the exact multiline preview body.');
-      check(await shareReview.getByRole('button', { name: 'Hand Off Reviewed Business Emails' }).isDisabled(), 'mobile: draft campaign allowed business email delivery before activation.');
+      check(await shareReview.getByRole('button', { name: 'Hand Off Selected Business Emails' }).isDisabled(), 'mobile: draft campaign allowed business email delivery before activation.');
       publicFlyerUrl = flyerLinks[0] || '';
       publicOfferUrl = customerLinks[0] || '';
       const campaignStatus = page.locator('select[name="status"]');
@@ -368,6 +369,56 @@ function check(condition, message) {
       await page.goto(new URL(activationResponse.headers().location, fixture.admin_url).toString(), { waitUntil: 'domcontentloaded' });
       check(await page.locator('select[name="status"]').inputValue() === 'active', 'mobile: disposable campaign could not be activated for public flyer inspection.');
       createdCampaignAdminUrl = page.url();
+
+      const contactDashboard = page.locator('[data-vms-business-contact-dashboard]');
+      await contactDashboard.waitFor({ state: 'visible' });
+      check(await contactDashboard.getByRole('heading', { name: 'Business Contacts & Activity' }).count() === 1, 'mobile: dedicated business-contact dashboard is missing.');
+      check(await contactDashboard.locator('[data-contact-card]').count() === 35, 'mobile: contact dashboard did not include all 35 linked businesses.');
+      check(await contactDashboard.locator('[data-contact-card][open]').count() === 0, 'mobile: business contact cards are not collapsed by default.');
+      check(await contactDashboard.locator('[data-vms-email-eligible]').count() === 21, 'mobile: first-time email selection did not expose exactly 21 eligible fixture addresses.');
+      check(await contactDashboard.locator('[data-vms-email-eligible]:checked').count() === 0, 'mobile: first-time email recipients were selected automatically.');
+      check(await contactDashboard.locator('[data-vms-email-submit]').isDisabled(), 'mobile: email handoff was enabled before an explicit selection.');
+      await contactDashboard.locator('[data-vms-select-all-eligible]').check();
+      check(await contactDashboard.locator('[data-vms-email-eligible]:checked').count() === 21, 'mobile: Select All Eligible did not select exactly the email-capable businesses.');
+      check(await contactDashboard.locator('[data-vms-email-selected-count]').innerText() === '21 recipients selected', 'mobile: selected-recipient feedback is inaccurate.');
+      await contactDashboard.locator('[data-vms-select-all-eligible]').uncheck();
+      check(await contactDashboard.locator('[data-vms-email-eligible]:checked').count() === 0 && await contactDashboard.locator('[data-vms-email-submit]').isDisabled(), 'mobile: clearing Select All Eligible did not return the handoff to a safe state.');
+
+      const firstContactCard = contactDashboard.locator('[data-contact-card]').first();
+      const contactCardId = await firstContactCard.getAttribute('id');
+      await firstContactCard.evaluate((details) => { details.open = true; });
+      check(await firstContactCard.getByText('No contact activity recorded.', { exact: true }).count() === 1, 'mobile: unopened copy/link activity was incorrectly recorded as contact.');
+      await firstContactCard.getByRole('button', { name: 'Copy offer link' }).click();
+      check(await firstContactCard.getByText('No contact activity recorded.', { exact: true }).count() === 1, 'mobile: copying an offer link incorrectly logged contact activity.');
+      const firstLogForm = firstContactCard.locator('.vms-pass-contact-log-form');
+      await firstLogForm.locator('select[name="contact_method"]').selectOption('phone');
+      await firstLogForm.locator('select[name="contact_outcome"]').selectOption('message_sent');
+      await firstLogForm.locator('textarea[name="contact_notes"]').fill('Called Café contact — first attempt.');
+      await firstLogForm.getByRole('button', { name: 'Save Contact Activity' }).click();
+      await page.waitForLoadState('domcontentloaded');
+      check(new URL(page.url()).hash === `#${contactCardId}`, 'mobile: contact logging did not return to the relevant business card.');
+      let loggedCard = page.locator(`#${contactCardId}`);
+      check(await loggedCard.getByText('Phone — Message sent', { exact: true }).count() === 1, 'mobile: first manual contact did not survive reload.');
+      await loggedCard.evaluate((details) => { details.open = true; });
+      const secondLogForm = loggedCard.locator('.vms-pass-contact-log-form');
+      await secondLogForm.locator('select[name="contact_method"]').selectOption('instagram');
+      await secondLogForm.locator('select[name="contact_outcome"]').selectOption('follow_up_needed');
+      await secondLogForm.locator('textarea[name="contact_notes"]').fill('Follow up tomorrow… ひらがな é');
+      await secondLogForm.getByRole('button', { name: 'Save Contact Activity' }).click();
+      await page.waitForLoadState('domcontentloaded');
+      loggedCard = page.locator(`#${contactCardId}`);
+      check(await loggedCard.getByText('Instagram — Follow-up needed', { exact: true }).count() === 1, 'mobile: second manual contact method did not survive reload.');
+      check(await loggedCard.locator('.vms-pass-contact-history li').count() === 2, 'mobile: chronological manual contact history did not preserve both entries.');
+      check(await page.locator('[data-vms-business-contact-dashboard]').getByText('Follow-up needed', { exact: true }).count() >= 1, 'mobile: follow-up status was not promoted in the dashboard.');
+      const refreshedDashboard = page.locator('[data-vms-business-contact-dashboard]');
+      await refreshedDashboard.locator('[data-vms-contact-search]').fill('no matching fixture business');
+      check(await refreshedDashboard.locator('[data-contact-card]:visible').count() === 0, 'mobile: contact search did not filter compact cards.');
+      check(await refreshedDashboard.locator('[data-vms-contact-visible-count]').innerText() === '0 businesses shown', 'mobile: filtered business count is inaccurate.');
+      await refreshedDashboard.locator('[data-vms-contact-search]').fill('');
+      await refreshedDashboard.locator('[data-vms-contact-filter]').selectOption('follow_up');
+      check(await refreshedDashboard.locator('[data-contact-card]:visible').count() === 1, 'mobile: follow-up filter did not isolate the logged business.');
+      await refreshedDashboard.locator('[data-vms-contact-filter]').selectOption('all');
+      check(await refreshedDashboard.locator('[data-contact-card]:visible').count() === 35, 'mobile: All businesses filter did not restore the full fixture list.');
     }
 
     const geometry = await page.evaluate(() => {
@@ -566,6 +617,7 @@ function check(condition, message) {
 	await noArtworkPage.screenshot({ path: path.join(outputDir, 'desktop-public-flyer-default.png'), fullPage: true });
 
   await removalPage.goto(createdCampaignAdminUrl, { waitUntil: 'domcontentloaded' });
+  await removalPage.locator('.vms-pass-secondary-business-controls').evaluate((details) => { details.open = true; });
   const pauseUrl = await removalPage.getByRole('link', { name: 'Pause' }).first().getAttribute('href');
   const pauseResponse = await removalPage.request.get(pauseUrl, { maxRedirects: 0 });
   check(pauseResponse.status() === 302, 'paused-state setup did not use the protected lifecycle action.');
@@ -573,6 +625,7 @@ function check(condition, message) {
   check(pausedResponse && pausedResponse.status() === 410, 'paused flyer did not return HTTP 410.');
   check(await noArtworkPage.getByRole('heading', { name: 'Offer unavailable' }).count() === 1 && await noArtworkPage.getByRole('link', { name: 'Visit the venue homepage' }).count() === 1, 'paused flyer did not show the branded plain-language unavailable state.');
   await removalPage.goto(createdCampaignAdminUrl, { waitUntil: 'domcontentloaded' });
+  await removalPage.locator('.vms-pass-secondary-business-controls').evaluate((details) => { details.open = true; });
   const resumeUrl = await removalPage.getByRole('link', { name: 'Resume' }).first().getAttribute('href');
   const resumeResponse = await removalPage.request.get(resumeUrl, { maxRedirects: 0 });
   check(resumeResponse.status() === 302, 'paused fixture link could not be restored after the state check.');

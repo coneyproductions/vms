@@ -677,7 +677,97 @@ try {
 	backstage_business_source_runtime_assert(isset($sent_map[(int) $first_distribution['id']]), 'Business delivery audit was not recognized for duplicate-send prevention.');
 	$duplicate_delivery = backstage_outreach_attempt_business_share_email($first_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), $delivery_review, $sent_map);
 	backstage_business_source_runtime_assert((string) ($duplicate_delivery['status'] ?? '') === 'skipped' && (string) ($duplicate_delivery['code'] ?? '') === 'already_sent', 'A retried business email was not blocked after its sent audit.');
+	$resend_delivery = backstage_outreach_attempt_business_share_email($first_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), $delivery_review, $sent_map, true);
+	backstage_business_source_runtime_assert((string) ($resend_delivery['status'] ?? '') === 'handed_off', 'The explicit resend adapter did not permit a separately audited mocked handoff.');
 	backstage_business_source_runtime_assert((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE campaign_id=%d', $recipient_table, $campaign_id)) === 0, 'Business sharing created individual Outreach recipients.');
+
+	$email_distributions = array_values(array_filter($updated_distributions, static fn(array $row): bool => sanitize_email((string) ($row['email'] ?? '')) !== ''));
+	foreach ($email_distributions as $email_distribution) {
+		if ((int) $email_distribution['id'] === (int) $first_distribution['id']) {
+			continue;
+		}
+		bvmgr_admission_audit_log(0, null, 'outreach_business_share_email_handed_off', $user_id, 'admin', array(
+			'campaign_id' => $campaign_id,
+			'distribution_id' => (int) $email_distribution['id'],
+			'business_id' => (int) $email_distribution['business_id'],
+			'email' => (string) $email_distribution['email'],
+			'template_digest' => hash('sha256', 'historical-fixture'),
+		));
+	}
+	$historical_dashboard = backstage_outreach_business_contact_dashboard($campaign_id, $updated_distributions);
+	backstage_business_source_runtime_assert((int) $historical_dashboard['summary']['total_businesses'] === 35 && (int) $historical_dashboard['summary']['email_handed_off'] === 21 && (int) $historical_dashboard['summary']['no_contact'] === 14, 'Historical audit projection did not produce the required 21 handed-off / 14 no-contact dashboard state.');
+	$historical_status = vms_pass_outreach_campaign_display_status((array) $created['campaign'], vms_pass_outreach_campaign_summary((array) $created['campaign']));
+	backstage_business_source_runtime_assert((string) $historical_status['label'] === 'Outreach in progress', 'Reusable-business campaign status did not reflect partial outreach.');
+	$historical_event_keys = array_column((array) $historical_dashboard['events'], 'event_key');
+	backstage_business_source_runtime_assert(count($historical_event_keys) === count(array_unique($historical_event_keys)), 'Historical email audits were duplicated in the projected contact history.');
+
+	$manual_distribution = null;
+	foreach ($updated_distributions as $candidate) {
+		if (sanitize_email((string) ($candidate['email'] ?? '')) === '') {
+			$manual_distribution = $candidate;
+			break;
+		}
+	}
+	backstage_business_source_runtime_assert(is_array($manual_distribution), 'Could not identify a copy-only business for manual contact tests.');
+	$manual_one = backstage_outreach_business_contact_insert(array(
+		'campaign_id' => $campaign_id,
+		'distribution_id' => (int) $manual_distribution['id'],
+		'business_id' => (int) $manual_distribution['business_id'],
+		'method' => 'facebook_messenger',
+		'outcome' => 'message_sent',
+		'activity_at' => '2031-04-05 17:30:00',
+		'notes' => 'Café — first contact',
+		'operator_user_id' => $user_id,
+		'request_key' => hash('sha256', $marker . '|manual-one'),
+	));
+	$manual_two_payload = array(
+		'campaign_id' => $campaign_id,
+		'distribution_id' => (int) $manual_distribution['id'],
+		'business_id' => (int) $manual_distribution['business_id'],
+		'method' => 'phone',
+		'outcome' => 'follow_up_needed',
+		'activity_at' => '2031-04-05 17:30:00',
+		'notes' => 'Asked for a follow-up call.',
+		'operator_user_id' => $user_id,
+		'request_key' => hash('sha256', $marker . '|manual-two'),
+	);
+	$manual_two = backstage_outreach_business_contact_insert($manual_two_payload);
+	$manual_duplicate = backstage_outreach_business_contact_insert($manual_two_payload);
+	backstage_business_source_runtime_assert($manual_one === 'inserted' && $manual_two === 'inserted' && $manual_duplicate === 'duplicate', 'Manual contact insertion or duplicate-submit protection failed.');
+	$manual_dashboard = backstage_outreach_business_contact_dashboard($campaign_id, $updated_distributions);
+	$manual_state = (array) $manual_dashboard['states'][(int) $manual_distribution['id']];
+	backstage_business_source_runtime_assert(count((array) $manual_state['history']) === 2 && (string) $manual_state['history'][0]['method'] === 'phone' && !empty($manual_state['follow_up_needed']), 'Multiple manual methods did not survive reload in chronological order or retain follow-up state.');
+	backstage_business_source_runtime_assert((int) $manual_dashboard['summary']['manual_contacts'] === 2 && (int) $manual_dashboard['summary']['no_contact'] === 13 && (int) $manual_dashboard['summary']['follow_up_needed'] === 1, 'Manual contact dashboard totals are inaccurate.');
+	$before_copy_count = count(backstage_outreach_business_contact_events($campaign_id));
+	backstage_outreach_business_share_context((array) $manual_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), (string) $reloaded_template['subject'], (string) $reloaded_template['message']);
+	backstage_business_source_runtime_assert(count(backstage_outreach_business_contact_events($campaign_id)) === $before_copy_count, 'Message/link preview incorrectly logged contact activity.');
+	$wpdb->insert(backstage_outreach_business_table('contact_activities'), array(
+		'campaign_id' => $campaign_id + 987654,
+		'distribution_id' => (int) $manual_distribution['id'],
+		'business_id' => (int) $manual_distribution['business_id'],
+		'method' => 'sms',
+		'outcome' => 'attempted',
+		'activity_at' => '2031-04-07 10:00:00',
+		'notes' => 'Unrelated campaign fixture',
+		'operator_user_id' => $user_id,
+		'request_key' => hash('sha256', $marker . '|other-campaign'),
+		'created_at' => $now,
+	));
+	backstage_business_source_runtime_assert(count(backstage_outreach_business_manual_contact_events($campaign_id)) === 2, 'Manual activity from another campaign leaked into this dashboard.');
+	$initial_review = array('mode' => 'initial', 'token' => backstage_outreach_business_review_token(), 'subject' => (string) $reloaded_template['subject'], 'message' => (string) $reloaded_template['message'], 'configuration_digest' => backstage_outreach_business_share_configuration_digest((array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), $updated_distributions), 'reviewed_at' => time());
+	ob_start();
+	backstage_outreach_render_business_contact_dashboard((array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), $updated_distributions, $initial_review);
+	$dashboard_html = (string) ob_get_clean();
+	backstage_business_source_runtime_assert(substr_count($dashboard_html, 'data-contact-card') === 35 && str_contains($dashboard_html, 'Business Contacts &amp; Activity') && str_contains($dashboard_html, 'Select All Eligible'), 'Compact dashboard did not render all 35 collapsed businesses or safe selection controls.');
+	backstage_business_source_runtime_assert(str_contains($dashboard_html, 'Café — first contact') && str_contains($dashboard_html, 'Copy only') && str_contains($dashboard_html, 'Previously handed off'), 'Dashboard history, UTF-8, or email-state distinctions were lost.');
+	$synthetic_rows = array();
+	for ($index = 1; $index <= 200; $index++) {
+		$synthetic_rows[] = array('id' => 900000 + $index, 'business_id' => 800000 + $index, 'business_name' => 'Scale Business ' . $index);
+	}
+	$scale_dashboard = backstage_outreach_business_contact_dashboard($campaign_id + 123456, $synthetic_rows);
+	backstage_business_source_runtime_assert((int) $scale_dashboard['summary']['total_businesses'] === 200 && (int) $scale_dashboard['summary']['no_contact'] === 200, 'Dashboard aggregation did not remain accurate at 200 businesses.');
+	$business_status = vms_pass_outreach_campaign_display_status((array) $created['campaign'], vms_pass_outreach_campaign_summary((array) $created['campaign']));
+	backstage_business_source_runtime_assert((string) $business_status['label'] === 'Needs Attention', 'A saved follow-up did not surface as a reusable-business campaign attention state.');
 
 	echo "Business Source campaign runtime PASS\n";
 	echo wp_json_encode(array(
@@ -689,6 +779,10 @@ try {
 		'personalized_business_messages' => 35,
 		'email_eligible_businesses' => 21,
 		'copy_only_businesses' => 14,
+		'projected_email_handoffs' => 21,
+		'manual_contact_entries' => 2,
+		'follow_ups_needed' => 1,
+		'dashboard_scale_rows' => 200,
 		'ordinary_individual_links_generated' => 3,
 		'new_definition_individual_claim_links' => 0,
 		'complimentary_claim_internal_tokens' => 1,
@@ -718,12 +812,15 @@ try {
 		delete_transient(backstage_outreach_campaign_business_form_key($campaign_id));
 		delete_transient(backstage_outreach_campaign_business_share_key($campaign_id));
 		delete_option(backstage_outreach_business_share_template_key($campaign_id));
+		$wpdb->delete(backstage_outreach_business_table('contact_activities'), array('campaign_id' => $campaign_id));
+		$wpdb->delete(backstage_outreach_business_table('contact_activities'), array('campaign_id' => $campaign_id + 987654));
 		$wpdb->query($wpdb->prepare(
-			'DELETE FROM %i WHERE action IN (%s,%s,%s) AND details LIKE %s',
+			'DELETE FROM %i WHERE action IN (%s,%s,%s,%s) AND details LIKE %s',
 			bvmgr_admission_table_audit(),
 			'outreach_business_share_email_handed_off',
 			'outreach_business_share_email_sent',
 			'outreach_business_share_email_failed',
+			'outreach_business_share_email_skipped',
 			'%' . $wpdb->esc_like('"campaign_id":' . $campaign_id) . '%'
 		));
 		$wpdb->delete(backstage_outreach_business_table('distribution_claims'), array('campaign_id' => $campaign_id));
