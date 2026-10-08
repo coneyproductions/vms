@@ -177,6 +177,14 @@ handoff results make recipient intent explicit while preserving audit and replay
 protections. Established business-link settings and invitation-template editing are
 secondary disclosures; they remain independent from email recipient selection.
 
+Version 1.2.14 separates an existing reusable-business offer batch from a new-batch
+draft. Opening the new setup clears only the browser selection, restores editable
+draft limits, preserves failed-review values, and leaves the existing batch
+untouched until a new definition is explicitly confirmed. Active membership counts
+also explain when a Source has no reusable businesses to review. Individual-recipient
+campaigns remain complimentary Guest Pass invitations; paid recipient checkout is
+not exposed without a distinct supported redemption and attribution architecture.
+
 Version 1.2.10 gives public business flyers fixed US Letter compositions that stay
 consistent between preview, print, and direct PDF download. Portrait full flyers
 stack proportional artwork above the offer. Landscape full flyers use a compact,

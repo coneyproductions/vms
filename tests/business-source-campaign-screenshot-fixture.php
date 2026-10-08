@@ -207,6 +207,14 @@ $wpdb->insert(bvmgr_admission_table_pass_sources(), array(
 ));
 $existing_source_id = (int) $wpdb->insert_id;
 $extra_source_ids[] = $existing_source_id;
+$wpdb->insert(bvmgr_admission_table_pass_sources(), array(
+	'source_name' => $marker . ' Zero Reusable Businesses',
+	'status' => 'active',
+	'created_by' => $user_id,
+	'created_at' => $now,
+));
+$empty_source_id = (int) $wpdb->insert_id;
+$extra_source_ids[] = $empty_source_id;
 $insert_batch = static function (int $fixture_source_id, string $name, string $status, string $value_type, float $value_amount) use ($wpdb, $user_id, $now): int {
 	$wpdb->insert(bvmgr_admission_table_pass_batches(), array(
 		'source_id' => $fixture_source_id,
@@ -265,6 +273,7 @@ $fixture = array(
 	'source_id' => $source_id,
 	'no_eligible_source_id' => $source_id,
 	'existing_source_id' => $existing_source_id,
+	'empty_source_id' => $empty_source_id,
 	'existing_free_batch_id' => $existing_free_batch_id,
 	'existing_paid_batch_id' => $existing_paid_batch_id,
 	'unrelated_batch_id' => $existing_free_batch_id,

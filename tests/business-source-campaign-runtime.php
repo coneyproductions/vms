@@ -265,10 +265,37 @@ try {
 		'Could not link a business to the no-eligible-batch Source.'
 	);
 
+	$failed_review_raw = array(
+		'recipient_source_mode' => 'business_source',
+		'tracking_category_mode' => 'existing',
+		'related_source_id' => $source_id,
+		'related_batch_id' => $batch_id,
+		'business_campaign_name' => $marker . ' failed review campaign',
+		'business_batch_name' => $marker . ' preserved 50 percent batch',
+		'business_batch_offer_type' => 'percent',
+		'business_batch_offer_amount' => '50',
+		'business_batch_admissions_per_link' => '2',
+		'business_batch_total_admission_cap' => '',
+		'business_batch_per_business_admission_cap' => '4',
+		'business_batch_validity_type' => 'date_range',
+		'business_batch_start_date' => '2026-10-01',
+		'business_batch_end_date' => '2026-10-31',
+		'business_batch_expires_at' => '2026-10-31T23:59',
+	);
+	$failed_review = vms_pass_outreach_prepare_business_batch_review($failed_review_raw, $user_id);
+	backstage_business_source_runtime_assert(is_wp_error($failed_review) && $failed_review->get_error_code() === 'missing_business_batch_capacity', 'A missing new-batch capacity did not fail explicitly.');
+	$failed_flash_payload = vms_pass_outreach_business_batch_flash_payload($failed_review_raw);
+	$failed_form_payload = vms_pass_outreach_business_batch_form_payload($failed_review_raw);
+	backstage_business_source_runtime_assert(absint($failed_flash_payload['related_batch_id'] ?? -1) === 0, 'A failed new-batch review returned to the previously selected existing batch.');
+	backstage_business_source_runtime_assert((string) ($failed_flash_payload['campaign_name'] ?? '') === $marker . ' failed review campaign', 'A failed new-batch review lost the campaign draft.');
+	backstage_business_source_runtime_assert((string) ($failed_form_payload['business_batch_offer_type'] ?? '') === 'percent' && (string) ($failed_form_payload['business_batch_offer_amount'] ?? '') === '50', 'A failed new-batch review lost the intended paid offer.');
+	backstage_business_source_runtime_assert((string) ($failed_form_payload['business_batch_start_date'] ?? '') === '2026-10-01' && (string) ($failed_form_payload['business_batch_expires_at'] ?? '') === '2026-10-31T23:59', 'A failed new-batch review lost its dates or expiry.');
+
 	$new_batch_review = vms_pass_outreach_prepare_business_batch_review(array(
 		'recipient_source_mode' => 'business_source',
 		'tracking_category_mode' => 'existing',
 		'related_source_id' => $source_id,
+		'related_batch_id' => $batch_id,
 		'business_campaign_name' => $marker . ' preserved Café campaign',
 		'business_batch_name' => $marker . ' reviewed batch',
 		'business_batch_offer_type' => 'percent',
@@ -285,6 +312,7 @@ try {
 		'business_batch_notes' => 'Reviewed explicitly — no generated claim links.',
 	), $user_id);
 	backstage_business_source_runtime_assert(is_array($new_batch_review), 'Explicit new-batch review failed.');
+	backstage_business_source_runtime_assert(absint($new_batch_review['form_payload']['related_batch_id'] ?? -1) === 0, 'New-batch review remained disguised as the previously selected existing batch.');
 	backstage_business_source_runtime_assert((string) ($new_batch_review['form_payload']['campaign_name'] ?? '') === $marker . ' preserved Café campaign', 'Campaign draft was not preserved through batch review.');
 	backstage_business_source_runtime_assert((int) ($new_batch_review['per_business_admission_cap'] ?? 0) === 8 && (int) ($new_batch_review['form_payload']['business_admission_cap'] ?? 0) === 8, 'Reviewed per-business admission limit was not preserved for QR setup.');
 	backstage_business_source_runtime_assert((int) ($new_batch_review['batch_payload']['quantity'] ?? -1) === 0, 'Definition-only review did not retain a true zero individual-link quantity.');
