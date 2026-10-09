@@ -10,6 +10,7 @@
 defined('ABSPATH') || exit;
 
 const BACKSTAGE_OUTREACH_DISCOUNT_SESSION_KEY = 'backstage_outreach_discount_offer';
+const BACKSTAGE_OUTREACH_DISCOUNT_SUPPRESSION_SESSION_KEY = 'backstage_outreach_discount_suppression';
 const BACKSTAGE_OUTREACH_COUPON_MANAGED_META = '_backstage_outreach_managed';
 const BACKSTAGE_OUTREACH_COUPON_DISTRIBUTION_META = '_backstage_outreach_distribution_id';
 const BACKSTAGE_OUTREACH_COUPON_CONFIG_HASH_META = '_backstage_outreach_configuration_hash';
@@ -449,6 +450,7 @@ function backstage_outreach_discount_session_set(array $distribution, string $ra
 		'token_hash' => hash('sha256', $raw_token),
 		'activated_at' => time(),
 	));
+	WC()->session->__unset(BACKSTAGE_OUTREACH_DISCOUNT_SUPPRESSION_SESSION_KEY);
 	if (method_exists(WC()->session, 'set_customer_session_cookie')) {
 		WC()->session->set_customer_session_cookie(true);
 	}
@@ -458,8 +460,91 @@ function backstage_outreach_discount_session_clear(): void
 {
 	if (function_exists('WC') && WC() && WC()->session) {
 		WC()->session->__unset(BACKSTAGE_OUTREACH_DISCOUNT_SESSION_KEY);
+		WC()->session->__unset(BACKSTAGE_OUTREACH_DISCOUNT_SUPPRESSION_SESSION_KEY);
 	}
 }
+
+function backstage_outreach_discount_coupon_is_suppressed(array $row, string $code): bool
+{
+	if (!function_exists('WC') || !WC() || !WC()->session) {
+		return false;
+	}
+	$suppression = WC()->session->get(BACKSTAGE_OUTREACH_DISCOUNT_SUPPRESSION_SESSION_KEY, array());
+	if (!is_array($suppression)) {
+		return false;
+	}
+	return absint($suppression['distribution_id'] ?? 0) === absint($row['id'] ?? 0)
+		&& wc_is_same_coupon((string) ($suppression['coupon_code'] ?? ''), $code);
+}
+
+function backstage_outreach_discount_clear_coupon_suppression(): void
+{
+	if (function_exists('WC') && WC() && WC()->session) {
+		WC()->session->__unset(BACKSTAGE_OUTREACH_DISCOUNT_SUPPRESSION_SESSION_KEY);
+	}
+}
+
+function backstage_outreach_discount_remove_coupon_without_suppression(string $code): void
+{
+	if (!function_exists('WC') || !WC() || !WC()->cart) {
+		return;
+	}
+	$GLOBALS['backstage_outreach_discount_internal_coupon_removal'] = absint($GLOBALS['backstage_outreach_discount_internal_coupon_removal'] ?? 0) + 1;
+	try {
+		WC()->cart->remove_coupon($code);
+	} finally {
+		$GLOBALS['backstage_outreach_discount_internal_coupon_removal'] = max(0, absint($GLOBALS['backstage_outreach_discount_internal_coupon_removal'] ?? 1) - 1);
+	}
+}
+
+function backstage_outreach_discount_record_coupon_removal(string $code): void
+{
+	if (absint($GLOBALS['backstage_outreach_discount_internal_coupon_removal'] ?? 0) > 0 || !function_exists('WC') || !WC() || !WC()->session) {
+		return;
+	}
+	$row = backstage_outreach_discount_session_distribution();
+	if (!is_array($row) || !wc_is_same_coupon((string) ($row['coupon_code'] ?? ''), $code)) {
+		return;
+	}
+	$coupon = new WC_Coupon($code);
+	$managed_row = backstage_outreach_discount_managed_coupon_distribution($coupon);
+	if (!is_array($managed_row) || absint($managed_row['id'] ?? 0) !== absint($row['id'] ?? 0)) {
+		return;
+	}
+	WC()->session->set(BACKSTAGE_OUTREACH_DISCOUNT_SUPPRESSION_SESSION_KEY, array(
+		'distribution_id' => absint($row['id'] ?? 0),
+		'coupon_code' => wc_format_coupon_code($code),
+	));
+}
+add_action('woocommerce_removed_coupon', 'backstage_outreach_discount_record_coupon_removal', 5);
+
+function backstage_outreach_discount_record_store_api_coupon_removal($response, $handler, $request)
+{
+	if (is_wp_error($response) || !($request instanceof WP_REST_Request) || $request->get_method() !== 'DELETE'
+		|| untrailingslashit($request->get_route()) !== '/wc/store/v1/cart/coupons') {
+		return $response;
+	}
+	$rest_response = rest_ensure_response($response);
+	if ($rest_response->get_status() >= 400) {
+		return $response;
+	}
+	$row = backstage_outreach_discount_session_distribution();
+	$code = is_array($row) ? wc_format_coupon_code((string) ($row['coupon_code'] ?? '')) : '';
+	if ($code !== '') {
+		backstage_outreach_discount_record_coupon_removal($code);
+	}
+	return $response;
+}
+add_filter('rest_request_after_callbacks', 'backstage_outreach_discount_record_store_api_coupon_removal', 10, 3);
+
+function backstage_outreach_discount_record_coupon_application(string $code): void
+{
+	$row = backstage_outreach_discount_session_distribution();
+	if (is_array($row) && wc_is_same_coupon((string) ($row['coupon_code'] ?? ''), $code)) {
+		backstage_outreach_discount_clear_coupon_suppression();
+	}
+}
+add_action('woocommerce_applied_coupon', 'backstage_outreach_discount_record_coupon_application', 5);
 
 function backstage_outreach_discount_session_distribution(): ?array
 {
@@ -520,7 +605,7 @@ function backstage_outreach_discount_remove_managed_coupons(): void
 	foreach ((array) WC()->cart->get_applied_coupons() as $code) {
 		$coupon = new WC_Coupon($code);
 		if ((string) $coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_MANAGED_META, true) === '1') {
-			WC()->cart->remove_coupon($code);
+			backstage_outreach_discount_remove_coupon_without_suppression($code);
 		}
 	}
 }
@@ -565,8 +650,14 @@ function backstage_outreach_discount_sync_cart_coupon(): void
 		foreach ((array) WC()->cart->get_applied_coupons() as $applied) {
 			$coupon = new WC_Coupon($applied);
 			if ((string) $coupon->get_meta(BACKSTAGE_OUTREACH_COUPON_MANAGED_META, true) === '1' && !wc_is_same_coupon($applied, $code)) {
-				WC()->cart->remove_coupon($applied);
+				backstage_outreach_discount_remove_coupon_without_suppression($applied);
 			}
+		}
+		if (backstage_outreach_discount_coupon_is_suppressed($row, $code)) {
+			if (WC()->cart->has_discount($code)) {
+				backstage_outreach_discount_remove_coupon_without_suppression($code);
+			}
+			return;
 		}
 		if (!WC()->cart->has_discount($code)) {
 			WC()->cart->apply_coupon($code);
@@ -595,8 +686,20 @@ function backstage_outreach_discount_exact_total($discount, $discounting_amount,
 	if (is_wp_error($terms)) {
 		return $discount;
 	}
-	$target_total_discount = backstage_outreach_discount_target_for_line($original_unit, $quantity, $terms);
-	return max(0.0, min((float) $discounting_amount, $target_total_discount - $commerce_line_discount));
+	$current_unit = max(0.0, (($original_unit * $quantity) - $commerce_line_discount) / $quantity);
+	$native_unit_discount = sanitize_key((string) ($terms['value_type'] ?? '')) === 'fixed'
+		? min($current_unit, max(0.0, (float) ($terms['value_amount'] ?? 0)))
+		: $current_unit * (max(0.0, min(100.0, (float) ($terms['value_amount'] ?? 0))) / 100);
+	if ($native_unit_discount <= 0.0) {
+		return $discount;
+	}
+	$discounted_quantity = max(0, min($quantity, (int) round((float) $discount / $native_unit_discount)));
+	if ($discounted_quantity <= 0) {
+		return $discount;
+	}
+	$target_total_discount = backstage_outreach_discount_target_for_line($original_unit, $discounted_quantity, $terms);
+	$applicable_commerce_discount = $commerce_line_discount * ($discounted_quantity / $quantity);
+	return max(0.0, min((float) $discounting_amount, $target_total_discount - $applicable_commerce_discount));
 }
 add_filter('woocommerce_coupon_get_discount_amount', 'backstage_outreach_discount_exact_total', 20, 5);
 
@@ -617,8 +720,7 @@ function backstage_outreach_discount_validate_cart(): void
 		wc_add_notice($terms->get_error_message(), 'error');
 		return;
 	}
-	$quantity = 0;
-	$excess_existing_discount = false;
+	$eligible_lines = array();
 	foreach (WC()->cart->get_cart() as $item) {
 		$product_id = absint($item['variation_id'] ?? 0) ?: absint($item['product_id'] ?? 0);
 		$parent_id = absint($item['product_id'] ?? 0);
@@ -626,18 +728,32 @@ function backstage_outreach_discount_validate_cart(): void
 			continue;
 		}
 		$item_quantity = max(0, absint($item['quantity'] ?? 0));
-		$quantity += $item_quantity;
 		$original_unit = isset($item['_vms_discounts_original_unit_price']) ? max(0.0, (float) $item['_vms_discounts_original_unit_price']) : 0.0;
 		$commerce_discount = isset($item['_vms_discounts_line_discount']) ? max(0.0, (float) $item['_vms_discounts_line_discount']) : 0.0;
-		if ($original_unit > 0 && $commerce_discount > backstage_outreach_discount_target_for_line($original_unit, $item_quantity, $terms) + 0.00001) {
-			$excess_existing_discount = true;
+		if ($item_quantity > 0 && $original_unit > 0 && $commerce_discount > 0) {
+			$eligible_lines[] = array(
+				'quantity' => $item_quantity,
+				'original_unit' => $original_unit,
+				'commerce_discount' => $commerce_discount,
+				'current_unit' => max(0.0, $original_unit - ($commerce_discount / $item_quantity)),
+			);
 		}
 	}
 	$per_order_cap = max(1, absint($row['admissions_per_recipient'] ?? 1));
-	if ($quantity > $per_order_cap) {
-		wc_add_notice(sprintf(__('This offer allows up to %d eligible tickets per order. Reduce the eligible ticket quantity to continue.', 'backstage-outreach'), $per_order_cap), 'error');
+	usort($eligible_lines, static fn(array $left, array $right): int => (float) $right['current_unit'] <=> (float) $left['current_unit']);
+	$remaining = $per_order_cap;
+	$offer_target = 0.0;
+	$applicable_commerce_discount = 0.0;
+	foreach ($eligible_lines as $line) {
+		$discounted_quantity = min($remaining, absint($line['quantity']));
+		if ($discounted_quantity <= 0) {
+			break;
+		}
+		$offer_target += backstage_outreach_discount_target_for_line((float) $line['original_unit'], $discounted_quantity, $terms);
+		$applicable_commerce_discount += (float) $line['commerce_discount'] * ($discounted_quantity / max(1, absint($line['quantity'])));
+		$remaining -= $discounted_quantity;
 	}
-	if ($excess_existing_discount) {
+	if ($applicable_commerce_discount > $offer_target + 0.00001) {
 		wc_add_notice(sprintf(__('An existing automatic ticket discount would exceed this Admission Offer (%s). The offer will not stack beyond its advertised value; remove the conflicting discount before checkout.', 'backstage-outreach'), backstage_outreach_discount_terms_label($terms, false)), 'error');
 	}
 }
@@ -903,6 +1019,7 @@ function backstage_outreach_discount_order_financial_snapshot(WC_Order $order, a
 	$net = 0.0;
 	$target_discount = 0.0;
 	$terms = backstage_outreach_discount_terms_for_distribution($row);
+	$eligible_lines = array();
 	foreach ($order->get_items('line_item') as $item) {
 		$product_id = absint($item->get_variation_id()) ?: absint($item->get_product_id());
 		$parent_id = absint($item->get_product_id());
@@ -917,13 +1034,28 @@ function backstage_outreach_discount_order_financial_snapshot(WC_Order $order, a
 			$line_original = $line_subtotal + $line_commerce_discount;
 		}
 		$gross += $line_original;
-		$commerce_discount += $line_commerce_discount;
 		$coupon_discount += max(0.0, $line_subtotal - $line_total);
 		$net += $line_total;
 		if (is_array($terms)) {
 			$line_quantity = max(1, (int) $item->get_quantity());
-			$target_discount += backstage_outreach_discount_target_for_line($line_original / $line_quantity, $line_quantity, $terms);
+			$eligible_lines[] = array(
+				'quantity' => $line_quantity,
+				'original_unit' => $line_original / $line_quantity,
+				'commerce_discount' => $line_commerce_discount,
+				'current_unit' => $line_subtotal / $line_quantity,
+			);
 		}
+	}
+	usort($eligible_lines, static fn(array $left, array $right): int => (float) $right['current_unit'] <=> (float) $left['current_unit']);
+	$remaining = max(1, absint($row['admissions_per_recipient'] ?? 1));
+	foreach ($eligible_lines as $line) {
+		$discounted_quantity = min($remaining, absint($line['quantity']));
+		if ($discounted_quantity <= 0) {
+			break;
+		}
+		$target_discount += backstage_outreach_discount_target_for_line((float) $line['original_unit'], $discounted_quantity, $terms);
+		$commerce_discount += (float) $line['commerce_discount'] * ($discounted_quantity / max(1, absint($line['quantity'])));
+		$remaining -= $discounted_quantity;
 	}
 	return array(
 		'gross' => $gross,
@@ -1006,9 +1138,7 @@ function backstage_outreach_discount_reserve_order(WC_Order $order): void
 			throw new Exception(__('The Admission Offer requires at least one eligible ticket.', 'backstage-outreach'));
 		}
 		$per_order_cap = max(1, absint($row['admissions_per_recipient'] ?? 1));
-		if ($ticket_quantity > $per_order_cap) {
-			throw new Exception(sprintf(__('This offer allows up to %d eligible tickets per order.', 'backstage-outreach'), $per_order_cap));
-		}
+		$discounted_ticket_quantity = min($ticket_quantity, $per_order_cap);
 		backstage_outreach_discount_validate_order_pricing($order, $row);
 		$campaign_id = absint($row['campaign_id']);
 		$now = backstage_outreach_business_now();
@@ -1021,7 +1151,7 @@ function backstage_outreach_discount_reserve_order(WC_Order $order): void
 			backstage_outreach_business_table('distribution_claims'), absint($row['id'])
 		));
 		$business_cap = absint($row['admission_cap'] ?? 0);
-		if ($business_cap > 0 && $per_business_used + $per_business_complimentary + $ticket_quantity > $business_cap) {
+		if ($business_cap > 0 && $per_business_used + $per_business_complimentary + $discounted_ticket_quantity > $business_cap) {
 			throw new Exception(__('This Admission Offer has reached its discounted-ticket limit.', 'backstage-outreach'));
 		}
 		$paid_or_held = (int) $wpdb->get_var($wpdb->prepare(
@@ -1033,7 +1163,7 @@ function backstage_outreach_discount_reserve_order(WC_Order $order): void
 			bvmgr_admission_table_entries(), bvmgr_admission_table_pass_claims(), $campaign_id
 		));
 		$campaign_cap = absint($row['campaign_ticket_cap'] ?? 0);
-		if ($campaign_cap > 0 && $paid_or_held + $complimentary + $ticket_quantity > $campaign_cap) {
+		if ($campaign_cap > 0 && $paid_or_held + $complimentary + $discounted_ticket_quantity > $campaign_cap) {
 			throw new Exception(__('This campaign has reached its combined ticket limit.', 'backstage-outreach'));
 		}
 		$batch = bvmgr_pass_claims_get_batch_by_id(absint($row['related_batch_id'] ?? 0));
@@ -1047,7 +1177,7 @@ function backstage_outreach_discount_reserve_order(WC_Order $order): void
 				"SELECT COALESCE(SUM(pr.ticket_quantity),0) FROM %i pr INNER JOIN %i c ON c.id=pr.campaign_id WHERE c.related_batch_id=%d AND pr.order_id<>%d AND (pr.status='paid' OR (pr.status='pending' AND pr.reservation_expires_at>%s))",
 				$table, vms_admission_table_pass_outreach_campaigns(), absint($row['related_batch_id']), $order->get_id(), $now
 			));
-			if ($batch_paid_or_held + $batch_complimentary + $ticket_quantity > $batch_cap) {
+			if ($batch_paid_or_held + $batch_complimentary + $discounted_ticket_quantity > $batch_cap) {
 				throw new Exception(__('This offer batch has reached its combined ticket limit.', 'backstage-outreach'));
 			}
 		}
@@ -1058,7 +1188,7 @@ function backstage_outreach_discount_reserve_order(WC_Order $order): void
 			'distribution_id' => absint($row['id']), 'campaign_id' => $campaign_id,
 			'source_id' => absint($row['source_id']), 'business_id' => absint($row['business_id']),
 			'coupon_id' => absint($row['coupon_id']), 'coupon_code' => (string) $row['coupon_code'],
-			'order_id' => $order->get_id(), 'status' => 'pending', 'ticket_quantity' => $ticket_quantity,
+			'order_id' => $order->get_id(), 'status' => 'pending', 'ticket_quantity' => $discounted_ticket_quantity,
 			'discount_total' => backstage_outreach_discount_order_coupon_total($order, (string) $row['coupon_code']),
 			'eligible_ticket_gross_total' => (float) $financial['gross'],
 			'eligible_ticket_net_total' => (float) $financial['net'],
@@ -1080,7 +1210,7 @@ function backstage_outreach_discount_reserve_order(WC_Order $order): void
 		if ($written === false) {
 			throw new Exception(__('The offer attribution could not be reserved safely. Please retry.', 'backstage-outreach'));
 		}
-		$order->update_meta_data('_backstage_outreach_discounted_ticket_quantity', $ticket_quantity);
+		$order->update_meta_data('_backstage_outreach_discounted_ticket_quantity', $discounted_ticket_quantity);
 		$order->update_meta_data('_backstage_outreach_eligible_ticket_ids', (array) $snapshot['product_ids']);
 		$order->save_meta_data();
 	} finally {

@@ -15,7 +15,7 @@ $assert = static function (bool $condition, string $message) use (&$assertions):
 	}
 };
 
-$assert(strpos($plugin, 'Version: 1.2.15') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.15'") !== false, 'Outreach release metadata is not 1.2.15.');
+$assert(strpos($plugin, 'Version: 1.2.15.1') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.15.1'") !== false, 'Outreach release metadata is not 1.2.15.1.');
 $assert(strpos($plugin, "includes/party-directory.php") !== false && strpos($plugin, "includes/party-directory-admin.php") !== false, 'Party foundation bootstrap is incomplete.');
 $assert(strpos($plugin, 'backstage_outreach_party_schema_upgrade();') !== false, 'Party schema upgrade is not registered.');
 $assert(strpos($domain, "return '1.0.0';") !== false, 'Independent Party schema marker is missing.');

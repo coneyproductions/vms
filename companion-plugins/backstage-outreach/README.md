@@ -1,6 +1,6 @@
 # Backstage Outreach
 
-Current release: **1.2.15**. This release adds the additive canonical Contacts & Partners foundation. Existing Contacts, reusable businesses, recipients, distributions, signed links, coupons, and delivery history remain authoritative for their current workflows.
+Current release: **1.2.15.1**. This production-safe checkout hotfix limits a managed business discount without limiting purchasable ticket quantity and preserves an explicit coupon removal for the current WooCommerce session. Existing Contacts, reusable businesses, recipients, distributions, signed links, coupons, and delivery history remain authoritative.
 
 Backstage Outreach is the recovered Guest Pass Outreach workflow for Backstage
 Venue Manager 1.2.0 and newer. It is intentionally maintained as a companion

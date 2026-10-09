@@ -136,7 +136,15 @@ try {
 		'event_plan_id' => (int) $event_plan_id,
 		'start_at' => microtime(true) + 2.0,
 	), false);
-	$worker = ABSPATH . 'wp-content/plugins/packages/vms-github-reconcile/tests/business-discount-qr-concurrency-worker.php';
+	$worker = getenv('BACKSTAGE_OUTREACH_CONCURRENCY_WORKER');
+	if (!is_string($worker) || $worker === '') {
+		$worker = ABSPATH . 'wp-content/plugins/packages/vms-github-reconcile/tests/business-discount-qr-concurrency-worker.php';
+	}
+	$wp_cli = getenv('BACKSTAGE_OUTREACH_WP_CLI');
+	if (!is_string($wp_cli) || $wp_cli === '') {
+		$wp_cli = '/opt/homebrew/bin/wp';
+	}
+	backstage_discount_concurrency_assert(is_file($worker), 'The clean WordPress race worker is unavailable.');
 	$processes = array();
 	foreach (array('paid', 'free') as $index => $mode) {
 		$descriptors = array(
@@ -144,7 +152,7 @@ try {
 			1 => array('file', $result_files[$index], 'w'),
 			2 => array('file', '/dev/null', 'a'),
 		);
-		$process = proc_open(array('/opt/homebrew/bin/wp', 'eval-file', $worker, $mode, $fixture_option), $descriptors, $pipes, ABSPATH);
+		$process = proc_open(array($wp_cli, 'eval-file', $worker, $mode, $fixture_option), $descriptors, $pipes, ABSPATH);
 		backstage_discount_concurrency_assert(is_resource($process), 'Could not start a clean WordPress race worker.');
 		fclose($pipes[0]);
 		$processes[] = $process;

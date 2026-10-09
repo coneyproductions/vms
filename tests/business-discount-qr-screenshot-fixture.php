@@ -52,27 +52,28 @@ if (is_array($fixture) && !empty($fixture['campaign_id'])) {
 $marker = 'QR Discount Screenshot Fixture';
 $now = backstage_outreach_business_now();
 $post_ids = array();
-$tec_event_id = (int) $wpdb->get_var("SELECT p.ID FROM {$wpdb->posts} p INNER JOIN {$wpdb->prefix}tec_events te ON te.post_id=p.ID WHERE p.post_type='tribe_events' AND p.post_status='publish' AND p.post_title LIKE 'DISPOSABLE QA%' AND te.start_date_utc>UTC_TIMESTAMP() ORDER BY te.start_date_utc LIMIT 1");
-if ($tec_event_id <= 0) {
-	throw new RuntimeException('A disposable published future TEC event is required for screenshots.');
+$event_start = wp_date('Y-m-d 19:00:00', time() + (14 * DAY_IN_SECONDS), wp_timezone());
+$event_end = wp_date('Y-m-d 22:00:00', time() + (14 * DAY_IN_SECONDS), wp_timezone());
+$tec_event_id = tribe_create_event(array('post_status' => 'publish', 'post_title' => $marker . ' Event', 'EventStartDate' => $event_start, 'EventEndDate' => $event_end));
+if (is_wp_error($tec_event_id) || $tec_event_id <= 0) {
+	throw new RuntimeException('Could not create a disposable published future TEC event for screenshots.');
 }
+$post_ids[] = (int) $tec_event_id;
 $event_plan_id = (int) wp_insert_post(array('post_type' => 'vms_event_plan', 'post_status' => 'publish', 'post_title' => $marker . ' Event Plan'));
 $post_ids[] = $event_plan_id;
 $status_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
 update_post_meta($event_plan_id, $status_key, 'published');
 update_post_meta($event_plan_id, '_vms_event_date', wp_date('Y-m-d', time() + (14 * DAY_IN_SECONDS)));
 update_post_meta($event_plan_id, '_vms_tec_event_id', $tec_event_id);
-$provider = tribe('tickets-plus.commerce.woo');
-$ticket_id = (int) $provider->ticket_add($tec_event_id, array('ticket_name' => 'Eligible General Admission', 'ticket_price' => '100', 'ticket_show_description' => 'no', 'tribe-ticket' => array('capacity' => 100, 'mode' => 'own')));
-$post_ids[] = $ticket_id;
-$ticket = wc_get_product($ticket_id);
+$ticket = new WC_Product_Simple();
+$ticket->set_name('Eligible General Admission');
 $ticket->set_status('publish');
+$ticket->set_regular_price('100');
+$ticket->set_price('100');
 $ticket->set_tax_status('none');
 $ticket->set_virtual(true);
-$ticket->save();
-update_post_meta($ticket_id, '_vms_event_plan_id', $event_plan_id);
-update_post_meta($ticket_id, '_vms_product_role', 'ga_ticket');
-
+$ticket_id = (int) $ticket->save();
+$post_ids[] = $ticket_id;
 $wpdb->insert(bvmgr_admission_table_pass_sources(), array('source_name' => $marker, 'status' => 'active', 'created_by' => 1, 'created_at' => $now));
 $source_id = (int) $wpdb->insert_id;
 $wpdb->insert(bvmgr_admission_table_pass_batches(), array('source_id' => $source_id, 'batch_name' => $offer_text . ' Business Offer', 'quantity' => 100, 'validity_type' => 'single_event', 'single_event_plan_id' => $event_plan_id, 'venue_ids_json' => '[]', 'value_type' => $offer_type, 'value_amount' => $offer_amount, 'applies_to' => 'entry_only', 'status' => 'active', 'checkin_open_mode' => 'same_day', 'max_per_phone' => 0, 'generated_count' => 0, 'created_by' => 1, 'created_at' => $now, 'admissions_per_link' => 2, 'total_admission_cap' => 40, 'max_per_email' => 0));
@@ -83,7 +84,13 @@ $business_id = backstage_outreach_insert_business(array('business_name' => 'Main
 backstage_outreach_business_upsert_membership($source_id, $business_id, 'manual', null, 0, array(), 1);
 $campaign = vms_pass_outreach_get_campaign_by_id($campaign_id);
 $batch = bvmgr_pass_claims_get_batch_by_id($batch_id);
-$configuration = backstage_outreach_discount_offer_configuration($campaign, $batch, 'coupon_backed');
+$terms = backstage_outreach_discount_batch_terms($batch);
+$configuration = array(
+	'distribution_type' => 'coupon_backed', 'events' => array(), 'event_ids' => array($event_plan_id),
+	'product_ids' => array($ticket_id), 'value_type' => (string) $terms['value_type'],
+	'value_amount' => (float) $terms['value_amount'], 'coupon_type' => (string) $terms['coupon_type'],
+	'legacy_free_capacity' => false, 'per_order_ticket_cap' => 2,
+);
 $distribution_id = backstage_outreach_create_distribution($campaign_id, $source_id, $business_id, 'coupon_backed', 20, 10, wp_date('Y-m-d H:i:s', time() + (30 * DAY_IN_SECONDS), wp_timezone()), $configuration['event_ids'], $configuration['product_ids'], 1);
 $distribution = backstage_outreach_discount_get_distribution($distribution_id);
 $coupon = backstage_outreach_discount_ensure_coupon($distribution, $campaign, $configuration);

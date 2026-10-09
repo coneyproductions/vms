@@ -226,7 +226,8 @@ try {
 	backstage_outreach_discount_sync_cart_coupon();
 	WC()->cart->calculate_totals();
 	backstage_outreach_discount_validate_cart();
-	backstage_variable_discount_assert(wc_notice_count('error') > 0, 'The two-admission customer limit did not block three eligible tickets.');
+	backstage_variable_discount_assert(wc_notice_count('error') === 0, 'A third full-price eligible ticket incorrectly blocked the cart.');
+	backstage_variable_discount_assert(abs((float) WC()->cart->get_discount_total() - 24.70) < 0.01, 'The fixed offer discounted more than two of three eligible tickets.');
 	wc_clear_notices();
 
 	$make_order = static function (array $offer, array $products) use (&$order_ids): WC_Order {
