@@ -11,7 +11,7 @@ $business = (string) file_get_contents($root . '/companion-plugins/backstage-out
 $party = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/party-bulk-workflows.php');
 
 $checks = array(
-	'Focused release is Outreach 1.2.19' => str_contains($plugin, 'Version: 1.2.19') && str_contains($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.19'"),
+	'Focused release is Outreach 1.2.19.1' => str_contains($plugin, 'Version: 1.2.19.1') && str_contains($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.19.1'"),
 	'Unsubscribe runtime loads after suppression and before send paths' => strpos($bootstrap, "'/suppression.php'") < strpos($bootstrap, "'/unsubscribe.php'") && str_contains($bootstrap, "'/unsubscribe.php'"),
 	'Base schema adds only an opaque token ledger' => str_contains($db, "return '1.2.0';") && str_contains($db, 'CREATE TABLE {$unsubscribe_tokens}') && str_contains($db, 'UNIQUE KEY token_hash') && !str_contains($db, 'unsubscribe_email_token'),
 	'Links use random opaque tokens plus a durable HMAC signature' => str_contains($unsubscribe, 'random_bytes(32)') && str_contains($unsubscribe, "hash_hmac('sha256', 'v1|' . \$token") && str_contains($unsubscribe, "hash('sha256', \$token)"),
@@ -23,10 +23,11 @@ $checks = array(
 	'Public response is no-store responsive and does not redirect' => str_contains($unsubscribe, 'Cache-Control: no-store') && str_contains($unsubscribe, '@media(max-width:390px)') && !str_contains($unsubscribe, 'wp_redirect(') && !str_contains($unsubscribe, 'wp_safe_redirect('),
 	'Every promotional handoff uses the mandatory wrapper' => substr_count($recipients, 'backstage_outreach_send_promotional_email(') === 1 && substr_count($business, 'backstage_outreach_send_promotional_email(') === 1 && substr_count($party, 'backstage_outreach_send_promotional_email(') === 1,
 	'Only the mandatory wrapper calls wp_mail' => substr_count($unsubscribe, 'wp_mail(') === 1 && !str_contains($recipients, 'wp_mail(') && !str_contains($business, 'wp_mail(') && !str_contains($party, 'wp_mail('),
-	'Footer and RFC 8058 headers are sender-inserted' => str_contains($unsubscribe, 'backstage_outreach_promotional_footer') && str_contains($unsubscribe, 'List-Unsubscribe: <') && str_contains($unsubscribe, 'List-Unsubscribe-Post: List-Unsubscribe=One-Click'),
+	'Footer is mandatory while RFC 8058 headers require verified signing' => str_contains($unsubscribe, 'backstage_outreach_promotional_footer') && str_contains($unsubscribe, 'if ($advertise_rfc8058)') && str_contains($unsubscribe, 'signs_rfc8058_headers') && str_contains($unsubscribe, 'List-Unsubscribe: <') && str_contains($unsubscribe, 'List-Unsubscribe-Post: List-Unsubscribe=One-Click'),
 	'PHPMailer is required to sign both RFC headers' => str_contains($unsubscribe, "array('List-Unsubscribe', 'List-Unsubscribe-Post')") && str_contains($unsubscribe, 'DKIM_extraHeaders') && str_contains($unsubscribe, 'openssl_pkey_get_private'),
+	'Unverified transport permits web unsubscribe unless policy requires RFC 8058' => str_contains($unsubscribe, "apply_filters('backstage_outreach_require_rfc8058', false") && str_contains($unsubscribe, '$require_rfc8058 && !$advertise_rfc8058'),
 	'Final suppression check and recipient lock precede wp_mail' => substr_count($unsubscribe, 'vms_outreach_email_is_suppressed($email)') >= 2 && strpos($unsubscribe, 'SELECT GET_LOCK') < strpos($unsubscribe, 'wp_mail('),
-	'Unavailable signing storage suppression and postal address fail closed' => str_contains($unsubscribe, 'outreach_mail_transport_unverified') && str_contains($unsubscribe, 'unsubscribe_storage_unavailable') && str_contains($unsubscribe, 'outreach_suppression_unavailable') && str_contains($unsubscribe, 'outreach_postal_address_unavailable'),
+	'Unavailable endpoint signing storage suppression and postal address fail closed' => str_contains($unsubscribe, 'outreach_unsubscribe_endpoint_unavailable') && str_contains($unsubscribe, 'unsubscribe_storage_unavailable') && str_contains($unsubscribe, 'outreach_suppression_unavailable') && str_contains($unsubscribe, 'outreach_postal_address_unavailable'),
 	'MailPoet subscriber state is not referenced or mutated' => stripos($unsubscribe . $recipients . $business . $party, 'mailpoet') === false,
 );
 

@@ -13,8 +13,8 @@ $backstage_business_source_delivery_block = static function ($return, array $att
 	return !in_array(sanitize_email((string) ($atts['to'] ?? '')), $backstage_business_source_mock_fail_emails, true);
 };
 add_filter('pre_wp_mail', $backstage_business_source_delivery_block, PHP_INT_MAX, 2);
-$backstage_business_source_verified_transport = static fn(array $state): array => array('ready' => true, 'method' => 'synthetic_verified_transport', 'message' => '');
-add_filter('backstage_outreach_mail_transport_readiness', $backstage_business_source_verified_transport, PHP_INT_MAX, 1);
+$backstage_business_source_unverified_transport = static fn(array $state): array => array('ready' => false, 'signs_rfc8058_headers' => false, 'method' => 'synthetic_unverified_transport', 'message' => 'Synthetic downstream signing is unverified.');
+add_filter('backstage_outreach_mail_transport_readiness', $backstage_business_source_unverified_transport, PHP_INT_MAX, 1);
 $backstage_business_source_postal_address = static fn(string $address): string => 'Synthetic Venue, 100 Test Way, Example, TX 75001, US';
 add_filter('backstage_outreach_postal_address', $backstage_business_source_postal_address, PHP_INT_MAX, 1);
 
@@ -752,7 +752,7 @@ try {
 	$captured_mail = end($backstage_business_source_mock_mail);
 	backstage_business_source_runtime_assert(is_array($captured_mail) && str_starts_with((string) ($captured_mail['message'] ?? ''), (string) $share_context['message'] . "\n\n--\n") && str_contains((string) ($captured_mail['message'] ?? ''), 'Unsubscribe from all Backstage Outreach promotional email: https://'), 'Mocked final email body did not preserve the reviewed message and automatic unsubscribe footer.');
 	backstage_business_source_runtime_assert(in_array('Content-Type: text/plain; charset=UTF-8', (array) ($captured_mail['headers'] ?? array()), true), 'Business invitation email stopped using UTF-8 plain text.');
-	backstage_business_source_runtime_assert(in_array('List-Unsubscribe-Post: List-Unsubscribe=One-Click', (array) ($captured_mail['headers'] ?? array()), true), 'Business invitation email is missing RFC 8058 one-click headers.');
+	backstage_business_source_runtime_assert(!in_array('List-Unsubscribe-Post: List-Unsubscribe=One-Click', (array) ($captured_mail['headers'] ?? array()), true), 'Business invitation advertised RFC 8058 without verified header signing.');
 	$sent_map = backstage_outreach_business_share_sent_map($campaign_id);
 	backstage_business_source_runtime_assert(isset($sent_map[(int) $first_distribution['id']]), 'Business delivery audit was not recognized for duplicate-send prevention.');
 	$duplicate_delivery = backstage_outreach_attempt_business_share_email($first_distribution, (array) $created['campaign'], bvmgr_pass_claims_get_batch_by_id($batch_id), $delivery_review, $sent_map);
@@ -906,7 +906,7 @@ try {
 	), JSON_PRETTY_PRINT) . "\n";
 } finally {
 	remove_filter('pre_wp_mail', $backstage_business_source_delivery_block, PHP_INT_MAX);
-	remove_filter('backstage_outreach_mail_transport_readiness', $backstage_business_source_verified_transport, PHP_INT_MAX);
+	remove_filter('backstage_outreach_mail_transport_readiness', $backstage_business_source_unverified_transport, PHP_INT_MAX);
 	remove_filter('backstage_outreach_postal_address', $backstage_business_source_postal_address, PHP_INT_MAX);
 	if ($suppression_id > 0) {
 		vms_outreach_remove_suppression($suppression_id);

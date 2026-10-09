@@ -9,7 +9,7 @@ function outreach_party_unified_assert(bool $condition, string $message): void
 }
 
 if (!class_exists('WooCommerce') || !function_exists('backstage_outreach_party_adoption_preview')) {
-	throw new RuntimeException('Outreach 1.2.19 and WooCommerce must be active.');
+	throw new RuntimeException('Outreach 1.2.19.1 and WooCommerce must be active.');
 }
 
 global $wpdb;
@@ -27,10 +27,11 @@ $coupon_ids = array();
 $post_ids = array();
 $suppression_id = 0;
 $mail_attempts = 0;
-$mail_block = static function () use (&$mail_attempts): bool { $mail_attempts++; return true; };
-add_filter('pre_wp_mail', $mail_block, PHP_INT_MAX);
-$verified_transport = static fn(array $state): array => array('ready' => true, 'method' => 'synthetic_verified_transport', 'message' => '');
-add_filter('backstage_outreach_mail_transport_readiness', $verified_transport, PHP_INT_MAX, 1);
+$captured_mail = array();
+$mail_block = static function ($return, array $atts) use (&$mail_attempts, &$captured_mail): bool { $mail_attempts++; $captured_mail[] = $atts; return true; };
+add_filter('pre_wp_mail', $mail_block, PHP_INT_MAX, 2);
+$unverified_transport = static fn(array $state): array => array('ready' => false, 'signs_rfc8058_headers' => false, 'method' => 'synthetic_unverified_transport', 'message' => 'Synthetic downstream signing is unverified.');
+add_filter('backstage_outreach_mail_transport_readiness', $unverified_transport, PHP_INT_MAX, 1);
 $synthetic_postal_address = static fn(string $address): string => 'Synthetic Venue, 100 Test Way, Example, TX 75001, US';
 add_filter('backstage_outreach_postal_address', $synthetic_postal_address, PHP_INT_MAX, 1);
 
@@ -252,6 +253,11 @@ try {
 	$resend_result = backstage_outreach_party_invitation_handoff($resend, $user_id);
 	outreach_party_unified_assert($resend_result['handed_off'] === 1, 'Deliberate resend failed.');
 	outreach_party_unified_assert($mail_attempts === 3, 'Accepted first handoffs and deliberate resend did not produce exactly three blocked-delivery mail calls.');
+	outreach_party_unified_assert(count($captured_mail) === 3, 'Party handoff capture count does not match mail attempts.');
+	foreach ($captured_mail as $captured_party_mail) {
+		outreach_party_unified_assert(str_contains((string) ($captured_party_mail['message'] ?? ''), 'Postal address:') && str_contains((string) ($captured_party_mail['message'] ?? ''), 'Unsubscribe from all Backstage Outreach promotional email: https://'), 'Party handoff is missing its automatic postal/unsubscribe footer.');
+		outreach_party_unified_assert(!in_array('List-Unsubscribe-Post: List-Unsubscribe=One-Click', (array) ($captured_party_mail['headers'] ?? array()), true), 'Party handoff advertised RFC 8058 without verified header signing.');
+	}
 
 	$safety_row = $sendable[3];
 	$safety_distribution_id = absint($safety_row['id']);
@@ -332,7 +338,7 @@ try {
 	), JSON_PRETTY_PRINT) . "\n";
 } finally {
 	remove_filter('pre_wp_mail', $mail_block, PHP_INT_MAX);
-	remove_filter('backstage_outreach_mail_transport_readiness', $verified_transport, PHP_INT_MAX);
+	remove_filter('backstage_outreach_mail_transport_readiness', $unverified_transport, PHP_INT_MAX);
 	remove_filter('backstage_outreach_postal_address', $synthetic_postal_address, PHP_INT_MAX);
 	foreach ($campaign_ids as $unsubscribe_campaign_id) {
 		$wpdb->delete(backstage_outreach_unsubscribe_table(), array('source_campaign_id' => (int) $unsubscribe_campaign_id), array('%d'));

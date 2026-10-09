@@ -1,6 +1,6 @@
 # Backstage Outreach
 
-Current release: **1.2.19**. Every promotional Party, Business, and complimentary invitation now receives an automatic personalized unsubscribe link, browser confirmation without GET-side mutation, and RFC 8058 one-click headers. Confirmation creates or reuses the existing global Outreach suppression record with reason `unsubscribe_request`; every handoff rechecks suppression immediately before mail transport. Opaque signed tokens reveal no recipient address, and delivery fails closed unless the venue postal identity and a verified DKIM or explicitly verified external header-signing transport are available. Existing Contacts, recipients, distributions, signed referral links, coupons, claims, delivery history, and MailPoet subscriber state remain authoritative and unchanged.
+Current release: **1.2.19.1**. Every promotional Party, Business, and complimentary invitation automatically receives a personalized web-unsubscribe link and venue postal address. Browser GET remains confirmation-only, while confirmed POST creates or reuses the existing global Outreach suppression with reason `unsubscribe_request`; every handoff rechecks suppression before mail transport. Opaque signed tokens reveal no recipient identity. RFC 8058 one-click headers are added only when the active transport explicitly verifies that it DKIM-signs both headers, so an unverified transport cannot falsely advertise one-click compliance and does not block the secure web unsubscribe. Existing Contacts, recipients, distributions, signed referral links, coupons, claims, delivery history, and MailPoet subscriber state remain authoritative and unchanged.
 
 Backstage Outreach is the recovered Guest Pass Outreach workflow for Backstage
 Venue Manager 1.2.0 and newer. It is intentionally maintained as a companion
@@ -13,16 +13,18 @@ historical outreach and direct-email feature set.
 - The legacy VMS plugin must remain inactive.
 - Activate this plugin only after taking a database backup and confirming the
   historical `vms_*` Outreach tables belong to the target site.
-- Promotional handoff requires a complete WooCommerce venue postal address and
-  a verified mail transport that signs the `List-Unsubscribe` and
-  `List-Unsubscribe-Post` headers. PHPMailer DKIM is detected automatically;
-  externally signed transports must return verified readiness through the
-  `backstage_outreach_mail_transport_readiness` filter.
+- Promotional handoff requires a complete WooCommerce venue postal address,
+  opaque-token storage/signing, and the registered HTTPS confirmation endpoint.
+- RFC 8058 advertisement is optional unless the site explicitly requires it.
+  PHPMailer DKIM is detected automatically. An externally signed transport must
+  explicitly report both `ready` and `signs_rfc8058_headers` through the
+  `backstage_outreach_mail_transport_readiness` filter. Without that evidence,
+  Outreach omits both one-click headers while retaining the body link.
 
 The plugin preserves the historical table and record identifiers. Its schema
 upgrade is additive and idempotent: it creates missing Outreach tables, adds
 missing claim-attribution columns/indexes, and backfills only missing normalized
-status values. Version 1.2.19 also adds an opaque unsubscribe-token table. It
+status values. Version 1.2.19 adds an opaque unsubscribe-token table. It
 does not drop, rename, truncate, or reset Outreach data.
 
 ## Mandatory promotional unsubscribe
@@ -31,17 +33,31 @@ Outreach appends the venue postal identity and a personalized HTTPS unsubscribe
 URL to every promotional message at the final handoff boundary; operators do
 not need to add a merge tag. A normal GET renders a responsive confirmation
 page and never changes suppression state, protecting against link scanners and
-prefetchers. Browser confirmation or a valid RFC 8058 one-click POST creates or
-reuses a global suppression record. Repeated requests report that the address
-was already unsubscribed, and a prior stronger suppression reason is preserved.
+prefetchers. Browser confirmation or, when advertised, a valid RFC 8058
+one-click POST creates or reuses a global suppression record. Repeated requests
+report that the address was already unsubscribed, and a prior stronger
+suppression reason is preserved.
 
 Tokens are random, stored only as hashes, and authenticated with a durable
 site-specific signing key. The public URL contains neither an email address nor
 a database identifier. Suppression is checked again under the same recipient
 lock immediately before every `wp_mail()` handoff, including queued execution
 and explicit resend paths. Failure to create or validate the token, acquire the
-lock, load suppression infrastructure, resolve postal identity, or verify the
-header-signing transport prevents the handoff.
+lock, load suppression infrastructure, resolve postal identity, or confirm the
+registered HTTPS endpoint prevents the handoff. Unverified transport signing
+suppresses only the optional RFC 8058 headers. Sites whose applicable policy
+requires one-click may make transport verification mandatory with the
+`backstage_outreach_require_rfc8058` filter.
+
+## Transport verification
+
+Do not infer RFC 8058 compliance from MailPoet or from downstream delivery
+alone. The smallest conclusive check for a downstream signer is one separately
+authorized message to a controlled mailbox: inspect the raw received message
+for an aligned `Authentication-Results: dkim=pass` and a `DKIM-Signature` whose
+`h=` list includes both `list-unsubscribe` and `list-unsubscribe-post`. Until
+that evidence exists, leave transport readiness unverified and Outreach will
+omit both headers.
 
 ## Canonical Party partner workflow
 

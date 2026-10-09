@@ -179,8 +179,9 @@ if (!function_exists('backstage_outreach_mail_transport_readiness')) {
 	{
 		$result = array(
 			'ready' => false,
+			'signs_rfc8058_headers' => false,
 			'method' => 'unverified',
-			'message' => __('The configured mail transport does not verify DKIM signing of the required unsubscribe headers. No email was submitted.', 'backstage-outreach'),
+			'message' => __('The configured mail transport does not verify DKIM signing of the RFC 8058 unsubscribe headers.', 'backstage-outreach'),
 		);
 
 		if (!class_exists('WP_PHPMailer')) {
@@ -203,6 +204,7 @@ if (!function_exists('backstage_outreach_mail_transport_readiness')) {
 				if ((string) $mailer->DKIM_domain !== '' && (string) $mailer->DKIM_selector !== '' && $key !== false) {
 					$result = array(
 						'ready' => true,
+						'signs_rfc8058_headers' => true,
 						'method' => 'phpmailer_dkim',
 						'message' => '',
 					);
@@ -211,7 +213,7 @@ if (!function_exists('backstage_outreach_mail_transport_readiness')) {
 					openssl_free_key($key);
 				}
 			} catch (Throwable $error) {
-				$result['message'] = __('The configured mail transport could not be verified. No email was submitted.', 'backstage-outreach');
+				$result['message'] = __('The configured mail transport could not be verified for RFC 8058 header signing.', 'backstage-outreach');
 			}
 		}
 
@@ -219,7 +221,28 @@ if (!function_exists('backstage_outreach_mail_transport_readiness')) {
 		if (!is_array($filtered)) {
 			return $result;
 		}
-		return array_merge($result, $filtered);
+		$filtered = array_merge($result, $filtered);
+		$filtered['ready'] = !empty($filtered['ready']) && !empty($filtered['signs_rfc8058_headers']);
+		return $filtered;
+	}
+}
+
+if (!function_exists('backstage_outreach_unsubscribe_endpoint_readiness')) {
+	function backstage_outreach_unsubscribe_endpoint_readiness(): array
+	{
+		$home_url = home_url('/');
+		$key = backstage_outreach_unsubscribe_signing_key();
+		$result = array(
+			'ready' => is_string($home_url)
+				&& str_starts_with($home_url, 'https://')
+				&& wp_http_validate_url($home_url) !== false
+				&& backstage_outreach_unsubscribe_table_ready()
+				&& !is_wp_error($key)
+				&& has_action('template_redirect', 'backstage_outreach_render_unsubscribe_page') !== false,
+			'message' => __('The secure public unsubscribe confirmation endpoint is unavailable. No email was submitted.', 'backstage-outreach'),
+		);
+		$filtered = apply_filters('backstage_outreach_unsubscribe_endpoint_readiness', $result);
+		return is_array($filtered) ? array_merge($result, $filtered) : $result;
 	}
 }
 
@@ -268,8 +291,14 @@ if (!function_exists('backstage_outreach_send_promotional_email')) {
 		if ($postal_address === '') {
 			return new WP_Error('outreach_postal_address_unavailable', __('The required postal sender address is unavailable. No email was submitted.', 'backstage-outreach'));
 		}
+		$endpoint = backstage_outreach_unsubscribe_endpoint_readiness();
+		if (empty($endpoint['ready'])) {
+			return new WP_Error('outreach_unsubscribe_endpoint_unavailable', (string) ($endpoint['message'] ?? __('The secure public unsubscribe confirmation endpoint is unavailable. No email was submitted.', 'backstage-outreach')));
+		}
 		$transport = backstage_outreach_mail_transport_readiness();
-		if (empty($transport['ready'])) {
+		$require_rfc8058 = (bool) apply_filters('backstage_outreach_require_rfc8058', false, $email, $context);
+		$advertise_rfc8058 = !empty($transport['ready']);
+		if ($require_rfc8058 && !$advertise_rfc8058) {
 			return new WP_Error('outreach_mail_transport_unverified', (string) ($transport['message'] ?? __('The mail transport is unverified. No email was submitted.', 'backstage-outreach')));
 		}
 
@@ -293,8 +322,10 @@ if (!function_exists('backstage_outreach_send_promotional_email')) {
 
 			$url = (string) $link['url'];
 			$message = rtrim($message) . "\n\n" . backstage_outreach_promotional_footer($url, $postal_address);
-			$headers[] = 'List-Unsubscribe: <' . $url . '>';
-			$headers[] = 'List-Unsubscribe-Post: List-Unsubscribe=One-Click';
+			if ($advertise_rfc8058) {
+				$headers[] = 'List-Unsubscribe: <' . $url . '>';
+				$headers[] = 'List-Unsubscribe-Post: List-Unsubscribe=One-Click';
+			}
 			$headers = array_values(array_unique(array_map('strval', $headers)));
 
 			$mail_error = '';
@@ -303,13 +334,17 @@ if (!function_exists('backstage_outreach_send_promotional_email')) {
 					$mail_error = $wp_error->get_error_message();
 				}
 			};
-			add_action('phpmailer_init', 'backstage_outreach_require_dkim_unsubscribe_headers', PHP_INT_MAX, 1);
+			if ($advertise_rfc8058) {
+				add_action('phpmailer_init', 'backstage_outreach_require_dkim_unsubscribe_headers', PHP_INT_MAX, 1);
+			}
 			add_action('wp_mail_failed', $mail_capture, 10, 1);
 			try {
 				$accepted = wp_mail($email, $subject, $message, $headers);
 			} finally {
 				remove_action('wp_mail_failed', $mail_capture, 10);
-				remove_action('phpmailer_init', 'backstage_outreach_require_dkim_unsubscribe_headers', PHP_INT_MAX);
+				if ($advertise_rfc8058) {
+					remove_action('phpmailer_init', 'backstage_outreach_require_dkim_unsubscribe_headers', PHP_INT_MAX);
+				}
 			}
 			if (!$accepted) {
 				return new WP_Error('wp_mail_failed', $mail_error !== '' ? $mail_error : __('WordPress did not accept the Outreach email for delivery.', 'backstage-outreach'));

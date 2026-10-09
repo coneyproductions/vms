@@ -11,7 +11,7 @@ function backstage_outreach_unsubscribe_runtime_assert(bool $condition, string $
 }
 
 if (!function_exists('backstage_outreach_send_promotional_email')) {
-	throw new RuntimeException('Backstage Outreach 1.2.19 must be active.');
+	throw new RuntimeException('Backstage Outreach 1.2.19.1 must be active.');
 }
 
 global $wpdb;
@@ -21,17 +21,29 @@ $emails = array(
 	'browser-' . $marker . '@example.test',
 	'existing-' . $marker . '@example.test',
 	'delivery-' . $marker . '@example.test',
+	'rfc-' . $marker . '@example.test',
 	'transport-' . $marker . '@example.test',
+	'required-' . $marker . '@example.test',
+	'endpoint-' . $marker . '@example.test',
 	'postal-' . $marker . '@example.test',
 );
 $mail = array();
-$transport_ready = true;
+$transport_ready = false;
+$require_rfc8058 = false;
+$endpoint_ready = true;
 $transport_filter = static function (array $state) use (&$transport_ready): array {
 	return array(
 		'ready' => $transport_ready,
+		'signs_rfc8058_headers' => $transport_ready,
 		'method' => $transport_ready ? 'synthetic_verified_transport' : 'synthetic_unverified_transport',
 		'message' => $transport_ready ? '' : 'Synthetic transport is intentionally unverified.',
 	);
+};
+$require_rfc8058_filter = static function (bool $required) use (&$require_rfc8058): bool {
+	return $require_rfc8058;
+};
+$endpoint_filter = static function (array $state) use (&$endpoint_ready): array {
+	return $endpoint_ready ? $state : array('ready' => false, 'message' => 'Synthetic endpoint is intentionally unavailable.');
 };
 $postal_filter = static fn(string $address): string => 'Synthetic Venue, 100 Test Way, Example, TX 75001, US';
 $mail_filter = static function ($return, array $atts) use (&$mail): bool {
@@ -39,6 +51,8 @@ $mail_filter = static function ($return, array $atts) use (&$mail): bool {
 	return true;
 };
 add_filter('backstage_outreach_mail_transport_readiness', $transport_filter, PHP_INT_MAX, 1);
+add_filter('backstage_outreach_require_rfc8058', $require_rfc8058_filter, PHP_INT_MAX, 1);
+add_filter('backstage_outreach_unsubscribe_endpoint_readiness', $endpoint_filter, PHP_INT_MAX, 1);
 add_filter('backstage_outreach_postal_address', $postal_filter, PHP_INT_MAX - 1, 1);
 add_filter('pre_wp_mail', $mail_filter, PHP_INT_MAX, 2);
 
@@ -93,26 +107,42 @@ try {
 	$captured = $mail[0];
 	$captured_headers = (array) ($captured['headers'] ?? array());
 	$list_header = current(array_values(array_filter($captured_headers, static fn(string $header): bool => str_starts_with($header, 'List-Unsubscribe: <'))));
-	backstage_outreach_unsubscribe_runtime_assert(is_string($list_header) && in_array('List-Unsubscribe-Post: List-Unsubscribe=One-Click', $captured_headers, true), 'RFC 8058 headers were missing from mocked delivery.');
+	backstage_outreach_unsubscribe_runtime_assert($list_header === false && !in_array('List-Unsubscribe-Post: List-Unsubscribe=One-Click', $captured_headers, true), 'Unverified transport advertised RFC 8058 headers.');
 	backstage_outreach_unsubscribe_runtime_assert(str_contains((string) $captured['message'], 'Unsubscribe from all Backstage Outreach promotional email: https://') && str_contains((string) $captured['message'], 'Postal address:'), 'Automatic footer or postal address was missing.');
-	preg_match('/<([^>]+)>/', $list_header, $url_match);
+	preg_match('/Unsubscribe from all Backstage Outreach promotional email: (https:\/\/\S+)/', (string) $captured['message'], $url_match);
 	parse_str((string) parse_url((string) ($url_match[1] ?? ''), PHP_URL_QUERY), $url_query);
 	$delivered_row = backstage_outreach_validate_unsubscribe_token((string) ($url_query['backstage-outreach-unsubscribe'] ?? ''), (string) ($url_query['signature'] ?? ''));
-	backstage_outreach_unsubscribe_runtime_assert(is_array($delivered_row) && (string) $delivered_row['source_type'] === 'campaign_recipient', 'Delivered personalized header did not resolve to its synthetic recipient context.');
+	backstage_outreach_unsubscribe_runtime_assert(is_array($delivered_row) && (string) $delivered_row['source_type'] === 'campaign_recipient', 'Delivered personalized body link did not resolve to its synthetic recipient context.');
+
+	$transport_ready = true;
+	$rfc_sent = backstage_outreach_send_promotional_email($emails[4], 'Synthetic RFC 8058 invitation', 'Verified transport message.', array(), array('source_type' => 'business_distribution', 'source_id' => 505, 'campaign_id' => 990024));
+	$rfc_mail = $mail[1] ?? array();
+	$rfc_headers = (array) ($rfc_mail['headers'] ?? array());
+	$rfc_list_header = current(array_values(array_filter($rfc_headers, static fn(string $header): bool => str_starts_with($header, 'List-Unsubscribe: <'))));
+	backstage_outreach_unsubscribe_runtime_assert($rfc_sent === true && count($mail) === 2 && is_string($rfc_list_header) && in_array('List-Unsubscribe-Post: List-Unsubscribe=One-Click', $rfc_headers, true), 'Verified transport did not advertise both RFC 8058 headers.');
 
 	$delivery_unsubscribe = backstage_outreach_unsubscribe_page('POST', (string) $url_query['backstage-outreach-unsubscribe'], (string) $url_query['signature'], array('List-Unsubscribe' => 'One-Click'));
 	$blocked = backstage_outreach_send_promotional_email($emails[3], 'Deliberate resend', 'Must not hand off.', array(), array('source_type' => 'party_distribution', 'source_id' => 405, 'campaign_id' => 990099));
-	backstage_outreach_unsubscribe_runtime_assert($delivery_unsubscribe['status'] === 'success' && is_wp_error($blocked) && $blocked->get_error_code() === 'outreach_suppressed' && count($mail) === 1, 'Campaign-wide suppression did not block a deliberate cross-campaign resend at final handoff.');
+	backstage_outreach_unsubscribe_runtime_assert($delivery_unsubscribe['status'] === 'success' && is_wp_error($blocked) && $blocked->get_error_code() === 'outreach_suppressed' && count($mail) === 2, 'Campaign-wide suppression did not block a deliberate cross-campaign resend at final handoff.');
 
 	$transport_ready = false;
-	$transport_blocked = backstage_outreach_send_promotional_email($emails[4], 'Blocked transport', 'Must not hand off.');
-	backstage_outreach_unsubscribe_runtime_assert(is_wp_error($transport_blocked) && $transport_blocked->get_error_code() === 'outreach_mail_transport_unverified' && count($mail) === 1, 'Unverified mail transport did not fail closed.');
-	$transport_ready = true;
+	$transport_allowed = backstage_outreach_send_promotional_email($emails[5], 'Web unsubscribe without one-click', 'Must contain the web link.');
+	$transport_mail = $mail[2] ?? array();
+	$transport_headers = (array) ($transport_mail['headers'] ?? array());
+	backstage_outreach_unsubscribe_runtime_assert($transport_allowed === true && count($mail) === 3 && str_contains((string) ($transport_mail['message'] ?? ''), 'Unsubscribe from all Backstage Outreach promotional email: https://') && !in_array('List-Unsubscribe-Post: List-Unsubscribe=One-Click', $transport_headers, true), 'Unverified transport did not preserve the mandatory body link while omitting one-click headers.');
+	$require_rfc8058 = true;
+	$required_blocked = backstage_outreach_send_promotional_email($emails[6], 'Required RFC 8058 transport', 'Must not hand off.');
+	backstage_outreach_unsubscribe_runtime_assert(is_wp_error($required_blocked) && $required_blocked->get_error_code() === 'outreach_mail_transport_unverified' && count($mail) === 3, 'A site that explicitly requires RFC 8058 did not fail closed on unverified transport.');
+	$require_rfc8058 = false;
+	$endpoint_ready = false;
+	$endpoint_blocked = backstage_outreach_send_promotional_email($emails[7], 'Broken endpoint', 'Must not hand off.');
+	backstage_outreach_unsubscribe_runtime_assert(is_wp_error($endpoint_blocked) && $endpoint_blocked->get_error_code() === 'outreach_unsubscribe_endpoint_unavailable' && count($mail) === 3, 'Unavailable public confirmation endpoint did not fail closed.');
+	$endpoint_ready = true;
 	$empty_postal = static fn(string $address): string => '';
 	add_filter('backstage_outreach_postal_address', $empty_postal, PHP_INT_MAX, 1);
-	$postal_blocked = backstage_outreach_send_promotional_email($emails[5], 'Blocked postal address', 'Must not hand off.');
+	$postal_blocked = backstage_outreach_send_promotional_email($emails[8], 'Blocked postal address', 'Must not hand off.');
 	remove_filter('backstage_outreach_postal_address', $empty_postal, PHP_INT_MAX);
-	backstage_outreach_unsubscribe_runtime_assert(is_wp_error($postal_blocked) && $postal_blocked->get_error_code() === 'outreach_postal_address_unavailable' && count($mail) === 1, 'Missing postal address did not fail closed.');
+	backstage_outreach_unsubscribe_runtime_assert(is_wp_error($postal_blocked) && $postal_blocked->get_error_code() === 'outreach_postal_address_unavailable' && count($mail) === 3, 'Missing postal address did not fail closed.');
 
 	if (function_exists('openssl_pkey_new')) {
 		$key = openssl_pkey_new(array('private_key_bits' => 1024, 'private_key_type' => OPENSSL_KEYTYPE_RSA));
@@ -134,10 +164,12 @@ try {
 		backstage_outreach_unsubscribe_runtime_assert(str_contains($mime, 'dkim-signature:') && str_contains($mime, 'list-unsubscribe') && str_contains($mime, 'list-unsubscribe-post'), 'DKIM signature did not cover both RFC 8058 headers.');
 	}
 
-	echo "Outreach unsubscribe runtime PASS: signed opaque links, forged-link rejection, GET prefetch safety, browser/RFC POST, idempotence, global suppression, mandatory footer/headers, final-gate blocking, and fail-closed infrastructure.\n";
+	echo "Outreach unsubscribe runtime PASS: signed opaque links, forged-link rejection, GET prefetch safety, browser/RFC POST, idempotence, global suppression, mandatory web footer without verified transport, verified-only one-click headers, final-gate blocking, and fail-closed web infrastructure.\n";
 } finally {
 	remove_filter('pre_wp_mail', $mail_filter, PHP_INT_MAX);
 	remove_filter('backstage_outreach_postal_address', $postal_filter, PHP_INT_MAX - 1);
+	remove_filter('backstage_outreach_unsubscribe_endpoint_readiness', $endpoint_filter, PHP_INT_MAX);
+	remove_filter('backstage_outreach_require_rfc8058', $require_rfc8058_filter, PHP_INT_MAX);
 	remove_filter('backstage_outreach_mail_transport_readiness', $transport_filter, PHP_INT_MAX);
 	foreach ($emails as $email) {
 		$suppression = vms_outreach_get_suppression_by_email($email);

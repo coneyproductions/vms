@@ -9,7 +9,7 @@ $admin = (string) file_get_contents($root . '/companion-plugins/backstage-outrea
 $discounts = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/business-discount-offers.php');
 
 $checks = array(
-	'Candidate identity is 1.2.19' => str_contains($plugin, "Version: 1.2.19") && str_contains($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.19"),
+	'Candidate identity is 1.2.19.1' => str_contains($plugin, "Version: 1.2.19.1") && str_contains($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.19.1"),
 	'Party schema is additive 1.2 with a contact activity ledger' => str_contains($party, "return '1.2.0';") && str_contains($party, "'contact_activities'") && str_contains($party, 'UNIQUE KEY request_key'),
 	'Workflow module is loaded after typed Party referrals' => strpos($plugin, "includes/party-paid-referrals.php") < strpos($plugin, "includes/party-bulk-workflows.php"),
 	'Directory index never calls the per-Party referral renderer with null' => str_contains($admin, "is_array(\$party) && function_exists('backstage_outreach_party_referral_render_panel')"),

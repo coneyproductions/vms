@@ -338,9 +338,19 @@ try {
 	WC()->cart->empty_cart(true);
 	backstage_outreach_discount_session_clear();
 	foreach ($order_ids as $order_id) {
+		$attendee_ids = $wpdb->get_col($wpdb->prepare("SELECT post_id FROM %i WHERE meta_key='_tribe_wooticket_order' AND meta_value=%d", $wpdb->postmeta, $order_id));
+		foreach ($attendee_ids as $attendee_id) {
+			wp_delete_post((int) $attendee_id, true);
+		}
 		$order = wc_get_order($order_id);
 		if ($order) {
 			$order->delete(true);
+		}
+	}
+	foreach ($post_ids as $related_post_id) {
+		$attendee_ids = $wpdb->get_col($wpdb->prepare("SELECT post_id FROM %i WHERE meta_key IN ('_tribe_wooticket_event','_tribe_wooticket_product') AND meta_value=%d", $wpdb->postmeta, $related_post_id));
+		foreach ($attendee_ids as $attendee_id) {
+			wp_delete_post((int) $attendee_id, true);
 		}
 	}
 	foreach (array_unique($coupon_ids) as $coupon_id) {
