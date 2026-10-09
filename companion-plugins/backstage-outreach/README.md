@@ -1,6 +1,6 @@
 # Backstage Outreach
 
-Current release: **1.2.16**. This release adds reusable paid referral links for canonical Person and Organization Parties through the existing reviewed percentage/fixed-discount engine. Existing Contacts, reusable businesses, recipients, distributions, signed links, coupons, and delivery history remain authoritative for their current workflows.
+Current release: **1.2.17**. This checkout hotfix limits the discount—not the purchasable eligible-ticket quantity—and preserves an explicit managed-coupon removal in the current WooCommerce session until the customer deliberately reapplies or revisits the signed offer. Existing Contacts, reusable businesses, recipients, distributions, signed links, coupons, claims, and delivery history remain authoritative.
 
 Backstage Outreach is the recovered Guest Pass Outreach workflow for Backstage
 Venue Manager 1.2.0 and newer. It is intentionally maintained as a companion

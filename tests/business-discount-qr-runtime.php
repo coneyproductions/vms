@@ -124,6 +124,7 @@ try {
 	$distribution_b = backstage_outreach_discount_get_distribution($distribution_ids['B']);
 	backstage_discount_runtime_assert(is_array($distribution_a) && is_array($distribution_b) && $distribution_a['coupon_code'] !== $distribution_b['coupon_code'], 'Per-business managed coupon attribution is not distinct.');
 	$managed_coupon_a = new WC_Coupon($coupon_ids['A']);
+	backstage_discount_runtime_assert(absint($managed_coupon_a->get_limit_usage_to_x_items()) === 2, 'The managed coupon does not retain the reviewed two-ticket discount limit.');
 	$commerce_top_up = backstage_outreach_discount_exact_total(40.0, 80.0, array(
 		'_vms_discounts_original_unit_price' => 100.0,
 		'_vms_discounts_line_discount' => 20.0,
@@ -135,6 +136,30 @@ try {
 		'quantity' => 1,
 	), false, $managed_coupon_a);
 	backstage_discount_runtime_assert(abs((float) $commerce_top_up - 30.0) < 0.01 && abs((float) $commerce_excess) < 0.01, 'Commerce Discount reconciliation did not top up to exactly 50% without over-stacking.');
+
+	$discount_matrix = array(1 => 50.0, 2 => 100.0, 3 => 100.0, 4 => 100.0);
+	foreach ($discount_matrix as $ticket_quantity => $expected_discount) {
+		WC()->cart->empty_cart(true);
+		backstage_outreach_discount_session_clear();
+		WC()->cart->add_to_cart($ticket_id, $ticket_quantity);
+		WC()->cart->add_to_cart($unrelated_id, 1);
+		backstage_outreach_discount_session_set($distribution_a, backstage_outreach_distribution_token($distribution_a));
+		backstage_outreach_discount_sync_cart_coupon();
+		WC()->cart->calculate_totals();
+		wc_clear_notices();
+		backstage_outreach_discount_validate_cart();
+		$commerce_line_discount = 0.0;
+		foreach (WC()->cart->get_cart() as $matrix_item) {
+			if (absint($matrix_item['product_id'] ?? 0) === $ticket_id) {
+				$commerce_line_discount = max(0.0, (float) ($matrix_item['_vms_discounts_line_discount'] ?? 0.0));
+			}
+		}
+		$applicable_commerce_discount = $commerce_line_discount * (min($ticket_quantity, 2) / $ticket_quantity);
+		$expected_coupon_discount = max(0.0, $expected_discount - $applicable_commerce_discount);
+		backstage_discount_runtime_assert(abs((float) WC()->cart->get_discount_total() - $expected_coupon_discount) < 0.01, 'The managed coupon discount matrix failed for eligible quantity ' . $ticket_quantity . ': expected coupon ' . $expected_coupon_discount . ', got ' . WC()->cart->get_discount_total() . '.');
+		backstage_discount_runtime_assert(abs((float) WC()->cart->get_total('edit') - (($ticket_quantity * 100.0) + 40.0 - $commerce_line_discount - $expected_coupon_discount)) < 0.01, 'A full-price eligible ticket or unrelated product total changed at quantity ' . $ticket_quantity . '.');
+		backstage_discount_runtime_assert(empty(wc_get_notices('error')), 'Eligible tickets above the discount cap incorrectly blocked the cart at quantity ' . $ticket_quantity . '.');
+	}
 
 	$ordinary_coupon = new WC_Coupon();
 	$ordinary_coupon->set_code('bvm-test-' . strtolower(wp_generate_password(10, false, false)));
@@ -160,9 +185,37 @@ try {
 	$ordinary_replacement = WC()->cart->apply_coupon($ordinary_coupon->get_code());
 	$applied = array_map('wc_format_coupon_code', WC()->cart->get_applied_coupons());
 	backstage_discount_runtime_assert($ordinary_replacement === false && in_array(wc_format_coupon_code((string) $distribution_a['coupon_code']), $applied, true), 'A manually entered coupon replaced or stacked with the managed individual-use coupon.');
+	wp_set_current_user(0);
 	WC()->cart->remove_coupon((string) $distribution_a['coupon_code']);
 	backstage_outreach_discount_sync_cart_coupon();
-	backstage_discount_runtime_assert(WC()->cart->has_discount((string) $distribution_a['coupon_code']), 'The valid signed session did not restore its removed managed coupon.');
+	backstage_discount_runtime_assert(!WC()->cart->has_discount((string) $distribution_a['coupon_code']) && backstage_outreach_discount_coupon_is_suppressed($distribution_a, (string) $distribution_a['coupon_code']), 'Explicit removal did not suppress only the active managed coupon.');
+	WC()->cart->calculate_totals();
+	WC()->cart->add_to_cart($unrelated_id, 1);
+	backstage_outreach_discount_sync_cart_coupon();
+	backstage_discount_runtime_assert(!WC()->cart->has_discount((string) $distribution_a['coupon_code']), 'Cart recalculation or add-to-cart restored an explicitly removed coupon.');
+	$deliberate_reapply = WC()->cart->apply_coupon((string) $distribution_a['coupon_code']);
+	backstage_discount_runtime_assert($deliberate_reapply === true && WC()->cart->has_discount((string) $distribution_a['coupon_code']) && !backstage_outreach_discount_coupon_is_suppressed($distribution_a, (string) $distribution_a['coupon_code']), 'A deliberate managed-coupon reapplication did not clear its session-scoped suppression.');
+	WC()->cart->remove_coupon((string) $distribution_a['coupon_code']);
+	backstage_outreach_discount_session_set($distribution_a, backstage_outreach_distribution_token($distribution_a));
+	backstage_outreach_discount_sync_cart_coupon();
+	backstage_discount_runtime_assert(WC()->cart->has_discount((string) $distribution_a['coupon_code']), 'A deliberate signed-offer revisit did not reactivate its managed coupon.');
+	wp_set_current_user($user_id);
+	$store_api_remove_all = new WP_REST_Request('DELETE', '/wc/store/v1/cart/coupons');
+	$store_api_remove_all->set_header('Nonce', wp_create_nonce('wc_store_api'));
+	$store_api_response = rest_do_request($store_api_remove_all);
+	backstage_outreach_discount_sync_cart_coupon();
+	backstage_discount_runtime_assert($store_api_response->get_status() === 200 && !WC()->cart->has_discount((string) $distribution_a['coupon_code']) && backstage_outreach_discount_coupon_is_suppressed($distribution_a, (string) $distribution_a['coupon_code']), 'The logged-in Store API remove-all route did not persist managed-coupon suppression.');
+	$no_offer_order = wc_create_order();
+	backstage_discount_runtime_assert($no_offer_order instanceof WC_Order, 'Could not create a disposable no-offer checkout order.');
+	$order_ids[] = $no_offer_order->get_id();
+	$no_offer_order->add_product(wc_get_product($ticket_id), 3);
+	$no_offer_order->save();
+	backstage_outreach_discount_stamp_order($no_offer_order);
+	backstage_outreach_discount_validate_order_before_payment($no_offer_order);
+	backstage_discount_runtime_assert(absint($no_offer_order->get_meta('_backstage_outreach_distribution_id', true)) === 0 && empty($no_offer_order->get_coupon_codes()), 'A coupon-free checkout retained managed-offer attribution after explicit removal.');
+	backstage_outreach_discount_session_set($distribution_a, backstage_outreach_distribution_token($distribution_a));
+	backstage_outreach_discount_sync_cart_coupon();
+	wp_set_current_user(0);
 	backstage_outreach_discount_session_set($distribution_b, backstage_outreach_distribution_token($distribution_b));
 	backstage_outreach_discount_sync_cart_coupon();
 	backstage_discount_runtime_assert(WC()->cart->has_discount((string) $distribution_b['coupon_code']) && !WC()->cart->has_discount((string) $distribution_a['coupon_code']) && count(WC()->cart->get_cart()) === 2, 'Switching signed business context did not replace only the managed coupon while preserving the cart.');
@@ -177,7 +230,7 @@ try {
 	$direct_apply = WC()->cart->apply_coupon((string) $distribution_a['coupon_code']);
 	backstage_discount_runtime_assert($direct_apply === false, 'Managed coupon bypassed the required signed offer context.');
 
-	$make_order = static function (array $distribution, string $email, bool $include_coupon = true) use ($ticket_id, $unrelated_id, &$order_ids): WC_Order {
+	$make_order = static function (array $distribution, string $email, bool $include_coupon = true, int $ticket_quantity = 1) use ($ticket_id, $unrelated_id, &$order_ids): WC_Order {
 		$order = wc_create_order();
 		if (is_wp_error($order)) {
 			throw new RuntimeException($order->get_error_message());
@@ -193,7 +246,7 @@ try {
 		$order->update_meta_data('_backstage_outreach_business_id', (int) $distribution['business_id']);
 		$order->update_meta_data('_backstage_outreach_coupon_id', (int) $distribution['coupon_id']);
 		$order->update_meta_data('_backstage_outreach_offer_type', 'coupon_backed');
-		$order->add_product(wc_get_product($ticket_id), 1);
+		$order->add_product(wc_get_product($ticket_id), max(1, $ticket_quantity));
 		$order->add_product(wc_get_product($unrelated_id), 1);
 		$order->save();
 		if ($include_coupon) {
@@ -206,6 +259,18 @@ try {
 		$order->save();
 		return $order;
 	};
+
+	$capped_order = $make_order($distribution_b, 'customer-cap@example.test', true, 4);
+	backstage_outreach_discount_validate_order_pricing($capped_order, $distribution_b);
+	backstage_outreach_discount_reserve_order($capped_order);
+	$capped_redemption = $wpdb->get_row($wpdb->prepare(
+		'SELECT ticket_quantity, discount_total FROM %i WHERE order_id=%d',
+		backstage_outreach_business_table('paid_redemptions'),
+		$capped_order->get_id()
+	), ARRAY_A);
+	backstage_discount_runtime_assert(abs((float) $capped_order->get_total() - 340.0) < 0.01, 'Four eligible tickets did not preserve two full-price tickets in checkout totals.');
+	backstage_discount_runtime_assert(is_array($capped_redemption) && absint($capped_redemption['ticket_quantity']) === 2 && abs((float) $capped_redemption['discount_total'] - 100.0) < 0.01, 'Capacity accounting did not reserve only the two discounted admissions.');
+	$wpdb->delete(backstage_outreach_business_table('paid_redemptions'), array('order_id' => $capped_order->get_id()));
 
 	$a1 = $make_order($distribution_a, 'customer-a1@example.test');
 	backstage_outreach_discount_reserve_order($a1);
