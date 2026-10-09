@@ -11,7 +11,7 @@ if (!function_exists('vms_outreach_db_option_key')) {
 if (!function_exists('vms_outreach_db_version_target')) {
 	function vms_outreach_db_version_target(): string
 	{
-		return '1.1.0';
+		return '1.2.0';
 	}
 }
 
@@ -60,6 +60,7 @@ if (!function_exists('vms_outreach_maybe_upgrade_schema')) {
 
 		$contacts = vms_outreach_table_contacts();
 		$suppressions = vms_outreach_table_suppressions();
+		$unsubscribe_tokens = backstage_outreach_unsubscribe_table();
 		$campaigns = vms_admission_table_pass_outreach_campaigns();
 		$recipients = vms_admission_table_pass_outreach_recipients();
 		$claims = vms_admission_table_pass_claims();
@@ -117,6 +118,22 @@ if (!function_exists('vms_outreach_maybe_upgrade_schema')) {
 			KEY email_norm (email_norm),
 			KEY suppressed_at (suppressed_at),
 			KEY source_contact_id (source_contact_id),
+			KEY source_campaign_id (source_campaign_id)
+		) {$charset_collate};";
+
+		$sql_unsubscribe_tokens = "CREATE TABLE {$unsubscribe_tokens} (
+			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			token_hash CHAR(64) NOT NULL,
+			email VARCHAR(190) NOT NULL,
+			email_norm VARCHAR(190) NOT NULL,
+			source_type VARCHAR(60) NOT NULL DEFAULT 'outreach',
+			source_id BIGINT(20) UNSIGNED NULL,
+			source_campaign_id BIGINT(20) UNSIGNED NULL,
+			created_at DATETIME NOT NULL,
+			confirmed_at DATETIME NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY token_hash (token_hash),
+			KEY email_norm (email_norm),
 			KEY source_campaign_id (source_campaign_id)
 		) {$charset_collate};";
 
@@ -198,6 +215,7 @@ if (!function_exists('vms_outreach_maybe_upgrade_schema')) {
 
 		dbDelta($sql_contacts);
 		dbDelta($sql_suppressions);
+		dbDelta($sql_unsubscribe_tokens);
 		dbDelta($sql_campaigns);
 		dbDelta($sql_recipients);
 

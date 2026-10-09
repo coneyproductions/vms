@@ -3651,22 +3651,35 @@ if (!function_exists('vms_pass_outreach_attempt_send_invite_email')) {
 			$headers[] = 'Reply-To: ' . $from_email;
 		}
 
-		$mail_error = '';
-		$mail_capture = static function ($wp_error) use (&$mail_error): void {
-			if (is_wp_error($wp_error)) {
-				$mail_error = $wp_error->get_error_message();
-			}
-		};
-		add_action('wp_mail_failed', $mail_capture, 10, 1);
-		$sent = wp_mail($email, $subject, $body, $headers);
-		remove_action('wp_mail_failed', $mail_capture, 10);
+		$sent = function_exists('backstage_outreach_send_promotional_email')
+			? backstage_outreach_send_promotional_email(
+				$email,
+				$subject,
+				$body,
+				$headers,
+				array(
+					'source_type' => 'campaign_recipient',
+					'source_id' => absint($recipient['id'] ?? 0),
+					'campaign_id' => absint($campaign['id'] ?? 0),
+				)
+			)
+			: new WP_Error('outreach_unsubscribe_unavailable', __('Mandatory unsubscribe delivery is unavailable. No email was submitted.', 'backstage-outreach'));
 
-		if (!$sent) {
-			$message = $mail_error !== '' ? $mail_error : __('WordPress did not accept the outreach email for delivery.', 'backstage-outreach');
-			vms_pass_outreach_mark_recipient_failed_send($recipient, $message);
+		if (is_wp_error($sent)) {
+			$message = $sent->get_error_message();
+			$is_suppressed = $sent->get_error_code() === 'outreach_suppressed';
+			if ($is_suppressed) {
+				vms_pass_outreach_apply_guardrail_send_state($recipient, array(
+					'blocked' => true,
+					'reason_code' => 'suppressed',
+					'reason_label' => __('Suppressed', 'backstage-outreach'),
+				), $message);
+			} else {
+				vms_pass_outreach_mark_recipient_failed_send($recipient, $message);
+			}
 			return array(
-				'status' => 'failed',
-				'code' => 'wp_mail_failed',
+				'status' => $is_suppressed ? 'skipped' : 'failed',
+				'code' => $sent->get_error_code(),
 				'message' => $message,
 				'recipient_id' => absint($recipient['id'] ?? 0),
 			);

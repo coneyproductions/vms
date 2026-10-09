@@ -4,6 +4,7 @@ defined('ABSPATH') || exit;
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/suppression.php';
+require_once __DIR__ . '/unsubscribe.php';
 require_once __DIR__ . '/contacts.php';
 require_once __DIR__ . '/admin-ui.php';
 

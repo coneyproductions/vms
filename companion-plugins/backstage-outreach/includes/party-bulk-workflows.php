@@ -595,15 +595,28 @@ function backstage_outreach_party_invitation_handoff(array $review, int $user_id
 			if (function_exists('vms_outreach_email_is_suppressed') && vms_outreach_email_is_suppressed($current_email)) { $result['failed'][$id] = __('Suppressed', 'backstage-outreach'); continue; }
 			$prior = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE distribution_id=%d AND activity_type=%s AND activity_status=%s', backstage_outreach_party_table('contact_activities'), $id, 'email_handoff', 'handed_off'));
 			if ((string) $review['mode'] === 'first' && $prior > 0) { $result['failed'][$id] = __('A prior handoff exists; use deliberate resend.', 'backstage-outreach'); continue; }
-			$accepted = wp_mail((string) $row['email'], (string) $row['subject'], (string) $row['message'], array('Content-Type: text/plain; charset=UTF-8'));
+			$handoff = function_exists('backstage_outreach_send_promotional_email')
+				? backstage_outreach_send_promotional_email(
+					(string) $row['email'],
+					(string) $row['subject'],
+					(string) $row['message'],
+					array('Content-Type: text/plain; charset=UTF-8'),
+					array(
+						'source_type' => 'party_distribution',
+						'source_id' => $id,
+						'campaign_id' => absint($review['campaign_id']),
+					)
+				)
+				: new WP_Error('outreach_unsubscribe_unavailable', __('Mandatory unsubscribe delivery is unavailable. No email was submitted.', 'backstage-outreach'));
+			$accepted = !is_wp_error($handoff);
 			$activity = backstage_outreach_party_record_activity(array(
 				'campaign_id' => absint($review['campaign_id']), 'distribution_id' => $id, 'party_id' => absint($row['party_id']),
 				'activity_type' => 'email_handoff', 'activity_status' => $accepted ? 'handed_off' : 'failed', 'contact_method' => 'email', 'contact_value' => (string) $row['email'],
 				'subject_snapshot' => (string) $row['subject'], 'message_snapshot' => (string) $row['message'], 'content_hash' => (string) $row['content_hash'],
-				'notes' => $accepted ? __('Accepted by the configured WordPress mailer; delivery is not asserted.', 'backstage-outreach') : __('The WordPress mailer rejected the handoff.', 'backstage-outreach'),
+				'notes' => $accepted ? __('Accepted by the configured WordPress mailer; delivery is not asserted.', 'backstage-outreach') : (is_wp_error($handoff) ? $handoff->get_error_message() : __('The WordPress mailer rejected the handoff.', 'backstage-outreach')),
 				'request_key' => hash('sha256', (string) $review['review_token'] . '|' . $id),
 			), $user_id);
-			if ($accepted && !is_wp_error($activity)) { $result['handed_off']++; } else { $result['failed'][$id] = is_wp_error($activity) ? $activity->get_error_message() : __('The mailer rejected the handoff.', 'backstage-outreach'); }
+			if ($accepted && !is_wp_error($activity)) { $result['handed_off']++; } else { $result['failed'][$id] = is_wp_error($activity) ? $activity->get_error_message() : (is_wp_error($handoff) ? $handoff->get_error_message() : __('The mailer rejected the handoff.', 'backstage-outreach')); }
 		} finally {
 			$wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock));
 		}

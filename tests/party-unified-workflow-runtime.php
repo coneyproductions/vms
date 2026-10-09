@@ -1,5 +1,5 @@
 <?php
-/** Disposable runtime acceptance for the 1.2.18.1 unified Party workflow. */
+/** Disposable runtime acceptance for the unified Party workflow. */
 
 defined('ABSPATH') || exit;
 
@@ -9,7 +9,7 @@ function outreach_party_unified_assert(bool $condition, string $message): void
 }
 
 if (!class_exists('WooCommerce') || !function_exists('backstage_outreach_party_adoption_preview')) {
-	throw new RuntimeException('Outreach 1.2.18.1 and WooCommerce must be active.');
+	throw new RuntimeException('Outreach 1.2.19 and WooCommerce must be active.');
 }
 
 global $wpdb;
@@ -29,6 +29,10 @@ $suppression_id = 0;
 $mail_attempts = 0;
 $mail_block = static function () use (&$mail_attempts): bool { $mail_attempts++; return true; };
 add_filter('pre_wp_mail', $mail_block, PHP_INT_MAX);
+$verified_transport = static fn(array $state): array => array('ready' => true, 'method' => 'synthetic_verified_transport', 'message' => '');
+add_filter('backstage_outreach_mail_transport_readiness', $verified_transport, PHP_INT_MAX, 1);
+$synthetic_postal_address = static fn(string $address): string => 'Synthetic Venue, 100 Test Way, Example, TX 75001, US';
+add_filter('backstage_outreach_postal_address', $synthetic_postal_address, PHP_INT_MAX, 1);
 
 $tables = array(
 	'parties' => backstage_outreach_party_table('parties'), 'methods' => backstage_outreach_party_table('contact_methods'),
@@ -328,6 +332,11 @@ try {
 	), JSON_PRETTY_PRINT) . "\n";
 } finally {
 	remove_filter('pre_wp_mail', $mail_block, PHP_INT_MAX);
+	remove_filter('backstage_outreach_mail_transport_readiness', $verified_transport, PHP_INT_MAX);
+	remove_filter('backstage_outreach_postal_address', $synthetic_postal_address, PHP_INT_MAX);
+	foreach ($campaign_ids as $unsubscribe_campaign_id) {
+		$wpdb->delete(backstage_outreach_unsubscribe_table(), array('source_campaign_id' => (int) $unsubscribe_campaign_id), array('%d'));
+	}
 	if ($suppression_id > 0) { vms_outreach_remove_suppression($suppression_id); }
 	foreach (array_unique($coupon_ids) as $coupon_id) { if ($coupon_id > 0) { wp_delete_post($coupon_id, true); } }
 	foreach (array('activities', 'redemptions', 'distributions', 'audit', 'links', 'roles', 'sources', 'methods', 'parties') as $key) {

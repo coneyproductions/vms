@@ -2096,8 +2096,23 @@ function backstage_outreach_attempt_business_share_email(array $row, array $camp
 		$headers[] = 'From: ' . $site_name . ' <' . $from_email . '>';
 		$headers[] = 'Reply-To: ' . $from_email;
 	}
-	$accepted = wp_mail($email, (string) $context['subject'], (string) $context['message'], $headers);
-	$action = $accepted ? 'outreach_business_share_email_handed_off' : 'outreach_business_share_email_failed';
+	$handoff = function_exists('backstage_outreach_send_promotional_email')
+		? backstage_outreach_send_promotional_email(
+			$email,
+			(string) $context['subject'],
+			(string) $context['message'],
+			$headers,
+			array(
+				'source_type' => 'business_distribution',
+				'source_id' => $distribution_id,
+				'campaign_id' => $campaign_id,
+			)
+		)
+		: new WP_Error('outreach_unsubscribe_unavailable', __('Mandatory unsubscribe delivery is unavailable. No email was submitted.', 'backstage-outreach'));
+	$accepted = !is_wp_error($handoff);
+	$action = $accepted
+		? 'outreach_business_share_email_handed_off'
+		: (is_wp_error($handoff) && $handoff->get_error_code() === 'outreach_suppressed' ? 'outreach_business_share_email_skipped' : 'outreach_business_share_email_failed');
 	if (function_exists('bvmgr_admission_audit_log')) {
 		$template_digest = hash('sha256', (string) ($review['subject'] ?? '') . "\n" . (string) ($review['message'] ?? ''));
 		bvmgr_admission_audit_log(0, null, $action, get_current_user_id(), 'admin', array(
@@ -2110,7 +2125,12 @@ function backstage_outreach_attempt_business_share_email(array $row, array $camp
 			'review_token_hash' => !empty($review['token']) ? hash('sha256', (string) $review['token']) : '',
 		));
 	}
-	return array('status' => $accepted ? 'handed_off' : 'failed', 'code' => $accepted ? 'accepted_by_mailer' : 'wp_mail_failed', 'distribution_id' => $distribution_id);
+	return array(
+		'status' => $accepted ? 'handed_off' : (is_wp_error($handoff) && $handoff->get_error_code() === 'outreach_suppressed' ? 'skipped' : 'failed'),
+		'code' => $accepted ? 'accepted_by_mailer' : (is_wp_error($handoff) ? $handoff->get_error_code() : 'wp_mail_failed'),
+		'distribution_id' => $distribution_id,
+		'message' => is_wp_error($handoff) ? $handoff->get_error_message() : '',
+	);
 }
 
 function backstage_outreach_handle_business_share(): void

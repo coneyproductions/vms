@@ -9,7 +9,7 @@ $admin = (string) file_get_contents($root . '/companion-plugins/backstage-outrea
 $discounts = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/business-discount-offers.php');
 
 $checks = array(
-	'Candidate identity is 1.2.18.1' => str_contains($plugin, "Version: 1.2.18.1") && str_contains($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.18.1"),
+	'Candidate identity is 1.2.19' => str_contains($plugin, "Version: 1.2.19") && str_contains($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.19"),
 	'Party schema is additive 1.2 with a contact activity ledger' => str_contains($party, "return '1.2.0';") && str_contains($party, "'contact_activities'") && str_contains($party, 'UNIQUE KEY request_key'),
 	'Workflow module is loaded after typed Party referrals' => strpos($plugin, "includes/party-paid-referrals.php") < strpos($plugin, "includes/party-bulk-workflows.php"),
 	'Directory index never calls the per-Party referral renderer with null' => str_contains($admin, "is_array(\$party) && function_exists('backstage_outreach_party_referral_render_panel')"),
@@ -35,7 +35,7 @@ $checks = array(
 	'First handoff blocks duplicates while resend is deliberate' => str_contains($workflow, "\$mode === 'resend'") && str_contains($workflow, 'Prior successful handoff; use deliberate resend'),
 	'Email suppression and missing addresses fail closed' => str_contains($workflow, 'vms_outreach_email_is_suppressed') && str_contains($workflow, "Missing email"),
 	'Invitation handoff revalidates the live referral and managed coupon immediately before mail' => substr_count($workflow, 'backstage_outreach_party_invitation_offer_error') >= 3 && str_contains($workflow, 'backstage_outreach_discount_distribution_error') && str_contains($workflow, 'party_invitation_signature_invalid'),
-	'No campaign link or Party creation automatically sends mail' => substr_count($workflow, 'wp_mail(') === 1 && str_contains($workflow, 'party_invitation_handoff'),
+	'No campaign link or Party creation automatically sends mail' => !str_contains($workflow, 'wp_mail(') && str_contains($workflow, 'backstage_outreach_send_promotional_email') && str_contains($workflow, 'party_invitation_handoff'),
 	'Mailer acceptance is not represented as delivery' => str_contains($workflow, 'delivery is not asserted'),
 	'Manual email phone text social and note methods remain available' => str_contains($workflow, "array('email', 'phone', 'text', 'social', 'note')"),
 	'Checkout discount cap remains a discount-only calculation' => str_contains($discounts, 'discounted_ticket_quantity') && !str_contains($discounts, 'Reduce the eligible ticket quantity to continue.'),
