@@ -15,10 +15,10 @@ $assert = static function (bool $condition, string $message) use (&$assertions):
 	}
 };
 
-$assert(strpos($plugin, 'Version: 1.2.17') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.17'") !== false, 'Outreach release metadata is not 1.2.17.');
+$assert(strpos($plugin, 'Version: 1.2.18') !== false && strpos($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.18'") !== false, 'Outreach release metadata is not 1.2.18.');
 $assert(strpos($plugin, "includes/party-directory.php") !== false && strpos($plugin, "includes/party-directory-admin.php") !== false, 'Party foundation bootstrap is incomplete.');
 $assert(strpos($plugin, 'backstage_outreach_party_schema_upgrade();') !== false, 'Party schema upgrade is not registered.');
-$assert(strpos($domain, "return '1.1.0';") !== false, 'Independent Party schema marker is missing.');
+$assert(strpos($domain, "return '1.2.0';") !== false, 'Independent Party schema marker is missing.');
 foreach (array('parties', 'contact_methods', 'affiliations', 'sources', 'campaign_roles', 'legacy_links', 'identity_audit', 'referral_distributions', 'referral_redemptions') as $table) {
 	$assert(strpos($domain, "backstage_outreach_party_table('{$table}')") !== false, "Party table {$table} is missing.");
 }

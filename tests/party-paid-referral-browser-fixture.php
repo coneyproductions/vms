@@ -12,6 +12,7 @@ $cleanup = static function (array $data) use ($wpdb, $option): void {
 	if ($distribution_ids) {
 		$ids = implode(',', $distribution_ids);
 		$coupon_ids = array_map('absint', $wpdb->get_col("SELECT coupon_id FROM `" . backstage_outreach_party_table('referral_distributions') . "` WHERE id IN ({$ids})"));
+		$wpdb->query("DELETE FROM `" . backstage_outreach_party_table('contact_activities') . "` WHERE distribution_id IN ({$ids})");
 		$wpdb->query("DELETE FROM `" . backstage_outreach_party_table('referral_redemptions') . "` WHERE distribution_id IN ({$ids})");
 		$wpdb->query("DELETE FROM `" . backstage_outreach_party_table('referral_distributions') . "` WHERE id IN ({$ids})");
 		foreach ($coupon_ids as $coupon_id) {
@@ -23,7 +24,8 @@ $cleanup = static function (array $data) use ($wpdb, $option): void {
 	}
 	if ($party_id > 0) {
 		delete_transient(backstage_outreach_party_referral_review_key($party_id));
-		foreach (array('identity_audit', 'legacy_links', 'campaign_roles', 'sources', 'contact_methods') as $suffix) {
+		$wpdb->query($wpdb->prepare('DELETE FROM %i WHERE from_party_id=%d OR to_party_id=%d', backstage_outreach_party_table('identity_audit'), $party_id, $party_id));
+		foreach (array('legacy_links', 'campaign_roles', 'sources', 'contact_methods') as $suffix) {
 			$wpdb->delete(backstage_outreach_party_table($suffix), array('party_id' => $party_id));
 		}
 		$wpdb->query($wpdb->prepare('DELETE FROM %i WHERE person_party_id=%d OR organization_party_id=%d', backstage_outreach_party_table('affiliations'), $party_id, $party_id));
@@ -98,6 +100,10 @@ $campaign_id = (int) $wpdb->insert_id;
 $party = backstage_outreach_party_save(array('party_type' => 'person', 'display_name' => $marker, 'given_name' => 'Café', 'family_name' => '東京'), $user_id);
 if (!is_array($party) || is_wp_error(backstage_outreach_party_link_source((int) $party['id'], $source_id, $user_id, 'browser_fixture'))) {
 	throw new RuntimeException('Could not create the canonical Party fixture.');
+}
+$email = backstage_outreach_party_save_contact_method((int) $party['id'], array('method_type' => 'email', 'value' => 'party-browser@example.test', 'is_primary' => 1, 'provenance_type' => 'browser_fixture'), $user_id);
+if (is_wp_error($email)) {
+	throw new RuntimeException('Could not create the Party email fixture.');
 }
 $fixture = array(
 	'marker' => $marker,

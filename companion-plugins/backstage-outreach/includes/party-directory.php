@@ -15,7 +15,7 @@ function backstage_outreach_party_schema_option_key(): string
 
 function backstage_outreach_party_schema_target(): string
 {
-	return '1.1.0';
+	return '1.2.0';
 }
 
 function backstage_outreach_party_table(string $suffix): string
@@ -233,6 +233,29 @@ function backstage_outreach_party_schema_upgrade(): void
 		KEY campaign_status (campaign_id, status),
 		KEY party_status (party_id, status),
 		KEY coupon_id (coupon_id)
+	) {$collate};");
+
+	dbDelta('CREATE TABLE ' . backstage_outreach_party_table('contact_activities') . " (
+		id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+		campaign_id BIGINT(20) UNSIGNED NOT NULL,
+		distribution_id BIGINT(20) UNSIGNED NOT NULL,
+		party_id BIGINT(20) UNSIGNED NOT NULL,
+		activity_type VARCHAR(32) NOT NULL,
+		activity_status VARCHAR(32) NOT NULL,
+		contact_method VARCHAR(32) NULL,
+		contact_value VARCHAR(255) NULL,
+		subject_snapshot TEXT NULL,
+		message_snapshot LONGTEXT NULL,
+		content_hash CHAR(64) NULL,
+		notes LONGTEXT NULL,
+		request_key CHAR(64) NOT NULL,
+		created_by BIGINT(20) UNSIGNED NOT NULL,
+		created_at DATETIME NOT NULL,
+		PRIMARY KEY (id),
+		UNIQUE KEY request_key (request_key),
+		KEY campaign_party (campaign_id, party_id),
+		KEY distribution_status (distribution_id, activity_status),
+		KEY party_created (party_id, created_at)
 	) {$collate};");
 
 	update_option(backstage_outreach_party_schema_option_key(), backstage_outreach_party_schema_target(), false);

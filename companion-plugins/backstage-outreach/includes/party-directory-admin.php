@@ -106,6 +106,9 @@ function backstage_outreach_party_render_directory_screen(): void
 	}
 
 	backstage_outreach_party_render_legacy_review();
+	if (function_exists('backstage_outreach_party_bulk_render_workspace')) {
+		backstage_outreach_party_bulk_render_workspace();
+	}
 
 	echo '<section class="vms-pass-card">';
 	echo '<h2>' . esc_html__('Contacts & Partners', 'backstage-outreach') . '</h2>';
@@ -159,7 +162,7 @@ function backstage_outreach_party_render_directory_screen(): void
 	}
 	echo '</tbody></table></div>';
 	echo '</section>';
-	if (function_exists('backstage_outreach_party_referral_render_panel')) {
+	if (is_array($party) && function_exists('backstage_outreach_party_referral_render_panel')) {
 		backstage_outreach_party_referral_render_panel($party);
 	}
 	echo '</div>';

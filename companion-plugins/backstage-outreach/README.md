@@ -1,6 +1,6 @@
 # Backstage Outreach
 
-Current release: **1.2.17**. This checkout hotfix limits the discount—not the purchasable eligible-ticket quantity—and preserves an explicit managed-coupon removal in the current WooCommerce session until the customer deliberately reapplies or revisits the signed offer. Existing Contacts, reusable businesses, recipients, distributions, signed links, coupons, claims, and delivery history remain authoritative.
+Current release: **1.2.18**. This release preserves the 1.2.17 checkout protections and adds reviewed, resumable adoption of historical recipients into canonical Parties, a distinct paid Partner campaign setup, bulk Partner-link generation, and audited contact handoffs. Existing Contacts, reusable businesses, recipients, distributions, signed links, coupons, claims, and delivery history remain authoritative.
 
 Backstage Outreach is the recovered Guest Pass Outreach workflow for Backstage
 Venue Manager 1.2.0 and newer. It is intentionally maintained as a companion
@@ -18,6 +18,28 @@ The plugin preserves the historical table and record identifiers. Its schema
 upgrade is additive and idempotent: it creates missing Outreach tables, adds
 missing claim-attribution columns/indexes, and backfills only missing normalized
 status values. It does not drop, rename, truncate, or reset Outreach data.
+
+## Canonical Party partner workflow
+
+Version 1.2.18 adds an operator-reviewed workflow for adopting historical
+campaign recipients into canonical Person Parties. Only a shared historical
+Contact ID groups snapshots automatically; matching names, email addresses,
+phone numbers, or brokerage labels are shown as review evidence and never act
+as identity keys. Commit retries reuse reviewed legacy links and provenance,
+while the original recipient snapshots remain unchanged.
+
+Reusable Partner Admission Offers use a new paid definition-only batch and a
+new linked campaign. They do not convert existing complimentary campaigns or
+batches, generate Guest Pass claim tokens, or require reusable-business
+memberships. Bulk generation delegates to the typed Party referral engine and
+verifies each signed link and managed coupon independently, so failed rows can
+be retried without duplicating successful rows.
+
+The Party contact dashboard records exact invitation snapshots and manual
+email, phone, text, social, or note activity. First-time handoff is protected
+against duplicates; resend is a separate explicit action. Global Outreach
+suppression and missing-email checks fail closed, and a successful `wp_mail()`
+return is recorded only as an accepted handoff—not as delivery.
 
 ## Delivery safety
 

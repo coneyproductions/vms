@@ -10,7 +10,7 @@ $business = (string) file_get_contents($root . '/companion-plugins/backstage-out
 
 $checks = array(
 	'Plugin loads the focused Party paid-referral adapter' => str_contains($plugin, "includes/party-paid-referrals.php"),
-	'Party schema advances independently and adds typed referral tables' => str_contains($party, "return '1.1.0';") && str_contains($party, "'referral_distributions'") && str_contains($party, "'referral_redemptions'"),
+	'Party schema advances independently and adds typed referral tables' => str_contains($party, "return '1.2.0';") && str_contains($party, "'referral_distributions'") && str_contains($party, "'referral_redemptions'") && str_contains($party, "'contact_activities'"),
 	'Partner distributions key campaign plus Party without a business id' => str_contains($party, 'UNIQUE KEY campaign_party (campaign_id, party_id)') && !preg_match('/referral_distributions[\s\S]{0,1800}business_id/', $party),
 	'Partner redemptions attribute the canonical Party' => str_contains($party, 'party_id BIGINT(20) UNSIGNED NOT NULL') && str_contains($party, 'KEY party_status (party_id, status)'),
 	'Signed Partner URL uses a distinct path and signature domain' => str_contains($referrals, "'party-referral|1|'") && str_contains($referrals, "'/admission-offer/partner/'"),
