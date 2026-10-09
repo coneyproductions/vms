@@ -592,18 +592,22 @@ add_action('woocommerce_removed_coupon', 'backstage_outreach_discount_record_cou
 
 function backstage_outreach_discount_record_store_api_coupon_removal($response, $handler, $request)
 {
-	if ($response !== null || !($request instanceof WP_REST_Request) || $request->get_method() !== 'DELETE'
+	if (is_wp_error($response) || !($request instanceof WP_REST_Request) || $request->get_method() !== 'DELETE'
 		|| untrailingslashit($request->get_route()) !== '/wc/store/v1/cart/coupons') {
+		return $response;
+	}
+	$rest_response = rest_ensure_response($response);
+	if ($rest_response->get_status() >= 400) {
 		return $response;
 	}
 	$row = backstage_outreach_discount_session_distribution();
 	$code = is_array($row) ? wc_format_coupon_code((string) ($row['coupon_code'] ?? '')) : '';
-	if ($code !== '' && function_exists('WC') && WC() && WC()->cart && WC()->cart->has_discount($code)) {
+	if ($code !== '') {
 		backstage_outreach_discount_record_coupon_removal($code);
 	}
 	return $response;
 }
-add_filter('rest_request_before_callbacks', 'backstage_outreach_discount_record_store_api_coupon_removal', 10, 3);
+add_filter('rest_request_after_callbacks', 'backstage_outreach_discount_record_store_api_coupon_removal', 10, 3);
 
 function backstage_outreach_discount_record_coupon_application(string $code): void
 {
