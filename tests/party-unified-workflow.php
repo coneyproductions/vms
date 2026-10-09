@@ -9,14 +9,17 @@ $admin = (string) file_get_contents($root . '/companion-plugins/backstage-outrea
 $discounts = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/business-discount-offers.php');
 
 $checks = array(
-	'Candidate identity is 1.2.18' => str_contains($plugin, "Version: 1.2.18") && str_contains($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.18"),
+	'Candidate identity is 1.2.18.1' => str_contains($plugin, "Version: 1.2.18.1") && str_contains($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.18.1"),
 	'Party schema is additive 1.2 with a contact activity ledger' => str_contains($party, "return '1.2.0';") && str_contains($party, "'contact_activities'") && str_contains($party, 'UNIQUE KEY request_key'),
 	'Workflow module is loaded after typed Party referrals' => strpos($plugin, "includes/party-paid-referrals.php") < strpos($plugin, "includes/party-bulk-workflows.php"),
 	'Directory index never calls the per-Party referral renderer with null' => str_contains($admin, "is_array(\$party) && function_exists('backstage_outreach_party_referral_render_panel')"),
 	'Adoption is bounded and requires a preview' => str_contains($workflow, 'min(1000, $limit)') && str_contains($workflow, 'party_adoption_scope_too_large') && str_contains($workflow, 'party_adoption_preview') && str_contains($workflow, 'review_token'),
 	'Commit handlers enforce server-side explicit confirmation' => str_contains($workflow, "empty(\$_POST['confirm_adoption'])") && str_contains($workflow, "empty(\$_POST['confirm_campaign'])") && str_contains($workflow, "empty(\$_POST['confirm_links'])") && str_contains($workflow, "empty(\$_POST['confirm_handoff'])"),
-	'Strong historical contact IDs are the only automatic grouping key' => str_contains($workflow, "'contact-' . \$contact_id") && str_contains($workflow, "'recipient-' . absint(\$row['id'])"),
-	'Name email and phone collisions are review warnings, not merge keys' => str_contains($workflow, 'Shared %s appears under more than one historical identity') && str_contains($workflow, 'identity_reviewed'),
+	'Shared historical contact IDs remain an authoritative grouping key' => str_contains($workflow, "'contact-' . \$contact_id"),
+	'Missing-contact compatibility requires the compound email name and organization signature' => str_contains($workflow, 'party_adoption_compatibility_plan') && str_contains($workflow, "array(\$identity['email'], \$identity['name'], \$identity['organization'])") && str_contains($workflow, "'compat-' . \$compatibility_signature"),
+	'Same-campaign duplicate emails and conflicting compound identities require review' => str_contains($workflow, 'duplicate_email_rows') && str_contains($workflow, 'matching email has a conflicting normalized name, organization, or same-campaign duplicate'),
+	'Every adoption proposal presents explicit identity evidence' => str_contains($workflow, "'identity_evidence'") && str_contains($workflow, 'Identity evidence:'),
+	'Conflicting reviewed mappings cannot be silently relinked' => str_contains($workflow, "'mapping_conflict'") && str_contains($workflow, 'cannot be silently relinked'),
 	'Adoption preserves immutable recipient IDs through legacy links' => str_contains($workflow, "backstage_outreach_party_confirm_legacy_link(\$party_id, 'campaign_recipient'") && str_contains($workflow, "'historical_recipient'"),
 	'Reviewed legacy Contact links can safely reuse an existing Party' => str_contains($workflow, "backstage_outreach_party_get_legacy_link('outreach_contact', \$contact_id)"),
 	'Adoption is resumable by provenance and audited request keys' => str_contains($workflow, "'recipient-adoption:'") && str_contains($workflow, "'bulk-adopt|'"),
@@ -31,6 +34,7 @@ $checks = array(
 	'Invitation preview snapshots exact personalized content' => str_contains($workflow, "'subject_snapshot'") && str_contains($workflow, "'message_snapshot'") && str_contains($workflow, "'content_hash'"),
 	'First handoff blocks duplicates while resend is deliberate' => str_contains($workflow, "\$mode === 'resend'") && str_contains($workflow, 'Prior successful handoff; use deliberate resend'),
 	'Email suppression and missing addresses fail closed' => str_contains($workflow, 'vms_outreach_email_is_suppressed') && str_contains($workflow, "Missing email"),
+	'Invitation handoff revalidates the live referral and managed coupon immediately before mail' => substr_count($workflow, 'backstage_outreach_party_invitation_offer_error') >= 3 && str_contains($workflow, 'backstage_outreach_discount_distribution_error') && str_contains($workflow, 'party_invitation_signature_invalid'),
 	'No campaign link or Party creation automatically sends mail' => substr_count($workflow, 'wp_mail(') === 1 && str_contains($workflow, 'party_invitation_handoff'),
 	'Mailer acceptance is not represented as delivery' => str_contains($workflow, 'delivery is not asserted'),
 	'Manual email phone text social and note methods remain available' => str_contains($workflow, "array('email', 'phone', 'text', 'social', 'note')"),

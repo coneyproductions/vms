@@ -50,7 +50,17 @@ function check(condition, message) {
     }
     check(!(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 2)), `${viewport.name}: horizontal overflow detected with workflow panels open.`);
 
+    const adoption = page.locator('#outreach-party-adoption');
+    await adoption.locator('select[name="source_id"]').selectOption(String(fixture.source_id));
+    await adoption.locator('select[name="campaign_ids[]"]').selectOption(fixture.historical_campaign_ids.map(String));
+    await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), adoption.getByRole('button', { name: 'Preview unique people' }).click()]);
+    check(await page.getByText('206 snapshots → 103 proposed people', { exact: false }).count() === 1, `${viewport.name}: zero-contact-ID adoption cardinality is incorrect.`);
+    check(await page.getByText('103 compound cross-campaign matches', { exact: false }).count() === 1, `${viewport.name}: compound match count is missing.`);
+    check(await page.getByText('Identity evidence:', { exact: true }).count() === 103, `${viewport.name}: explicit identity evidence is not shown for every proposed person.`);
+    check(!(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 2)), `${viewport.name}: adoption review overflow detected.`);
+
     const bulk = page.locator('#outreach-party-bulk-links');
+    await bulk.evaluate(node => { node.open = true; });
     await bulk.locator('select[name="partner_campaign_id"]').selectOption(String(fixture.campaign_id));
     await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), bulk.getByRole('button', { name: 'Load Source Parties' }).click()]);
     check(await page.getByText(fixture.marker, { exact: true }).count() >= 1, `${viewport.name}: Source-associated Party did not load.`);

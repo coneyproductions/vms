@@ -1,6 +1,6 @@
 # Backstage Outreach
 
-Current release: **1.2.18**. This release preserves the 1.2.17 checkout protections and adds reviewed, resumable adoption of historical recipients into canonical Parties, a distinct paid Partner campaign setup, bulk Partner-link generation, and audited contact handoffs. Existing Contacts, reusable businesses, recipients, distributions, signed links, coupons, claims, and delivery history remain authoritative.
+Current release: **1.2.18.1**. This compatibility release preserves the 1.2.17 checkout protections and 1.2.18 Partner workflow while adding a reviewed compound match for historical recipients whose Contact IDs are absent, plus a fresh offer-validity gate immediately before invitation handoff. Existing Contacts, reusable businesses, recipients, distributions, signed links, coupons, claims, and delivery history remain authoritative.
 
 Backstage Outreach is the recovered Guest Pass Outreach workflow for Backstage
 Venue Manager 1.2.0 and newer. It is intentionally maintained as a companion
@@ -21,12 +21,14 @@ status values. It does not drop, rename, truncate, or reset Outreach data.
 
 ## Canonical Party partner workflow
 
-Version 1.2.18 adds an operator-reviewed workflow for adopting historical
+Version 1.2.18.1 retains the operator-reviewed workflow for adopting historical
 campaign recipients into canonical Person Parties. Only a shared historical
-Contact ID groups snapshots automatically; matching names, email addresses,
-phone numbers, or brokerage labels are shown as review evidence and never act
-as identity keys. Commit retries reuse reviewed legacy links and provenance,
-while the original recipient snapshots remain unchanged.
+Contact ID groups snapshots authoritatively. When Contact IDs are absent, an
+exact normalized email, person name, and organization across different
+campaigns may form a compatibility proposal, with its evidence displayed for
+explicit operator confirmation. No single shared name, email, phone, or
+organization is sufficient. Commit retries reuse reviewed legacy links and
+provenance, while the original recipient snapshots remain unchanged.
 
 Reusable Partner Admission Offers use a new paid definition-only batch and a
 new linked campaign. They do not convert existing complimentary campaigns or
@@ -39,7 +41,10 @@ The Party contact dashboard records exact invitation snapshots and manual
 email, phone, text, social, or note activity. First-time handoff is protected
 against duplicates; resend is a separate explicit action. Global Outreach
 suppression and missing-email checks fail closed, and a successful `wp_mail()`
-return is recorded only as an accepted handoff—not as delivery.
+return is recorded only as an accepted handoff—not as delivery. Immediately
+before every handoff, the server revalidates the active Party, Source
+association, campaign, paid batch, distribution, expiry, signed referral,
+managed coupon ownership, offer configuration, suppression, and send mode.
 
 ## Delivery safety
 

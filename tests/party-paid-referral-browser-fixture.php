@@ -8,6 +8,9 @@ $mode = sanitize_key((string) ($args[0] ?? 'create'));
 $fixture = get_option($option, array());
 $cleanup = static function (array $data) use ($wpdb, $option): void {
 	$party_id = absint($data['party_id'] ?? 0);
+	foreach (array_map('absint', (array) ($data['recipient_ids'] ?? array())) as $recipient_id) {
+		$wpdb->delete(vms_pass_outreach_recipient_table(), array('id' => $recipient_id), array('%d'));
+	}
 	$distribution_ids = $party_id > 0 ? array_map('absint', $wpdb->get_col($wpdb->prepare('SELECT id FROM %i WHERE party_id=%d', backstage_outreach_party_table('referral_distributions'), $party_id))) : array();
 	if ($distribution_ids) {
 		$ids = implode(',', $distribution_ids);
@@ -34,6 +37,9 @@ $cleanup = static function (array $data) use ($wpdb, $option): void {
 	if (!empty($data['campaign_id'])) {
 		$wpdb->delete(vms_admission_table_pass_outreach_campaigns(), array('id' => absint($data['campaign_id'])));
 	}
+	foreach (array_map('absint', (array) ($data['historical_campaign_ids'] ?? array())) as $campaign_id) {
+		$wpdb->delete(vms_admission_table_pass_outreach_campaigns(), array('id' => $campaign_id), array('%d'));
+	}
 	if (!empty($data['batch_id'])) {
 		$wpdb->delete(bvmgr_admission_table_pass_batches(), array('id' => absint($data['batch_id'])));
 	}
@@ -42,6 +48,9 @@ $cleanup = static function (array $data) use ($wpdb, $option): void {
 	}
 	foreach (array_reverse(array_map('absint', (array) ($data['post_ids'] ?? array()))) as $post_id) {
 		wp_delete_post($post_id, true);
+	}
+	if (!empty($data['admin_id'])) {
+		delete_transient('backstage_outreach_party_adoption_' . absint($data['admin_id']));
 	}
 	delete_option($option);
 };
@@ -97,6 +106,27 @@ $wpdb->insert(bvmgr_admission_table_pass_batches(), array('source_id' => $source
 $batch_id = (int) $wpdb->insert_id;
 $wpdb->insert(vms_admission_table_pass_outreach_campaigns(), array('campaign_name' => $marker . ' Campaign', 'related_source_id' => $source_id, 'related_batch_id' => $batch_id, 'validity_type' => 'single_event', 'single_event_plan_id' => $plan_id, 'admissions_per_recipient' => 2, 'total_admission_cap' => 20, 'status' => 'active', 'eligibility_mode' => 'anyone_with_invite', 'created_by' => $user_id, 'created_at' => $now, 'campaign_purpose' => 'guest_pass_invitation'));
 $campaign_id = (int) $wpdb->insert_id;
+$historical_campaign_ids = array();
+$recipient_ids = array();
+for ($campaign_index = 1; $campaign_index <= 2; $campaign_index++) {
+	$wpdb->insert(vms_admission_table_pass_outreach_campaigns(), array('campaign_name' => $marker . ' Historical ' . $campaign_index, 'related_source_id' => $source_id, 'related_batch_id' => $batch_id, 'validity_type' => 'single_event', 'single_event_plan_id' => $plan_id, 'admissions_per_recipient' => 2, 'total_admission_cap' => 206, 'status' => 'draft', 'eligibility_mode' => 'anyone_with_invite', 'created_by' => $user_id, 'created_at' => $now, 'campaign_purpose' => 'guest_pass_invitation'));
+	$historical_campaign_ids[] = (int) $wpdb->insert_id;
+}
+foreach ($historical_campaign_ids as $campaign_id_for_recipient) {
+	for ($person = 1; $person <= 103; $person++) {
+		$name = sprintf('%s Realtor %03d', $marker, $person);
+		$email = sprintf('party-browser-realtor-%03d@example.test', $person);
+		$company = sprintf('Browser Brokerage %02d', (($person - 1) % 36) + 1);
+		$wpdb->insert(vms_pass_outreach_recipient_table(), array(
+			'campaign_id' => $campaign_id_for_recipient, 'contact_id' => 0, 'full_name' => $name, 'first_name' => $marker,
+			'last_name' => sprintf('Realtor %03d', $person), 'email' => $email, 'email_norm' => $email, 'phone' => sprintf('903555%04d', $person),
+			'phone_norm' => sprintf('903555%04d', $person), 'company' => $company, 'invite_token' => strtolower(wp_generate_password(32, false, false)),
+			'send_status' => 'not_sent', 'status' => 'ready', 'created_by' => $user_id, 'created_at' => $now,
+		));
+		if ($wpdb->insert_id <= 0) { throw new RuntimeException('Could not create the adoption browser recipient fixture.'); }
+		$recipient_ids[] = (int) $wpdb->insert_id;
+	}
+}
 $party = backstage_outreach_party_save(array('party_type' => 'person', 'display_name' => $marker, 'given_name' => 'Café', 'family_name' => '東京'), $user_id);
 if (!is_array($party) || is_wp_error(backstage_outreach_party_link_source((int) $party['id'], $source_id, $user_id, 'browser_fixture'))) {
 	throw new RuntimeException('Could not create the canonical Party fixture.');
@@ -112,6 +142,9 @@ $fixture = array(
 	'source_id' => $source_id,
 	'batch_id' => $batch_id,
 	'campaign_id' => $campaign_id,
+	'historical_campaign_ids' => $historical_campaign_ids,
+	'recipient_ids' => $recipient_ids,
+	'admin_id' => $user_id,
 	'post_ids' => $post_ids,
 );
 update_option($option, $fixture, false);

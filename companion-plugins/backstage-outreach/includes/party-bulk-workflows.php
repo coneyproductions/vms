@@ -13,6 +13,70 @@ function backstage_outreach_party_workflow_digest($value): string
 	return hash('sha256', (string) wp_json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 }
 
+function backstage_outreach_party_adoption_normalize_identity_text(string $value): string
+{
+	$value = remove_accents(sanitize_text_field($value));
+	$value = preg_replace('/\s+/u', ' ', trim($value));
+	return function_exists('mb_strtolower') ? mb_strtolower((string) $value, 'UTF-8') : strtolower((string) $value);
+}
+
+function backstage_outreach_party_adoption_identity(array $row): array
+{
+	$name = sanitize_text_field((string) ($row['full_name'] ?: trim((string) ($row['first_name'] ?? '') . ' ' . (string) ($row['last_name'] ?? ''))));
+	$email = backstage_outreach_party_normalize_contact_value('email', (string) ($row['email'] ?? ''));
+	$organization = sanitize_text_field((string) ($row['company'] ?: ($row['group_label'] ?? '')));
+	return array(
+		'email' => $email,
+		'name' => backstage_outreach_party_adoption_normalize_identity_text($name),
+		'organization' => backstage_outreach_party_adoption_normalize_identity_text($organization),
+	);
+}
+
+function backstage_outreach_party_adoption_compatibility_plan(array $rows): array
+{
+	$candidates = array();
+	$email_campaign_rows = array();
+	foreach ($rows as $row) {
+		if (absint($row['contact_id'] ?? 0) > 0) {
+			continue;
+		}
+		$identity = backstage_outreach_party_adoption_identity($row);
+		$row_id = absint($row['id'] ?? 0);
+		$campaign_id = absint($row['campaign_id'] ?? 0);
+		if ($identity['email'] !== '') {
+			$email_campaign_rows[$identity['email']][$campaign_id][] = $row_id;
+		}
+		if ($identity['email'] === '' || $identity['name'] === '' || $identity['organization'] === '') {
+			continue;
+		}
+		$signature = backstage_outreach_party_workflow_digest(array($identity['email'], $identity['name'], $identity['organization']));
+		$candidates[$signature][] = array('row_id' => $row_id, 'campaign_id' => $campaign_id, 'identity' => $identity);
+	}
+
+	$row_signatures = array();
+	foreach ($candidates as $signature => $matches) {
+		$campaigns = array_count_values(array_column($matches, 'campaign_id'));
+		if (count($matches) < 2 || count($campaigns) < 2 || max($campaigns) > 1) {
+			continue;
+		}
+		foreach ($matches as $match) {
+			$row_signatures[absint($match['row_id'])] = $signature;
+		}
+	}
+
+	$duplicate_email_rows = array();
+	foreach ($email_campaign_rows as $campaigns) {
+		foreach ($campaigns as $row_ids) {
+			if (count($row_ids) > 1) {
+				foreach ($row_ids as $row_id) {
+					$duplicate_email_rows[absint($row_id)] = true;
+				}
+			}
+		}
+	}
+	return array('row_signatures' => $row_signatures, 'duplicate_email_rows' => $duplicate_email_rows);
+}
+
 function backstage_outreach_party_adoption_rows(int $source_id, array $campaign_ids, int $limit = 1000): array
 {
 	global $wpdb;
@@ -60,10 +124,15 @@ function backstage_outreach_party_adoption_preview(int $source_id, array $campai
 		return new WP_Error('party_adoption_scope_too_large', __('This review contains more than 1,000 recipient snapshots. Narrow the campaign selection before continuing.', 'backstage-outreach'));
 	}
 	$rows = backstage_outreach_party_adoption_rows($source_id, $campaign_ids, $limit);
+	$compatibility = backstage_outreach_party_adoption_compatibility_plan($rows);
 	$groups = array();
 	foreach ($rows as $row) {
 		$contact_id = absint($row['contact_id'] ?? 0);
-		$key = $contact_id > 0 ? 'contact-' . $contact_id : 'recipient-' . absint($row['id']);
+		$row_id = absint($row['id']);
+		$compatibility_signature = (string) ($compatibility['row_signatures'][$row_id] ?? '');
+		$key = $contact_id > 0
+			? 'contact-' . $contact_id
+			: ($compatibility_signature !== '' ? 'compat-' . $compatibility_signature : 'recipient-' . $row_id);
 		if (!isset($groups[$key])) {
 			$groups[$key] = array(
 				'group_key' => $key,
@@ -75,6 +144,10 @@ function backstage_outreach_party_adoption_preview(int $source_id, array $campai
 				'names' => array(),
 				'organizations' => array(),
 				'existing_party_id' => 0,
+				'mapped_party_ids' => array(),
+				'identity_evidence' => array(),
+				'compatibility_match' => $compatibility_signature !== '',
+				'mapping_conflict' => false,
 				'ambiguous_reasons' => array(),
 			);
 		}
@@ -91,17 +164,17 @@ function backstage_outreach_party_adoption_preview(int $source_id, array $campai
 		$link = backstage_outreach_party_get_legacy_link('campaign_recipient', absint($row['id']));
 		if (is_array($link)) {
 			$link_party_id = absint($link['party_id'] ?? 0);
-			if ($groups[$key]['existing_party_id'] > 0 && $groups[$key]['existing_party_id'] !== $link_party_id) {
-				$groups[$key]['ambiguous_reasons'][] = __('Recipient snapshots are already linked to different Parties.', 'backstage-outreach');
-			} else {
-				$groups[$key]['existing_party_id'] = $link_party_id;
-			}
+			if ($link_party_id > 0) { $groups[$key]['mapped_party_ids'][$link_party_id] = true; }
 		}
-		if ($groups[$key]['existing_party_id'] <= 0 && $contact_id > 0) {
+		if (!$groups[$key]['mapped_party_ids'] && $contact_id > 0) {
 			$contact_link = backstage_outreach_party_get_legacy_link('outreach_contact', $contact_id);
 			if (is_array($contact_link)) {
-				$groups[$key]['existing_party_id'] = absint($contact_link['party_id'] ?? 0);
+				$contact_party_id = absint($contact_link['party_id'] ?? 0);
+				if ($contact_party_id > 0) { $groups[$key]['mapped_party_ids'][$contact_party_id] = true; }
 			}
+		}
+		if (!empty($compatibility['duplicate_email_rows'][$row_id])) {
+			$groups[$key]['ambiguous_reasons'][] = __('Duplicate normalized email exists within one campaign, so no compatibility match was proposed.', 'backstage-outreach');
 		}
 	}
 
@@ -120,13 +193,33 @@ function backstage_outreach_party_adoption_preview(int $source_id, array $campai
 	$email_count = 0;
 	$ambiguous_count = 0;
 	$skipped_count = 0;
+	$compatibility_match_count = 0;
 	foreach ($groups as $key => &$group) {
 		$group['campaign_ids'] = array_map('absint', array_keys($group['campaign_ids']));
 		$group['names'] = array_keys($group['names']);
 		$group['emails'] = array_keys($group['emails']);
 		$group['phones'] = array_keys($group['phones']);
 		$group['organizations'] = array_keys($group['organizations']);
+		$group['mapped_party_ids'] = array_map('absint', array_keys($group['mapped_party_ids']));
+		if (count($group['mapped_party_ids']) === 1) {
+			$group['existing_party_id'] = (int) $group['mapped_party_ids'][0];
+		} elseif (count($group['mapped_party_ids']) > 1) {
+			$group['mapping_conflict'] = true;
+			$group['ambiguous_reasons'][] = __('Recipient snapshots are already linked to different Parties and cannot be silently relinked.', 'backstage-outreach');
+		}
 		$group['display_name'] = (string) ($group['names'][0] ?? '');
+		if ($group['contact_id'] > 0) {
+			$group['identity_evidence'][] = sprintf(__('Shared historical Contact ID #%1$d across campaign snapshot(s) %2$s.', 'backstage-outreach'), $group['contact_id'], implode(', ', $group['campaign_ids']));
+		} elseif (!empty($group['compatibility_match'])) {
+			$group['identity_evidence'][] = sprintf(__('Compatibility proposal: exact normalized email, person name, and organization agree across campaigns %s.', 'backstage-outreach'), implode(', ', $group['campaign_ids']));
+			$compatibility_match_count++;
+		} else {
+			$group['identity_evidence'][] = sprintf(__('No safe cross-campaign compatibility match; recipient snapshot #%d remains separate.', 'backstage-outreach'), absint($group['recipients'][0]['id'] ?? 0));
+			$identity = backstage_outreach_party_adoption_identity((array) ($group['recipients'][0] ?? array()));
+			if ($identity['email'] === '' || $identity['name'] === '' || $identity['organization'] === '') {
+				$group['ambiguous_reasons'][] = __('A compound email, person-name, and organization identity is incomplete and requires manual review.', 'backstage-outreach');
+			}
+		}
 		if ($group['emails']) { $email_count++; }
 		if ($group['display_name'] === '') {
 			$group['ambiguous_reasons'][] = __('No usable person name is present.', 'backstage-outreach');
@@ -136,7 +229,9 @@ function backstage_outreach_party_adoption_preview(int $source_id, array $campai
 			foreach ($values as $value) {
 				$normalized = $type === 'email' || $type === 'phone' ? backstage_outreach_party_normalize_contact_value($type, $value) : strtolower($value);
 				if ($normalized !== '' && count($identity_map[$type . ':' . $normalized] ?? array()) > 1) {
-					$group['ambiguous_reasons'][] = sprintf(__('Shared %s appears under more than one historical identity.', 'backstage-outreach'), $type);
+					$group['ambiguous_reasons'][] = $type === 'email'
+						? __('A matching email has a conflicting normalized name, organization, or same-campaign duplicate and requires manual review.', 'backstage-outreach')
+						: sprintf(__('Shared %s appears under more than one historical identity.', 'backstage-outreach'), $type);
 				}
 			}
 		}
@@ -173,7 +268,7 @@ function backstage_outreach_party_adoption_preview(int $source_id, array $campai
 		'source_name' => (string) $source['source_name'],
 		'campaign_ids' => $campaign_ids,
 		'groups' => $groups,
-		'summary' => array('recipient_count' => count($rows), 'party_count' => count($groups), 'email_count' => $email_count, 'missing_email_count' => count($groups) - $email_count, 'ambiguous_count' => $ambiguous_count, 'skipped_count' => $skipped_count),
+		'summary' => array('recipient_count' => count($rows), 'party_count' => count($groups), 'compatibility_match_count' => $compatibility_match_count, 'email_count' => $email_count, 'missing_email_count' => count($groups) - $email_count, 'ambiguous_count' => $ambiguous_count, 'skipped_count' => $skipped_count),
 		'scope_digest' => backstage_outreach_party_workflow_digest($rows),
 		'reviewed_at' => time(),
 	);
@@ -190,10 +285,15 @@ function backstage_outreach_party_adoption_commit(array $review, array $choices,
 	$result = array('created' => 0, 'reused' => 0, 'linked' => 0, 'skipped' => 0, 'errors' => array());
 	global $wpdb;
 	$current_rows = backstage_outreach_party_adoption_rows(absint($current['source_id']), (array) $current['campaign_ids']);
+	$current_compatibility = backstage_outreach_party_adoption_compatibility_plan($current_rows);
 	foreach ((array) $current['groups'] as $group) {
 		$key = sanitize_key((string) $group['group_key']);
 		$choice = $choice_map[$key] ?? array();
 		if (empty($choice['selected'])) { $result['skipped']++; continue; }
+		if (!empty($group['mapping_conflict'])) {
+			$result['errors'][$key] = __('This proposal contains conflicting reviewed mappings and cannot be silently relinked.', 'backstage-outreach');
+			continue;
+		}
 		$resolution = sanitize_key((string) ($choice['resolution'] ?? ''));
 		$party_id = absint($choice['party_id'] ?? 0);
 		if (!empty($group['existing_party_id'])) {
@@ -249,10 +349,12 @@ function backstage_outreach_party_adoption_commit(array $review, array $choices,
 			if (is_wp_error($role)) { $error = $role; break; }
 		}
 		foreach ($current_rows as $row) {
-			$row_key = absint($row['contact_id'] ?? 0) > 0 ? 'contact-' . absint($row['contact_id']) : 'recipient-' . absint($row['id']);
+			$row_id = absint($row['id']);
+			$signature = (string) ($current_compatibility['row_signatures'][$row_id] ?? '');
+			$row_key = absint($row['contact_id'] ?? 0) > 0 ? 'contact-' . absint($row['contact_id']) : ($signature !== '' ? 'compat-' . $signature : 'recipient-' . $row_id);
 			if ($row_key !== $key) { continue; }
 			$snapshot = backstage_outreach_party_get_legacy_snapshot('campaign_recipient', absint($row['id']));
-			$link = is_wp_error($snapshot) ? $snapshot : backstage_outreach_party_confirm_legacy_link($party_id, 'campaign_recipient', absint($row['id']), (string) $snapshot['snapshot_hash'], array(__('Reviewed shared historical contact identifier', 'backstage-outreach')), $user_id, hash('sha256', 'bulk-adopt|' . $party_id . '|' . absint($row['id'])));
+			$link = is_wp_error($snapshot) ? $snapshot : backstage_outreach_party_confirm_legacy_link($party_id, 'campaign_recipient', absint($row['id']), (string) $snapshot['snapshot_hash'], (array) $group['identity_evidence'], $user_id, hash('sha256', 'bulk-adopt|' . $party_id . '|' . absint($row['id'])));
 			if (is_wp_error($link)) { $error = $link; break; }
 			$result['linked']++;
 		}
@@ -410,6 +512,26 @@ function backstage_outreach_party_invitation_content(array $row): array
 	return array('subject' => $subject, 'message' => $message, 'content_hash' => backstage_outreach_party_workflow_digest(array($row['email'] ?? '', $subject, $message, $row['id'] ?? 0)));
 }
 
+function backstage_outreach_party_invitation_offer_error(array $row)
+{
+	$distribution_id = absint($row['id'] ?? $row['distribution_id'] ?? 0);
+	$current = backstage_outreach_party_referral_get_distribution($distribution_id);
+	if (!is_array($current)
+		|| absint($current['campaign_id'] ?? 0) !== absint($row['campaign_id'] ?? 0)
+		|| absint($current['party_id'] ?? 0) !== absint($row['party_id'] ?? 0)) {
+		return new WP_Error('party_invitation_distribution_invalid', __('The reviewed Partner distribution is no longer available.', 'backstage-outreach'));
+	}
+	$error = backstage_outreach_discount_distribution_error($current);
+	if (is_wp_error($error)) {
+		return $error;
+	}
+	$token = backstage_outreach_party_referral_token($current);
+	if ($token === '' || empty($current['token_hash']) || !hash_equals((string) $current['token_hash'], hash('sha256', $token)) || backstage_outreach_party_referral_url($current) === '') {
+		return new WP_Error('party_invitation_signature_invalid', __('The signed Partner referral is invalid and must be reviewed again.', 'backstage-outreach'));
+	}
+	return null;
+}
+
 function backstage_outreach_party_invitation_preview(int $campaign_id, array $distribution_ids, string $mode = 'first')
 {
 	$distribution_ids = array_values(array_unique(array_filter(array_map('absint', $distribution_ids))));
@@ -420,11 +542,13 @@ function backstage_outreach_party_invitation_preview(int $campaign_id, array $di
 		$row = $all[$distribution_id] ?? null;
 		if (!is_array($row)) { continue; }
 		$reason = '';
-		if ((string) $row['email'] === '') { $reason = __('Missing email', 'backstage-outreach'); }
+		$offer_error = backstage_outreach_party_invitation_offer_error($row);
+		if (is_wp_error($offer_error)) { $reason = $offer_error->get_error_message(); }
+		elseif ((string) $row['email'] === '') { $reason = __('Missing email', 'backstage-outreach'); }
 		elseif (!empty($row['suppressed'])) { $reason = __('Suppressed', 'backstage-outreach'); }
 		elseif ($mode === 'first' && absint($row['handoff_count'] ?? 0) > 0) { $reason = __('Prior successful handoff; use deliberate resend', 'backstage-outreach'); }
 		$content = backstage_outreach_party_invitation_content($row);
-		$rows[] = array_merge(array('distribution_id' => $distribution_id, 'party_id' => absint($row['party_id']), 'name' => (string) $row['display_name'], 'email' => (string) $row['email'], 'eligible' => $reason === '', 'blocked_reason' => $reason), $content);
+		$rows[] = array_merge(array('distribution_id' => $distribution_id, 'campaign_id' => absint($row['campaign_id']), 'party_id' => absint($row['party_id']), 'name' => (string) $row['display_name'], 'email' => (string) $row['email'], 'eligible' => $reason === '', 'blocked_reason' => $reason), $content);
 	}
 	return array('campaign_id' => $campaign_id, 'mode' => $mode, 'rows' => $rows, 'review_token' => wp_generate_uuid4(), 'reviewed_at' => time(), 'digest' => backstage_outreach_party_workflow_digest($rows));
 }
@@ -464,6 +588,11 @@ function backstage_outreach_party_invitation_handoff(array $review, int $user_id
 		$lock = 'outreach_party_mail_' . $id;
 		if ((int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s,5)', $lock)) !== 1) { $result['failed'][$id] = __('Another handoff is in progress.', 'backstage-outreach'); continue; }
 		try {
+			$offer_error = backstage_outreach_party_invitation_offer_error($row);
+			$current_email = backstage_outreach_party_primary_email(absint($row['party_id']));
+			if (is_wp_error($offer_error)) { $result['failed'][$id] = $offer_error->get_error_message(); continue; }
+			if ($current_email === '' || !is_email($current_email) || strcasecmp($current_email, (string) $row['email']) !== 0) { $result['failed'][$id] = __('The selected email changed after review.', 'backstage-outreach'); continue; }
+			if (function_exists('vms_outreach_email_is_suppressed') && vms_outreach_email_is_suppressed($current_email)) { $result['failed'][$id] = __('Suppressed', 'backstage-outreach'); continue; }
 			$prior = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE distribution_id=%d AND activity_type=%s AND activity_status=%s', backstage_outreach_party_table('contact_activities'), $id, 'email_handoff', 'handed_off'));
 			if ((string) $review['mode'] === 'first' && $prior > 0) { $result['failed'][$id] = __('A prior handoff exists; use deliberate resend.', 'backstage-outreach'); continue; }
 			$accepted = wp_mail((string) $row['email'], (string) $row['subject'], (string) $row['message'], array('Content-Type: text/plain; charset=UTF-8'));
@@ -672,12 +801,12 @@ function backstage_outreach_party_bulk_render_workspace(): void
 	echo '</select></label></div><p class="vms-pass-actions"><button class="button" type="submit">' . esc_html__('Preview unique people', 'backstage-outreach') . '</button></p></form>';
 	if (is_array($adoption)) {
 		$s = (array) $adoption['summary'];
-		echo '<div id="outreach-party-adoption-review" class="vms-pass-review-card"><h3>' . esc_html__('Adoption preview — no writes yet', 'backstage-outreach') . '</h3><p>' . esc_html(sprintf(__('%1$d snapshots → %2$d proposed people; %3$d have email; %4$d missing email; %5$d ambiguous; %6$d skipped.', 'backstage-outreach'), $s['recipient_count'], $s['party_count'], $s['email_count'], $s['missing_email_count'], $s['ambiguous_count'], $s['skipped_count'])) . '</p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_party_adoption_commit"><input type="hidden" name="review_token" value="' . esc_attr((string) $adoption['review_token']) . '">';
+		echo '<div id="outreach-party-adoption-review" class="vms-pass-review-card"><h3>' . esc_html__('Adoption preview — no writes yet', 'backstage-outreach') . '</h3><p>' . esc_html(sprintf(__('%1$d snapshots → %2$d proposed people; %3$d compound cross-campaign matches; %4$d have email; %5$d missing email; %6$d ambiguous; %7$d skipped.', 'backstage-outreach'), $s['recipient_count'], $s['party_count'], absint($s['compatibility_match_count'] ?? 0), $s['email_count'], $s['missing_email_count'], $s['ambiguous_count'], $s['skipped_count'])) . '</p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_party_adoption_commit"><input type="hidden" name="review_token" value="' . esc_attr((string) $adoption['review_token']) . '">';
 		wp_nonce_field('backstage_outreach_party_adoption_commit');
 		echo '<div class="vms-pass-table-scroll"><table class="widefat striped"><thead><tr><th>' . esc_html__('Adopt', 'backstage-outreach') . '</th><th>' . esc_html__('Person / history', 'backstage-outreach') . '</th><th>' . esc_html__('Contact / context', 'backstage-outreach') . '</th><th>' . esc_html__('Resolution', 'backstage-outreach') . '</th></tr></thead><tbody>';
 		foreach ((array) $adoption['groups'] as $group) {
 			$key = sanitize_key((string) $group['group_key']);
-			echo '<tr><td><input type="checkbox" name="adoption[' . esc_attr($key) . '][selected]" value="1"' . checked((string) $group['display_name'] !== '', true, false) . '></td><td><strong>' . esc_html((string) $group['display_name']) . '</strong><br><small>' . esc_html(sprintf(__('%1$d snapshot(s), campaigns %2$s, historical contact %3$s', 'backstage-outreach'), count((array) $group['campaign_ids']), implode(', ', (array) $group['campaign_ids']), absint($group['contact_id']) ?: __('none', 'backstage-outreach'))) . '</small></td><td>' . esc_html(implode(', ', (array) $group['emails'])) . '<br>' . esc_html(implode(', ', (array) $group['phones'])) . '<br><small>' . esc_html(implode(' / ', (array) $group['organizations'])) . '</small>';
+			echo '<tr><td><input type="checkbox" name="adoption[' . esc_attr($key) . '][selected]" value="1"' . checked((string) $group['display_name'] !== '', true, false) . '></td><td><strong>' . esc_html((string) $group['display_name']) . '</strong><br><small>' . esc_html(sprintf(__('%1$d snapshot(s), campaigns %2$s, historical contact %3$s', 'backstage-outreach'), count((array) $group['campaign_ids']), implode(', ', (array) $group['campaign_ids']), absint($group['contact_id']) ?: __('none', 'backstage-outreach'))) . '</small></td><td>' . esc_html(implode(', ', (array) $group['emails'])) . '<br>' . esc_html(implode(', ', (array) $group['phones'])) . '<br><small>' . esc_html(implode(' / ', (array) $group['organizations'])) . '</small><p><strong>' . esc_html__('Identity evidence:', 'backstage-outreach') . '</strong> ' . esc_html(implode(' ', (array) $group['identity_evidence'])) . '</p>';
 			if ($group['ambiguous_reasons']) { echo '<p class="vms-outreach-party-warning">' . esc_html(implode(' ', (array) $group['ambiguous_reasons'])) . '</p><label><input type="checkbox" name="adoption[' . esc_attr($key) . '][identity_reviewed]" value="1"> ' . esc_html__('I reviewed this identity evidence', 'backstage-outreach') . '</label>'; }
 			echo '</td><td>';
 			if (absint($group['existing_party_id']) > 0) { echo esc_html(sprintf(__('Reuse already linked Party #%d', 'backstage-outreach'), absint($group['existing_party_id']))) . '<input type="hidden" name="adoption[' . esc_attr($key) . '][resolution]" value="reuse"><input type="hidden" name="adoption[' . esc_attr($key) . '][party_id]" value="' . esc_attr((string) absint($group['existing_party_id'])) . '">'; }
