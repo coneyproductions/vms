@@ -1627,7 +1627,32 @@ function backstage_outreach_business_share_default_subject(): string
 
 function backstage_outreach_business_share_default_message(): string
 {
-	return __("Hello {contact_name},\n\nHere are the customer offer and printable reception-desk flyer links for {business_name}. Please share them with your customers.", 'backstage-outreach');
+	return __("Hello {greeting},\n\nHere are the customer offer and printable reception-desk flyer links for {business_name}. Please share them with your customers.\n\n{offer_details}\n\nThank you,", 'backstage-outreach');
+}
+
+function backstage_outreach_business_place_offer_details(string $message, string $details): string
+{
+	if (str_contains($message, '{offer_details}')) {
+		return trim(str_replace('{offer_details}', $details, $message));
+	}
+	if (preg_match('/^(?:Thanks|Thank you|Sincerely|Best|Regards|Cheers)[,!]?\h*$/mi', $message, $closing, PREG_OFFSET_CAPTURE)) {
+		$offset = (int) ($closing[0][1] ?? strlen($message));
+		return trim(substr($message, 0, $offset)) . "\n\n" . $details . "\n\n" . ltrim(substr($message, $offset));
+	}
+	return trim($message . "\n\n" . $details);
+}
+
+function backstage_outreach_business_preview_footer(): string
+{
+	$postal = function_exists('backstage_outreach_postal_address') ? backstage_outreach_postal_address() : '';
+	$postal_line = $postal !== ''
+		? sprintf(__('Postal address: %s', 'backstage-outreach'), $postal)
+		: __('Postal address: Not currently configured; final handoff will be blocked until it is available.', 'backstage-outreach');
+	return implode("\n", array(
+		__('Final email footer (added only at handoff):', 'backstage-outreach'),
+		$postal_line,
+		__('Unsubscribe: A unique, secure link for this recipient will be generated only at final handoff.', 'backstage-outreach'),
+	));
 }
 
 function backstage_outreach_business_share_template_key(int $campaign_id): string
@@ -2019,6 +2044,7 @@ function backstage_outreach_business_share_recipient_snapshot(array $row, array 
 		'email' => sanitize_email((string) ($context['email'] ?? '')),
 		'subject' => sanitize_text_field((string) ($context['subject'] ?? '')),
 		'message' => sanitize_textarea_field((string) ($context['message'] ?? '')),
+		'preview_message' => sanitize_textarea_field((string) ($context['preview_message'] ?? $context['message'] ?? '')),
 	);
 	$snapshot['digest'] = hash('sha256', wp_json_encode($snapshot, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 	return $snapshot;
@@ -2080,7 +2106,8 @@ function backstage_outreach_business_share_context(array $distribution, array $c
 	$flyer_url = backstage_outreach_distribution_flyer_url($distribution);
 	$replace = array(
 		'{business_name}' => $business_name,
-		'{contact_name}' => $contact_name !== '' ? $contact_name : $business_name,
+		'{contact_name}' => $contact_name !== '' ? $contact_name : sprintf(__('team at %s', 'backstage-outreach'), $business_name),
+		'{greeting}' => $contact_name !== '' ? $contact_name : sprintf(__('team at %s', 'backstage-outreach'), $business_name),
 		'{offer_terms}' => $offer,
 		'{customer_url}' => $customer_url,
 		'{flyer_url}' => $flyer_url,
@@ -2095,18 +2122,19 @@ function backstage_outreach_business_share_context(array $distribution, array $c
 		: __('No stated shared admission maximum', 'backstage-outreach');
 	$details = array(
 		__('Offer', 'backstage-outreach') . ': ' . $offer,
-		__('Admissions per customer', 'backstage-outreach') . ': ' . $customer_cap,
-		__('Total admissions allowed per business', 'backstage-outreach') . ': ' . $business_limit,
-		__('Total admissions available across all businesses', 'backstage-outreach') . ': ' . $overall_limit,
-		__('Shared-capacity note', 'backstage-outreach') . ': ' . __('The overall pool is shared. A per-business maximum does not reserve admissions, so the pool may run out first.', 'backstage-outreach'),
-		__('Applicable events / dates', 'backstage-outreach') . ': ' . $scope,
-		__('Expiry', 'backstage-outreach') . ': ' . $expiry_label,
-		__('Customer offer URL', 'backstage-outreach') . ': ' . $customer_url,
-		__('Printable flyer URL', 'backstage-outreach') . ': ' . $flyer_url,
+		sprintf(_n('Customer allowance: Up to %d admission per order.', 'Customer allowance: Up to %d admissions per order.', $customer_cap, 'backstage-outreach'), $customer_cap),
+		__('Business allocation', 'backstage-outreach') . ': ' . $business_limit . '. ' . __('This does not reserve admissions from the shared pool.', 'backstage-outreach'),
+		__('Shared campaign pool', 'backstage-outreach') . ': ' . $overall_limit . '. ' . __('The pool may run out before this business reaches its allocation.', 'backstage-outreach'),
+		__('Valid for', 'backstage-outreach') . ': ' . $scope,
+		__('Offer expires', 'backstage-outreach') . ': ' . $expiry_label,
+		__('Customer offer', 'backstage-outreach') . ': ' . $customer_url,
+		__('Printable flyer', 'backstage-outreach') . ': ' . $flyer_url,
 	);
+	$message = backstage_outreach_business_place_offer_details($intro, implode("\n", $details));
 	return array(
 		'subject' => $subject,
-		'message' => trim($intro . "\n\n" . implode("\n", $details)),
+		'message' => $message,
+		'preview_message' => trim($message . "\n\n---\n" . backstage_outreach_business_preview_footer()),
 		'email' => sanitize_email((string) ($distribution['email'] ?? '')),
 		'customer_url' => $customer_url,
 		'flyer_url' => $flyer_url,
@@ -2765,7 +2793,7 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		}
 		echo '<details class="vms-pass-business-template-editor"><summary><strong>' . esc_html__('Edit Invitation Template', 'backstage-outreach') . '</strong></summary><p class="description">' . esc_html__('The saved template supplies the introduction for personalized business invitations. Saving it does not select recipients or send email.', 'backstage-outreach') . '</p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_business_share"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="share_mode" value="preview">';
 		wp_nonce_field('backstage_outreach_business_share');
-		echo '<div class="vms-pass-grid"><label class="vms-pass-span-2">' . esc_html__('Business-contact subject', 'backstage-outreach') . '<input type="text" name="business_share_subject" value="' . esc_attr($share_subject) . '" required><span class="description">' . esc_html__('Available tags: {business_name}, {contact_name}, {offer_terms}, {customer_url}, {flyer_url}.', 'backstage-outreach') . '</span></label><label class="vms-pass-span-2">' . esc_html__('Business-contact introduction', 'backstage-outreach') . '<textarea name="business_share_message" rows="8" required>' . esc_textarea($share_message) . '</textarea><span class="description">' . esc_html__('Emails are plain text. Paragraphs and blank lines are preserved, but pasted Markdown markers such as **bold** do not create formatting. The exact reviewed offer, limits, dates, expiry, customer link, and flyer link are appended automatically to every message.', 'backstage-outreach') . '</span></label></div><p><button class="button button-primary">' . esc_html__('Save Invitation Template', 'backstage-outreach') . '</button></p></form></details>';
+		echo '<div class="vms-pass-grid"><label class="vms-pass-span-2">' . esc_html__('Business-contact subject', 'backstage-outreach') . '<input type="text" name="business_share_subject" value="' . esc_attr($share_subject) . '" required><span class="description">' . esc_html__('Available tags: {business_name}, {contact_name}, {greeting}, {offer_terms}, {customer_url}, {flyer_url}.', 'backstage-outreach') . '</span></label><label class="vms-pass-span-2">' . esc_html__('Business-contact introduction', 'backstage-outreach') . '<textarea name="business_share_message" rows="10" required>' . esc_textarea($share_message) . '</textarea><span class="description">' . esc_html__('Emails are plain text. Put {offer_details} where the concise required offer-and-links block should appear—normally before your closing or signature. If omitted, the block is inserted before a recognized closing or appended. Final handoff separately adds the real postal address and a unique unsubscribe link.', 'backstage-outreach') . '</span></label></div><p><button class="button button-primary">' . esc_html__('Save Invitation Template', 'backstage-outreach') . '</button></p></form></details>';
 		echo '</div>';
 	}
 	echo '<script>(function(){var section=document.getElementById("backstage-outreach-partners");if(!section){return;}var selection=section.querySelector("#backstage-outreach-business-selection");var review=section.querySelector("#backstage-outreach-business-review");var commit=section.querySelector("[data-vms-business-review-commit]");var stale=section.querySelector("[data-vms-business-review-stale]");var dirty=false;function invalidateReview(){if(!review||dirty){return;}dirty=true;review.classList.add("is-stale");if(stale){stale.hidden=false;}if(commit){commit.querySelectorAll("button,input").forEach(function(el){el.disabled=true;});}}var all=section.querySelector("[data-backstage-select-all]");if(all){all.addEventListener("change",function(){section.querySelectorAll("[data-backstage-business]").forEach(function(el){el.checked=all.checked;});invalidateReview();});}if(selection){selection.querySelectorAll("input,select").forEach(function(field){if(field.type!=="hidden"&&field.type!=="submit"){field.addEventListener("change",invalidateReview);field.addEventListener("input",invalidateReview);}});}section.querySelectorAll("[data-backstage-copy]").forEach(function(btn){btn.addEventListener("click",function(){var input=document.getElementById(btn.getAttribute("data-backstage-copy-target")||"");if(input&&navigator.clipboard){navigator.clipboard.writeText(input.value);btn.textContent="Copied";}});});var target=null;var hash=window.location.hash;if(hash==="#backstage-outreach-business-review"){target=review;}else if(hash==="#backstage-outreach-business-share"||hash==="#backstage-outreach-business-contacts"||hash==="#backstage-outreach-business-email-review"||hash==="#backstage-outreach-business-resend-review"||hash==="#backstage-outreach-business-email-result"){target=section.querySelector(hash);}if(target){window.setTimeout(function(){target.focus({preventScroll:true});var reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;var top=target.getBoundingClientRect().top+window.scrollY-(document.getElementById("wpadminbar")?document.getElementById("wpadminbar").offsetHeight:0)-16;window.scrollTo({top:Math.max(0,top),behavior:reduced?"auto":"smooth"});},100);}})();</script></section>';

@@ -9,7 +9,7 @@ function outreach_party_unified_assert(bool $condition, string $message): void
 }
 
 if (!class_exists('WooCommerce') || !function_exists('backstage_outreach_party_adoption_preview')) {
-	throw new RuntimeException('Outreach 1.2.20 and WooCommerce must be active.');
+	throw new RuntimeException('Outreach 1.2.21 and WooCommerce must be active.');
 }
 
 global $wpdb;
@@ -319,6 +319,9 @@ try {
 	outreach_party_unified_assert($suppressed_handoff['handed_off'] === 0 && count($suppressed_handoff['failed']) === 1 && $mail_attempts === 3, 'Suppressed address reached the mailer.');
 	$manual = backstage_outreach_party_record_activity(array('campaign_id' => (int) $paid['campaign_id'], 'distribution_id' => $send_ids[0], 'party_id' => (int) $sendable[0]['party_id'], 'activity_type' => 'manual_contact', 'activity_status' => 'logged', 'contact_method' => 'phone', 'notes' => 'Synthetic call', 'request_key' => hash('sha256', $marker . '|manual')), $user_id);
 	outreach_party_unified_assert(is_array($manual), 'Manual contact activity was not recorded.');
+	$campaign_results = backstage_outreach_party_campaign_results((int) $paid['campaign_id']);
+	outreach_party_unified_assert(!empty($campaign_results['is_party_campaign']) && (int) $campaign_results['partners'] === 103 && (int) $campaign_results['active_links'] === 103 && (int) $campaign_results['coupon_links'] === 103, 'Strategy-aware campaign results did not report the 103 persisted Partner distributions.');
+	outreach_party_unified_assert((int) $campaign_results['accepted_handoffs'] === 3 && (int) $campaign_results['manual_contacts'] === 1 && (int) $campaign_results['paid_redemptions'] === 0, 'Strategy-aware campaign results did not report persisted handoff, manual-contact, and redemption facts.');
 
 	outreach_party_unified_assert($baseline['campaign31'] === $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id=%d', vms_admission_table_pass_outreach_campaigns(), 31), ARRAY_A), 'Campaign 31 changed.');
 	outreach_party_unified_assert($baseline['batch84'] === $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id=%d', bvmgr_admission_table_pass_batches(), 84), ARRAY_A), 'Batch 84 changed.');

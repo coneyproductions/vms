@@ -4642,16 +4642,16 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 				'required' => true,
 				'help' => __('Choose individual-recipient delivery or reusable links / QRs for businesses before completing route-specific campaign details.', 'backstage-outreach'),
 			)) . '</legend>';
-			echo '<div class="vms-pass-choice-row vms-pass-choice-row--stacked">';
-			echo '<label class="vms-pass-choice"><input type="radio" name="recipient_source_mode" value="csv_new"' . checked($recipient_source_mode, 'csv_new', false) . '> <span>' . esc_html__('Upload CSV / Create New Source List', 'backstage-outreach') . '</span></label>';
+			echo '<div class="vms-pass-choice-row vms-pass-choice-row--routes">';
+			echo '<label class="vms-pass-choice vms-pass-route-choice"><input type="radio" name="recipient_source_mode" value="csv_new"' . checked($recipient_source_mode, 'csv_new', false) . '> <span><strong>' . esc_html__('New recipient list (CSV)', 'backstage-outreach') . '</strong><small>' . esc_html__('Import a new list of people for individual invitations.', 'backstage-outreach') . '</small></span></label>';
 			if ($has_sources) {
-				echo '<label class="vms-pass-choice"><input type="radio" name="recipient_source_mode" value="existing_source"' . checked($recipient_source_mode, 'existing_source', false) . '> <span>' . esc_html__('Use Existing Source List', 'backstage-outreach') . '</span></label>';
-				echo '<label class="vms-pass-choice"><input type="radio" name="recipient_source_mode" value="business_source"' . checked($recipient_source_mode, 'business_source', false) . '> <span>' . esc_html__('Reusable Business Links / QRs', 'backstage-outreach') . '</span></label>';
+				echo '<label class="vms-pass-choice vms-pass-route-choice"><input type="radio" name="recipient_source_mode" value="existing_source"' . checked($recipient_source_mode, 'existing_source', false) . '> <span><strong>' . esc_html__('Existing recipient list', 'backstage-outreach') . '</strong><small>' . esc_html__('Use people already on a Source list for individual invitations.', 'backstage-outreach') . '</small></span></label>';
+				echo '<label class="vms-pass-choice vms-pass-route-choice"><input type="radio" name="recipient_source_mode" value="business_source"' . checked($recipient_source_mode, 'business_source', false) . '> <span><strong>' . esc_html__('Business sharing links / QR codes', 'backstage-outreach') . '</strong><small>' . esc_html__('Make one reusable link for each business to share with customers.', 'backstage-outreach') . '</small></span></label>';
 			}
 			if ($contacts_mode_available) {
-				echo '<label class="vms-pass-choice"><input type="radio" name="recipient_source_mode" value="contacts"' . checked($recipient_source_mode, 'contacts', false) . '> <span>' . esc_html__('Select saved Outreach contacts', 'backstage-outreach') . '</span></label>';
+				echo '<label class="vms-pass-choice vms-pass-route-choice"><input type="radio" name="recipient_source_mode" value="contacts"' . checked($recipient_source_mode, 'contacts', false) . '> <span><strong>' . esc_html__('Saved contacts', 'backstage-outreach') . '</strong><small>' . esc_html__('Choose individual people from the saved Outreach directory.', 'backstage-outreach') . '</small></span></label>';
 			}
-			echo '</div></fieldset>';
+			echo '</div><p class="description">' . esc_html__('Choosing a route does not send invitations.', 'backstage-outreach') . '</p></fieldset>';
 			echo '<p class="description">' . esc_html__('Your draft stays on this page when you switch routes. Compatible unedited offer fields are copied into a new business-batch draft; existing batches are never changed.', 'backstage-outreach') . '</p>';
 			echo '</details>';
 		}
@@ -5419,7 +5419,8 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 		echo '</form>';
 		echo '</section>';
 
-		if ($campaign_id > 0 && $show_guest_pass_fields && function_exists('vms_pass_outreach_render_recipients_panel')) {
+		$is_party_results_campaign = $campaign_id > 0 && function_exists('backstage_outreach_is_party_campaign') && backstage_outreach_is_party_campaign($campaign_id);
+		if ($campaign_id > 0 && $show_guest_pass_fields && !$is_party_results_campaign && function_exists('vms_pass_outreach_render_recipients_panel')) {
 			vms_pass_outreach_render_recipients_panel($form_payload);
 		}
 
@@ -5489,10 +5490,14 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 					));
 					$edit_url = vms_pass_outreach_admin_page_url(array('campaign_id' => $row_id));
 					$is_business_campaign = function_exists('backstage_outreach_is_reusable_business_campaign') && backstage_outreach_is_reusable_business_campaign($row);
+					$party_results = !$is_business_campaign && function_exists('backstage_outreach_party_campaign_results') ? backstage_outreach_party_campaign_results($row_id) : array();
+					$is_party_campaign = !empty($party_results['is_party_campaign']);
 					$contact_dashboard = $is_business_campaign && function_exists('backstage_outreach_business_contact_dashboard') ? backstage_outreach_business_contact_dashboard($row_id) : array();
 					$contact_summary = (array) ($contact_dashboard['summary'] ?? array());
 					$business_results_anchor = absint($contact_summary['total_businesses'] ?? 0) > 0 ? '#backstage-outreach-business-contacts' : '#backstage-outreach-partners';
-					$results_url = $edit_url . ($is_business_campaign ? $business_results_anchor : '#vms-outreach-delivery-status');
+					$results_url = $is_party_campaign
+						? backstage_outreach_party_admin_url(array('partner_campaign_id' => $row_id)) . '#outreach-party-contact-dashboard'
+						: $edit_url . ($is_business_campaign ? $business_results_anchor : '#vms-outreach-delivery-status');
 					$delivery_line = $is_business_campaign
 						? sprintf(
 							__('%1$d businesses · %2$d email handed off · %3$d manual contacts', 'backstage-outreach'),
@@ -5500,23 +5505,37 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 							absint($contact_summary['email_handed_off'] ?? 0),
 							absint($contact_summary['manual_contacts'] ?? 0)
 						)
-						: (function_exists('vms_pass_outreach_campaign_counts_line')
+						: ($is_party_campaign
+							? sprintf(
+								__('%1$d Partners · %2$d active links · %3$d accepted handoffs', 'backstage-outreach'),
+								absint($party_results['partners'] ?? 0),
+								absint($party_results['active_links'] ?? 0),
+								absint($party_results['accepted_handoffs'] ?? 0)
+							)
+							: (function_exists('vms_pass_outreach_campaign_counts_line')
 							? vms_pass_outreach_campaign_counts_line($campaign_summary)
-							: sprintf(__('Recipients %d', 'backstage-outreach'), absint($campaign_summary['total_recipients'] ?? 0)));
+							: sprintf(__('Recipients %d', 'backstage-outreach'), absint($campaign_summary['total_recipients'] ?? 0))));
 					$results_line = $is_business_campaign
 						? sprintf(
 							__('%1$d no contact · %2$d follow-ups needed', 'backstage-outreach'),
 							absint($contact_summary['no_contact'] ?? 0),
 							absint($contact_summary['follow_up_needed'] ?? 0)
 						)
-						: (function_exists('vms_pass_outreach_campaign_results_line')
+						: ($is_party_campaign
+							? sprintf(
+								__('Visits: Not tracked · Inbox deliveries: Not tracked · %d paid redemptions', 'backstage-outreach'),
+								absint($party_results['paid_redemptions'] ?? 0)
+							)
+							: (function_exists('vms_pass_outreach_campaign_results_line')
 							? vms_pass_outreach_campaign_results_line($row, $campaign_summary, array('include_total_admissions' => false))
 							: sprintf(
 								__('Claimed %1$d · Checked in %2$d', 'backstage-outreach'),
 								absint($campaign_summary['claimed_recipients'] ?? 0),
 								absint($campaign_summary['admissions_checked_in'] ?? 0)
-							));
-					$next_step = $is_business_campaign ? __('Open the business contact dashboard to log outreach, review history, and share personalized links.', 'backstage-outreach') : $campaign_next_action_message($campaign_summary);
+							)));
+					$next_step = $is_business_campaign
+						? __('Open the business contact dashboard to log outreach, review history, and share personalized links.', 'backstage-outreach')
+						: ($is_party_campaign ? __('Open the Partner dashboard for authoritative link, handoff, and redemption results.', 'backstage-outreach') : $campaign_next_action_message($campaign_summary));
 					$results_popover_html = '<p class="vms-pass-floating-popover__eyebrow">' . esc_html__('Delivery & Results', 'backstage-outreach') . '</p><p class="vms-pass-floating-popover__counts"><strong>' . esc_html($delivery_line) . '</strong></p><p class="vms-pass-floating-popover__counts"><strong>' . esc_html($results_line) . '</strong></p><p class="vms-pass-floating-popover__next-step">' . esc_html($next_step) . '</p><div class="vms-pass-floating-popover__actions"><a class="button button-small" href="' . esc_url($results_url) . '">' . esc_html__('Open Delivery & Results', 'backstage-outreach') . '</a></div>';
 					$passes_url = !empty($row['related_batch_id']) && function_exists('vms_pass_claims_admin_page_url')
 						? vms_pass_claims_admin_page_url(array('tab' => 'passes', 'batch_id' => (int) $row['related_batch_id']))

@@ -17,7 +17,7 @@ function check(condition, message) {
   const browser = await chromium.launch({ headless: true });
   let storageState;
 
-  for (const viewport of [{ name: 'desktop', width: 1440, height: 1000 }, { name: 'mobile', width: 390, height: 844 }]) {
+	for (const viewport of [{ name: 'desktop', width: 1440, height: 1000 }, { name: 'split', width: 760, height: 900 }, { name: 'mobile', width: 390, height: 844 }]) {
     const contextOptions = { ignoreHTTPSErrors: true, viewport, storageState };
     if (httpUser && httpPass) contextOptions.httpCredentials = { username: httpUser, password: httpPass };
     const context = await browser.newContext(contextOptions);
@@ -65,6 +65,12 @@ function check(condition, message) {
     await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), bulk.getByRole('button', { name: 'Load Source Parties' }).click()]);
     check(await page.getByText(fixture.marker, { exact: true }).count() >= 1, `${viewport.name}: Source-associated Party did not load.`);
     check(await page.locator('input[data-vms-party-select][value="' + fixture.party_id + '"]').count() === 1, `${viewport.name}: bulk selection checkbox missing.`);
+		const partyList = page.locator('.vms-pass-table-scroll--party-workflow').last();
+		check(await partyList.getAttribute('data-vms-sticky-table') !== null && await partyList.evaluate(node => getComputedStyle(node).maxHeight === '420px'), `${viewport.name}: Party selection list is not bounded with a sticky-header contract.`);
+		await page.locator('input[data-vms-party-select][value="' + fixture.party_id + '"]').check();
+		check(await page.locator('[data-vms-party-selected-count]').innerText() === '1 selected', `${viewport.name}: selected-Party feedback is inaccurate.`);
+		check(await page.getByRole('heading', { name: 'Campaign Results' }).count() === 1, `${viewport.name}: strategy-aware Party campaign results summary is missing.`);
+		check(await page.getByText('Offer-page visits: Not tracked', { exact: false }).count() === 1, `${viewport.name}: untracked Party metrics are not labeled honestly.`);
     check(!(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 2)), `${viewport.name}: horizontal overflow detected with Source Party table.`);
     await page.screenshot({ path: `${output}/party-unified-workflow-${viewport.name}.png`, fullPage: true });
     check(errors.length === 0, `${viewport.name}: console errors: ${errors.join(' | ')}`);
@@ -72,5 +78,5 @@ function check(condition, message) {
   }
 
   await browser.close();
-  console.log('Unified Party workflow browser PASS (1440px and 390px)');
+  console.log('Unified Party workflow browser PASS (1440px, 760px, and 390px)');
 })().catch(error => { console.error(error); process.exit(1); });

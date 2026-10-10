@@ -11,7 +11,7 @@ $business = (string) file_get_contents($root . '/companion-plugins/backstage-out
 $party = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/party-bulk-workflows.php');
 
 $checks = array(
-	'Focused release is Outreach 1.2.20' => str_contains($plugin, 'Version: 1.2.20') && str_contains($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.20'"),
+	'Focused release is Outreach 1.2.21' => str_contains($plugin, 'Version: 1.2.21') && str_contains($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.21'"),
 	'Unsubscribe runtime loads after suppression and before send paths' => strpos($bootstrap, "'/suppression.php'") < strpos($bootstrap, "'/unsubscribe.php'") && str_contains($bootstrap, "'/unsubscribe.php'"),
 	'Base schema adds only an opaque token ledger' => str_contains($db, "return '1.2.0';") && str_contains($db, 'CREATE TABLE {$unsubscribe_tokens}') && str_contains($db, 'UNIQUE KEY token_hash') && !str_contains($db, 'unsubscribe_email_token'),
 	'Links use random opaque tokens plus a durable HMAC signature' => str_contains($unsubscribe, 'random_bytes(32)') && str_contains($unsubscribe, "hash_hmac('sha256', 'v1|' . \$token") && str_contains($unsubscribe, "hash('sha256', \$token)"),

@@ -897,6 +897,11 @@
   align-items: flex-start;
 }
 
+#vms-pass-claims-wrap .vms-pass-choice-row--routes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 #vms-pass-claims-wrap .vms-pass-choice {
   display: inline-flex;
   align-items: center;
@@ -921,6 +926,30 @@
 
 #vms-pass-claims-wrap .vms-pass-choice span {
   font-weight: 500;
+}
+
+#vms-pass-claims-wrap .vms-pass-route-choice {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  align-items: flex-start;
+  white-space: normal;
+}
+
+#vms-pass-claims-wrap .vms-pass-route-choice > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+#vms-pass-claims-wrap .vms-pass-route-choice strong {
+  color: #17243a;
+}
+
+#vms-pass-claims-wrap .vms-pass-route-choice small {
+  color: #526174;
+  font-weight: 400;
+  line-height: 1.35;
 }
 
 #vms-pass-claims-wrap .vms-pass-subfield {
@@ -1104,6 +1133,66 @@
 
 #vms-pass-claims-wrap .vms-pass-table-scroll--business-source {
   max-height: 640px;
+}
+
+#vms-pass-claims-wrap .vms-pass-table-scroll--party-workflow {
+  max-height: 420px;
+}
+
+#vms-pass-claims-wrap .vms-pass-table-scroll--party-directory {
+  max-height: 520px;
+}
+
+#vms-pass-claims-wrap .vms-pass-workflow-selection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+#vms-pass-claims-wrap .vms-pass-workflow-review-list {
+  max-height: 320px;
+  margin: 12px 0;
+  padding: 10px 10px 10px 34px;
+  overflow: auto;
+  border: 1px solid #d8e2f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+#vms-pass-claims-wrap .vms-pass-party-results-summary {
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid #b8cce4;
+  border-radius: 12px;
+  background: #f7fbff;
+}
+
+#vms-pass-claims-wrap .vms-pass-party-results-summary h3 {
+  margin-top: 0;
+}
+
+#vms-pass-claims-wrap .vms-pass-party-results-summary dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+#vms-pass-claims-wrap .vms-pass-party-results-summary dl > div {
+  min-width: 0;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+#vms-pass-claims-wrap .vms-pass-party-results-summary dt {
+  font-weight: 700;
+}
+
+#vms-pass-claims-wrap .vms-pass-party-results-summary dd {
+  margin: 4px 0 0;
 }
 
 #vms-pass-claims-wrap .vms-pass-table-scroll .widefat {
@@ -1719,6 +1808,10 @@
 
 @media (max-width: 900px) {
   #vms-pass-claims-wrap .vms-pass-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #vms-pass-claims-wrap .vms-pass-choice-row--routes {
     grid-template-columns: 1fr;
   }
 

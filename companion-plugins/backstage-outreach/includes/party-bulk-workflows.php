@@ -624,9 +624,10 @@ function backstage_outreach_party_invitation_handoff(array $review, int $user_id
 	return $result;
 }
 
-function backstage_outreach_party_workflow_redirect(string $anchor = 'outreach-party-workflows'): void
+function backstage_outreach_party_workflow_redirect(string $anchor = 'outreach-party-workflows', int $campaign_id = 0): void
 {
-	backstage_outreach_party_admin_redirect(array(), $anchor);
+	$args = $campaign_id > 0 ? array('partner_campaign_id' => $campaign_id) : array();
+	backstage_outreach_party_admin_redirect($args, $anchor);
 }
 
 function backstage_outreach_party_handle_adoption_review(): void
@@ -712,7 +713,7 @@ function backstage_outreach_party_handle_bulk_link_review(): void
 		set_transient(backstage_outreach_party_workflow_review_key('bulk_links'), $review, 30 * MINUTE_IN_SECONDS);
 		backstage_outreach_party_admin_notice(__('Partner-link preview is ready. No links or coupons were created.', 'backstage-outreach'), 'info');
 	}
-	backstage_outreach_party_workflow_redirect('outreach-party-bulk-link-review');
+	backstage_outreach_party_workflow_redirect('outreach-party-bulk-link-review', absint($_POST['campaign_id'] ?? 0));
 }
 add_action('admin_post_backstage_outreach_party_bulk_link_review', 'backstage_outreach_party_handle_bulk_link_review');
 
@@ -723,12 +724,13 @@ function backstage_outreach_party_handle_bulk_link_create(): void
 	$token = sanitize_text_field((string) wp_unslash($_POST['review_token'] ?? ''));
 	if (!is_array($review) || !hash_equals((string) ($review['review_token'] ?? ''), $token) || absint($review['reviewed_by'] ?? 0) !== $user_id || empty($_POST['confirm_links'])) {
 		backstage_outreach_party_admin_notice(__('The link preview expired or is invalid. Preview again.', 'backstage-outreach'), 'error');
-		backstage_outreach_party_workflow_redirect('outreach-party-bulk-links');
+		backstage_outreach_party_workflow_redirect('outreach-party-bulk-links', is_array($review) ? absint($review['campaign_id'] ?? 0) : 0);
 	}
 	$result = backstage_outreach_party_bulk_link_commit($review, $user_id);
+	$campaign_id = absint($review['campaign_id'] ?? 0);
 	delete_transient(backstage_outreach_party_workflow_review_key('bulk_links'));
 	backstage_outreach_party_admin_notice(sprintf(__('Bulk link generation finished: %1$d created, %2$d safely replayed, %3$d failed. Failed rows may be previewed and retried.', 'backstage-outreach'), $result['created'], $result['existing'], count($result['failed'])), $result['failed'] ? 'warning' : 'success');
-	backstage_outreach_party_workflow_redirect('outreach-party-bulk-links');
+	backstage_outreach_party_workflow_redirect('outreach-party-bulk-links', $campaign_id);
 }
 add_action('admin_post_backstage_outreach_party_bulk_link_create', 'backstage_outreach_party_handle_bulk_link_create');
 
@@ -739,7 +741,7 @@ function backstage_outreach_party_handle_invitation_review(): void
 	$review['reviewed_by'] = $user_id;
 	set_transient(backstage_outreach_party_workflow_review_key('invitations'), $review, 20 * MINUTE_IN_SECONDS);
 	backstage_outreach_party_admin_notice(__('Invitation preview is ready. No messages were handed off.', 'backstage-outreach'), 'info');
-	backstage_outreach_party_workflow_redirect('outreach-party-invitation-review');
+	backstage_outreach_party_workflow_redirect('outreach-party-invitation-review', absint($review['campaign_id'] ?? 0));
 }
 add_action('admin_post_backstage_outreach_party_invitation_review', 'backstage_outreach_party_handle_invitation_review');
 
@@ -750,12 +752,13 @@ function backstage_outreach_party_handle_invitation_handoff(): void
 	$token = sanitize_text_field((string) wp_unslash($_POST['review_token'] ?? ''));
 	if (!is_array($review) || !hash_equals((string) ($review['review_token'] ?? ''), $token) || absint($review['reviewed_by'] ?? 0) !== $user_id || empty($_POST['confirm_handoff'])) {
 		backstage_outreach_party_admin_notice(__('The invitation review expired, changed, or was not explicitly confirmed.', 'backstage-outreach'), 'error');
-		backstage_outreach_party_workflow_redirect('outreach-party-contact-dashboard');
+		backstage_outreach_party_workflow_redirect('outreach-party-contact-dashboard', is_array($review) ? absint($review['campaign_id'] ?? 0) : 0);
 	}
 	$result = backstage_outreach_party_invitation_handoff($review, $user_id);
+	$campaign_id = absint($review['campaign_id'] ?? 0);
 	delete_transient(backstage_outreach_party_workflow_review_key('invitations'));
 	backstage_outreach_party_admin_notice(sprintf(__('%1$d invitation(s) were accepted by the configured WordPress mailer for handoff; delivery is not asserted. %2$d failed or were blocked.', 'backstage-outreach'), $result['handed_off'], count($result['failed'])), $result['failed'] ? 'warning' : 'success');
-	backstage_outreach_party_workflow_redirect('outreach-party-contact-dashboard');
+	backstage_outreach_party_workflow_redirect('outreach-party-contact-dashboard', $campaign_id);
 }
 add_action('admin_post_backstage_outreach_party_invitation_handoff', 'backstage_outreach_party_handle_invitation_handoff');
 
@@ -767,7 +770,7 @@ function backstage_outreach_party_handle_manual_activity(): void
 	$method = sanitize_key((string) ($_POST['contact_method'] ?? 'note'));
 	if (!is_array($row) || !in_array($method, array('email', 'phone', 'text', 'social', 'note'), true)) {
 		backstage_outreach_party_admin_notice(__('The manual contact activity was invalid.', 'backstage-outreach'), 'error');
-		backstage_outreach_party_workflow_redirect('outreach-party-contact-dashboard');
+		backstage_outreach_party_workflow_redirect('outreach-party-contact-dashboard', is_array($row) ? absint($row['campaign_id'] ?? 0) : 0);
 	}
 	$result = backstage_outreach_party_record_activity(array(
 		'campaign_id' => absint($row['campaign_id']), 'distribution_id' => $distribution_id, 'party_id' => absint($row['party_id']),
@@ -777,7 +780,7 @@ function backstage_outreach_party_handle_manual_activity(): void
 		'request_key' => hash('sha256', 'manual|' . $user_id . '|' . wp_generate_uuid4()),
 	), $user_id);
 	backstage_outreach_party_admin_notice(is_wp_error($result) ? $result->get_error_message() : __('Manual contact activity recorded.', 'backstage-outreach'), is_wp_error($result) ? 'error' : 'success');
-	backstage_outreach_party_workflow_redirect('outreach-party-contact-dashboard');
+	backstage_outreach_party_workflow_redirect('outreach-party-contact-dashboard', absint($row['campaign_id'] ?? 0));
 }
 add_action('admin_post_backstage_outreach_party_manual_activity', 'backstage_outreach_party_handle_manual_activity');
 
@@ -797,7 +800,11 @@ function backstage_outreach_party_bulk_render_workspace(): void
 	$invitation_review = get_transient(backstage_outreach_party_workflow_review_key('invitations'));
 	$selected_campaign_id = absint($_GET['partner_campaign_id'] ?? ($link_review['campaign_id'] ?? 0));
 	$paid_campaign_ids = array_map(static fn(array $campaign): int => absint($campaign['id'] ?? 0), $paid_campaigns);
-	$selected_campaign = $selected_campaign_id > 0 && in_array($selected_campaign_id, $paid_campaign_ids, true) ? vms_pass_outreach_get_campaign_by_id($selected_campaign_id) : null;
+	$selected_campaign = $selected_campaign_id > 0 ? vms_pass_outreach_get_campaign_by_id($selected_campaign_id) : null;
+	$selected_is_party_results = is_array($selected_campaign) && backstage_outreach_is_party_campaign($selected_campaign_id);
+	if (!$selected_is_party_results && !in_array($selected_campaign_id, $paid_campaign_ids, true)) {
+		$selected_campaign = null;
+	}
 	if (!is_array($selected_campaign)) { $selected_campaign_id = 0; }
 	$source_parties = array();
 	if (is_array($selected_campaign)) {
@@ -816,7 +823,7 @@ function backstage_outreach_party_bulk_render_workspace(): void
 		$s = (array) $adoption['summary'];
 		echo '<div id="outreach-party-adoption-review" class="vms-pass-review-card"><h3>' . esc_html__('Adoption preview — no writes yet', 'backstage-outreach') . '</h3><p>' . esc_html(sprintf(__('%1$d snapshots → %2$d proposed people; %3$d compound cross-campaign matches; %4$d have email; %5$d missing email; %6$d ambiguous; %7$d skipped.', 'backstage-outreach'), $s['recipient_count'], $s['party_count'], absint($s['compatibility_match_count'] ?? 0), $s['email_count'], $s['missing_email_count'], $s['ambiguous_count'], $s['skipped_count'])) . '</p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_party_adoption_commit"><input type="hidden" name="review_token" value="' . esc_attr((string) $adoption['review_token']) . '">';
 		wp_nonce_field('backstage_outreach_party_adoption_commit');
-		echo '<div class="vms-pass-table-scroll"><table class="widefat striped"><thead><tr><th>' . esc_html__('Adopt', 'backstage-outreach') . '</th><th>' . esc_html__('Person / history', 'backstage-outreach') . '</th><th>' . esc_html__('Contact / context', 'backstage-outreach') . '</th><th>' . esc_html__('Resolution', 'backstage-outreach') . '</th></tr></thead><tbody>';
+		echo '<div class="vms-pass-table-scroll vms-pass-table-scroll--party-workflow" data-vms-sticky-table><table class="widefat striped"><thead><tr><th>' . esc_html__('Adopt', 'backstage-outreach') . '</th><th>' . esc_html__('Person / history', 'backstage-outreach') . '</th><th>' . esc_html__('Contact / context', 'backstage-outreach') . '</th><th>' . esc_html__('Resolution', 'backstage-outreach') . '</th></tr></thead><tbody>';
 		foreach ((array) $adoption['groups'] as $group) {
 			$key = sanitize_key((string) $group['group_key']);
 			echo '<tr><td><input type="checkbox" name="adoption[' . esc_attr($key) . '][selected]" value="1"' . checked((string) $group['display_name'] !== '', true, false) . '></td><td><strong>' . esc_html((string) $group['display_name']) . '</strong><br><small>' . esc_html(sprintf(__('%1$d snapshot(s), campaigns %2$s, historical contact %3$s', 'backstage-outreach'), count((array) $group['campaign_ids']), implode(', ', (array) $group['campaign_ids']), absint($group['contact_id']) ?: __('none', 'backstage-outreach'))) . '</small></td><td>' . esc_html(implode(', ', (array) $group['emails'])) . '<br>' . esc_html(implode(', ', (array) $group['phones'])) . '<br><small>' . esc_html(implode(' / ', (array) $group['organizations'])) . '</small><p><strong>' . esc_html__('Identity evidence:', 'backstage-outreach') . '</strong> ' . esc_html(implode(' ', (array) $group['identity_evidence'])) . '</p>';
@@ -849,13 +856,13 @@ function backstage_outreach_party_bulk_render_workspace(): void
 	if (is_array($selected_campaign)) {
 		echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_party_bulk_link_review"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $selected_campaign_id) . '">';
 		wp_nonce_field('backstage_outreach_party_bulk_link_review');
-		echo '<p><label><input type="checkbox" data-vms-party-select-all> ' . esc_html__('Select all loaded active Source Parties', 'backstage-outreach') . '</label></p><div class="vms-pass-table-scroll"><table class="widefat striped"><thead><tr><th>' . esc_html__('Select', 'backstage-outreach') . '</th><th>' . esc_html__('Party', 'backstage-outreach') . '</th><th>' . esc_html__('Type', 'backstage-outreach') . '</th><th>' . esc_html__('Email', 'backstage-outreach') . '</th></tr></thead><tbody>';
+		echo '<p class="vms-pass-workflow-selection"><label><input type="checkbox" data-vms-party-select-all> ' . esc_html__('Select all loaded active Source Parties', 'backstage-outreach') . '</label> <strong data-vms-party-selected-count aria-live="polite">' . esc_html__('0 selected', 'backstage-outreach') . '</strong></p><div class="vms-pass-table-scroll vms-pass-table-scroll--party-workflow" data-vms-sticky-table><table class="widefat striped"><thead><tr><th>' . esc_html__('Select', 'backstage-outreach') . '</th><th>' . esc_html__('Party', 'backstage-outreach') . '</th><th>' . esc_html__('Type', 'backstage-outreach') . '</th><th>' . esc_html__('Email', 'backstage-outreach') . '</th></tr></thead><tbody>';
 		foreach ((array) $source_parties as $party) { $email = backstage_outreach_party_primary_email(absint($party['id'])); echo '<tr><td><input data-vms-party-select type="checkbox" name="party_ids[]" value="' . esc_attr((string) absint($party['id'])) . '"></td><td>' . esc_html((string) $party['display_name']) . '</td><td>' . esc_html((string) $party['party_type']) . '</td><td>' . esc_html($email !== '' ? $email : __('Missing', 'backstage-outreach')) . '</td></tr>'; }
 		echo '</tbody></table></div><div class="vms-pass-grid"><label>' . esc_html__('Optional per-Partner admission cap', 'backstage-outreach') . '<input type="number" name="admission_cap" min="0" max="50000" value="0"></label><label>' . esc_html__('Optional per-Partner order cap', 'backstage-outreach') . '<input type="number" name="order_cap" min="0" max="50000" value="0"></label></div><p class="vms-pass-actions"><button class="button" type="submit">' . esc_html__('Preview selected links', 'backstage-outreach') . '</button></p></form>';
 	}
 	if (is_array($link_review)) {
 		$ready = count(array_filter((array) $link_review['rows'], static fn(array $row): bool => $row['status'] === 'ready'));
-		echo '<div id="outreach-party-bulk-link-review" class="vms-pass-review-card"><h3>' . esc_html__('Bulk-link preview — no writes yet', 'backstage-outreach') . '</h3><p>' . esc_html(sprintf(__('%1$d ready; %2$d blocked. Replaying the same selection reuses its one existing Party link and managed coupon.', 'backstage-outreach'), $ready, count($link_review['rows']) - $ready)) . '</p><ul>';
+		echo '<div id="outreach-party-bulk-link-review" class="vms-pass-review-card" tabindex="-1"><h3>' . esc_html__('Bulk-link preview — no writes yet', 'backstage-outreach') . '</h3><p>' . esc_html(sprintf(__('%1$d ready; %2$d blocked. Replaying the same selection reuses its one existing Party link and managed coupon.', 'backstage-outreach'), $ready, count($link_review['rows']) - $ready)) . '</p><ul class="vms-pass-workflow-review-list">';
 		foreach ((array) $link_review['rows'] as $row) { echo '<li>' . esc_html((string) $row['name']) . ' — ' . esc_html((string) $row['status'] . (!empty($row['error']) ? ': ' . $row['error'] : '')) . '</li>'; }
 		echo '</ul><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_party_bulk_link_create"><input type="hidden" name="review_token" value="' . esc_attr((string) $link_review['review_token']) . '">';
 		wp_nonce_field('backstage_outreach_party_bulk_link_create');
@@ -865,12 +872,22 @@ function backstage_outreach_party_bulk_render_workspace(): void
 
 	if ($selected_campaign_id > 0) {
 		$contact_rows = backstage_outreach_party_contact_rows($selected_campaign_id);
-		echo '<details id="outreach-party-contact-dashboard" open><summary><strong>' . esc_html__('4. Partner contact dashboard', 'backstage-outreach') . '</strong></summary><p>' . esc_html__('“Sent-handoff” means only that WordPress accepted the message for handoff; it does not mean delivered. Manual channels remain available and are audited.', 'backstage-outreach') . '</p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_party_invitation_review"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $selected_campaign_id) . '">';
+		$party_results = backstage_outreach_party_campaign_results($selected_campaign_id);
+		$selected_campaign_cap = absint($selected_campaign['total_admission_cap'] ?? 0);
+		$money_prefix = (string) ($party_results['currency'] ?? '') !== '' ? (string) $party_results['currency'] . ' ' : '';
+		echo '<details id="outreach-party-contact-dashboard" open tabindex="-1"><summary><strong>' . esc_html__('4. Partner contact dashboard', 'backstage-outreach') . '</strong></summary>';
+		echo '<div class="vms-pass-party-results-summary" role="status"><h3>' . esc_html__('Campaign Results', 'backstage-outreach') . '</h3><dl>';
+		echo '<div><dt>' . esc_html__('Partner links', 'backstage-outreach') . '</dt><dd>' . esc_html(sprintf(__('%1$d total · %2$d active · %3$d paused · %4$d revoked · %5$d coupon-backed', 'backstage-outreach'), absint($party_results['distributions'] ?? 0), absint($party_results['active_links'] ?? 0), absint($party_results['paused_links'] ?? 0), absint($party_results['revoked_links'] ?? 0), absint($party_results['coupon_links'] ?? 0))) . '</dd></div>';
+		echo '<div><dt>' . esc_html__('Outreach', 'backstage-outreach') . '</dt><dd>' . esc_html(sprintf(__('%1$d accepted email handoffs · %2$d failed · %3$d manual contacts', 'backstage-outreach'), absint($party_results['accepted_handoffs'] ?? 0), absint($party_results['failed_handoffs'] ?? 0), absint($party_results['manual_contacts'] ?? 0))) . '</dd></div>';
+		echo '<div><dt>' . esc_html__('Paid results', 'backstage-outreach') . '</dt><dd>' . esc_html(sprintf(__('%1$d redemptions · %2$d discounted tickets · %3$d refund records · %4$s net eligible-ticket revenue · %5$s refunded', 'backstage-outreach'), absint($party_results['paid_redemptions'] ?? 0), absint($party_results['discounted_tickets'] ?? 0), absint($party_results['refunded_redemptions'] ?? 0), $money_prefix . number_format_i18n((float) ($party_results['net_revenue'] ?? 0), 2), $money_prefix . number_format_i18n((float) ($party_results['refunded_total'] ?? 0), 2))) . '</dd></div>';
+		echo '<div><dt>' . esc_html__('Capacity', 'backstage-outreach') . '</dt><dd>' . esc_html($selected_campaign_cap > 0 ? sprintf(__('%1$d shared campaign admissions; %2$d Partner links also have individual caps. Individual caps do not reserve the shared pool.', 'backstage-outreach'), $selected_campaign_cap, absint($party_results['partner_caps'] ?? 0)) : sprintf(__('%d Partner links have individual caps; no campaign-wide cap is recorded.', 'backstage-outreach'), absint($party_results['partner_caps'] ?? 0))) . '</dd></div>';
+		echo '<div><dt>' . esc_html__('Tracking limits', 'backstage-outreach') . '</dt><dd>' . esc_html__('Offer-page visits: Not tracked · Inbox deliveries: Not tracked. A handoff means only that WordPress accepted the message.', 'backstage-outreach') . '</dd></div></dl></div>';
+		echo '<p>' . esc_html__('“Sent-handoff” means only that WordPress accepted the message for handoff; it does not mean delivered. Manual channels remain available and are audited.', 'backstage-outreach') . '</p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_party_invitation_review"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $selected_campaign_id) . '">';
 		wp_nonce_field('backstage_outreach_party_invitation_review');
-		echo '<p><label>' . esc_html__('Handoff mode', 'backstage-outreach') . ' <select name="handoff_mode"><option value="first">' . esc_html__('First handoff only', 'backstage-outreach') . '</option><option value="resend">' . esc_html__('Deliberate resend', 'backstage-outreach') . '</option></select></label></p><div class="vms-pass-table-scroll"><table class="widefat striped"><thead><tr><th>' . esc_html__('Email', 'backstage-outreach') . '</th><th>' . esc_html__('Partner / context', 'backstage-outreach') . '</th><th>' . esc_html__('Offer', 'backstage-outreach') . '</th><th>' . esc_html__('Contact / results', 'backstage-outreach') . '</th><th>' . esc_html__('Manual log', 'backstage-outreach') . '</th></tr></thead><tbody>';
+		echo '<p class="vms-pass-workflow-selection"><label>' . esc_html__('Handoff mode', 'backstage-outreach') . ' <select name="handoff_mode"><option value="first">' . esc_html__('First handoff only', 'backstage-outreach') . '</option><option value="resend">' . esc_html__('Deliberate resend', 'backstage-outreach') . '</option></select></label> <strong data-vms-party-email-selected-count aria-live="polite">' . esc_html__('0 selected', 'backstage-outreach') . '</strong></p><div class="vms-pass-table-scroll vms-pass-table-scroll--party-workflow" data-vms-sticky-table><table class="widefat striped"><thead><tr><th>' . esc_html__('Email', 'backstage-outreach') . '</th><th>' . esc_html__('Partner / context', 'backstage-outreach') . '</th><th>' . esc_html__('Offer', 'backstage-outreach') . '</th><th>' . esc_html__('Contact / results', 'backstage-outreach') . '</th><th>' . esc_html__('Manual log', 'backstage-outreach') . '</th></tr></thead><tbody>';
 		foreach ($contact_rows as $row) {
 			$affiliations = array_map(static fn(array $a): string => (string) ($a['organization_name'] ?? ''), (array) $row['affiliations']);
-			echo '<tr><td><input type="checkbox" name="distribution_ids[]" value="' . esc_attr((string) absint($row['id'])) . '"' . disabled((string) $row['email'] === '' || !empty($row['suppressed']), true, false) . '></td><td><strong>' . esc_html((string) $row['display_name']) . '</strong><br><small>' . esc_html(implode(', ', array_filter($affiliations))) . '</small><br>' . esc_html((string) ($row['email'] ?: __('Missing email', 'backstage-outreach'))) . (!empty($row['suppressed']) ? '<br><strong>' . esc_html__('Suppressed', 'backstage-outreach') . '</strong>' : '') . '</td><td><input class="regular-text" readonly value="' . esc_attr((string) $row['offer_url']) . '"></td><td>' . esc_html((string) ($row['contact_status'] ?: __('Ready', 'backstage-outreach'))) . '<br>' . esc_html(sprintf(__('%1$d handoff(s); %2$d redemption(s)', 'backstage-outreach'), absint($row['handoff_count']), absint($row['redemption_count']))) . '</td><td>' . esc_html__('Use manual log below', 'backstage-outreach') . '</td></tr>';
+			echo '<tr><td><input data-vms-party-email-select type="checkbox" name="distribution_ids[]" value="' . esc_attr((string) absint($row['id'])) . '"' . disabled((string) $row['email'] === '' || !empty($row['suppressed']), true, false) . '></td><td><strong>' . esc_html((string) $row['display_name']) . '</strong><br><small>' . esc_html(implode(', ', array_filter($affiliations))) . '</small><br>' . esc_html((string) ($row['email'] ?: __('Missing email', 'backstage-outreach'))) . (!empty($row['suppressed']) ? '<br><strong>' . esc_html__('Suppressed', 'backstage-outreach') . '</strong>' : '') . '</td><td><input class="regular-text" readonly value="' . esc_attr((string) $row['offer_url']) . '"></td><td>' . esc_html((string) ($row['contact_status'] ?: __('Ready', 'backstage-outreach'))) . '<br>' . esc_html(sprintf(__('%1$d handoff(s); %2$d redemption(s)', 'backstage-outreach'), absint($row['handoff_count']), absint($row['redemption_count']))) . '</td><td>' . esc_html__('Use manual log below', 'backstage-outreach') . '</td></tr>';
 		}
 		echo '</tbody></table></div><p class="vms-pass-actions"><button class="button" type="submit">' . esc_html__('Preview personalized invitations', 'backstage-outreach') . '</button></p></form>';
 		echo '<details><summary><strong>' . esc_html__('Log manual contact or note', 'backstage-outreach') . '</strong></summary><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="vms-pass-form"><input type="hidden" name="action" value="backstage_outreach_party_manual_activity">';
@@ -888,5 +905,5 @@ function backstage_outreach_party_bulk_render_workspace(): void
 		}
 		echo '</details>';
 	}
-	echo '<script>document.addEventListener("change",function(e){if(!e.target.matches("[data-vms-party-select-all]"))return;document.querySelectorAll("[data-vms-party-select]").forEach(function(box){box.checked=e.target.checked;});});</script></section>';
+	echo '<script>(function(){function count(selector,target){var node=document.querySelector(target);if(node){node.textContent=document.querySelectorAll(selector+":checked").length+" selected";}}document.addEventListener("change",function(e){if(e.target.matches("[data-vms-party-select-all]")){document.querySelectorAll("[data-vms-party-select]").forEach(function(box){box.checked=e.target.checked;});count("[data-vms-party-select]","[data-vms-party-selected-count]");}if(e.target.matches("[data-vms-party-select]")){count("[data-vms-party-select]","[data-vms-party-selected-count]");}if(e.target.matches("[data-vms-party-email-select]")){count("[data-vms-party-email-select]","[data-vms-party-email-selected-count]");}});})();</script></section>';
 }

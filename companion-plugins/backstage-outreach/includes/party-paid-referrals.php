@@ -72,6 +72,87 @@ function backstage_outreach_party_referral_rows(int $party_id): array
 	), ARRAY_A));
 }
 
+function backstage_outreach_party_campaign_results(int $campaign_id): array
+{
+	static $cache = array();
+	$empty = array(
+		'is_party_campaign' => false,
+		'partners' => 0,
+		'distributions' => 0,
+		'active_links' => 0,
+		'paused_links' => 0,
+		'revoked_links' => 0,
+		'coupon_links' => 0,
+		'accepted_handoffs' => 0,
+		'failed_handoffs' => 0,
+		'manual_contacts' => 0,
+		'paid_redemptions' => 0,
+		'refunded_redemptions' => 0,
+		'discounted_tickets' => 0,
+		'net_revenue' => 0.0,
+		'refunded_total' => 0.0,
+		'currency' => '',
+		'partner_caps' => 0,
+	);
+	if ($campaign_id <= 0) {
+		return $empty;
+	}
+	if (isset($cache[$campaign_id])) {
+		return $cache[$campaign_id];
+	}
+	global $wpdb;
+	$distribution = $wpdb->get_row($wpdb->prepare(
+		'SELECT COUNT(*) distributions,COUNT(DISTINCT party_id) partners,
+		SUM(CASE WHEN status=%s THEN 1 ELSE 0 END) active_links,
+		SUM(CASE WHEN status=%s THEN 1 ELSE 0 END) paused_links,
+		SUM(CASE WHEN status=%s THEN 1 ELSE 0 END) revoked_links,
+		SUM(CASE WHEN coupon_id IS NOT NULL AND coupon_id>0 THEN 1 ELSE 0 END) coupon_links,
+		SUM(CASE WHEN admission_cap>0 THEN 1 ELSE 0 END) partner_caps
+		FROM %i WHERE campaign_id=%d',
+		'active', 'paused', 'revoked', backstage_outreach_party_table('referral_distributions'), $campaign_id
+	), ARRAY_A);
+	if (!is_array($distribution) || absint($distribution['distributions'] ?? 0) <= 0) {
+		$cache[$campaign_id] = $empty;
+		return $cache[$campaign_id];
+	}
+	$activity = $wpdb->get_row($wpdb->prepare(
+		'SELECT
+		SUM(CASE WHEN activity_type=%s AND activity_status=%s THEN 1 ELSE 0 END) accepted_handoffs,
+		SUM(CASE WHEN activity_type=%s AND activity_status=%s THEN 1 ELSE 0 END) failed_handoffs,
+		SUM(CASE WHEN activity_type=%s AND activity_status=%s THEN 1 ELSE 0 END) manual_contacts
+		FROM %i WHERE campaign_id=%d',
+		'email_handoff', 'handed_off', 'email_handoff', 'failed', 'manual_contact', 'logged', backstage_outreach_party_table('contact_activities'), $campaign_id
+	), ARRAY_A);
+	$redemption = $wpdb->get_row($wpdb->prepare(
+		'SELECT
+		SUM(CASE WHEN status IN (%s,%s,%s) THEN 1 ELSE 0 END) paid_redemptions,
+		SUM(CASE WHEN status IN (%s,%s) THEN 1 ELSE 0 END) refunded_redemptions,
+		SUM(CASE WHEN status IN (%s,%s,%s) THEN ticket_quantity ELSE 0 END) discounted_tickets,
+		SUM(CASE WHEN status IN (%s,%s,%s) THEN eligible_ticket_net_total ELSE 0 END) net_revenue,
+		SUM(eligible_ticket_refunded_total) refunded_total,
+		CASE WHEN COUNT(DISTINCT NULLIF(currency,\'\'))=1 THEN MAX(currency) ELSE \'\' END currency
+		FROM %i WHERE campaign_id=%d',
+		'paid', 'partially_refunded', 'refunded', 'partially_refunded', 'refunded',
+		'paid', 'partially_refunded', 'refunded', 'paid', 'partially_refunded', 'refunded',
+		backstage_outreach_party_table('referral_redemptions'), $campaign_id
+	), ARRAY_A);
+	$cache[$campaign_id] = array_merge($empty, array_map('intval', array_intersect_key($distribution, $empty)), array_map('intval', array_intersect_key((array) $activity, $empty)), array(
+		'is_party_campaign' => true,
+		'paid_redemptions' => absint($redemption['paid_redemptions'] ?? 0),
+		'refunded_redemptions' => absint($redemption['refunded_redemptions'] ?? 0),
+		'discounted_tickets' => absint($redemption['discounted_tickets'] ?? 0),
+		'net_revenue' => (float) ($redemption['net_revenue'] ?? 0),
+		'refunded_total' => (float) ($redemption['refunded_total'] ?? 0),
+		'currency' => sanitize_text_field((string) ($redemption['currency'] ?? '')),
+	));
+	return $cache[$campaign_id];
+}
+
+function backstage_outreach_is_party_campaign(int $campaign_id): bool
+{
+	return !empty(backstage_outreach_party_campaign_results($campaign_id)['is_party_campaign']);
+}
+
 function backstage_outreach_party_referral_compatible_campaigns(array $party): array
 {
 	if ((string) ($party['status'] ?? '') !== 'active') {

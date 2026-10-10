@@ -5,11 +5,12 @@ $root = dirname(__DIR__);
 $plugin = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/backstage-outreach.php');
 $party = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/party-directory.php');
 $workflow = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/party-bulk-workflows.php');
+$referrals = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/party-paid-referrals.php');
 $admin = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/party-directory-admin.php');
 $discounts = (string) file_get_contents($root . '/companion-plugins/backstage-outreach/includes/business-discount-offers.php');
 
 $checks = array(
-	'Candidate identity is 1.2.20' => str_contains($plugin, "Version: 1.2.20") && str_contains($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.20"),
+	'Candidate identity is 1.2.21' => str_contains($plugin, "Version: 1.2.21") && str_contains($plugin, "BACKSTAGE_OUTREACH_VERSION', '1.2.21"),
 	'Party schema is additive 1.2 with a contact activity ledger' => str_contains($party, "return '1.2.0';") && str_contains($party, "'contact_activities'") && str_contains($party, 'UNIQUE KEY request_key'),
 	'Workflow module is loaded after typed Party referrals' => strpos($plugin, "includes/party-paid-referrals.php") < strpos($plugin, "includes/party-bulk-workflows.php"),
 	'Directory index never calls the per-Party referral renderer with null' => str_contains($admin, "is_array(\$party) && function_exists('backstage_outreach_party_referral_render_panel')"),
@@ -37,6 +38,9 @@ $checks = array(
 	'Invitation handoff revalidates the live referral and managed coupon immediately before mail' => substr_count($workflow, 'backstage_outreach_party_invitation_offer_error') >= 3 && str_contains($workflow, 'backstage_outreach_discount_distribution_error') && str_contains($workflow, 'party_invitation_signature_invalid'),
 	'No campaign link or Party creation automatically sends mail' => !str_contains($workflow, 'wp_mail(') && str_contains($workflow, 'backstage_outreach_send_promotional_email') && str_contains($workflow, 'party_invitation_handoff'),
 	'Mailer acceptance is not represented as delivery' => str_contains($workflow, 'delivery is not asserted'),
+	'Campaign results use persisted Party distributions rather than campaign names' => str_contains($referrals, 'function backstage_outreach_party_campaign_results') && str_contains($referrals, "backstage_outreach_party_table('referral_distributions')") && str_contains($workflow, 'Offer-page visits: Not tracked') && str_contains($workflow, 'accepted email handoffs'),
+	'Party workflow lists are bounded with sticky headers and live selection counts' => substr_count($workflow, 'vms-pass-table-scroll--party-workflow') >= 3 && str_contains($workflow, 'data-vms-sticky-table') && str_contains($workflow, 'data-vms-party-selected-count'),
+	'Partner campaign context survives reviewed workflow redirects' => str_contains($workflow, "array('partner_campaign_id' => \$campaign_id)") && str_contains($workflow, "backstage_outreach_party_workflow_redirect('outreach-party-contact-dashboard', \$campaign_id)"),
 	'Manual email phone text social and note methods remain available' => str_contains($workflow, "array('email', 'phone', 'text', 'social', 'note')"),
 	'Checkout discount cap remains a discount-only calculation' => str_contains($discounts, 'discounted_ticket_quantity') && !str_contains($discounts, 'Reduce the eligible ticket quantity to continue.'),
 	'Explicit removal suppression still covers Store API and session flows' => str_contains($discounts, 'backstage_outreach_discount_record_coupon_removal') && str_contains($discounts, 'rest_request_after_callbacks'),

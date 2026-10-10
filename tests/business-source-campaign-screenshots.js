@@ -389,13 +389,13 @@ function check(condition, message) {
       await page.waitForLoadState('domcontentloaded');
 	  await page.locator('#backstage-outreach-business-share .vms-pass-business-template-editor').evaluate((details) => { details.open = true; });
 	  check(await page.locator('#backstage-outreach-business-share textarea[name="business_share_message"]').inputValue() === multilineIntroduction, 'mobile: saved multiline business introduction did not survive reload exactly.');
-	  check(await page.locator('#backstage-outreach-business-share').getByText('Emails are plain text. Paragraphs and blank lines are preserved', { exact: false }).count() === 1, 'mobile: plain-text and Markdown guidance is missing.');
+	  check(await page.locator('#backstage-outreach-business-share').getByText('Emails are plain text. Put {offer_details}', { exact: false }).count() === 1, 'mobile: plain-text offer-details placement guidance is missing.');
       const shareReview = page.locator('[data-vms-business-contact-dashboard]');
       const shareRows = shareReview.locator('[data-contact-card]');
       check(await shareRows.count() === 35, 'mobile: personalized sharing did not include all 35 linked businesses.');
       check(await shareRows.locator('.vms-pass-contact-card__select').getByText('No email', { exact: true }).count() === 14, 'mobile: personalized sharing did not retain 14 copy-only businesses without email.');
       await shareRows.first().evaluate((details) => { details.open = true; });
-      check(await shareRows.first().locator('textarea[readonly]').inputValue().then((value) => value.includes('ひらがな é\n\nFirst paragraph') && value.includes('\n\nSecond paragraph keeps a blank line.\n\n**Bold markers stay literal.**\n\nOffer:') && value.includes('Customer offer URL:') && value.includes('Printable flyer URL:') && value.includes('does not reserve admissions')), 'mobile: personalized message omitted multiline formatting, UTF-8, links, or shared-capacity qualification.');
+	  check(await shareRows.first().locator('textarea[readonly]').inputValue().then((value) => value.includes('ひらがな é\n\nFirst paragraph') && value.includes('\n\nSecond paragraph keeps a blank line.\n\n**Bold markers stay literal.**\n\nOffer:') && value.includes('Customer offer:') && value.includes('Printable flyer:') && value.includes('does not reserve admissions') && value.includes('Final email footer (added only at handoff):') && value.includes('A unique, secure link for this recipient will be generated only at final handoff.')), 'mobile: personalized message omitted multiline formatting, UTF-8, links, capacity qualification, or final-footer disclosure.');
       const firstMessage = await shareRows.first().locator('textarea[readonly]').inputValue();
       check(firstMessage.includes(customerLinks[0]) && firstMessage.includes(flyerLinks[0]), 'mobile: first business message did not use that business’s own offer and flyer links.');
 	  await shareRows.first().getByRole('button', { name: 'Copy message' }).click();
@@ -715,17 +715,22 @@ function check(condition, message) {
 
   await removalPage.goto(createdCampaignAdminUrl, { waitUntil: 'domcontentloaded' });
   await removalPage.locator('.vms-pass-secondary-business-controls').evaluate((details) => { details.open = true; });
-  const pauseUrl = await removalPage.getByRole('link', { name: 'Pause' }).first().getAttribute('href');
-  const pauseResponse = await removalPage.request.get(pauseUrl, { maxRedirects: 0 });
-  check(pauseResponse.status() === 302, 'paused-state setup did not use the protected lifecycle action.');
+  let lifecycleRow = removalPage.locator('[data-vms-tour="outreach-business-results"] tbody tr').first();
+  await Promise.all([
+    removalPage.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+    lifecycleRow.getByRole('link', { name: 'Pause', exact: true }).click(),
+  ]);
+  check((await removalPage.locator('[data-vms-tour="outreach-business-results"] tbody tr').first().locator('td').nth(1).innerText()).trim() === 'paused', 'protected Pause action did not update the scoped distribution.');
   const pausedResponse = await noArtworkPage.goto(publicFlyerUrl, { waitUntil: 'domcontentloaded' });
   check(pausedResponse && pausedResponse.status() === 410, 'paused flyer did not return HTTP 410.');
   check(await noArtworkPage.getByRole('heading', { name: 'Offer unavailable' }).count() === 1 && await noArtworkPage.getByRole('link', { name: 'Visit the venue homepage' }).count() === 1, 'paused flyer did not show the branded plain-language unavailable state.');
-  await removalPage.goto(createdCampaignAdminUrl, { waitUntil: 'domcontentloaded' });
   await removalPage.locator('.vms-pass-secondary-business-controls').evaluate((details) => { details.open = true; });
-  const resumeUrl = await removalPage.getByRole('link', { name: 'Resume' }).first().getAttribute('href');
-  const resumeResponse = await removalPage.request.get(resumeUrl, { maxRedirects: 0 });
-  check(resumeResponse.status() === 302, 'paused fixture link could not be restored after the state check.');
+  lifecycleRow = removalPage.locator('[data-vms-tour="outreach-business-results"] tbody tr').first();
+  await Promise.all([
+    removalPage.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+    lifecycleRow.getByRole('link', { name: 'Resume', exact: true }).click(),
+  ]);
+  check((await removalPage.locator('[data-vms-tour="outreach-business-results"] tbody tr').first().locator('td').nth(1).innerText()).trim() === 'active', 'protected Resume action did not restore the scoped distribution.');
   const tamperedFlyerUrl = publicFlyerUrl.slice(0, -1) + (publicFlyerUrl.endsWith('a') ? 'b' : 'a');
   const tamperedResponse = await noArtworkPage.goto(tamperedFlyerUrl, { waitUntil: 'domcontentloaded' });
   check(tamperedResponse && tamperedResponse.status() === 404, 'tampered flyer did not return HTTP 404.');
