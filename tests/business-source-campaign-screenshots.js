@@ -26,6 +26,7 @@ function check(condition, message) {
 	let loginStorageState = null;
   const cases = [
     { name: 'desktop', width: 1440, height: 1000, submit: true },
+    { name: 'split', width: 760, height: 900, submit: false },
     { name: 'mobile', width: 390, height: 844, submit: false },
   ];
 
@@ -402,18 +403,32 @@ function check(condition, message) {
       check(await shareReview.getByRole('button', { name: 'Review Selected First-Time Emails' }).isDisabled(), 'mobile: draft campaign allowed business email review before an eligible selection.');
       publicFlyerUrl = flyerLinks[0] || '';
       publicOfferUrl = customerLinks[0] || '';
-      const campaignStatus = page.locator('select[name="status"]');
-      const activationPost = await campaignStatus.evaluate((field) => {
-        const form = field.form;
-        const fields = Object.fromEntries(Array.from(new FormData(form).entries()));
-        fields.status = 'active';
-        fields.save_mode = 'standard';
-        return { action: new URL(form.getAttribute('action') || window.location.href, window.location.href).toString(), fields };
+      const activationPanel = page.locator('#backstage-outreach-business-share .vms-pass-business-activation');
+      check(await activationPanel.getByText('This campaign is currently in Draft mode.', { exact: true }).count() === 1, 'mobile: Business sharing does not lead with an authoritative Draft notice.');
+      const activationForm = activationPanel.locator('[data-vms-status-submit-form]');
+      check(await activationForm.getByRole('button', { name: 'Activate Campaign' }).count() === 1, 'mobile: eligible draft campaign does not expose contextual activation.');
+      const syntheticActivation = await activationForm.evaluate((form) => {
+        const first = form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        const second = form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        return {
+          first,
+          second,
+          busy: form.getAttribute('aria-busy'),
+          disabled: form.querySelector('button[type="submit"]').disabled,
+          progress: form.querySelector('[data-vms-status-submit-progress]').hidden,
+        };
       });
-      const activationResponse = await page.request.post(activationPost.action, { form: activationPost.fields, maxRedirects: 0 });
-      check(activationResponse.status() === 302, 'mobile: disposable campaign activation did not return a safe redirect.');
-      await page.goto(new URL(activationResponse.headers().location, fixture.admin_url).toString(), { waitUntil: 'domcontentloaded' });
+      check(syntheticActivation.first && !syntheticActivation.second && syntheticActivation.busy === 'true' && syntheticActivation.disabled && !syntheticActivation.progress, `mobile: activation submit interlock failed (${JSON.stringify(syntheticActivation)}).`);
+      await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })));
+      check(!(await activationForm.getByRole('button', { name: 'Activate Campaign' }).isDisabled()), 'mobile: activation action stayed disabled after browser navigation recovery.');
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+        activationForm.getByRole('button', { name: 'Activate Campaign' }).click(),
+      ]);
+      check(new URL(page.url()).hash === '#backstage-outreach-business-share', 'mobile: contextual activation did not stay on Business sharing.');
       check(await page.locator('select[name="status"]').inputValue() === 'active', 'mobile: disposable campaign could not be activated for public flyer inspection.');
+      check(await page.locator('#backstage-outreach-business-share').getByText('Campaign active. Business links are ready to share; email invitations still require separate review and send.', { exact: true }).count() >= 1, 'mobile: contextual activation did not report status-only completion.');
+      check(await page.locator('#backstage-outreach-business-share').getByRole('button', { name: 'Activate Campaign' }).count() === 0, 'mobile: active campaign still exposes the activation action.');
       createdCampaignAdminUrl = page.url();
 
       const contactDashboard = page.locator('[data-vms-business-contact-dashboard]');
@@ -424,6 +439,29 @@ function check(condition, message) {
       check(await contactDashboard.locator('[data-vms-email-eligible]').count() === 21, 'mobile: first-time email selection did not expose exactly 21 eligible fixture addresses.');
       check(await contactDashboard.locator('[data-vms-email-eligible]:checked').count() === 0, 'mobile: first-time email recipients were selected automatically.');
       check(await contactDashboard.locator('[data-vms-email-submit]').isDisabled(), 'mobile: email handoff was enabled before an explicit selection.');
+      await contactDashboard.locator('[data-vms-email-eligible]').first().check();
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+        contactDashboard.locator('[data-vms-email-submit]').click(),
+      ]);
+      const handoffForm = page.locator('[data-vms-email-handoff-form][data-vms-handoff-mode="first"]');
+      check(await handoffForm.count() === 1, 'mobile: reviewed first-time handoff form is missing.');
+      const handoffInterlock = await handoffForm.evaluate((form) => {
+        const first = form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        const second = form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        return {
+          first,
+          second,
+          busy: form.getAttribute('aria-busy'),
+          disabled: form.querySelector('[data-vms-handoff-submit]').disabled,
+          message: form.querySelector('[data-vms-handoff-progress-text]').textContent,
+        };
+      });
+      check(handoffInterlock.first && !handoffInterlock.second && handoffInterlock.busy === 'true' && handoffInterlock.disabled, `mobile: handoff double-submit guard failed (${JSON.stringify(handoffInterlock)}).`);
+      check(handoffInterlock.message === 'Submitting 1 reviewed email. Please wait; do not refresh or resend.', `mobile: handoff progress copy is inaccurate (${handoffInterlock.message}).`);
+      await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })));
+      check(!(await handoffForm.locator('[data-vms-handoff-submit]').isDisabled()), 'mobile: handoff action stayed disabled after browser navigation recovery.');
+      check(await handoffForm.getByText('The previous handoff may have completed. Review the current campaign activity before submitting again.', { exact: true }).count() === 1, 'mobile: uncertain handoff recovery does not warn against blind resend.');
       await contactDashboard.locator('[data-vms-select-all-visible-eligible]').click();
       check(await contactDashboard.locator('[data-vms-email-eligible]:checked').count() === 21, 'mobile: Select All Visible Eligible did not select exactly the visible email-capable businesses.');
       check(await contactDashboard.locator('[data-vms-email-selected-count]').innerText() === '21 recipients selected', 'mobile: selected-recipient feedback is inaccurate.');
@@ -504,6 +542,12 @@ function check(condition, message) {
       adminStorageState = await context.storageState();
     }
     await context.close();
+  }
+
+  if (process.env.BVM_OUTREACH_UX_ONLY === '1') {
+    await browser.close();
+    console.log('Outreach UX desktop, split-screen, and mobile browser checks passed.');
+    return;
   }
 
   check(publicFlyerUrl !== '', 'public flyer URL was not captured from QR results.');

@@ -11,7 +11,7 @@ function backstage_outreach_unsubscribe_runtime_assert(bool $condition, string $
 }
 
 if (!function_exists('backstage_outreach_send_promotional_email')) {
-	throw new RuntimeException('Backstage Outreach 1.2.19.1 must be active.');
+	throw new RuntimeException('Backstage Outreach 1.2.20 must be active.');
 }
 
 global $wpdb;

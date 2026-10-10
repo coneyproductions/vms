@@ -1827,6 +1827,65 @@ function backstage_outreach_business_contact_result_key(int $campaign_id): strin
 	return 'backstage_outreach_business_contact_result_' . get_current_user_id() . '_' . $campaign_id;
 }
 
+function backstage_outreach_business_activation_result_key(int $campaign_id): string
+{
+	return 'backstage_outreach_business_activation_result_' . get_current_user_id() . '_' . $campaign_id;
+}
+
+function backstage_outreach_business_activation_readiness(array $campaign)
+{
+	$campaign_id = absint($campaign['id'] ?? 0);
+	if ($campaign_id <= 0 || !backstage_outreach_is_reusable_business_campaign($campaign)) {
+		return new WP_Error('business_campaign_missing', __('Reusable Business campaign not found.', 'backstage-outreach'));
+	}
+	if (absint($campaign['related_source_id'] ?? 0) <= 0) {
+		return new WP_Error('business_campaign_source_missing', __('Link a Business Source before activating this campaign.', 'backstage-outreach'));
+	}
+	$batch_id = absint($campaign['related_batch_id'] ?? 0);
+	if ($batch_id <= 0 || !is_array(bvmgr_pass_claims_get_batch_by_id($batch_id))) {
+		return new WP_Error('business_campaign_batch_missing', __('Link a valid offer batch before activating this campaign.', 'backstage-outreach'));
+	}
+	$active_rows = array_filter(backstage_outreach_distribution_rows($campaign_id), static fn(array $row): bool => sanitize_key((string) ($row['status'] ?? '')) === 'active');
+	if (empty($active_rows)) {
+		return new WP_Error('business_campaign_links_missing', __('Save at least one active Business link before activating this campaign.', 'backstage-outreach'));
+	}
+	return true;
+}
+
+function backstage_outreach_handle_business_campaign_activation(): void
+{
+	if (!current_user_can(vms_pass_claims_capability())) {
+		wp_die(esc_html__('Access denied.', 'backstage-outreach'));
+	}
+	if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? '')) !== 'POST') {
+		wp_die(esc_html__('Campaign activation requires a submitted form.', 'backstage-outreach'), '', array('response' => 405));
+	}
+	$campaign_id = backstage_outreach_request_absint($_POST, 'campaign_id');
+	check_admin_referer('backstage_outreach_business_activate_campaign_' . $campaign_id);
+	$campaign = vms_pass_outreach_get_campaign_by_id($campaign_id);
+	$result = is_array($campaign)
+		? backstage_outreach_business_activation_readiness($campaign)
+		: new WP_Error('business_campaign_missing', __('Reusable Business campaign not found.', 'backstage-outreach'));
+	if (!is_wp_error($result) && sanitize_key((string) ($campaign['status'] ?? 'draft')) === 'closed') {
+		$result = new WP_Error('campaign_closed', __('This campaign is closed. Re-open it through the separate campaign editor workflow.', 'backstage-outreach'));
+	}
+	if (!is_wp_error($result)) {
+		$result = function_exists('vms_pass_outreach_activate_campaign')
+			? vms_pass_outreach_activate_campaign($campaign, 'business_sharing')
+			: new WP_Error('campaign_activate_unavailable', __('Campaign activation is unavailable right now.', 'backstage-outreach'));
+	}
+	$message = is_wp_error($result)
+		? $result->get_error_message()
+		: __('Campaign active. Business links are ready to share; email invitations still require separate review and send.', 'backstage-outreach');
+	set_transient(backstage_outreach_business_activation_result_key($campaign_id), array(
+		'type' => is_wp_error($result) ? 'error' : 'success',
+		'message' => $message,
+	), 10 * MINUTE_IN_SECONDS);
+	backstage_outreach_business_message($message, is_wp_error($result) ? 'error' : 'success');
+	backstage_outreach_business_redirect_to_step($campaign_id, 'backstage-outreach-business-share');
+}
+add_action('admin_post_backstage_outreach_business_activate_campaign', 'backstage_outreach_handle_business_campaign_activation');
+
 function backstage_outreach_business_contact_insert(array $activity)
 {
 	$campaign_id = absint($activity['campaign_id'] ?? 0);
@@ -2539,6 +2598,12 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 	}
 	$pending_ids = !empty($pending['business_ids']) ? array_map('absint', (array) $pending['business_ids']) : array();
 	echo '<section id="backstage-outreach-partners" class="vms-pass-card" data-vms-tour="outreach-business-distribution"><h2>' . esc_html__('Step 5 — Generate, Print, or Export Business QRs', 'backstage-outreach') . '</h2>';
+	$creation_result_key = 'backstage_outreach_business_creation_result_' . get_current_user_id() . '_' . $campaign_id;
+	$creation_result = get_transient($creation_result_key);
+	if (is_array($creation_result)) {
+		delete_transient($creation_result_key);
+		echo '<div class="vms-pass-contact-result vms-pass-contact-result--success" role="status" tabindex="-1"><p><strong>' . esc_html(sprintf(__('Campaign #%d created.', 'backstage-outreach'), absint($creation_result['campaign_id'] ?? $campaign_id))) . '</strong> ' . esc_html(sprintf(__('Linked Source #%1$d and Batch #%2$d. No email was sent and no business links were generated.', 'backstage-outreach'), absint($creation_result['source_id'] ?? $source_id), absint($creation_result['batch_id'] ?? ($campaign['related_batch_id'] ?? 0)))) . '</p><p><a class="button button-primary" href="#backstage-outreach-business-selection">' . esc_html__('Generate reusable Business links', 'backstage-outreach') . '</a></p></div>';
+	}
 	if (function_exists('backstage_outreach_help_button')) {
 		echo '<p class="vms-pass-actions">' . backstage_outreach_help_button(
 			'backstage-outreach.business-qr-setup',
@@ -2668,7 +2733,33 @@ function backstage_outreach_render_business_distribution_panel(array $campaign):
 		$share_review = get_transient(backstage_outreach_campaign_business_share_key($campaign_id));
 		$share_subject = is_array($share_review) ? sanitize_text_field((string) ($share_review['subject'] ?? $stored_subject)) : $stored_subject;
 		$share_message = is_array($share_review) ? sanitize_textarea_field((string) ($share_review['message'] ?? $stored_message)) : $stored_message;
-		echo '<div id="backstage-outreach-business-share" class="vms-pass-preview-summary vms-pass-business-share" tabindex="-1"><h3>' . esc_html__('Share with businesses', 'backstage-outreach') . '</h3><p>' . esc_html__('Review a campaign-specific introduction, then inspect each personalized message. Every linked business has copyable content; email delivery is available only for valid, unsuppressed addresses and requires an explicit reviewed send.', 'backstage-outreach') . '</p><p class="description">' . esc_html__('This workflow does not create Outreach recipients or individual Guest Pass claim links.', 'backstage-outreach') . '</p>';
+		echo '<div id="backstage-outreach-business-share" class="vms-pass-preview-summary vms-pass-business-share" tabindex="-1"><h3>' . esc_html__('Share with businesses', 'backstage-outreach') . '</h3>';
+		$campaign_status = sanitize_key((string) ($campaign['status'] ?? 'draft'));
+		$activation_result_key = backstage_outreach_business_activation_result_key($campaign_id);
+		$activation_result = get_transient($activation_result_key);
+		if (is_array($activation_result)) {
+			delete_transient($activation_result_key);
+		}
+		$activation_readiness = backstage_outreach_business_activation_readiness($campaign);
+		$banner_type = is_array($activation_result) && (string) ($activation_result['type'] ?? '') === 'error' ? 'error' : ($campaign_status === 'active' ? 'success' : 'warning');
+		echo '<div class="vms-pass-business-activation vms-pass-contact-result vms-pass-contact-result--' . esc_attr($banner_type) . '" role="' . esc_attr($banner_type === 'error' ? 'alert' : 'status') . '">';
+		if (is_array($activation_result) && !empty($activation_result['message'])) {
+			echo '<p><strong>' . esc_html((string) $activation_result['message']) . '</strong></p>';
+		} elseif ($campaign_status === 'active') {
+			echo '<p><strong>' . esc_html__('Campaign active.', 'backstage-outreach') . '</strong> ' . esc_html__('Business links are ready to share; email invitations still require separate review and send.', 'backstage-outreach') . '</p>';
+		} elseif ($campaign_status === 'closed') {
+			echo '<p><strong>' . esc_html__('This campaign is closed.', 'backstage-outreach') . '</strong> ' . esc_html__('Re-opening requires the separate campaign editor workflow.', 'backstage-outreach') . '</p>';
+		} else {
+			echo '<p><strong>' . esc_html__('This campaign is currently in Draft mode.', 'backstage-outreach') . '</strong></p><p>' . esc_html__('Business offer links are inactive and invitations cannot be sent yet.', 'backstage-outreach') . '</p>';
+			if (is_wp_error($activation_readiness)) {
+				echo '<p>' . esc_html($activation_readiness->get_error_message()) . '</p>';
+			} else {
+				echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" data-vms-status-submit-form><input type="hidden" name="action" value="backstage_outreach_business_activate_campaign"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '">';
+				wp_nonce_field('backstage_outreach_business_activate_campaign_' . $campaign_id);
+				echo '<p><button type="submit" class="button button-primary">' . esc_html__('Activate Campaign', 'backstage-outreach') . '</button></p><p class="vms-pass-handoff-progress" data-vms-status-submit-progress role="status" aria-live="assertive" hidden><span class="spinner is-active" aria-hidden="true"></span><span>' . esc_html__('Activating campaign. Please wait.', 'backstage-outreach') . '</span></p></form>';
+			}
+		}
+		echo '</div><p>' . esc_html__('Review a campaign-specific introduction, then inspect each personalized message. Every linked business has copyable content; email delivery is available only for valid, unsuppressed addresses and requires an explicit reviewed send.', 'backstage-outreach') . '</p><p class="description">' . esc_html__('This workflow does not create Outreach recipients or individual Guest Pass claim links.', 'backstage-outreach') . '</p>';
 		if (function_exists('backstage_outreach_render_business_contact_dashboard')) {
 			backstage_outreach_render_business_contact_dashboard($campaign, $batch, $active_share_rows, is_array($share_review) ? $share_review : null);
 		}

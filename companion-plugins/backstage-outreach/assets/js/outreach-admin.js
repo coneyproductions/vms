@@ -574,6 +574,122 @@
     syncResendSelection();
   }
 
+  function handoffProgressMessage(form) {
+    var count = Math.max(0, Number(form.getAttribute('data-vms-handoff-count') || 0));
+    var noun = count === 1 ? 'email' : 'emails';
+    var mode = String(form.getAttribute('data-vms-handoff-mode') || 'first');
+    var action = mode === 'resend' ? 'Submitting a deliberate resend for ' : 'Submitting ';
+    return action + count + ' reviewed ' + noun + '. Please wait; do not refresh or resend.';
+  }
+
+  function setHandoffFormSubmitting(form) {
+    if (!form || form.getAttribute('data-vms-submitting') === '1') {
+      return false;
+    }
+    form.setAttribute('data-vms-submitting', '1');
+    form.setAttribute('aria-busy', 'true');
+    form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (control) {
+      control.disabled = true;
+    });
+    var progress = form.querySelector('[data-vms-handoff-progress]');
+    var text = form.querySelector('[data-vms-handoff-progress-text]');
+    if (text) {
+      text.textContent = handoffProgressMessage(form);
+    }
+    if (progress) {
+      progress.hidden = false;
+    }
+    return true;
+  }
+
+  function resetHandoffForms(showUncertainState) {
+    document.querySelectorAll('#vms-pass-claims-wrap [data-vms-email-handoff-form]').forEach(function (form) {
+      var wasSubmitting = form.getAttribute('data-vms-submitting') === '1';
+      form.removeAttribute('data-vms-submitting');
+      form.removeAttribute('aria-busy');
+      form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (control) {
+        control.disabled = false;
+      });
+      var progress = form.querySelector('[data-vms-handoff-progress]');
+      var spinner = progress ? progress.querySelector('.spinner') : null;
+      var text = form.querySelector('[data-vms-handoff-progress-text]');
+      if (showUncertainState && wasSubmitting) {
+        if (spinner) {
+          spinner.hidden = true;
+        }
+        if (text) {
+          text.textContent = 'The previous handoff may have completed. Review the current campaign activity before submitting again.';
+        }
+        if (progress) {
+          progress.hidden = false;
+        }
+      } else if (progress) {
+        progress.hidden = true;
+        if (spinner) {
+          spinner.hidden = false;
+        }
+      }
+    });
+  }
+
+  function initHandoffForms() {
+    document.querySelectorAll('#vms-pass-claims-wrap [data-vms-email-handoff-form]').forEach(function (form) {
+      if (form.__vmsHandoffInit) {
+        return;
+      }
+      form.__vmsHandoffInit = true;
+      form.addEventListener('submit', function (event) {
+        if (event.defaultPrevented || !form.checkValidity()) {
+          return;
+        }
+        if (!setHandoffFormSubmitting(form)) {
+          event.preventDefault();
+        }
+      });
+    });
+  }
+
+  function initStatusSubmitForms() {
+    document.querySelectorAll('#vms-pass-claims-wrap [data-vms-status-submit-form]').forEach(function (form) {
+      if (form.__vmsStatusSubmitInit) {
+        return;
+      }
+      form.__vmsStatusSubmitInit = true;
+      form.addEventListener('submit', function (event) {
+        if (event.defaultPrevented || !form.checkValidity()) {
+          return;
+        }
+        if (form.getAttribute('data-vms-submitting') === '1') {
+          event.preventDefault();
+          return;
+        }
+        form.setAttribute('data-vms-submitting', '1');
+        form.setAttribute('aria-busy', 'true');
+        form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (control) {
+          control.disabled = true;
+        });
+        var progress = form.querySelector('[data-vms-status-submit-progress]');
+        if (progress) {
+          progress.hidden = false;
+        }
+      });
+    });
+  }
+
+  function resetStatusSubmitForms() {
+    document.querySelectorAll('#vms-pass-claims-wrap [data-vms-status-submit-form]').forEach(function (form) {
+      form.removeAttribute('data-vms-submitting');
+      form.removeAttribute('aria-busy');
+      form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (control) {
+        control.disabled = false;
+      });
+      var progress = form.querySelector('[data-vms-status-submit-progress]');
+      if (progress) {
+        progress.hidden = true;
+      }
+    });
+  }
+
   document.addEventListener('click', function (event) {
     var helpToggle = event.target && event.target.closest ? event.target.closest('#vms-pass-claims-wrap .vms-pass-help__toggle') : null;
     if (helpToggle) {
@@ -856,6 +972,8 @@
       syncAllContactAudienceSelectAll();
       syncFlyerLayoutCompatibility(null);
       syncFlyerLayoutOverride();
+	  initHandoffForms();
+	  initStatusSubmitForms();
 	  syncContactDashboard();
 	  syncResendRows();
     }, { once: true });
@@ -865,12 +983,16 @@
     syncAllContactAudienceSelectAll();
     syncFlyerLayoutCompatibility(null);
     syncFlyerLayoutOverride();
+	initHandoffForms();
+	initStatusSubmitForms();
 	syncContactDashboard();
 	syncResendRows();
   }
 
   window.addEventListener('load', syncAllStickyTables);
   window.addEventListener('pageshow', function () {
+	resetHandoffForms(true);
+	resetStatusSubmitForms();
     var target = openSectionForHashTarget();
     if (target) {
       window.requestAnimationFrame(function () {

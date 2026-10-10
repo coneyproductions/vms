@@ -155,7 +155,7 @@ function backstage_outreach_render_business_email_review(array $campaign, ?array
 		$snapshot = is_array($snapshots[$reviewed_id] ?? null) ? (array) $snapshots[$reviewed_id] : array();
 		echo '<details class="vms-pass-email-review-row"><summary><strong>' . esc_html((string) ($snapshot['business_name'] ?? '')) . '</strong><span>' . esc_html((string) ($snapshot['email'] ?? '')) . '</span></summary><div><p><strong>' . esc_html__('Subject:', 'backstage-outreach') . '</strong> ' . esc_html((string) ($snapshot['subject'] ?? '')) . '</p><label>' . esc_html__('Personalized plain-text message', 'backstage-outreach') . '<textarea rows="10" readonly>' . esc_textarea((string) ($snapshot['message'] ?? '')) . '</textarea></label></div></details>';
 	}
-	echo '</div><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="backstage_outreach_business_share"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="share_mode" value="' . esc_attr($is_resend ? 'resend_send' : 'send') . '"><input type="hidden" name="share_review_token" value="' . esc_attr((string) ($share_review['token'] ?? '')) . '">';
+	echo '</div><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" data-vms-email-handoff-form data-vms-handoff-count="' . esc_attr((string) count($reviewed_ids)) . '" data-vms-handoff-mode="' . esc_attr($is_resend ? 'resend' : 'first') . '"><input type="hidden" name="action" value="backstage_outreach_business_share"><input type="hidden" name="campaign_id" value="' . esc_attr((string) $campaign_id) . '"><input type="hidden" name="share_mode" value="' . esc_attr($is_resend ? 'resend_send' : 'send') . '"><input type="hidden" name="share_review_token" value="' . esc_attr((string) ($share_review['token'] ?? '')) . '">';
 	foreach ($reviewed_ids as $reviewed_id) {
 		echo '<input type="hidden" name="distribution_ids[]" value="' . esc_attr((string) $reviewed_id) . '">';
 	}
@@ -163,7 +163,7 @@ function backstage_outreach_render_business_email_review(array $campaign, ?array
 	if ($is_resend) {
 		echo '<label><input type="checkbox" name="confirm_resend" value="1" required> ' . esc_html__('I confirm that these businesses already have recorded handoffs and should receive another mail-system handoff.', 'backstage-outreach') . '</label>';
 	}
-	echo '<p><button class="button button-primary">' . esc_html($is_resend ? __('Confirm Resend', 'backstage-outreach') : __('Hand Off Reviewed First-Time Emails', 'backstage-outreach')) . '</button></p></form></div>';
+	echo '<p><button type="submit" class="button button-primary" data-vms-handoff-submit>' . esc_html($is_resend ? __('Confirm Resend', 'backstage-outreach') : __('Hand Off Reviewed First-Time Emails', 'backstage-outreach')) . '</button></p><p class="vms-pass-handoff-progress" data-vms-handoff-progress role="status" aria-live="assertive" hidden><span class="spinner is-active" aria-hidden="true"></span><span data-vms-handoff-progress-text></span></p></form></div>';
 }
 
 function backstage_outreach_render_business_resend_controls(array $campaign, array $rows, array $sent_map, ?array $share_review): void

@@ -9,7 +9,7 @@ function outreach_party_unified_assert(bool $condition, string $message): void
 }
 
 if (!class_exists('WooCommerce') || !function_exists('backstage_outreach_party_adoption_preview')) {
-	throw new RuntimeException('Outreach 1.2.19.1 and WooCommerce must be active.');
+	throw new RuntimeException('Outreach 1.2.20 and WooCommerce must be active.');
 }
 
 global $wpdb;

@@ -2653,7 +2653,7 @@ if (!function_exists('vms_pass_outreach_sanitize_campaign_payload')) {
 }
 
 if (!function_exists('vms_pass_outreach_activate_campaign')) {
-	function vms_pass_outreach_activate_campaign($campaign)
+	function vms_pass_outreach_activate_campaign($campaign, string $trigger = 'delivery_guardrail')
 	{
 		if (!is_array($campaign)) {
 			$campaign = vms_pass_outreach_get_campaign_by_id(absint($campaign));
@@ -2699,7 +2699,7 @@ if (!function_exists('vms_pass_outreach_activate_campaign')) {
 				'campaign_name' => (string) ($payload['campaign_name'] ?? ''),
 				'related_source_id' => (int) ($payload['related_source_id'] ?? 0),
 				'related_batch_id' => (int) ($payload['related_batch_id'] ?? 0),
-				'trigger' => 'delivery_guardrail',
+				'trigger' => sanitize_key($trigger),
 			));
 		}
 
@@ -2728,6 +2728,7 @@ if (!function_exists('vms_pass_outreach_handle_campaign_save')) {
 		$csv_preview_redirect_url = vms_pass_outreach_create_preview_url('csv_new');
 		$existing_source_preview_redirect_url = vms_pass_outreach_create_preview_url('existing_source');
 		$business_source_preview_redirect_url = vms_pass_outreach_create_preview_url('business_source');
+		$business_source_create_redirect_url = vms_pass_outreach_admin_page_url() . '#vms-outreach-business-create-step';
 		$business_source_setup_redirect_url = vms_pass_outreach_business_setup_url();
 		$business_review_action_redirect_url = vms_pass_outreach_business_review_action_url();
 		$contacts_preview_redirect_url = vms_pass_outreach_create_preview_url('contacts');
@@ -3255,7 +3256,7 @@ if (!function_exists('vms_pass_outreach_handle_campaign_save')) {
 						: __('This Source has no active reusable businesses. Add or reactivate a business before creating the campaign.', 'backstage-outreach')
 				);
 			}
-			wp_safe_redirect($business_source_preview_redirect_url);
+			wp_safe_redirect($business_source_create_redirect_url);
 			exit;
 		}
 
@@ -3369,6 +3370,15 @@ if (!function_exists('vms_pass_outreach_handle_campaign_save')) {
 			$campaign_setup = isset($preview_state['campaign_setup']) && is_array($preview_state['campaign_setup']) ? $preview_state['campaign_setup'] : array();
 
 			if (empty($preview_state) || empty($campaign_setup)) {
+				if (sanitize_key((string) ($raw['recipient_source_mode'] ?? '')) === 'business_source') {
+					vms_pass_outreach_set_campaign_form_flash($user_id, array(
+						'campaign_id' => 0,
+						'payload' => vms_pass_outreach_soft_campaign_payload_for_form($raw, 0),
+						'field_errors' => array(
+							'business_review' => __('Review expired or changed. Preview Active Businesses again.', 'backstage-outreach'),
+						),
+					));
+				}
 				if (function_exists('vms_pass_claims_set_user_message')) {
 					vms_pass_claims_set_user_message('error', __('Recipient preview is missing. Preview the source list before refreshing the message preview.', 'backstage-outreach'));
 				}
@@ -3463,6 +3473,15 @@ if (!function_exists('vms_pass_outreach_handle_campaign_save')) {
 			$import_preview = isset($preview_state['import_preview']) && is_array($preview_state['import_preview']) ? $preview_state['import_preview'] : array();
 			$prepared_rows = array();
 			if (empty($preview_state) || empty($campaign_setup)) {
+				if (sanitize_key((string) ($raw['recipient_source_mode'] ?? '')) === 'business_source') {
+					vms_pass_outreach_set_campaign_form_flash($user_id, array(
+						'campaign_id' => 0,
+						'payload' => vms_pass_outreach_soft_campaign_payload_for_form($raw, 0),
+						'field_errors' => array(
+							'business_review' => __('Review expired or changed. Preview Active Businesses again.', 'backstage-outreach'),
+						),
+					));
+				}
 				if (function_exists('vms_pass_claims_set_user_message')) {
 					vms_pass_claims_set_user_message('error', __('Recipient preview expired or is missing. Preview the source list again before creating the campaign.', 'backstage-outreach'));
 				}
@@ -3576,6 +3595,13 @@ if (!function_exists('vms_pass_outreach_handle_campaign_save')) {
 				);
 				if (is_wp_error($current_business_preview)) {
 					vms_pass_outreach_clear_upload_preview($user_id);
+					vms_pass_outreach_set_campaign_form_flash($user_id, array(
+						'campaign_id' => 0,
+						'payload' => vms_pass_outreach_soft_campaign_payload_for_form($raw, 0),
+						'field_errors' => array(
+							'business_review' => __('Review expired or changed. Preview Active Businesses again.', 'backstage-outreach'),
+						),
+					));
 					if (function_exists('vms_pass_claims_set_user_message')) {
 						vms_pass_claims_set_user_message('error', $current_business_preview->get_error_message());
 					}
@@ -3585,6 +3611,13 @@ if (!function_exists('vms_pass_outreach_handle_campaign_save')) {
 				if (empty($reviewed_business_preview['membership_digest'])
 					|| !hash_equals((string) $reviewed_business_preview['membership_digest'], (string) ($current_business_preview['membership_digest'] ?? ''))) {
 					vms_pass_outreach_clear_upload_preview($user_id);
+					vms_pass_outreach_set_campaign_form_flash($user_id, array(
+						'campaign_id' => 0,
+						'payload' => vms_pass_outreach_soft_campaign_payload_for_form($raw, 0),
+						'field_errors' => array(
+							'business_review' => __('Review expired or changed. Preview Active Businesses again.', 'backstage-outreach'),
+						),
+					));
 					if (function_exists('vms_pass_claims_set_user_message')) {
 						vms_pass_claims_set_user_message('error', __('Active Source memberships changed after review. Refresh the business preview before creating the campaign.', 'backstage-outreach'));
 					}
@@ -3696,6 +3729,13 @@ if (!function_exists('vms_pass_outreach_handle_campaign_save')) {
 					$user_id
 				);
 				if (is_wp_error($created)) {
+					vms_pass_outreach_set_campaign_form_flash($user_id, array(
+						'campaign_id' => 0,
+						'payload' => vms_pass_outreach_soft_campaign_payload_for_form($raw, 0),
+						'field_errors' => array(
+							'business_review' => __('Review expired or changed. Preview Active Businesses again.', 'backstage-outreach'),
+						),
+					));
 					if (function_exists('vms_pass_claims_set_user_message')) {
 						vms_pass_claims_set_user_message('error', $created->get_error_message());
 					}
@@ -3709,6 +3749,15 @@ if (!function_exists('vms_pass_outreach_handle_campaign_save')) {
 				vms_pass_outreach_clear_campaign_form_flash($user_id);
 				vms_pass_outreach_clear_upload_preview($user_id);
 				vms_pass_outreach_clear_upload_mapping($user_id);
+				set_transient(
+					'backstage_outreach_business_creation_result_' . $user_id . '_' . $campaign_id,
+					array(
+						'campaign_id' => $campaign_id,
+						'source_id' => absint($created_campaign['related_source_id'] ?? 0),
+						'batch_id' => absint($created_campaign['related_batch_id'] ?? 0),
+					),
+					10 * MINUTE_IN_SECONDS
+				);
 				if (function_exists('vms_pass_claims_set_user_message')) {
 					vms_pass_claims_set_user_message(
 						'success',
@@ -5078,12 +5127,21 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 					echo '<p class="description" data-vms-preview-stale-note hidden>' . esc_html__('Source or batch changed after this review. Preview the current businesses again before creating the campaign.', 'backstage-outreach') . '</p>';
 					echo '</div>';
 				}
-				echo '<section class="vms-pass-business-campaign-step" aria-labelledby="vms-outreach-business-create-heading"><h3 id="vms-outreach-business-create-heading">' . esc_html__('Step 4 — Create Campaign', 'backstage-outreach') . '</h3>';
+				$business_review_ready = $create_preview_mode === 'business_source' && $create_preview_ready_count > 0;
+				$business_review_changed = !empty($field_errors['business_review']);
+				$business_review_status = $business_review_ready
+					? sprintf(_n('%d business reviewed. Campaign has NOT been created yet.', '%d businesses reviewed. Campaign has NOT been created yet.', $create_preview_ready_count, 'backstage-outreach'), $create_preview_ready_count)
+					: ($business_review_changed
+						? __('Review expired or changed. Preview Active Businesses again.', 'backstage-outreach')
+						: ($selected_business_membership_count > 0
+							? sprintf(_n('Review the %d active business above before creating this campaign.', 'Review the %d active businesses above before creating this campaign.', $selected_business_membership_count, 'backstage-outreach'), $selected_business_membership_count)
+							: __('Select a Source with active businesses and an eligible offer batch, then preview the businesses before creating this campaign.', 'backstage-outreach')));
+				echo '<section id="vms-outreach-business-create-step" class="vms-pass-business-campaign-step" aria-labelledby="vms-outreach-business-create-heading" tabindex="-1"><h3 id="vms-outreach-business-create-heading">' . esc_html__('Step 4 — Create Campaign', 'backstage-outreach') . '</h3>';
 				echo '<label class="vms-pass-span-2' . (!empty($field_errors['campaign_name']) ? ' vms-pass-field-has-error' : '') . '">' . $render_label(__('Campaign Name', 'backstage-outreach'), array('required' => true, 'help' => __('Internal name for this reviewed reusable-business campaign. It is required only when creating the campaign, so Source and batch review can happen first.', 'backstage-outreach'))) . '<input type="text" name="business_campaign_name" value="' . esc_attr((string) vms_pass_outreach_payload_value($form_payload, 'campaign_name', '')) . '" placeholder="' . esc_attr__('Business Admission Offer', 'backstage-outreach') . '"' . (!empty($field_errors['campaign_name']) ? ' aria-invalid="true"' : '') . '>' . $render_messages($field_errors, array('campaign_name')) . '</label>';
+				echo '<p class="vms-pass-actions"><button type="submit" class="button button-primary" name="save_mode" value="recipient_commit" data-vms-create-campaign-button="1" data-vms-business-review-ready="' . esc_attr($business_review_ready ? '1' : '0') . '"' . (!empty($create_preview_setup_snapshot_json) ? ' data-vms-preview-setup="' . esc_attr($create_preview_setup_snapshot_json) . '"' : '') . disabled(!$business_review_ready, true, false) . '>' . esc_html__('Create Campaign and Continue to Business QR Setup', 'backstage-outreach') . '</button></p>';
+				echo '<p class="description" data-vms-business-create-status data-vms-reviewed-status="' . esc_attr($business_review_ready ? $business_review_status : '') . '" data-vms-review-changed="' . esc_attr($business_review_changed ? '1' : '0') . '" role="status" aria-live="polite">' . esc_html($business_review_status) . '</p>';
+				echo '<p data-vms-business-review-link' . $hidden_attr($business_review_ready) . '><a href="#vms-outreach-business-review-action">' . esc_html__('Go to Step 3 — Preview Active Businesses', 'backstage-outreach') . '</a></p>';
 				echo '<p class="description">' . esc_html__('Create only after reviewing the Source, batch, and complete business list. Continue then opens Step 5 without generating individual claim links.', 'backstage-outreach') . '</p>';
-				if ($create_preview_mode === 'business_source' && $create_preview_ready_count > 0) {
-					echo '<p class="vms-pass-actions"><button type="submit" class="button button-primary" name="save_mode" value="recipient_commit" data-vms-create-campaign-button="1"' . (!empty($create_preview_setup_snapshot_json) ? ' data-vms-preview-setup="' . esc_attr($create_preview_setup_snapshot_json) . '"' : '') . '>' . esc_html__('Create Campaign and Continue to Business QR Setup', 'backstage-outreach') . '</button></p>';
-				}
 				echo '</section>';
 				echo '</div>';
 
@@ -5318,6 +5376,10 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 				'no_businesses' => __('This Source currently has no active reusable businesses. You may define an offer batch now, but Business Review and campaign creation remain unavailable until businesses are imported or linked to this Source.', 'backstage-outreach'),
 				'business_count_one' => __('%d active reusable business is available for review.', 'backstage-outreach'),
 				'business_count_many' => __('%d active reusable businesses are available for review.', 'backstage-outreach'),
+				'create_review_one' => __('Review the %d active business above before creating this campaign.', 'backstage-outreach'),
+				'create_review_many' => __('Review the %d active businesses above before creating this campaign.', 'backstage-outreach'),
+				'create_review_missing' => __('Select a Source with active businesses and an eligible offer batch, then preview the businesses before creating this campaign.', 'backstage-outreach'),
+				'review_stale' => __('Review expired or changed. Preview Active Businesses again.', 'backstage-outreach'),
 			), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . ';';
 			echo 'function namedField(name){return root.querySelector(\'[name="\'+name+\'"]:not([disabled])\');}';
 			echo 'function selectedValue(name){var input=root.querySelector(\'input[name="\'+name+\'"]:checked:not([disabled])\');if(input){return input.value;}var field=namedField(name);return field?field.value:"";}';
@@ -5341,7 +5403,7 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 			echo 'function updateRecipientSource(){var mode=selectedValue("recipient_source_mode")||"csv_new";var trackingInput=root.querySelector("[data-vms-tracking-mode-input]");syncBusinessCampaignName(mode);toggleByAttr("data-vms-recipient-source-csv",mode==="csv_new");toggleByAttr("data-vms-recipient-source-existing",mode==="existing_source");toggleByAttr("data-vms-recipient-source-business",mode==="business_source");toggleByAttr("data-vms-recipient-source-contacts",mode==="contacts");toggleByAttr("data-vms-nonbusiness-campaign-fields",mode!=="business_source");toggleByAttr("data-vms-nonbusiness-offer-fields",mode!=="business_source");toggleByAttr("data-vms-nonbusiness-create-actions",mode!=="business_source");toggleByAttr("data-vms-business-review-summary",mode==="business_source");toggleByAttr("data-vms-individual-review-summary",mode!=="business_source");var draftConflict=document.querySelector("[data-vms-business-draft-conflict]");if(draftConflict&&mode!=="business_source"){draftConflict.hidden=true;}var messageSection=root.querySelector("[data-vms-business-message-secondary]");if(messageSection&&mode==="business_source"){messageSection.open=false;}if(trackingInput){trackingInput.value=(mode==="existing_source"||mode==="business_source")?"existing":"new";}if(mode==="business_source"){syncBusinessOfferDraft();syncBusinessBatches(true);}}';
 			echo 'function currentPreviewSetup(){var mode=selectedValue("recipient_source_mode")||"csv_new";var sourceField=mode==="business_source"&&businessRoot?businessRoot.querySelector("[data-vms-business-source]"):namedField("related_source_id");var batchField=mode==="business_source"&&businessRoot?businessRoot.querySelector("[data-vms-business-batch]"):namedField("related_batch_id");var entry=mode==="business_source"?businessEntry(batchField&&batchField.value):null;var businessCap=businessRoot?businessRoot.querySelector(\'[name="business_batch_per_business_admission_cap"]\'):null;return JSON.stringify({recipient_source_mode:mode,related_source_id:parseInt((sourceField||{}).value||"0",10)||0,related_batch_id:parseInt((batchField||{}).value||"0",10)||0,tracking_category_mode:(mode==="existing_source"||mode==="business_source")?"existing":"new",tracking_category_name:mode==="business_source"?"":(((namedField("tracking_category_name")||{}).value||"").trim()),admissions_per_recipient:entry?(parseInt(entry.admissions_per_link||1,10)||1):(parseInt((namedField("admissions_per_recipient")||{}).value||"0",10)||0),validity_type:entry?(entry.validity_type||""):((namedField("validity_type")||{}).value||""),single_event_plan_id:entry?(parseInt(entry.single_event_plan_id||0,10)||0):(parseInt((namedField("single_event_plan_id")||{}).value||"0",10)||0),start_date:entry?(entry.start_date||""):((namedField("start_date")||{}).value||""),end_date:entry?(entry.end_date||""):((namedField("end_date")||{}).value||""),season_label:entry?(entry.season_label||""):(((namedField("season_label")||{}).value||"").trim()),business_admission_cap:mode==="business_source"?(parseInt((businessCap||{}).value||"0",10)||0):0});}';
 			echo 'function currentMessagePreview(){return JSON.stringify({email_subject:((namedField("email_subject")||{}).value||""),message_template:(((namedField("message_template")||{}).value||"").replace(/\\r\\n/g,"\\n"))});}';
-			echo 'function updatePreviewStale(){var createButton=root.querySelector("[data-vms-create-campaign-button]");var messageButton=root.querySelector("[data-vms-message-preview-button]");var recipientSnapshot=createButton?(createButton.getAttribute("data-vms-preview-setup")||""):(messageButton?(messageButton.getAttribute("data-vms-preview-setup")||""):"");var messageSnapshot=createButton?(createButton.getAttribute("data-vms-message-preview")||""):(messageButton?(messageButton.getAttribute("data-vms-message-preview")||""):"");recipientSnapshot=canonicalSnapshot(recipientSnapshot);messageSnapshot=canonicalSnapshot(messageSnapshot);var recipientStale=businessReviewInvalidated||(recipientSnapshot!==""&&recipientSnapshot!==currentPreviewSetup());var messageStale=messageSnapshot!==""&&messageSnapshot!==currentMessagePreview();if(createButton){createButton.disabled=recipientStale||messageStale;}if(messageButton){messageButton.disabled=recipientStale||!messageStale;}root.querySelectorAll("[data-vms-preview-stale-note],[data-vms-review-stale-note],[data-vms-message-preview-recipient-note],[data-vms-create-recipient-preview-note]").forEach(function(node){node.hidden=!recipientStale;});root.querySelectorAll("[data-vms-message-preview-stale-note],[data-vms-create-message-preview-note]").forEach(function(node){node.hidden=recipientStale||!messageStale;});}';
+			echo 'function updatePreviewStale(){var createButton=root.querySelector("[data-vms-create-campaign-button]");var messageButton=root.querySelector("[data-vms-message-preview-button]");var recipientSnapshot=createButton?(createButton.getAttribute("data-vms-preview-setup")||""):(messageButton?(messageButton.getAttribute("data-vms-preview-setup")||""):"");var messageSnapshot=createButton?(createButton.getAttribute("data-vms-message-preview")||""):(messageButton?(messageButton.getAttribute("data-vms-message-preview")||""):"");recipientSnapshot=canonicalSnapshot(recipientSnapshot);messageSnapshot=canonicalSnapshot(messageSnapshot);var businessCreate=!!(createButton&&createButton.hasAttribute("data-vms-business-review-ready"));var businessReviewReady=!businessCreate||createButton.getAttribute("data-vms-business-review-ready")==="1";var recipientStale=businessReviewInvalidated||!businessReviewReady||(recipientSnapshot!==""&&recipientSnapshot!==currentPreviewSetup());var messageStale=messageSnapshot!==""&&messageSnapshot!==currentMessagePreview();if(createButton){createButton.disabled=recipientStale||messageStale;}if(messageButton){messageButton.disabled=recipientStale||!messageStale;}if(businessCreate){var createStatus=businessRoot.querySelector("[data-vms-business-create-status]");var reviewLink=businessRoot.querySelector("[data-vms-business-review-link]");if(createStatus){var serverReviewChanged=createStatus.getAttribute("data-vms-review-changed")==="1";var activeCount=businessActiveCount(businessRoot.querySelector("[data-vms-business-source]"));var reviewTemplate=activeCount===1?businessUi.create_review_one:businessUi.create_review_many;var initialStatus=activeCount>0?String(reviewTemplate||"").replace("%d",activeCount):businessUi.create_review_missing;createStatus.textContent=recipientStale?((businessReviewReady||serverReviewChanged)?businessUi.review_stale:initialStatus):(createStatus.getAttribute("data-vms-reviewed-status")||initialStatus);}if(reviewLink){reviewLink.hidden=!recipientStale;}}root.querySelectorAll("[data-vms-preview-stale-note],[data-vms-review-stale-note],[data-vms-message-preview-recipient-note],[data-vms-create-recipient-preview-note]").forEach(function(node){node.hidden=!recipientStale;});root.querySelectorAll("[data-vms-message-preview-stale-note],[data-vms-create-message-preview-note]").forEach(function(node){node.hidden=recipientStale||!messageStale;});}';
 			echo 'root.querySelectorAll(\'input[name="campaign_purpose_select"]\').forEach(function(node){node.addEventListener("change",updatePurpose);});';
 			echo 'root.querySelectorAll(\'input[name="recipient_source_mode"]\').forEach(function(node){node.addEventListener("change",function(){updateRecipientSource();updatePreviewStale();});});';
 			echo 'if(businessRoot){var businessSource=businessRoot.querySelector("[data-vms-business-source]");var businessBatch=businessRoot.querySelector("[data-vms-business-batch]");var businessScope=businessRoot.querySelector(\'[name="business_batch_validity_type"]\');var businessOffer=businessRoot.querySelector(\'[name="business_batch_offer_type"]\');var openBatch=businessRoot.querySelector("[data-vms-open-business-batch]");var batchDetails=businessRoot.querySelector("[data-vms-business-batch-create]");Object.keys(businessDraftMap).forEach(function(name){var field=businessRoot.querySelector(\'[name="\'+name+\'"]\');var source=root.querySelector(\'[data-vms-nonbusiness-offer-fields] [name="\'+businessDraftMap[name]+\'"]\');if(field&&source&&field.value&&source.value&&field.value!==source.value){recordBusinessTouched(name);}if(field){field.addEventListener("input",function(){recordBusinessTouched(name);if(field.dataset.newBatchDraft!==undefined){field.dataset.newBatchDraft=field.value;}businessReviewInvalidated=true;updatePreviewStale();});field.addEventListener("change",function(){recordBusinessTouched(name);if(field.dataset.newBatchDraft!==undefined){field.dataset.newBatchDraft=field.value;}businessReviewInvalidated=true;updatePreviewStale();});}});if(businessSource){businessSource.addEventListener("change",function(){businessReviewInvalidated=true;syncBusinessBatches(false);updatePreviewStale();});}if(businessBatch){businessBatch.addEventListener("change",function(){businessReviewInvalidated=true;if(batchDetails&&(parseInt(businessBatch.value||"0",10)||0)>0){batchDetails.open=false;}renderBusinessBatchState();updatePreviewStale();});}if(businessScope){businessScope.addEventListener("change",updateBusinessBatchScope);}if(businessOffer){businessOffer.addEventListener("change",updateBusinessOffer);}if(batchDetails){batchDetails.addEventListener("toggle",function(){if(batchDetails.open){enterNewBusinessBatch();}});}if(openBatch){openBatch.addEventListener("click",function(){var details=batchDetails;if(details){details.open=true;enterNewBusinessBatch();var first=details.querySelector("input,select,textarea");if(first){first.focus({preventScroll:true});first.scrollIntoView({block:"center",behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}}});}var createForm=root.querySelector("form");if(createForm){createForm.addEventListener("submit",function(event){var submitter=event.submitter;if(!submitter){return;}if(submitter.value==="business_batch_preview"){enterNewBusinessBatch();enableBusinessScopeDrafts();}if(submitter.value==="recipient_commit"&&selectedValue("recipient_source_mode")==="business_source"){var campaignName=businessRoot.querySelector(\'[name="business_campaign_name"]\');if(campaignName&&!campaignName.value.trim()){event.preventDefault();campaignName.setAttribute("aria-invalid","true");campaignName.focus();return;}}if(submitter.value!=="business_source_preview"){return;}var sourceId=parseInt(businessSource&&businessSource.value||"0",10)||0;var count=businessActiveCount(businessSource);var entry=businessEntry(businessBatch&&businessBatch.value);if(sourceId>0&&count>0&&entry){return;}event.preventDefault();var invalid=sourceId<=0||count<=0?businessSource:businessBatch;if(invalid){invalid.setAttribute("aria-invalid","true");invalid.focus();}renderBusinessBatchState();});}}';
@@ -5349,7 +5411,7 @@ if (!function_exists('vms_pass_outreach_render_outreach_tab')) {
 			echo '[\'related_source_id\',\'related_batch_id\',\'tracking_category_name\',\'admissions_per_recipient\',\'single_event_plan_id\',\'start_date\',\'end_date\',\'season_label\',\'business_batch_per_business_admission_cap\'].forEach(function(name){root.querySelectorAll(\'[name="\'+name+\'"]\').forEach(function(field){field.addEventListener("change",updatePreviewStale);field.addEventListener("input",updatePreviewStale);});});';
 			echo '[\'email_subject\',\'message_template\'].forEach(function(name){root.querySelectorAll(\'[name="\'+name+\'"]\').forEach(function(field){field.addEventListener("change",updatePreviewStale);field.addEventListener("input",updatePreviewStale);});});';
 			echo 'if(validitySelect){validitySelect.addEventListener("change",updatePreviewStale);}';
-				echo 'updatePurpose();updateValidity();updateRecipientSource();updateBusinessBatchScope();updateBusinessOffer();updatePreviewStale();if(window.location.hash==="#vms-outreach-business-review-action"&&businessRoot){var focusBusinessReviewAction=function(){var reviewButton=businessRoot.querySelector("[data-vms-business-preview-button]");if(reviewButton&&!reviewButton.disabled){reviewButton.focus({preventScroll:true});reviewButton.scrollIntoView({block:"center",behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}};window.setTimeout(focusBusinessReviewAction,150);window.addEventListener("load",function(){window.setTimeout(focusBusinessReviewAction,50);},{once:true});}';
+				echo 'updatePurpose();updateValidity();updateRecipientSource();updateBusinessBatchScope();updateBusinessOffer();updatePreviewStale();if(window.location.hash==="#vms-outreach-business-review-action"&&businessRoot){var focusBusinessReviewAction=function(){var reviewButton=businessRoot.querySelector("[data-vms-business-preview-button]");if(reviewButton&&!reviewButton.disabled){reviewButton.focus({preventScroll:true});reviewButton.scrollIntoView({block:"center",behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}};window.setTimeout(focusBusinessReviewAction,150);window.addEventListener("load",function(){window.setTimeout(focusBusinessReviewAction,50);},{once:true});}if(window.location.hash==="#vms-outreach-business-create-step"&&businessRoot){var focusBusinessCreateStep=function(){var createStep=businessRoot.querySelector("#vms-outreach-business-create-step");if(createStep){createStep.focus({preventScroll:true});createStep.scrollIntoView({block:"center",behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}};window.setTimeout(focusBusinessCreateStep,150);window.addEventListener("load",function(){window.setTimeout(focusBusinessCreateStep,50);},{once:true});}';
 			echo '})();';
 			echo '</script>';
 		}

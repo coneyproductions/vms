@@ -522,7 +522,10 @@
 }
 
 #vms-pass-claims-wrap .vms-pass-form {
+  width: 100%;
+  min-width: 0;
   max-width: 1040px;
+  box-sizing: border-box;
 }
 
 #vms-pass-claims-wrap .vms-pass-form--full {
@@ -558,11 +561,13 @@
 
 #vms-pass-claims-wrap .vms-pass-form-sections {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   margin-top: 16px;
 }
 
 #vms-pass-claims-wrap .vms-pass-form-section {
+  width: 100%;
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
@@ -1742,6 +1747,13 @@
     grid-column: 1 / -1;
     justify-content: flex-start;
   }
+
+  #vms-pass-claims-wrap .vms-pass-choice {
+    max-width: 100%;
+    box-sizing: border-box;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
 
 #vms-pass-claims-wrap .vms-pass-purpose-current {
@@ -2555,6 +2567,23 @@
   display: grid;
   gap: 8px;
   margin: 12px 0;
+}
+
+#vms-pass-claims-wrap .vms-pass-handoff-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  font-weight: 600;
+}
+
+#vms-pass-claims-wrap .vms-pass-handoff-progress[hidden] {
+  display: none;
+}
+
+#vms-pass-claims-wrap .vms-pass-handoff-progress .spinner {
+  float: none;
+  margin: 0;
 }
 
 #vms-pass-claims-wrap .vms-pass-email-review-row {
