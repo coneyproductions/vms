@@ -1,6 +1,6 @@
 # Backstage Outreach
 
-Current release: **1.2.22**. Business campaign setup now presents existing and new offer batches as equal, explicit paths while preserving reviewed selections and new-batch drafts. Promotional flyers can inherit a dedicated venue flyer logo or use a campaign-specific override without changing WordPress or BVM branding; the existing site logo remains the fallback. Existing Contacts, recipients, distributions, signed links, coupons, claims, suppression, delivery history, and MailPoet subscriber state remain authoritative and unchanged.
+Current release: **1.2.23**. Public complimentary claims now auto-associate a sole eligible event, present event and offer details clearly, and use only configuration-valid admission quantities. Neighborhood Offer pages distinguish percentage and fixed-dollar Discount Vouchers from complimentary Guest Passes. Existing campaign eligibility, attribution, claim limits, redemption, reservation, coupon, consent, and delivery behavior remain authoritative and unchanged.
 
 Backstage Outreach is the recovered Guest Pass Outreach workflow for Backstage
 Venue Manager 1.2.0 and newer. It is intentionally maintained as a companion

@@ -62,8 +62,8 @@ $post_ids[] = (int) $tec_event_id;
 $event_plan_id = (int) wp_insert_post(array('post_type' => 'vms_event_plan', 'post_status' => 'publish', 'post_title' => $marker . ' Event Plan'));
 $post_ids[] = $event_plan_id;
 $status_key = function_exists('bvmgr_meta_key') ? (string) bvmgr_meta_key('event_plan', 'status') : '_vms_event_plan_status';
-update_post_meta($event_plan_id, $status_key, 'published');
 update_post_meta($event_plan_id, '_vms_event_date', wp_date('Y-m-d', time() + (14 * DAY_IN_SECONDS)));
+update_post_meta($event_plan_id, $status_key, 'published');
 update_post_meta($event_plan_id, '_vms_tec_event_id', $tec_event_id);
 $ticket = new WC_Product_Simple();
 $ticket->set_name('Eligible General Admission');
@@ -103,6 +103,8 @@ $fixture = array(
 	'admin_url' => vms_pass_outreach_admin_page_url(array('campaign_id' => $campaign_id)) . '#backstage-outreach-partners',
 	'public_url' => backstage_outreach_distribution_url($distribution),
 	'offer_text' => $offer_text,
+	'event_title' => get_the_title($event_plan_id),
+	'event_date' => bvmgr_pass_claims_format_public_date(wp_date('Y-m-d', time() + (14 * DAY_IN_SECONDS))),
 	'cart_url' => add_query_arg('add-to-cart', $ticket_id, wc_get_cart_url()),
 );
 update_option($option, $fixture, false);

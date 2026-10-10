@@ -1,0 +1,102 @@
+.vms-pass-public-page .vms-pass-offer-summary {
+  display: grid;
+  gap: 3px;
+  margin: 0 0 8px;
+  padding: 14px 16px;
+  border: 1px solid #b9d7cd;
+  border-radius: 12px;
+  background: #f3f8f6;
+}
+
+.vms-pass-public-page .vms-pass-offer-summary strong {
+  color: #163c34;
+  font-size: 1.2rem;
+}
+
+.vms-pass-public-page .vms-pass-offer-summary span,
+.vms-pass-public-page .vms-pass-referral {
+  color: #526174;
+  font-size: .9rem;
+}
+
+.vms-pass-public-page .vms-pass-referral {
+  margin: 0 0 18px;
+}
+
+.vms-pass-public-page .vms-pass-selected-event {
+  display: grid;
+  gap: 3px;
+  margin: 18px 0;
+  padding: 16px;
+  border-left: 5px solid #2267c7;
+  border-radius: 10px;
+  background: #eef5ff;
+}
+
+.vms-pass-public-page .vms-pass-selected-event > span {
+  color: #526174;
+  font-size: .8rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.vms-pass-public-page .vms-pass-selected-event strong {
+  font-size: 1.2rem;
+}
+
+.vms-pass-public-page .vms-pass-claim-form {
+  margin-top: 22px;
+}
+
+.vms-pass-public-page .vms-pass-claim-form h2 {
+  margin-bottom: 14px;
+}
+
+.vms-pass-public-page .vms-pass-claim-form .vms-pass-grid {
+  gap: 14px;
+}
+
+.vms-pass-public-page .vms-pass-quantity-summary {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid #d8e2f0;
+  border-radius: 9px;
+  background: #f7fafc;
+}
+
+.vms-pass-public-page .vms-pass-quantity-summary > span {
+  color: #526174;
+  font-size: .85rem;
+  font-weight: 700;
+}
+
+.vms-pass-public-page .vms-pass-checkbox {
+  align-items: flex-start;
+  line-height: 1.4;
+}
+
+.vms-pass-public-page .vms-pass-actions button {
+  min-height: 48px;
+  padding: 11px 18px;
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .vms-pass-public-page {
+    padding: 14px 0;
+  }
+
+  .vms-pass-public-page .vms-pass-wrap {
+    padding: 0 9px;
+  }
+
+  .vms-pass-public-page .vms-pass-card {
+    padding: 16px 14px;
+  }
+
+  .vms-pass-public-page .vms-pass-actions button {
+    width: 100%;
+  }
+}

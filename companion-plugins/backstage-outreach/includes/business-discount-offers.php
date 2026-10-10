@@ -926,7 +926,8 @@ function backstage_outreach_discount_offer_router(array $distribution, string $r
 	if (empty($events)) {
 		backstage_outreach_render_public_offer_status(__('No Eligible Tickets', 'backstage-outreach'), __('There are no eligible admission tickets available for this offer right now.', 'backstage-outreach'), 410);
 	}
-	bvmgr_pass_claims_render_public_shell(__('Admission Offer', 'backstage-outreach'), static function () use ($distribution, $events, $terms): void {
+	backstage_outreach_enqueue_public_assets();
+	bvmgr_pass_claims_render_public_shell(__('Neighborhood Offer', 'backstage-outreach'), static function () use ($distribution, $events, $terms): void {
 		$is_party = backstage_outreach_discount_owner_type($distribution) === 'party';
 		$partner_name = (string) ($distribution['party_name'] ?? ($distribution['business_name'] ?? ''));
 		$per_order_cap = max(1, absint($distribution['admissions_per_recipient'] ?? 1));
@@ -941,21 +942,30 @@ function backstage_outreach_discount_offer_router(array $distribution, string $r
 		$expiry = backstage_outreach_distribution_effective_expiry($distribution);
 		$per_business_cap = absint($distribution['admission_cap'] ?? 0);
 		$overall_cap = absint(($distribution['batch']['total_admission_cap'] ?? 0));
-		echo '<style>.vms-offer-hero{text-align:center;margin-bottom:24px}.vms-offer-logo{display:block;max-width:min(340px,80vw);max-height:120px;width:auto;height:auto;margin:0 auto 18px}.vms-offer-venue{font-size:1.5rem;font-weight:800}.vms-offer-art{display:block;width:100%;max-height:340px;object-fit:cover;border-radius:16px;margin:18px 0}.vms-offer-benefit{font-size:clamp(1.5rem,5vw,2.3rem);line-height:1.15}.vms-offer-events{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px}.vms-offer-event{overflow:hidden}.vms-offer-event img,.vms-offer-event-fallback{display:flex;width:100%;aspect-ratio:16/9;align-items:center;justify-content:center;object-fit:cover;border-radius:10px}.vms-offer-event-fallback{padding:16px;background:#e8f2ee;color:#245548;text-align:center;font-weight:800}.vms-offer-event h2{margin-bottom:4px}.vms-offer-terms{margin-top:22px}.vms-offer-terms summary{cursor:pointer;font-weight:700}.vms-offer-availability{padding:12px 16px;border-radius:10px;background:#f3f8f6}.vms-pass-card .vms-offer-business{color:#526174}@media(max-width:390px){.vms-offer-events{grid-template-columns:1fr}.vms-offer-benefit{font-size:1.55rem}}</style>';
+		echo '<style>.vms-offer-hero{text-align:center;margin-bottom:24px}.vms-offer-logo{display:block;max-width:min(340px,80vw);max-height:120px;width:auto;height:auto;margin:0 auto 18px}.vms-offer-venue{font-size:1.5rem;font-weight:800}.vms-offer-art{display:block;width:100%;max-height:340px;object-fit:cover;border-radius:16px;margin:18px 0}.vms-offer-kicker{margin:0 0 6px;color:#146b55;font-size:.82rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.vms-offer-benefit{font-size:clamp(1.5rem,5vw,2.3rem);line-height:1.15}.vms-offer-event-highlight{display:grid;gap:3px;margin:18px 0;padding:16px;border:1px solid #b9d7cd;border-radius:12px;background:#f3f8f6;text-align:left}.vms-offer-event-highlight span{color:#526174;font-size:.88rem;font-weight:700;text-transform:uppercase}.vms-offer-event-highlight strong{font-size:1.2rem}.vms-offer-events{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px}.vms-offer-event{overflow:hidden}.vms-offer-event img,.vms-offer-event-fallback{display:flex;width:100%;aspect-ratio:16/9;align-items:center;justify-content:center;object-fit:cover;border-radius:10px}.vms-offer-event-fallback{padding:16px;background:#e8f2ee;color:#245548;text-align:center;font-weight:800}.vms-offer-event h2{margin-bottom:4px}.vms-offer-terms{margin-top:22px}.vms-offer-terms summary{cursor:pointer;font-weight:700}.vms-offer-availability{padding:12px 16px;border-radius:10px;background:#f3f8f6}.vms-pass-card .vms-offer-business{color:#526174}@media(max-width:390px){.vms-offer-events{grid-template-columns:1fr}.vms-offer-benefit{font-size:1.55rem}}</style>';
 		echo '<header class="vms-offer-hero">';
 		if ((string) $branding['logo_url'] !== '') {
 			echo '<img class="vms-offer-logo" src="' . esc_url((string) $branding['logo_url']) . '" alt="' . esc_attr((string) $branding['site_name']) . '">';
 		} else {
 			echo '<p class="vms-offer-venue">' . esc_html((string) $branding['site_name']) . '</p>';
 		}
-		echo '<h1>' . esc_html((string) $design['heading']) . '</h1>';
+		echo '<p class="vms-offer-kicker">' . esc_html__('Neighborhood Offer', 'backstage-outreach') . '</p><h1>' . esc_html((string) $design['heading']) . '</h1>';
 		if ((string) $design['subheading'] !== '') {
 			echo '<p>' . esc_html((string) $design['subheading']) . '</p>';
 		}
 		if ($artwork_url !== '') {
 			echo '<img class="vms-offer-art" src="' . esc_url($artwork_url) . '" alt="">';
 		}
-		echo '<p class="vms-offer-benefit"><strong>' . esc_html(sprintf(__('%1$s for up to %2$d people', 'backstage-outreach'), $value_label, $per_order_cap)) . '</strong></p><p class="vms-offer-business">' . esc_html(sprintf(__('Shared by %s', 'backstage-outreach'), $partner_name)) . '</p><p>' . esc_html__('Choose tickets for an eligible event. Your offer is applied automatically in the cart and checkout.', 'backstage-outreach') . '</p></header>';
+		echo '<p class="vms-offer-benefit"><strong>' . esc_html(sprintf(__('%1$s Discount Voucher — up to %2$d discounted admissions', 'backstage-outreach'), $value_label, $per_order_cap)) . '</strong></p><p class="vms-offer-business">' . esc_html(sprintf(__('Shared by %s', 'backstage-outreach'), $partner_name)) . '</p><p>' . esc_html__('Choose eligible tickets. This discount voucher is applied automatically in the cart and checkout; admissions are not complimentary or already purchased.', 'backstage-outreach') . '</p></header>';
+		if (count($events) === 1) {
+			$single_event = (array) reset($events);
+			$single_date = backstage_outreach_discount_offer_event_date_label($single_event);
+			echo '<div class="vms-offer-event-highlight"><span>' . esc_html__('Valid for this event', 'backstage-outreach') . '</span><strong>' . esc_html((string) ($single_event['title'] ?? __('Event', 'backstage-outreach'))) . '</strong>';
+			if ($single_date !== '') {
+				echo '<time>' . esc_html($single_date) . '</time>';
+			}
+			echo '</div>';
+		}
 		if ($expiry !== '' || $per_business_cap > 0 || $overall_cap > 0) {
 			echo '<div class="vms-offer-availability"><strong>' . esc_html__('Availability', 'backstage-outreach') . '</strong><ul>';
 			if ($expiry !== '') {
@@ -973,7 +983,7 @@ function backstage_outreach_discount_offer_router(array $distribution, string $r
 			}
 			echo '</ul></div>';
 		}
-		echo '<h2>' . esc_html__('Choose tickets', 'backstage-outreach') . '</h2><div class="vms-offer-events">';
+		echo '<h2>' . esc_html__('Choose discounted tickets', 'backstage-outreach') . '</h2><div class="vms-offer-events">';
 		foreach ($events as $event) {
 			$label = (string) ($event['title'] ?? __('Event', 'backstage-outreach'));
 			$date = backstage_outreach_discount_offer_event_date_label($event);
@@ -988,7 +998,7 @@ function backstage_outreach_discount_offer_router(array $distribution, string $r
 			if ($date !== '') {
 				echo '<p>' . esc_html($date) . '</p>';
 			}
-			echo '<p><a class="button" href="' . esc_url((string) $event['ticket_url']) . '">' . esc_html__('Choose tickets', 'backstage-outreach') . '</a></p></article>';
+			echo '<p><a class="button" href="' . esc_url((string) $event['ticket_url']) . '">' . esc_html__('Choose discounted tickets', 'backstage-outreach') . '</a></p></article>';
 		}
 		echo '</div><details class="vms-offer-terms"><summary>' . esc_html__('Offer terms', 'backstage-outreach') . '</summary><ul>';
 		echo '<li>' . esc_html(sprintf(__('%s applies only to eligible admission tickets. Merchandise, food, rentals, add-ons, and other tickets keep their normal pricing.', 'backstage-outreach'), $value_label)) . '</li>';
