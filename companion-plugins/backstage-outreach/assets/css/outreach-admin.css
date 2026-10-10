@@ -2254,6 +2254,82 @@
   background: #f0faf6;
 }
 
+#vms-pass-claims-wrap .vms-pass-business-batch-choice {
+  margin: 8px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-batch-choice > legend {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-batch-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-batch-choice-card {
+  display: grid;
+  gap: 7px;
+  min-height: 142px;
+  padding: 14px;
+  border: 2px solid #c3c4c7;
+  border-radius: 10px;
+  background: #fff;
+  color: #1d2327;
+  text-align: left;
+  cursor: pointer;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-batch-choice-card:hover,
+#vms-pass-claims-wrap .vms-pass-business-batch-choice-card:focus-visible {
+  border-color: #2271b1;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-batch-choice-card.is-selected {
+  border-color: #146b55;
+  box-shadow: inset 0 0 0 1px #146b55;
+  background: #f0faf6;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-batch-choice-card strong {
+  font-size: 15px;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-batch-choice-card span,
+#vms-pass-claims-wrap .vms-pass-business-batch-choice-card em {
+  font-style: normal;
+  line-height: 1.45;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-batch-choice-card em {
+  align-self: end;
+  color: #50575e;
+  font-weight: 600;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-existing-batch {
+  display: grid;
+  gap: 12px;
+}
+
+#vms-pass-claims-wrap .vms-pass-business-existing-batch[hidden] {
+  display: none;
+}
+
+@media (max-width: 782px) {
+  #vms-pass-claims-wrap .vms-pass-business-batch-choice-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #vms-pass-claims-wrap .vms-pass-business-batch-choice-card {
+    min-height: 0;
+  }
+}
+
 #vms-pass-claims-wrap .vms-pass-business-batch-create {
   margin: 16px 0;
   padding: 0 14px 14px;
@@ -2338,6 +2414,18 @@
   display: block;
   width: 100%;
   max-height: 220px;
+  object-fit: contain;
+}
+
+#vms-pass-claims-wrap .vms-pass-flyer-logo-control .vms-pass-flyer-artwork-preview {
+  width: min(12rem, 100%);
+  aspect-ratio: 1;
+}
+
+#vms-pass-claims-wrap .vms-pass-flyer-logo-control .vms-pass-flyer-artwork-preview img {
+  width: 100%;
+  height: 100%;
+  max-height: none;
   object-fit: contain;
 }
 

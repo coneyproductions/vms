@@ -50,6 +50,8 @@ $alternate_event_plan_id = 0;
 $missing_art_event_plan_id = 0;
 $tec_event_ids = array();
 $flyer_artwork_ids = array();
+$flyer_default_missing = '__backstage_outreach_missing_' . wp_generate_uuid4();
+$original_flyer_default = get_option(backstage_outreach_flyer_design_option_key(), $flyer_default_missing);
 $business_ids = array();
 $drift_business_id = 0;
 $suppression_id = 0;
@@ -531,9 +533,28 @@ try {
 	$flyer_row = $wpdb->get_row($wpdb->prepare('SELECT * FROM %i WHERE id=%d', backstage_outreach_business_table('campaign_businesses'), $complimentary_distribution_id), ARRAY_A);
 	$flyer_context = backstage_outreach_distribution_flyer_context(backstage_outreach_distribution_token((array) $flyer_row));
 	backstage_business_source_runtime_assert(is_array($flyer_context), 'Active signed flyer context was rejected' . (is_wp_error($flyer_context) ? ': ' . $flyer_context->get_error_code() . ' — ' . $flyer_context->get_error_message() : '.'));
+	$default_without_logo = is_array($original_flyer_default) ? $original_flyer_default : array();
+	unset($default_without_logo['logo_id']);
+	update_option(backstage_outreach_flyer_design_option_key(), $default_without_logo, false);
 	$default_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id, (array) $flyer_context['batch']);
 	$default_flyer_html = backstage_outreach_distribution_flyer_html($flyer_context);
 	backstage_business_source_runtime_assert((string) $default_design['heading'] !== '' && str_contains($default_flyer_html, (string) $default_design['heading']), 'The venue-default flyer design was not resolved on a campaign without overrides.');
+	backstage_business_source_runtime_assert((string) $default_design['logo_source'] === ((string) backstage_outreach_flyer_branding()['logo_url'] !== '' ? 'site' : 'none') && (string) $default_design['logo_url'] === (string) backstage_outreach_flyer_branding()['logo_url'], 'No flyer-specific logo did not preserve the existing site-logo fallback.');
+	update_option(backstage_outreach_flyer_design_option_key(), array_merge($default_without_logo, array('logo_id' => $event_artwork_id)), false);
+	$venue_logo_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id, (array) $flyer_context['batch']);
+	backstage_business_source_runtime_assert((string) $venue_logo_design['logo_source'] === 'venue' && (int) $venue_logo_design['logo_id'] === $event_artwork_id, 'Venue flyer logo did not override the existing site logo.');
+	update_option(backstage_outreach_flyer_design_option_key($complimentary_campaign_id), array('logo_mode' => 'custom', 'logo_id' => $alternate_event_artwork_id), false);
+	$campaign_logo_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id, (array) $flyer_context['batch']);
+	$campaign_logo_html = backstage_outreach_distribution_flyer_html($flyer_context);
+	backstage_business_source_runtime_assert((string) $campaign_logo_design['logo_source'] === 'campaign' && (int) $campaign_logo_design['logo_id'] === $alternate_event_artwork_id && str_contains($campaign_logo_html, 'flyer-logo-specific'), 'Campaign flyer logo did not override the venue logo or reach the shared flyer/PDF DOM.');
+	update_option(backstage_outreach_flyer_design_option_key($complimentary_campaign_id), array('logo_mode' => 'custom', 'logo_id' => 999999999), false);
+	$missing_campaign_logo_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id, (array) $flyer_context['batch']);
+	backstage_business_source_runtime_assert((string) $missing_campaign_logo_design['logo_source'] === 'venue' && (int) $missing_campaign_logo_design['logo_id'] === $event_artwork_id, 'Missing campaign logo did not fall back to the venue flyer logo.');
+	update_option(backstage_outreach_flyer_design_option_key(), array_merge($default_without_logo, array('logo_id' => 999999999)), false);
+	$invalid_logo_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id, (array) $flyer_context['batch']);
+	backstage_business_source_runtime_assert(in_array((string) $invalid_logo_design['logo_source'], array('site', 'none'), true) && (int) $invalid_logo_design['logo_id'] === 0, 'Invalid flyer logo assets did not fall back safely.');
+	update_option(backstage_outreach_flyer_design_option_key(), $default_without_logo, false);
+	delete_option(backstage_outreach_flyer_design_option_key($complimentary_campaign_id));
 	backstage_business_source_runtime_assert((string) $default_design['artwork_source'] === 'event' && (int) $default_design['artwork_id'] === $event_artwork_id, 'Automatic artwork did not follow the One Event batch through its linked TEC event image.');
 	$alternate_design = backstage_outreach_resolved_flyer_design($complimentary_campaign_id, array_merge((array) $flyer_context['batch'], array('single_event_plan_id' => $alternate_event_plan_id)));
 	backstage_business_source_runtime_assert((string) $alternate_design['artwork_source'] === 'event' && (int) $alternate_design['artwork_id'] === $alternate_event_artwork_id, 'Changing the reviewed Event Plan did not change automatic artwork.');
@@ -920,6 +941,11 @@ try {
 		$wpdb->delete(backstage_outreach_business_table('distribution_claims'), array('campaign_id' => $complimentary_campaign_id));
 		$wpdb->delete(backstage_outreach_business_table('campaign_businesses'), array('campaign_id' => $complimentary_campaign_id));
 		$wpdb->delete(vms_admission_table_pass_outreach_campaigns(), array('id' => $complimentary_campaign_id));
+	}
+	if ($original_flyer_default === $flyer_default_missing) {
+		delete_option(backstage_outreach_flyer_design_option_key());
+	} else {
+		update_option(backstage_outreach_flyer_design_option_key(), $original_flyer_default, false);
 	}
 	if ($complimentary_claim_id > 0) {
 		$wpdb->delete(bvmgr_admission_table_entries(), array('pass_claim_id' => $complimentary_claim_id));

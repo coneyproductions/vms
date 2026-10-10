@@ -121,22 +121,33 @@ $source_id = (int) $wpdb->insert_id;
 $extra_source_ids = array();
 $extra_batch_ids = array();
 $artwork_ids = array();
-$create_artwork = static function (string $filename, string $title, int $width, int $height, array $colors) use ($marker): int {
+$create_artwork = static function (string $filename, string $title, int $width, int $height, array $colors, bool $transparent = false) use ($marker): int {
 	if (!function_exists('imagecreatetruecolor')) {
 		return 0;
 	}
 	$image = imagecreatetruecolor($width, $height);
+	if ($transparent) {
+		imagealphablending($image, false);
+		imagesavealpha($image, true);
+		$clear = imagecolorallocatealpha($image, 0, 0, 0, 127);
+		imagefill($image, 0, 0, $clear);
+		imagealphablending($image, true);
+	}
 	$background = imagecolorallocate($image, $colors[0][0], $colors[0][1], $colors[0][2]);
 	$accent = imagecolorallocate($image, $colors[1][0], $colors[1][1], $colors[1][2]);
 	$white = imagecolorallocate($image, 255, 255, 255);
 	$gold = imagecolorallocate($image, 244, 198, 92);
 	$soft = imagecolorallocate($image, 231, 240, 237);
 	$ink = imagecolorallocate($image, 20, 34, 42);
-	imagefilledrectangle($image, 0, 0, $width, $height, $background);
+	if (!$transparent) {
+		imagefilledrectangle($image, 0, 0, $width, $height, $background);
+	}
 	imagefilledellipse($image, (int) ($width * .76), (int) ($height * .31), (int) ($width * .67), (int) ($width * .67), $accent);
 	imagefilledellipse($image, (int) ($width * .18), (int) ($height * .51), (int) ($width * .24), (int) ($width * .24), $gold);
 	imagefilledrectangle($image, 0, (int) ($height * .73), $width, $height, $soft);
-	imagefilledrectangle($image, (int) ($width * .055), (int) ($height * .055), (int) ($width * .945), (int) ($height * .69), $background);
+	if (!$transparent) {
+		imagefilledrectangle($image, (int) ($width * .055), (int) ($height * .055), (int) ($width * .945), (int) ($height * .69), $background);
+	}
 	$bold_font = '/System/Library/Fonts/Supplemental/Arial Bold.ttf';
 	$regular_font = '/System/Library/Fonts/Supplemental/Arial.ttf';
 	$draw_text = static function (string $text, int $size, int $x, int $y, int $color, bool $bold = false) use ($image, $bold_font, $regular_font): void {
@@ -178,7 +189,9 @@ $create_artwork = static function (string $filename, string $title, int $width, 
 $portrait_artwork_id = $create_artwork('business-source-browser-fixture-portrait.png', 'Portrait Artwork', 1200, 1600, array(array(16, 50, 63), array(13, 109, 87)));
 $landscape_artwork_id = $create_artwork('business-source-browser-fixture-landscape.png', 'Landscape Artwork', 1600, 900, array(array(49, 36, 85), array(197, 83, 57)));
 $event_artwork_id = $create_artwork('business-source-browser-fixture-event.png', 'Selected Event Artwork', 1800, 1200, array(array(66, 26, 43), array(178, 92, 52)));
-$artwork_ids = array_values(array_filter(array($portrait_artwork_id, $landscape_artwork_id, $event_artwork_id)));
+$transparent_square_logo_id = $create_artwork('business-source-browser-fixture-square-transparent-logo.png', 'Square Transparent Flyer Logo', 900, 900, array(array(18, 82, 66), array(244, 198, 92)), true);
+$wide_logo_id = $create_artwork('business-source-browser-fixture-wide-logo.png', 'Wide Flyer Logo', 1600, 500, array(array(24, 56, 91), array(197, 83, 57)));
+$artwork_ids = array_values(array_filter(array($portrait_artwork_id, $landscape_artwork_id, $event_artwork_id, $transparent_square_logo_id, $wide_logo_id)));
 $artwork_id = $portrait_artwork_id;
 $tec_event_id = wp_insert_post(array(
 	'post_type' => 'tribe_events',
@@ -302,6 +315,8 @@ $fixture = array(
 	'portrait_artwork_id' => $portrait_artwork_id,
 	'landscape_artwork_id' => $landscape_artwork_id,
 	'event_artwork_id' => $event_artwork_id,
+	'transparent_square_logo_id' => $transparent_square_logo_id,
+	'wide_logo_id' => $wide_logo_id,
 	'artwork_ids' => $artwork_ids,
 	'event_plan_id' => (int) $event_plan_id,
 	'tec_event_id' => (int) $tec_event_id,

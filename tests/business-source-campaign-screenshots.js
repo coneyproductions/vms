@@ -95,11 +95,13 @@ function check(condition, message) {
 	  await route.locator('select[name="related_source_id"]').selectOption(String(fixture.empty_source_id));
 	  check((await route.locator('[data-vms-business-membership-guidance]').textContent()).includes('no active reusable businesses'), 'desktop: zero-membership Source did not explain why Business Review and campaign creation remain unavailable.');
 	  check(await route.locator('select[name="related_batch_id"] option').count() === 3, 'desktop: zero-membership Source did not expose its two eligible existing batches.');
+	  check(await route.getByRole('radio', { name: /Use Existing Offer Batch/ }).count() === 1 && await route.getByRole('radio', { name: /Create New Offer Batch/ }).count() === 1, 'desktop: existing and new offer-batch paths are not equally explicit choices.');
+	  await route.getByRole('radio', { name: /Use Existing Offer Batch/ }).click();
 	  await route.locator('select[name="related_batch_id"]').selectOption(String(fixture.empty_free_batch_id));
 	  check(await route.locator('button[value="business_source_preview"]').isDisabled(), 'desktop: zero-membership Source plus existing complimentary batch enabled Business Review.');
 	  await route.locator('select[name="related_batch_id"]').selectOption(String(fixture.empty_paid_batch_id));
 	  check(await route.locator('button[value="business_source_preview"]').isDisabled(), 'desktop: zero-membership Source plus existing 50%-off batch enabled Business Review.');
-	  await route.locator('[data-vms-business-batch-create] summary').click();
+	  await route.getByRole('radio', { name: /Create New Offer Batch/ }).click();
 	  await route.locator('input[name="business_batch_name"]').fill('Business Source Browser Fixture Created In Outreach Zero Member');
 	  await route.locator('select[name="business_batch_offer_type"]').selectOption('percent');
 	  await route.locator('input[name="business_batch_offer_amount"]').fill('50');
@@ -123,7 +125,7 @@ function check(condition, message) {
 	  await route.locator('select[name="related_batch_id"]').selectOption(String(fixture.existing_free_batch_id));
 	  check(await route.locator('[data-vms-business-batch-summary]').getByText(/Using existing batch: Complimentary admission/).count() === 1, 'desktop: existing complimentary selection is not labeled as the existing-batch path.');
 	  check(await route.locator('input[name="business_batch_total_admission_cap"]').getAttribute('readonly') !== null, 'desktop: existing batch total was not visibly locked.');
-	  await route.locator('[data-vms-business-batch-create] summary').click();
+	  await route.getByRole('radio', { name: /Create New Offer Batch/ }).click();
 	  await page.waitForTimeout(50);
 	  check(await route.locator('select[name="related_batch_id"]').inputValue() === '0', 'desktop: opening new-batch setup did not leave the existing-batch path.');
 	  check(await route.locator('[data-vms-business-batch-summary]').isHidden(), 'desktop: existing complimentary summary disguised the new-batch draft.');
@@ -137,6 +139,7 @@ function check(condition, message) {
 	  await route.locator('input[name="business_batch_offer_amount"]').fill('');
 	  await route.locator('select[name="business_batch_offer_type"]').selectOption('');
 	  await route.locator('input[name="business_batch_total_admission_cap"]').fill('');
+	  await route.getByRole('radio', { name: /Use Existing Offer Batch/ }).click();
       await route.locator('select[name="related_batch_id"]').selectOption(String(fixture.existing_paid_batch_id));
 	  check(await route.getByText('Using existing batch: Admission Offer — 50% off admission for up to 2 people', { exact: true }).count() === 1, 'desktop: existing paid batch wording is not explicit.');
       await route.locator('select[name="related_source_id"]').selectOption(String(fixture.source_id));
@@ -349,6 +352,7 @@ function check(condition, message) {
       const design = page.locator('#backstage-outreach-flyer-design');
       check(await design.locator('input[name="campaign_artwork_mode"][value="inherit"]').isChecked(), 'mobile: new campaign did not retain automatic artwork mode.');
       check((await design.locator('[data-vms-flyer-artwork-source]').innerText()).includes('Selected event artwork'), 'mobile: One Event batch did not automatically resolve its linked event artwork.');
+	  check(await design.locator('.vms-pass-flyer-defaults [data-vms-artwork-prefix="venue-logo"] [data-vms-artwork-select]').count() === 1, 'mobile: Venue Flyer Defaults does not expose an independent logo selector.');
       await design.locator('input[name="campaign_flyer_heading"]').fill('Live Music at Café Serenade — ひらがな é');
       await design.locator('input[name="campaign_flyer_subheading"]').fill('You’ve found a reception-desk offer for tonight’s stage.');
 	  await design.locator('input[name="campaign_layout_mode"][value="custom"]').check();
@@ -356,7 +360,7 @@ function check(condition, message) {
 	  await design.locator('select[name="campaign_composition"]').selectOption('panels');
 	  check(await design.locator('input[name="campaign_panel_position"]').inputValue() === 'bottom', 'mobile: campaign composition did not retain the full-width offer-band arrangement.');
       await design.getByRole('button', { name: 'Choose campaign artwork' }).click();
-      const mediaDialog = page.locator('.media-modal');
+	      const mediaDialog = page.locator('.media-modal:visible');
       await mediaDialog.waitFor({ state: 'visible' });
 	  const mediaLibraryTab = mediaDialog.getByRole('tab', { name: 'Media Library' });
 	  if (await mediaLibraryTab.count()) {
@@ -369,10 +373,25 @@ function check(condition, message) {
       await mediaDialog.locator(`.attachment[data-id="${fixture.artwork_id}"]`).click();
       await mediaDialog.getByRole('button', { name: 'Use this artwork' }).click();
       check(await design.locator('input[name="campaign_artwork_mode"][value="custom"]').isChecked(), 'mobile: selecting campaign artwork did not select the custom-artwork mode.');
+	  await design.getByRole('button', { name: 'Choose campaign flyer logo' }).click();
+	  const logoMediaDialog = page.locator('.media-modal:visible');
+	  await logoMediaDialog.waitFor({ state: 'visible' });
+	  const logoMediaLibraryTab = logoMediaDialog.getByRole('tab', { name: 'Media Library' });
+	  if (await logoMediaLibraryTab.count()) {
+		await logoMediaLibraryTab.click();
+	  }
+	  const logoMediaSearch = logoMediaDialog.locator('input[type="search"]');
+	  if (await logoMediaSearch.count()) {
+		await logoMediaSearch.fill('Business Source Browser Fixture Square Transparent Flyer Logo');
+	  }
+	  await logoMediaDialog.locator(`.attachment[data-id="${fixture.transparent_square_logo_id}"]`).click();
+	  await logoMediaDialog.getByRole('button', { name: 'Use this logo' }).click();
+	  check(await design.locator('input[name="campaign_logo_mode"][value="custom"]').isChecked(), 'mobile: selecting a campaign flyer logo did not select the custom-logo mode.');
       await design.getByRole('button', { name: 'Save flyer design' }).click();
       await page.waitForLoadState('domcontentloaded');
       check(await page.locator('#backstage-outreach-flyer-design img').count() >= 1, 'mobile: saved campaign artwork preview is missing.');
-	  check((await page.locator('#backstage-outreach-flyer-design [data-vms-flyer-artwork-source]').innerText()).includes('Campaign artwork override'), 'mobile: custom artwork did not remain the explicit source after save.');
+		  check((await page.locator('#backstage-outreach-flyer-design [data-vms-flyer-artwork-source]').innerText()).includes('Campaign artwork override'), 'mobile: custom artwork did not remain the explicit source after save.');
+		  check((await page.locator('#backstage-outreach-flyer-design [data-vms-flyer-logo-source]').innerText()).includes('Campaign flyer logo override'), 'mobile: campaign flyer logo did not remain the resolved source after save.');
 	  check(await page.locator('#backstage-outreach-flyer-design input[name="campaign_layout_mode"][value="custom"]').isChecked(), 'mobile: campaign layout override was not restored after save.');
 	  check(await page.locator('#backstage-outreach-flyer-design select[name="campaign_orientation"]').inputValue() === 'portrait', 'mobile: portrait layout was not restored after save.');
 	  check(await page.locator('#backstage-outreach-flyer-design input[name="campaign_panel_position"]').inputValue() === 'bottom', 'mobile: normalized full-width offer band was not restored after save.');
@@ -567,6 +586,22 @@ function check(condition, message) {
     check(await flyerPage.getByRole('heading', { name: 'Live Music at Café Serenade — ひらがな é' }).count() === 1, `${flyerCase.name}: campaign flyer heading or UTF-8 is missing.`);
     check(await flyerPage.getByText('You’ve found a reception-desk offer for tonight’s stage.', { exact: true }).count() === 1, `${flyerCase.name}: campaign flyer subheading is missing.`);
     check(await flyerPage.locator('img.artwork').count() === 1, `${flyerCase.name}: selected Media Library artwork is missing from printable image content.`);
+	const flyerLogo = flyerPage.locator('.offer-brand img.flyer-logo-specific');
+	check(await flyerLogo.count() === 1, `${flyerCase.name}: dedicated flyer logo is missing from the shared flyer/PDF composition.`);
+	const logoGeometry = await flyerLogo.evaluate(async (logo) => {
+	  const rect = logo.getBoundingClientRect();
+	  const qr = document.querySelector('.qr-block').getBoundingClientRect();
+	  const response = await fetch(logo.currentSrc || logo.src);
+	  const bitmap = await createImageBitmap(await response.blob());
+	  const canvas = document.createElement('canvas');
+	  canvas.width = bitmap.width;
+	  canvas.height = bitmap.height;
+	  const context = canvas.getContext('2d');
+	  context.drawImage(bitmap, 0, 0);
+	  const alpha = context.getImageData(0, 0, 1, 1).data[3];
+	  return { naturalWidth: logo.naturalWidth, naturalHeight: logo.naturalHeight, width: rect.width, height: rect.height, alpha, overlapsQr: !(rect.right <= qr.left || rect.left >= qr.right || rect.bottom <= qr.top || rect.top >= qr.bottom), objectFit: getComputedStyle(logo).objectFit };
+	});
+	check(logoGeometry.naturalWidth === logoGeometry.naturalHeight && Math.abs(logoGeometry.width - logoGeometry.height) <= 2 && logoGeometry.alpha === 0 && !logoGeometry.overlapsQr && logoGeometry.objectFit === 'contain', `${flyerCase.name}: square transparent logo was distorted, cropped, or obstructed the QR (${JSON.stringify(logoGeometry)}).`);
     check(await flyerPage.getByText('Complimentary Guest Passes for up to 2 people per customer', { exact: true }).count() === 1, `${flyerCase.name}: complimentary flyer wording is inaccurate.`);
     const flyerText = await flyerPage.locator('body').innerText();
     check(flyerText.includes('Maximum through this business: 2 Guest Pass admissions.'), `${flyerCase.name}: capped flyer omits its real per-business maximum.`);
@@ -601,8 +636,21 @@ function check(condition, message) {
   const removalDesign = removalPage.locator('#backstage-outreach-flyer-design');
 	await removalDesign.locator('select[name="campaign_orientation"]').selectOption('landscape');
 	await removalDesign.locator('select[name="campaign_composition"]').selectOption('full');
+	await removalDesign.getByRole('button', { name: 'Replace logo' }).click();
+	const wideLogoMediaDialog = removalPage.locator('.media-modal:visible');
+	await wideLogoMediaDialog.waitFor({ state: 'visible' });
+	const wideLogoLibraryTab = wideLogoMediaDialog.getByRole('tab', { name: 'Media Library' });
+	if (await wideLogoLibraryTab.count()) {
+	  await wideLogoLibraryTab.click();
+	}
+	const wideLogoSearch = wideLogoMediaDialog.locator('input[type="search"]');
+	if (await wideLogoSearch.count()) {
+	  await wideLogoSearch.fill('Business Source Browser Fixture Wide Flyer Logo');
+	}
+	await wideLogoMediaDialog.locator(`.attachment[data-id="${fixture.wide_logo_id}"]`).click();
+	await wideLogoMediaDialog.getByRole('button', { name: 'Use this logo' }).click();
 	await removalDesign.getByRole('button', { name: 'Replace artwork' }).click();
-	const landscapeMediaDialog = removalPage.locator('.media-modal');
+	const landscapeMediaDialog = removalPage.locator('.media-modal:visible');
 	await landscapeMediaDialog.waitFor({ state: 'visible' });
 	const landscapeMediaLibraryTab = landscapeMediaDialog.getByRole('tab', { name: 'Media Library' });
 	if (await landscapeMediaLibraryTab.count()) {
@@ -628,17 +676,21 @@ function check(condition, message) {
 		const rect = element ? element.getBoundingClientRect() : null;
 		return rect ? { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height } : null;
 	  };
-	  const offer = sheet.querySelector('.offer-panel');
-	  return {
-		sheet: box('.composition'), art: box('.art-panel'), offer: box('.offer-panel'), brand: box('.offer-brand'), copy: box('.offer-copy'), qr: box('.qr-block'),
-		offerBackground: offer ? getComputedStyle(offer).backgroundColor : '',
-		offerFontSize: offer ? parseFloat(getComputedStyle(offer.querySelector('.offer')).fontSize) : 0,
-	  };
+		  const offer = sheet.querySelector('.offer-panel');
+		  const logo = sheet.querySelector('.offer-brand img.logo');
+		  return {
+			sheet: box('.composition'), art: box('.art-panel'), offer: box('.offer-panel'), brand: box('.offer-brand'), logo: box('.offer-brand img.logo'), copy: box('.offer-copy'), qr: box('.qr-block'),
+			offerBackground: offer ? getComputedStyle(offer).backgroundColor : '',
+			offerFontSize: offer ? parseFloat(getComputedStyle(offer.querySelector('.offer')).fontSize) : 0,
+			logoNaturalRatio: logo ? logo.naturalWidth / logo.naturalHeight : 0,
+			logoObjectFit: logo ? getComputedStyle(logo).objectFit : '',
+		  };
 	});
 	check(landscapeGeometry.offer.height >= 236 && landscapeGeometry.offer.height <= 244, `landscape: offer band is not compact (${JSON.stringify(landscapeGeometry.offer)}).`);
 	check(landscapeGeometry.art.height > landscapeGeometry.offer.height * 1.7, 'landscape: artwork did not receive substantially more space than the offer band.');
 	check(landscapeGeometry.brand.left < landscapeGeometry.copy.left && landscapeGeometry.copy.left < landscapeGeometry.qr.left, 'landscape: logo, offer copy, and QR are not three deliberate left-to-right regions.');
 	check(Math.max(landscapeGeometry.brand.top, landscapeGeometry.copy.top, landscapeGeometry.qr.top) - Math.min(landscapeGeometry.brand.top, landscapeGeometry.copy.top, landscapeGeometry.qr.top) <= 12, 'landscape: logo, offer copy, and QR are not top-aligned.');
+	check(landscapeGeometry.logoNaturalRatio > 2.5 && Math.abs((landscapeGeometry.logo.width / landscapeGeometry.logo.height) - landscapeGeometry.logoNaturalRatio) < 0.1 && landscapeGeometry.logo.right < landscapeGeometry.copy.left && landscapeGeometry.logoObjectFit === 'contain', `landscape: wide flyer logo was distorted, cropped, or obstructed offer copy (${JSON.stringify(landscapeGeometry.logo)}).`);
 	check(landscapeGeometry.sheet.right - landscapeGeometry.qr.right <= 42, 'landscape: QR is not positioned at the far right of the offer band.');
 	check(landscapeGeometry.offerBackground === 'rgb(255, 255, 255)' && landscapeGeometry.offerFontSize >= 19, `landscape: offer band is not fully opaque with readable typography (${JSON.stringify(landscapeGeometry)}).`);
 	await landscapePage.screenshot({ path: path.join(outputDir, 'desktop-public-flyer-landscape.png'), fullPage: true });
@@ -699,38 +751,54 @@ function check(condition, message) {
   await noArtworkDownload.saveAs(path.join(outputDir, 'public-flyer-landscape-no-artwork.pdf'));
 
 	await removalPage.goto(createdCampaignAdminUrl, { waitUntil: 'domcontentloaded' });
-	const defaultDesign = removalPage.locator('#backstage-outreach-flyer-design');
-	await defaultDesign.locator('input[name="campaign_flyer_heading"]').fill('');
-	await defaultDesign.locator('input[name="campaign_flyer_subheading"]').fill('');
-	await defaultDesign.locator('input[name="campaign_artwork_mode"][value="inherit"]').check();
-	await defaultDesign.getByRole('button', { name: 'Save flyer design' }).click();
+		const defaultDesign = removalPage.locator('#backstage-outreach-flyer-design');
+		await defaultDesign.locator('input[name="campaign_flyer_heading"]').fill('');
+		await defaultDesign.locator('input[name="campaign_flyer_subheading"]').fill('');
+		await defaultDesign.locator('input[name="campaign_artwork_mode"][value="inherit"]').check();
+		await defaultDesign.getByRole('button', { name: 'Remove logo' }).click();
+		check(await defaultDesign.locator('input[name="campaign_logo_mode"][value="inherit"]').isChecked(), 'removing the campaign logo did not restore inherited-logo mode.');
+		await defaultDesign.getByRole('button', { name: 'Save flyer design' }).click();
 	await removalPage.waitForLoadState('domcontentloaded');
-	check((await removalPage.locator('#backstage-outreach-flyer-design [data-vms-flyer-artwork-source]').innerText()).includes('Selected event artwork'), 'automatic mode did not return to the reviewed One Event artwork after explicit none.');
+		check((await removalPage.locator('#backstage-outreach-flyer-design [data-vms-flyer-artwork-source]').innerText()).includes('Selected event artwork'), 'automatic mode did not return to the reviewed One Event artwork after explicit none.');
+		check(/Existing site logo|No logo available/.test(await removalPage.locator('#backstage-outreach-flyer-design [data-vms-flyer-logo-source]').innerText()), 'removed campaign logo did not fall back to existing site branding.');
 	await noArtworkPage.goto(publicFlyerUrl, { waitUntil: 'networkidle' });
 	await noArtworkPage.evaluate(() => window.backstageOutreachFlyerReady);
 	const defaultHeading = await noArtworkPage.locator('h1.heading').innerText();
-	check(defaultHeading.startsWith('Live music at ') && !defaultHeading.includes('Café Serenade'), 'venue-default flyer heading did not replace the campaign override.');
+	check(defaultHeading.startsWith('Live music at ') && defaultHeading !== 'Live Music at Café Serenade — ひらがな é', 'venue-default flyer heading did not replace the campaign override.');
 	check((await noArtworkPage.locator('img.artwork').getAttribute('src') || '').includes('business-source-browser-fixture-event'), 'automatic public flyer did not use the linked event artwork.');
 	await noArtworkPage.screenshot({ path: path.join(outputDir, 'desktop-public-flyer-default.png'), fullPage: true });
+	if (process.env.BVM_OUTREACH_QOL_ONLY === '1') {
+	  await noArtworkContext.close();
+	  await removalContext.close();
+	  await browser.close();
+	  console.log('Business Source QoL browser workflow PASS');
+	  return;
+	}
 
-  await removalPage.goto(createdCampaignAdminUrl, { waitUntil: 'domcontentloaded' });
-  await removalPage.locator('.vms-pass-secondary-business-controls').evaluate((details) => { details.open = true; });
-  let lifecycleRow = removalPage.locator('[data-vms-tour="outreach-business-results"] tbody tr').first();
-  await Promise.all([
-    removalPage.waitForNavigation({ waitUntil: 'domcontentloaded' }),
-    lifecycleRow.getByRole('link', { name: 'Pause', exact: true }).click(),
-  ]);
-  check((await removalPage.locator('[data-vms-tour="outreach-business-results"] tbody tr').first().locator('td').nth(1).innerText()).trim() === 'paused', 'protected Pause action did not update the scoped distribution.');
+	  await removalPage.goto(createdCampaignAdminUrl, { waitUntil: 'domcontentloaded' });
+	  await removalPage.locator('.vms-pass-secondary-business-controls').evaluate((details) => { details.open = true; });
+	  let lifecycleRow = removalPage.locator('[data-vms-tour="outreach-business-results"] tbody tr').first();
+	  const pauseLink = lifecycleRow.getByRole('link', { name: 'Pause', exact: true });
+	  const lifecycleDistributionId = new URL(await pauseLink.getAttribute('href'), removalPage.url()).searchParams.get('distribution_id');
+	  await Promise.all([
+	    removalPage.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+	    pauseLink.click(),
+	  ]);
+	  lifecycleRow = removalPage.locator('[data-vms-tour="outreach-business-results"] tbody tr').filter({ has: removalPage.locator(`a[href*="distribution_id=${lifecycleDistributionId}"]`) });
+	  const pausedStatus = (await lifecycleRow.locator('td[data-label="Status"]').innerText()).trim();
+	  check(pausedStatus === 'paused', `protected Pause action did not update the scoped distribution (${pausedStatus}).`);
   const pausedResponse = await noArtworkPage.goto(publicFlyerUrl, { waitUntil: 'domcontentloaded' });
   check(pausedResponse && pausedResponse.status() === 410, 'paused flyer did not return HTTP 410.');
   check(await noArtworkPage.getByRole('heading', { name: 'Offer unavailable' }).count() === 1 && await noArtworkPage.getByRole('link', { name: 'Visit the venue homepage' }).count() === 1, 'paused flyer did not show the branded plain-language unavailable state.');
   await removalPage.locator('.vms-pass-secondary-business-controls').evaluate((details) => { details.open = true; });
-  lifecycleRow = removalPage.locator('[data-vms-tour="outreach-business-results"] tbody tr').first();
+	  lifecycleRow = removalPage.locator('[data-vms-tour="outreach-business-results"] tbody tr').filter({ has: removalPage.locator(`a[href*="distribution_id=${lifecycleDistributionId}"]`) });
   await Promise.all([
     removalPage.waitForNavigation({ waitUntil: 'domcontentloaded' }),
     lifecycleRow.getByRole('link', { name: 'Resume', exact: true }).click(),
-  ]);
-  check((await removalPage.locator('[data-vms-tour="outreach-business-results"] tbody tr').first().locator('td').nth(1).innerText()).trim() === 'active', 'protected Resume action did not restore the scoped distribution.');
+	  ]);
+	  lifecycleRow = removalPage.locator('[data-vms-tour="outreach-business-results"] tbody tr').filter({ has: removalPage.locator(`a[href*="distribution_id=${lifecycleDistributionId}"]`) });
+	  const resumedStatus = (await lifecycleRow.locator('td[data-label="Status"]').innerText()).trim();
+	  check(resumedStatus === 'active', `protected Resume action did not restore the scoped distribution (${resumedStatus}).`);
   const tamperedFlyerUrl = publicFlyerUrl.slice(0, -1) + (publicFlyerUrl.endsWith('a') ? 'b' : 'a');
   const tamperedResponse = await noArtworkPage.goto(tamperedFlyerUrl, { waitUntil: 'domcontentloaded' });
   check(tamperedResponse && tamperedResponse.status() === 404, 'tampered flyer did not return HTTP 404.');

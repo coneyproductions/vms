@@ -736,8 +736,8 @@
         return;
       }
       var artworkFrame = window.wp.media({
-        title: 'Choose flyer artwork',
-        button: { text: 'Use this artwork' },
+        title: String(artworkSelect.getAttribute('data-vms-media-title') || 'Choose flyer artwork'),
+        button: { text: String(artworkSelect.getAttribute('data-vms-media-button') || 'Use this artwork') },
         library: { type: 'image' },
         multiple: false
       });
@@ -760,6 +760,12 @@
           var customMode = root.closest('fieldset').querySelector('input[name="campaign_artwork_mode"][value="custom"]');
           if (customMode) {
             customMode.checked = true;
+          }
+        }
+        if (root && root.getAttribute('data-vms-artwork-prefix') === 'campaign-logo') {
+          var customLogoMode = root.closest('fieldset').querySelector('input[name="campaign_logo_mode"][value="custom"]');
+          if (customLogoMode) {
+            customLogoMode.checked = true;
           }
         }
       });
@@ -785,6 +791,12 @@
         var noArtworkMode = removeRoot.closest('fieldset').querySelector('input[name="campaign_artwork_mode"][value="none"]');
         if (noArtworkMode) {
           noArtworkMode.checked = true;
+        }
+      }
+      if (removeRoot && removeRoot.getAttribute('data-vms-artwork-prefix') === 'campaign-logo') {
+        var inheritedLogoMode = removeRoot.closest('fieldset').querySelector('input[name="campaign_logo_mode"][value="inherit"]');
+        if (inheritedLogoMode) {
+          inheritedLogoMode.checked = true;
         }
       }
       return;
