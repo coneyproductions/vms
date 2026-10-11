@@ -33,6 +33,27 @@
   background: #eef5ff;
 }
 
+.vms-pass-public-page .vms-pass-selected-event.is-neutral {
+  border-left-color: #8190a5;
+  background: #f4f6f9;
+}
+
+.vms-pass-public-page .vms-pass-event-artwork,
+.vms-pass-public-page [data-backstage-event-image] {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  margin: 0 0 12px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #fff;
+}
+
+.vms-pass-public-page [data-backstage-event-image][hidden] {
+  display: none;
+}
+
 .vms-pass-public-page .vms-pass-selected-event > span {
   color: #526174;
   font-size: .8rem;
@@ -72,9 +93,18 @@
   font-weight: 700;
 }
 
-.vms-pass-public-page .vms-pass-checkbox {
-  align-items: flex-start;
+.vms-pass-public-page .vms-pass-grid label.vms-pass-checkbox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   line-height: 1.4;
+}
+
+.vms-pass-public-page .vms-pass-grid label.vms-pass-checkbox input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
 }
 
 .vms-pass-public-page .vms-pass-actions button {

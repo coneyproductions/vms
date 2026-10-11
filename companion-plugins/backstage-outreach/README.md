@@ -1,6 +1,6 @@
 # Backstage Outreach
 
-Current release: **1.2.23**. Public complimentary claims now auto-associate a sole eligible event, present event and offer details clearly, and use only configuration-valid admission quantities. Neighborhood Offer pages distinguish percentage and fixed-dollar Discount Vouchers from complimentary Guest Passes. Existing campaign eligibility, attribution, claim limits, redemption, reservation, coupon, consent, and delivery behavior remain authoritative and unchanged.
+Current release: **1.2.24**. New public complimentary claims require a valid confirmation email while keeping phone and marketing consent optional. Single-event claims display the linked TEC featured image when available; multi-event claims keep a neutral preview until selection and then show only the selected event's artwork. Existing campaign eligibility, attribution, claim limits, redemption, reservation, coupon, consent, and delivery behavior remain authoritative and unchanged.
 
 Backstage Outreach is the recovered Guest Pass Outreach workflow for Backstage
 Venue Manager 1.2.0 and newer. It is intentionally maintained as a companion

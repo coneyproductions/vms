@@ -625,7 +625,7 @@ try {
 		'first_name' => 'Café',
 		'last_name' => 'Customer',
 		'phone' => '312-555-0199',
-		'email' => '',
+		'email' => 'cafe-customer@example.test',
 		'party_size' => 2,
 		'opt_in' => 0,
 	);

@@ -3100,6 +3100,8 @@ if (!function_exists('bvmgr_pass_claims_create_claim')) {
 		$phone = sanitize_text_field((string) ($input['phone'] ?? ''));
 		$email = sanitize_email((string) ($input['email'] ?? ''));
 		$phone_norm = bvmgr_pass_claims_normalize_phone($phone);
+		$require_phone = !array_key_exists('require_phone', $context) || !empty($context['require_phone']);
+		$require_email = !empty($context['require_email']);
 		$opt_in = !empty($input['opt_in']) ? 1 : 0;
 		$settings = function_exists('bvmgr_admission_settings') ? bvmgr_admission_settings() : array();
 		$global_max_party_size = max(1, (int) ($settings['max_party_size'] ?? 6));
@@ -3113,13 +3115,19 @@ if (!function_exists('bvmgr_pass_claims_create_claim')) {
 		$source_id = (int) ($batch['source_id'] ?? 0);
 			$now = bvmgr_admission_now_mysql();
 
-			if ($first_name === '' || $last_name === '' || $phone_norm === '' || $event_plan_id <= 0) {
+			if ($first_name === '' || $last_name === '' || ($require_phone && $phone_norm === '') || $event_plan_id <= 0) {
 				bvmgr_pass_claims_reset_token_unclaimed($tokens_table, $token_id);
-				return new WP_Error('invalid_claim_input', __('First name, last name, phone, and event are required.', 'backstage-venue-manager'));
+				return new WP_Error('invalid_claim_input', $require_phone
+					? __('First name, last name, phone, and event are required.', 'backstage-venue-manager')
+					: __('First name, last name, and event are required.', 'backstage-venue-manager'));
+			}
+			if ($require_email && ($email === '' || !is_email($email))) {
+				bvmgr_pass_claims_reset_token_unclaimed($tokens_table, $token_id);
+				return new WP_Error('invalid_claim_email', __('Enter a valid email address.', 'backstage-venue-manager'));
 			}
 
 			$max_per_phone = max(0, (int) ($batch['max_per_phone'] ?? 0));
-			if ($max_per_phone > 0) {
+			if ($max_per_phone > 0 && $phone_norm !== '') {
 				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Claim-limit counts read the plugin-owned claims table with a %i/%d/%s-prepared identifier and filters so public claims reflect immediate prior submissions.
 				$existing = (int) $wpdb->get_var($wpdb->prepare(
 					"SELECT COUNT(1) FROM %i WHERE batch_id = %d AND phone_norm = %s",

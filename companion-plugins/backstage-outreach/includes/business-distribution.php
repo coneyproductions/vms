@@ -3184,6 +3184,13 @@ function backstage_outreach_existing_distribution_result(array $mapping): array
 function backstage_outreach_partner_claim(array $distribution, array $event, array $input, string $submission_key)
 {
 	global $wpdb;
+	$raw_email = trim((string) ($input['email'] ?? ''));
+	$email = sanitize_email($raw_email);
+	if ($email === '' || $email !== $raw_email || !is_email($email)) {
+		return new WP_Error('invalid_claimant_email', __('Enter a valid email address so we can confirm your Guest Pass.', 'backstage-outreach'));
+	}
+	$input['email'] = $email;
+	$input['phone'] = sanitize_text_field((string) ($input['phone'] ?? ''));
 	$distribution_id = (int) $distribution['id'];
 	$campaign_id = (int) $distribution['campaign_id'];
 	$batch = (array) $distribution['batch'];
@@ -3336,7 +3343,7 @@ function backstage_outreach_partner_claim(array $distribution, array $event, arr
 			$wpdb->query('ROLLBACK');
 			return $token;
 		}
-		$context = array('distribution_id' => $distribution_id, 'campaign_id' => $campaign_id, 'business_id' => (int) $fresh_distribution['business_id'], 'source_id' => (int) $fresh_distribution['source_id'], 'batch_lock_held' => true, 'defer_email' => true);
+		$context = array('distribution_id' => $distribution_id, 'campaign_id' => $campaign_id, 'business_id' => (int) $fresh_distribution['business_id'], 'source_id' => (int) $fresh_distribution['source_id'], 'batch_lock_held' => true, 'defer_email' => true, 'require_phone' => false, 'require_email' => true);
 		$result = bvmgr_pass_claims_create_claim($token, $batch, $event, $input, $context);
 		if (is_wp_error($result)) {
 			$wpdb->query('ROLLBACK');
@@ -3381,6 +3388,55 @@ function backstage_outreach_partner_max_party_size(array $distribution, array $b
 	return min($global_max, $batch_max, $campaign_max);
 }
 
+function backstage_outreach_partner_event_artwork(array $event): array
+{
+	$event_plan_id = absint($event['id'] ?? 0);
+	if ($event_plan_id <= 0) {
+		return array('url' => '', 'alt' => '');
+	}
+	$tec_event_id = absint(get_post_meta($event_plan_id, '_vms_tec_event_id', true));
+	$attachment_id = $tec_event_id > 0 && function_exists('get_post_thumbnail_id')
+		? absint(get_post_thumbnail_id($tec_event_id))
+		: 0;
+	if ($attachment_id <= 0 && function_exists('bvmgr_ticketing_v2_resolve_event_featured_image_id')) {
+		$attachment_id = absint(bvmgr_ticketing_v2_resolve_event_featured_image_id($event_plan_id));
+	}
+	if ($attachment_id <= 0 && function_exists('get_post_thumbnail_id')) {
+		$attachment_id = absint(get_post_thumbnail_id($event_plan_id));
+	}
+	$url = $attachment_id > 0 && function_exists('wp_get_attachment_image_url')
+		? wp_get_attachment_image_url($attachment_id, 'large')
+		: '';
+	if (!is_string($url) || $url === '') {
+		return array('url' => '', 'alt' => '');
+	}
+	$alt = sanitize_text_field((string) get_post_meta($attachment_id, '_wp_attachment_image_alt', true));
+	if ($alt === '') {
+		$alt = sanitize_text_field((string) ($event['title'] ?? __('Event', 'backstage-outreach')));
+	}
+	return array('url' => esc_url_raw($url), 'alt' => $alt);
+}
+
+function backstage_outreach_partner_event_summary_html(array $event, bool $neutral = false): string
+{
+	if ($neutral) {
+		$neutral_title = __('Select an eligible event below to see its details.', 'backstage-outreach');
+		return '<section class="vms-pass-selected-event is-neutral" data-backstage-event-preview data-neutral-title="' . esc_attr($neutral_title) . '" aria-live="polite"><span>' . esc_html__('Choose your event', 'backstage-outreach') . '</span><strong data-backstage-event-title>' . esc_html($neutral_title) . '</strong><time data-backstage-event-date hidden></time><img data-backstage-event-image alt="" hidden></section>';
+	}
+	$event_title = sanitize_text_field((string) ($event['title'] ?? __('Event', 'backstage-outreach')));
+	$event_date = !empty($event['event_date']) ? bvmgr_pass_claims_format_public_date((string) $event['event_date']) : '';
+	$artwork = backstage_outreach_partner_event_artwork($event);
+	$html = '<section class="vms-pass-selected-event" aria-label="' . esc_attr__('Selected event', 'backstage-outreach') . '">';
+	if ((string) $artwork['url'] !== '') {
+		$html .= '<img class="vms-pass-event-artwork" src="' . esc_url((string) $artwork['url']) . '" alt="' . esc_attr((string) $artwork['alt']) . '">';
+	}
+	$html .= '<span>' . esc_html__('Your event', 'backstage-outreach') . '</span><strong>' . esc_html($event_title) . '</strong>';
+	if ($event_date !== '') {
+		$html .= '<time>' . esc_html($event_date) . '</time>';
+	}
+	return $html . '</section>';
+}
+
 function backstage_outreach_partner_form_html(array $distribution, array $events, array $posted, string $error, string $submission_key): string
 {
 	$batch = (array) $distribution['batch'];
@@ -3396,26 +3452,23 @@ function backstage_outreach_partner_form_html(array $distribution, array $events
 	$html .= '<p class="vms-pass-offer-summary"><strong>' . esc_html($offer_summary) . '</strong><span>' . esc_html__('No purchase is required for these Guest Pass admissions.', 'backstage-outreach') . '</span></p>';
 	$html .= '<p class="vms-pass-referral">' . esc_html(sprintf(__('Shared by %s', 'backstage-outreach'), (string) $distribution['business_name'])) . '</p>';
 	if (!empty($single_event)) {
-		$event_title = (string) ($single_event['title'] ?? __('Event', 'backstage-outreach'));
-		$event_date = !empty($single_event['event_date']) ? bvmgr_pass_claims_format_public_date((string) $single_event['event_date']) : '';
-		$html .= '<section class="vms-pass-selected-event" aria-label="' . esc_attr__('Selected event', 'backstage-outreach') . '"><span>' . esc_html__('Your event', 'backstage-outreach') . '</span><strong>' . esc_html($event_title) . '</strong>';
-		if ($event_date !== '') {
-			$html .= '<time>' . esc_html($event_date) . '</time>';
-		}
-		$html .= '</section>';
+		$html .= backstage_outreach_partner_event_summary_html($single_event);
+	} else {
+		$html .= backstage_outreach_partner_event_summary_html(array(), true);
 	}
 	if ($error !== '') {
 		$html .= '<p class="vms-pass-error">' . esc_html($error) . '</p>';
 	}
 	$html .= '<form method="post" class="vms-pass-claim-form">' . wp_nonce_field('backstage_outreach_partner_claim_' . (int) $distribution['id'], '_backstage_partner_nonce', true, false) . '<input type="hidden" name="backstage_partner_submit" value="1"><input type="hidden" name="submission_key" value="' . esc_attr($submission_key) . '"><h2>' . esc_html__('Guest information', 'backstage-outreach') . '</h2><div class="vms-pass-grid">';
-	$html .= '<label>' . esc_html__('First Name', 'backstage-outreach') . '<input name="first_name" value="' . esc_attr((string) $posted['first_name']) . '" required></label><label>' . esc_html__('Last Name', 'backstage-outreach') . '<input name="last_name" value="' . esc_attr((string) $posted['last_name']) . '" required></label><label>' . esc_html__('Phone', 'backstage-outreach') . '<input name="phone" value="' . esc_attr((string) $posted['phone']) . '" required></label><label>' . esc_html__('Email (optional)', 'backstage-outreach') . '<input type="email" name="email" value="' . esc_attr((string) $posted['email']) . '"></label>';
+	$html .= '<label>' . esc_html__('First Name', 'backstage-outreach') . '<input name="first_name" autocomplete="given-name" value="' . esc_attr((string) $posted['first_name']) . '" required></label><label>' . esc_html__('Last Name', 'backstage-outreach') . '<input name="last_name" autocomplete="family-name" value="' . esc_attr((string) $posted['last_name']) . '" required></label><label>' . esc_html__('Phone (optional)', 'backstage-outreach') . '<input type="tel" name="phone" autocomplete="tel" value="' . esc_attr((string) $posted['phone']) . '"></label><label>' . esc_html__('Email', 'backstage-outreach') . '<input type="email" name="email" autocomplete="email" value="' . esc_attr((string) $posted['email']) . '" required><span class="vms-pass-field-help">' . esc_html__('Required for pass confirmation and event-related communication. This does not enroll you in marketing.', 'backstage-outreach') . '</span></label>';
 	if (!empty($single_event)) {
 		$html .= '<input type="hidden" name="event_plan_id" value="' . esc_attr((string) absint($single_event['id'] ?? 0)) . '">';
 	} else {
-		$html .= '<label class="vms-pass-span-2">' . esc_html__('Event', 'backstage-outreach') . '<select name="event_plan_id" required><option value="">' . esc_html__('Choose an eligible event', 'backstage-outreach') . '</option>';
+		$html .= '<label class="vms-pass-span-2">' . esc_html__('Event', 'backstage-outreach') . '<select name="event_plan_id" required data-backstage-event-select><option value="">' . esc_html__('Choose an eligible event', 'backstage-outreach') . '</option>';
 		foreach ($events as $event) {
 			$label = (string) ($event['title'] ?? __('Event', 'backstage-outreach')) . (!empty($event['event_date']) ? ' (' . bvmgr_pass_claims_format_public_date((string) $event['event_date']) . ')' : '');
-			$html .= '<option value="' . esc_attr((string) ((int) $event['id'])) . '"' . selected((int) $posted['event_plan_id'], (int) $event['id'], false) . '>' . esc_html($label) . '</option>';
+			$artwork = backstage_outreach_partner_event_artwork($event);
+			$html .= '<option value="' . esc_attr((string) ((int) $event['id'])) . '" data-event-title="' . esc_attr((string) ($event['title'] ?? __('Event', 'backstage-outreach'))) . '" data-event-date="' . esc_attr(!empty($event['event_date']) ? bvmgr_pass_claims_format_public_date((string) $event['event_date']) : '') . '" data-event-image="' . esc_url((string) $artwork['url']) . '" data-event-alt="' . esc_attr((string) $artwork['alt']) . '"' . selected((int) $posted['event_plan_id'], (int) $event['id'], false) . '>' . esc_html($label) . '</option>';
 		}
 		$html .= '</select></label>';
 	}
@@ -3426,10 +3479,10 @@ function backstage_outreach_partner_form_html(array $distribution, array $events
 		for ($quantity = 1; $quantity <= $max; $quantity += 1) {
 			$html .= '<option value="' . esc_attr((string) $quantity) . '"' . selected($selected_party_size, $quantity, false) . '>' . esc_html((string) $quantity) . '</option>';
 		}
-		$html .= '</select><span class="vms-pass-field-help">' . esc_html(sprintf(__('Choose 1 to %d. This offer allows up to %d complimentary admissions.', 'backstage-outreach'), $max, $max)) . '</span></label>';
+		$html .= '</select></label>';
 	}
 	$button_label = sprintf(_n('Claim %d Guest Pass', 'Claim %d Guest Passes', $selected_party_size, 'backstage-outreach'), $selected_party_size);
-	$html .= '<label class="vms-pass-span-2 vms-pass-checkbox"><input type="checkbox" name="opt_in" value="1"' . checked(1, (int) $posted['opt_in'], false) . '> <span>' . esc_html__('Send me event updates and reminders (optional).', 'backstage-outreach') . '</span></label></div><p class="vms-pass-actions"><button type="submit" data-backstage-claim-button data-singular="' . esc_attr__('Claim %d Guest Pass', 'backstage-outreach') . '" data-plural="' . esc_attr__('Claim %d Guest Passes', 'backstage-outreach') . '">' . esc_html($button_label) . '</button></p></form>';
+	$html .= '<label class="vms-pass-span-2 vms-pass-checkbox"><input type="checkbox" name="opt_in" value="1"' . checked(1, (int) $posted['opt_in'], false) . '><span>' . esc_html__('Also send me occasional venue news and marketing emails (optional).', 'backstage-outreach') . '</span></label></div><p class="vms-pass-actions"><button type="submit" data-backstage-claim-button data-singular="' . esc_attr__('Claim %d Guest Pass', 'backstage-outreach') . '" data-plural="' . esc_attr__('Claim %d Guest Passes', 'backstage-outreach') . '">' . esc_html($button_label) . '</button></p></form>';
 	return $html;
 }
 
@@ -3483,7 +3536,7 @@ function backstage_outreach_partner_router(): void
 		if ($submission_key === '' || !wp_verify_nonce($nonce, 'backstage_outreach_partner_claim_' . (int) $distribution['id'])) {
 			$error = __('Invalid or expired form. Refresh and try again.', 'backstage-outreach');
 		} else {
-			$posted = array('first_name' => backstage_outreach_request_text($_POST, 'first_name'), 'last_name' => backstage_outreach_request_text($_POST, 'last_name'), 'phone' => backstage_outreach_request_text($_POST, 'phone'), 'email' => sanitize_email(backstage_outreach_request_text($_POST, 'email')), 'event_plan_id' => !empty($single_event) ? absint($single_event['id'] ?? 0) : backstage_outreach_request_absint($_POST, 'event_plan_id'), 'party_size' => backstage_outreach_request_absint($_POST, 'party_size', $max_party_size), 'opt_in' => backstage_outreach_request_text($_POST, 'opt_in') === '1' ? 1 : 0);
+			$posted = array('first_name' => backstage_outreach_request_text($_POST, 'first_name'), 'last_name' => backstage_outreach_request_text($_POST, 'last_name'), 'phone' => backstage_outreach_request_text($_POST, 'phone'), 'email' => trim(backstage_outreach_request_text($_POST, 'email')), 'event_plan_id' => !empty($single_event) ? absint($single_event['id'] ?? 0) : backstage_outreach_request_absint($_POST, 'event_plan_id'), 'party_size' => backstage_outreach_request_absint($_POST, 'party_size', $max_party_size), 'opt_in' => backstage_outreach_request_text($_POST, 'opt_in') === '1' ? 1 : 0);
 			$ip = bvmgr_request_remote_addr();
 			$selected = null;
 			foreach ($events as $event) {
