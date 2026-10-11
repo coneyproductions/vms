@@ -263,7 +263,7 @@ if (!function_exists('bvmgr_email_followups_send_event_email')) {
 			return array('ok' => false, 'sent' => 0, 'errors' => 0, 'skipped' => 1, 'message' => $reason);
 		}
 
-		$recipient_result = bvmgr_email_followups_event_recipients($event_plan_id);
+		$recipient_result = bvmgr_email_followups_event_recipients($event_plan_id, $email_key);
 		$recipients = (array) ($recipient_result['recipients'] ?? array());
 		$requested_emails = isset($args['recipient_emails']) && is_array($args['recipient_emails']) ? bvmgr_email_followups_normalize_recipient_emails((array) $args['recipient_emails']) : array();
 		if (!empty($requested_emails)) {
@@ -318,7 +318,12 @@ if (!function_exists('bvmgr_email_followups_send_event_email')) {
 			}
 
 			$rendered = bvmgr_email_followups_render_message($email_key, $event_plan_id, $recipient, $content);
-			$sync = bvmgr_email_followups_maybe_sync_mailpoet_subscriber($email, (string) ($recipient['name'] ?? ''), array('ticket-buyer', 'vms-event-buyer'));
+			$guest_pass_only = array_key_exists('paid_ticket_qty', $recipient)
+				&& ((int) ($recipient['paid_ticket_qty'] ?? 0) + (int) ($recipient['other_complimentary_qty'] ?? 0)) <= 0
+				&& (int) ($recipient['guest_pass_qty'] ?? 0) > 0;
+			$sync = $guest_pass_only
+				? array('ok' => true, 'skipped' => true, 'message' => 'guest_pass_feedback_no_mailpoet_sync')
+				: bvmgr_email_followups_maybe_sync_mailpoet_subscriber($email, (string) ($recipient['name'] ?? ''), array('ticket-buyer', 'vms-event-buyer'));
 			$ok = wp_mail($email, (string) $rendered['subject'], (string) $rendered['body_html'], bvmgr_email_followups_headers());
 			bvmgr_email_followups_log(array(
 				'action' => $mode,

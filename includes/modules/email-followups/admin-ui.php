@@ -450,7 +450,7 @@ if (!function_exists('bvmgr_email_followups_render_preview_tab')) {
 			$preview_content = isset($active_batch['content']) && is_array($active_batch['content']) ? $active_batch['content'] : bvmgr_email_followups_template_for($email_key);
 		}
 		$context = bvmgr_email_followups_event_context($event_plan_id);
-		$recipient_result = bvmgr_email_followups_event_recipients($event_plan_id);
+		$recipient_result = bvmgr_email_followups_event_recipients($event_plan_id, $email_key);
 		$recipients = (array) ($recipient_result['recipients'] ?? array());
 		$rendered = bvmgr_email_followups_render_message($email_key, $event_plan_id, !empty($recipients[0]) ? (array) $recipients[0] : array('name' => 'Preview Recipient'), $preview_content);
 		$scheduled_ts = bvmgr_email_followups_scheduled_timestamp($event_plan_id, $email_key);
@@ -480,6 +480,19 @@ if (!function_exists('bvmgr_email_followups_render_preview_tab')) {
 		echo '<article class="vms-efu-card"><h2>' . esc_html__('Recipient Preview', 'backstage-venue-manager') . '</h2>';
 		echo '<p><strong>' . esc_html__('Eligible recipients:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) count($recipients)) . '</p>';
 		echo '<p><strong>' . esc_html__('Net tickets represented:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) (($recipient_result['counts']['tickets_net'] ?? 0))) . '</p>';
+		if ($email_key === 'post_event') {
+			$breakdown = array(
+				/* translators: %d: number of unique paid-ticket recipient email addresses. */
+				sprintf(__('Paid Tickets: %d', 'backstage-venue-manager'), (int) ($recipient_result['counts']['paid_ticket_recipients'] ?? 0)),
+				/* translators: %d: number of unique Guest Pass claimant email addresses. */
+				sprintf(__('Guest Passes: %d', 'backstage-venue-manager'), (int) ($recipient_result['counts']['guest_pass_recipients'] ?? 0)),
+				/* translators: %d: number of unique other complimentary guest email addresses. */
+				sprintf(__('Other Complimentary guests: %d', 'backstage-venue-manager'), (int) ($recipient_result['counts']['other_complimentary_recipients'] ?? 0)),
+			);
+			echo '<p><strong>' . esc_html__('Recipient breakdown:', 'backstage-venue-manager') . '</strong> ' . esc_html(implode(' · ', $breakdown)) . '</p>';
+			echo '<p class="description">' . esc_html__('An address represented by more than one source is counted in each applicable category but receives only one survey email.', 'backstage-venue-manager') . '</p>';
+			echo '<p><strong>' . esc_html__('Guest Pass admissions represented:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) ($recipient_result['counts']['guest_pass_admissions_net'] ?? 0)) . '</p>';
+		}
 		echo '<p><strong>' . esc_html__('Send allowed:', 'backstage-venue-manager') . '</strong> ' . esc_html($allowed ? __('Yes', 'backstage-venue-manager') : __('No', 'backstage-venue-manager')) . '</p>';
 		if ($email_key === 'post_event') {
 			$feedback_url = (string) ($rendered['tokens']['{feedback_url}'] ?? '');
@@ -544,7 +557,8 @@ if (!function_exists('bvmgr_email_followups_render_preview_tab')) {
 			/* translators: %d: number used in this message. */
 			echo '<details class="vms-efu-recipient-list vms-efu-recipient-picker" open><summary>' . esc_html(sprintf(_n('Choose recipients (%d eligible; all selected by default)', 'Choose recipients (%d eligible; all selected by default)', count($recipients), 'backstage-venue-manager'), count($recipients))) . '</summary>';
 			echo '<div class="vms-efu-recipient-tools"><button type="button" class="button" data-vms-efu-select="all">' . esc_html__('Select all', 'backstage-venue-manager') . '</button> <button type="button" class="button" data-vms-efu-select="none">' . esc_html__('Select none', 'backstage-venue-manager') . '</button> <span class="vms-efu-selected-count" aria-live="polite"></span></div>';
-			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__('Send', 'backstage-venue-manager') . '</th><th>' . esc_html__('Email', 'backstage-venue-manager') . '</th><th>' . esc_html__('Name', 'backstage-venue-manager') . '</th><th>' . esc_html__('Tickets', 'backstage-venue-manager') . '</th><th>' . esc_html__('Orders', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
+			$quantity_heading = $email_key === 'post_event' ? __('Admissions', 'backstage-venue-manager') : __('Tickets', 'backstage-venue-manager');
+			echo '<table class="widefat striped"><thead><tr><th>' . esc_html__('Send', 'backstage-venue-manager') . '</th><th>' . esc_html__('Email', 'backstage-venue-manager') . '</th><th>' . esc_html__('Name', 'backstage-venue-manager') . '</th><th>' . esc_html($quantity_heading) . '</th><th>' . esc_html__('Orders', 'backstage-venue-manager') . '</th></tr></thead><tbody>';
 			foreach ($recipients as $recipient) {
 				$email = sanitize_email((string) ($recipient['email'] ?? ''));
 				if (!is_email($email)) {

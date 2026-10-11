@@ -118,26 +118,81 @@ if (!function_exists('bvmgr_email_followups_context_allows_send')) {
 	}
 }
 
-if (!function_exists('bvmgr_email_followups_event_recipients')) {
-	function bvmgr_email_followups_event_recipients(int $event_plan_id): array
+if (!function_exists('bvmgr_email_followups_guest_pass_claim_rows')) {
+	/**
+	 * Resolve completed Guest Pass claims for the exact Event Plan selected at claim time.
+	 *
+	 * Claimant identity comes from the claim row. Admission rows determine whether the
+	 * claimed reservation still has at least one uncanceled admission. The token join
+	 * rejects incomplete or otherwise invalid claim records without reapplying current
+	 * offer/batch rules to an already completed claim.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	function bvmgr_email_followups_guest_pass_claim_rows(int $event_plan_id): array
 	{
 		$event_plan_id = absint($event_plan_id);
+		if (
+			$event_plan_id <= 0
+			|| !function_exists('bvmgr_admission_table_pass_claims')
+			|| !function_exists('bvmgr_admission_table_pass_tokens')
+			|| !function_exists('bvmgr_admission_table_entries')
+		) {
+			return array();
+		}
+
+		global $wpdb;
+		$claims_table = bvmgr_admission_table_pass_claims();
+		$tokens_table = bvmgr_admission_table_pass_tokens();
+		$entries_table = bvmgr_admission_table_entries();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Event Feedback must read request-fresh plugin-owned claim/admission state so canceled reservations are excluded from the recipient preview.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT c.id AS claim_id, c.event_plan_id, c.first_name, c.last_name, c.email,
+					t.status AS token_status,
+					COALESCE(SUM(CASE WHEN e.event_plan_id = c.event_plan_id AND e.source = 'pass_claim' AND e.status <> 'canceled' THEN e.party_size ELSE 0 END), 0) AS admissions_net
+				 FROM %i c
+				 LEFT JOIN %i t ON t.id = c.token_id AND t.claim_id = c.id
+				 LEFT JOIN %i e ON e.pass_claim_id = c.id
+				 WHERE c.event_plan_id = %d
+				 GROUP BY c.id, c.event_plan_id, c.first_name, c.last_name, c.email, t.status
+				 ORDER BY c.id ASC",
+				$claims_table,
+				$tokens_table,
+				$entries_table,
+				$event_plan_id
+			),
+			ARRAY_A
+		);
+
+		return is_array($rows) ? array_values(array_filter($rows, 'is_array')) : array();
+	}
+}
+
+if (!function_exists('bvmgr_email_followups_event_recipients')) {
+	function bvmgr_email_followups_event_recipients(int $event_plan_id, string $email_key = ''): array
+	{
+		$event_plan_id = absint($event_plan_id);
+		$email_key = sanitize_key($email_key);
 		$result = array(
 			'recipients' => array(),
 			'counts' => array(
 				'rows_scanned' => 0,
 				'invalid_email' => 0,
 				'refunded_or_zero' => 0,
+				'guest_pass_rows_scanned' => 0,
+				'guest_pass_invalid_email' => 0,
+				'guest_pass_ineligible' => 0,
 				'unique_recipients' => 0,
 				'tickets_net' => 0,
+				'guest_pass_admissions_net' => 0,
+				'paid_ticket_recipients' => 0,
+				'guest_pass_recipients' => 0,
+				'other_complimentary_recipients' => 0,
 			),
 			'warnings' => array(),
 		);
-
-		if (!function_exists('bvmgr_get_ticket_sales_rows')) {
-			$result['warnings'][] = __('Ticket sales resolver is unavailable.', 'backstage-venue-manager');
-			return $result;
-		}
 
 		$context = bvmgr_email_followups_event_context($event_plan_id);
 		$args = array(
@@ -151,9 +206,14 @@ if (!function_exists('bvmgr_email_followups_event_recipients')) {
 			$args['tec_event_id'] = absint($context['tec_event_id']);
 		}
 
-		$rows = bvmgr_get_ticket_sales_rows($args);
-		if (!is_array($rows)) {
-			$rows = array();
+		$rows = array();
+		if (!function_exists('bvmgr_get_ticket_sales_rows')) {
+			$result['warnings'][] = __('Ticket sales resolver is unavailable.', 'backstage-venue-manager');
+		} else {
+			$rows = bvmgr_get_ticket_sales_rows($args);
+			if (!is_array($rows)) {
+				$rows = array();
+			}
 		}
 
 		$by_email = array();
@@ -181,11 +241,23 @@ if (!function_exists('bvmgr_email_followups_event_recipients')) {
 					'email' => $email,
 					'name' => sanitize_text_field((string) ($row['customer_name'] ?? '')),
 					'qty' => 0,
+					'paid_ticket_qty' => 0,
+					'guest_pass_qty' => 0,
+					'other_complimentary_qty' => 0,
+					'sources' => array(),
 					'order_ids' => array(),
 					'order_numbers' => array(),
 				);
 			}
 			$by_email[$key]['qty'] += $net_qty;
+			$is_other_complimentary = array_key_exists('line_total_cents', $row) && (int) $row['line_total_cents'] <= 0;
+			if ($is_other_complimentary) {
+				$by_email[$key]['other_complimentary_qty'] += $net_qty;
+				$by_email[$key]['sources']['other_complimentary'] = true;
+			} else {
+				$by_email[$key]['paid_ticket_qty'] += $net_qty;
+				$by_email[$key]['sources']['paid_ticket'] = true;
+			}
 			if (!empty($row['order_id'])) {
 				$by_email[$key]['order_ids'][] = absint($row['order_id']);
 			}
@@ -194,11 +266,61 @@ if (!function_exists('bvmgr_email_followups_event_recipients')) {
 			}
 		}
 
+		if ($email_key === 'post_event') {
+			foreach (bvmgr_email_followups_guest_pass_claim_rows($event_plan_id) as $claim) {
+				$result['counts']['guest_pass_rows_scanned']++;
+				$admissions_net = max(0, (int) ($claim['admissions_net'] ?? 0));
+				if (sanitize_key((string) ($claim['token_status'] ?? '')) !== 'claimed' || $admissions_net <= 0) {
+					$result['counts']['guest_pass_ineligible']++;
+					continue;
+				}
+
+				$email = sanitize_email((string) ($claim['email'] ?? ''));
+				if (!is_email($email)) {
+					$result['counts']['guest_pass_invalid_email']++;
+					continue;
+				}
+
+				$key = strtolower($email);
+				$name = trim(sanitize_text_field((string) ($claim['first_name'] ?? '')) . ' ' . sanitize_text_field((string) ($claim['last_name'] ?? '')));
+				if (!isset($by_email[$key])) {
+					$by_email[$key] = array(
+						'email' => $email,
+						'name' => $name,
+						'qty' => 0,
+						'paid_ticket_qty' => 0,
+						'guest_pass_qty' => 0,
+						'other_complimentary_qty' => 0,
+						'sources' => array(),
+						'order_ids' => array(),
+						'order_numbers' => array(),
+					);
+				} elseif ((string) ($by_email[$key]['name'] ?? '') === '' && $name !== '') {
+					$by_email[$key]['name'] = $name;
+				}
+
+				$by_email[$key]['qty'] += $admissions_net;
+				$by_email[$key]['guest_pass_qty'] += $admissions_net;
+				$by_email[$key]['sources']['guest_pass'] = true;
+				$result['counts']['guest_pass_admissions_net'] += $admissions_net;
+			}
+		}
+
 		foreach ($by_email as $email => $recipient) {
 			$recipient['order_ids'] = array_values(array_unique(array_filter(array_map('absint', (array) $recipient['order_ids']))));
 			$recipient['order_numbers'] = array_values(array_unique(array_filter(array_map('sanitize_text_field', (array) $recipient['order_numbers']))));
+			$recipient['sources'] = array_values(array_keys(array_filter((array) ($recipient['sources'] ?? array()))));
 			$result['recipients'][] = $recipient;
-			$result['counts']['tickets_net'] += (int) $recipient['qty'];
+			$result['counts']['tickets_net'] += (int) ($recipient['paid_ticket_qty'] ?? 0) + (int) ($recipient['other_complimentary_qty'] ?? 0);
+			if ((int) ($recipient['paid_ticket_qty'] ?? 0) > 0) {
+				$result['counts']['paid_ticket_recipients']++;
+			}
+			if ((int) ($recipient['guest_pass_qty'] ?? 0) > 0) {
+				$result['counts']['guest_pass_recipients']++;
+			}
+			if ((int) ($recipient['other_complimentary_qty'] ?? 0) > 0) {
+				$result['counts']['other_complimentary_recipients']++;
+			}
 		}
 		$result['counts']['unique_recipients'] = count($result['recipients']);
 		return $result;
