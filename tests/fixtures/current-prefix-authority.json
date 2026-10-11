@@ -68,6 +68,7 @@
                 "bvmgr_email_followups_content_hash": 1,
                 "bvmgr_email_followups_event_draft": 1,
                 "bvmgr_email_followups_event_draft_key": 1,
+                "bvmgr_email_followups_guest_pass_claim_rows": 1,
                 "bvmgr_email_followups_manual_content": 1,
                 "bvmgr_email_followups_save_event_draft_post": 1,
                 "bvmgr_event_command_center_build_ticket_sales_snapshot": 1,
