@@ -25,6 +25,15 @@ function bvmgr_staffing_notify_enable(): bool
 
 function bvmgr_staffing_notify_key(int $audit_id): string { return 'staffing_audit_' . $audit_id; }
 
+/** Fail closed when an Event Plan has no valid future performance end. */
+function bvmgr_staffing_notify_event_block_reason(int $plan): string
+{
+    $timing = bvmgr_staffing_event_plan_datetime($plan);
+    $end = $timing['end_local'] ?? null;
+    if (!$end instanceof DateTimeImmutable) return 'event_schedule_unavailable';
+    return $end <= current_datetime() ? 'event_already_ended' : '';
+}
+
 /** Reads never repair or create notification work. */
 function bvmgr_staffing_notify_audits(int $plan = 0, bool $pending = false): array
 {
@@ -125,6 +134,8 @@ function bvmgr_staffing_notify_deliver(array $latest, bool $manual = false): voi
     if (in_array($latest['status'], array('sent', 'skipped'), true) || ($work['phase'] ?? '') === 'attempt') return;
     if ($latest['status'] === 'failed' && ((!$manual && (int) $work['attempts'] >= 3) || time() - strtotime($latest['created_at'] . ' UTC') < 60)) return;
     if (bvmgr_staffing_notify_obsolete($work)) { bvmgr_staffing_notify_record($work, 'skipped', 'superseded', 'superseded_by_current_assignment'); return; }
+    $event_block = bvmgr_staffing_notify_event_block_reason((int) $work['plan_id']);
+    if ($event_block !== '') { bvmgr_staffing_notify_record($work, 'skipped', 'suppressed', $event_block); return; }
     $person = bvmgr_staffing_notify_recipient((int) $work['staff_id']);
     if (!empty($work['recipient']['email']) && ($person['email'] !== $work['recipient']['email'] || (int) $person['user_id'] !== (int) $work['recipient']['user_id'])) {
         bvmgr_staffing_notify_record($work, 'skipped', 'superseded', 'recipient_identity_changed'); return;
@@ -134,6 +145,9 @@ function bvmgr_staffing_notify_deliver(array $latest, bool $manual = false): voi
     if ($person['error'] !== '') { bvmgr_staffing_notify_record($work, 'failed', 'failed', $person['error']); return; }
     try { $message = bvmgr_staffing_notify_template($work); }
     catch (Throwable $e) { bvmgr_staffing_notify_record($work, 'failed', 'failed', 'template_render_failed'); return; }
+    // Recheck at the last safe point before recording an attempt and calling transport.
+    $event_block = bvmgr_staffing_notify_event_block_reason((int) $work['plan_id']);
+    if ($event_block !== '') { bvmgr_staffing_notify_record($work, 'skipped', 'suppressed', $event_block); return; }
     // Durable marker BEFORE transport: a crash/unknown result must never auto-resend.
     if (!bvmgr_staffing_notify_record($work, 'queued', 'attempt', 'delivery_outcome_unknown')) return;
     try { $result = bvmgr_notify_provider_core_email_send(array_merge($message, array('to' => $person['email']))); }
@@ -157,6 +171,11 @@ function bvmgr_staffing_notify_tick(int $plan = 0, int $retry_audit = 0): void
         $locked = true;
         foreach (bvmgr_staffing_notify_audits($plan, true) as $audit) {
             $work = bvmgr_staffing_notify_work($audit);
+            $event_block = bvmgr_staffing_notify_event_block_reason((int) $work['plan_id']);
+            if ($event_block !== '') {
+                if (!bvmgr_staffing_notify_record($work, 'skipped', 'suppressed', $event_block)) break;
+                continue;
+            }
             if (!bvmgr_staffing_notify_record($work, 'queued', 'work')) break;
         }
         $sql = "SELECT n.* FROM %i n INNER JOIN (SELECT event_key,MAX(id) id FROM %i WHERE source='vms_staffing' GROUP BY event_key) current ON current.id=n.id WHERE n.status IN ('queued','failed') AND n.error_message<>'delivery_outcome_unknown' ORDER BY n.id ASC";

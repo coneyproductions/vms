@@ -239,6 +239,7 @@
                 "bvmgr_staffing_notify_audits": 1,
                 "bvmgr_staffing_notify_deliver": 1,
                 "bvmgr_staffing_notify_enable": 1,
+                "bvmgr_staffing_notify_event_block_reason": 1,
                 "bvmgr_staffing_notify_floor": 1,
                 "bvmgr_staffing_notify_key": 1,
                 "bvmgr_staffing_notify_landing": 1,

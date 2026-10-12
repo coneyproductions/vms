@@ -143,7 +143,7 @@ $hookCallbacks = array(
 );
 
 $supportedVersions = array(
-	'backstage-venue-manager' => '1.3.7',
+	'backstage-venue-manager' => '1.3.8',
 	'events-slider' => '1.0.10',
 	'fill-dates' => '0.1.8',
 	'data-tools' => '0.5.55',
