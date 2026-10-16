@@ -2590,7 +2590,7 @@ $assert($GLOBALS['vms_test_transient_set_calls'] === 0 && $GLOBALS['vms_test_tra
 
 $passClaimsPreviewNotice = $renderPassClaimsNotices(array('result' => 'batch_preview'));
 $assert(
-	$passClaimsPreviewNotice === '<div class="notice notice-info is-dismissible"><p>Preview generated. Review sample URLs below before committing.</p></div>',
+	$passClaimsPreviewNotice === '<div class="notice notice-info is-dismissible"><p>Preview generated. Review the exact summary below before committing.</p></div>',
 	'Pass Claims explicit notice callback should preserve the batch-preview notice fragment.'
 );
 

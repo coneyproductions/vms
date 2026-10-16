@@ -646,7 +646,7 @@ $expectedFormHtml = static function (array $batch, array $eligibleEvents, array 
 		}
 	$html .= '</select></label>';
 	$html .= '<label class="vms-pass-span-2">How many people will use this pass?<span class="vms-pass-number-control"><button type="button" class="vms-pass-number-control__button" data-vms-pass-party-decrease aria-label="Decrease party size">-</button><input type="number" name="party_size" min="1" max="' . esc_attr((string) $maxPartySize) . '" step="1" inputmode="numeric" data-vms-pass-party-size value="' . esc_attr((string) max(1, min($maxPartySize, (int) ($posted['party_size'] ?? 1)))) . '"><button type="button" class="vms-pass-number-control__button" data-vms-pass-party-increase aria-label="Increase party size">+</button></span><span class="vms-pass-field-help">This link can admit up to ' . esc_html((string) $maxPartySize) . ' people.</span></label>';
-	$html .= '<label class="vms-pass-span-2 vms-pass-checkbox"><input type="checkbox" name="opt_in" value="1"' . checked(1, (int) ($posted['opt_in'] ?? 0), false) . '> <span>Send me event updates and reminders (optional). Your pass email is sent automatically if you enter an email.</span></label>';
+	$html .= '<label class="vms-pass-span-2 vms-pass-checkbox"><input type="checkbox" name="opt_in" value="1"' . checked(1, (int) ($posted['opt_in'] ?? 0), false) . '> <span>Send me event updates and reminders (optional).</span></label>';
 	$html .= '</div>';
 	$html .= '<p class="vms-pass-actions"><button type="submit" name="vms_pass_claim_submit" value="1">Claim Pass</button></p>';
 	$html .= '</form>';
@@ -772,6 +772,8 @@ $assert(substr_count($expectedInitialForm, '<form method="post">') === 1 && subs
 $assert(strpos($expectedInitialForm, '&lt;i&gt;Launch Event&lt;/i&gt; (September 12, 2026) - Main &lt;script&gt;Hall&lt;/script&gt;') !== false, 'Pass Claims public form contract should keep HTML-like event labels inert.');
 $assert(strpos($expectedInitialForm, 'checked="checked"') === false && strpos($expectedInitialForm, 'selected="selected"') === false, 'Pass Claims initial GET form should start with no selected event and no checked opt-in state.');
 $assert(strpos($expectedInitialForm, 'value="1"') !== false, 'Pass Claims initial GET form should preserve the default party-size value.');
+$assert(strpos($expectedInitialForm, 'Send me event updates and reminders (optional).') !== false, 'Pass Claims should preserve the optional marketing consent label.');
+$assert(strpos($expectedInitialForm, 'Your pass email is sent automatically') === false, 'Pass Claims should omit the redundant automatic pass-email sentence.');
 $assert($GLOBALS['vms_test_find_token_calls'] === 0 && $GLOBALS['vms_test_get_batch_calls'] === 0 && $GLOBALS['vms_test_eligible_calls'] === 0 && $GLOBALS['vms_test_nonce_calls'] === 0 && $GLOBALS['vms_test_create_claim_calls'] === 0 && $GLOBALS['vms_test_rate_limit_calls'] === 0 && $GLOBALS['vms_test_empty_notice_calls'] === 0, 'Pass Claims public form helper should not perform routing, provider, nonce, or mutation work on its own.');
 
 $resetRuntime();

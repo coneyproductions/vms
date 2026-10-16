@@ -169,15 +169,23 @@
   text-align: center;
 }
 
-.vms-pass-public-page .vms-pass-checkbox {
-  align-items: center;
-  flex-direction: row;
-  gap: 8px;
+.vms-pass-public-page .vms-pass-grid .vms-pass-checkbox {
+	align-items: flex-start;
+	flex-direction: row;
+	gap: 8px;
+	cursor: pointer;
 }
 
 .vms-pass-public-page .vms-pass-checkbox input[type="checkbox"] {
-  width: auto;
-  margin: 0;
+	flex: 0 0 auto;
+	width: 20px;
+	height: 20px;
+	margin: 1px 0 0;
+}
+
+.vms-pass-public-page .vms-pass-checkbox span {
+	flex: 1 1 auto;
+	min-width: 0;
 }
 
 .vms-pass-field-help{display:block;margin-top:6px;color:#526174;font-size:13px;font-weight:400}.vms-pass-public-page--print{background:#fff}.vms-pass-public-page--print .vms-pass-wrap{max-width:520px}.vms-pass-public-page--print .vms-pass-card{box-shadow:none;border:1px solid #d9e2ef}@media print{header,footer,#wpadminbar,.site-header,.site-footer,.kadence-sticky-header{display:none!important}.vms-pass-public-page{background:#fff!important}.vms-pass-wrap{max-width:520px!important;margin:0 auto!important;padding:0!important}.vms-pass-card{box-shadow:none!important;border:0!important}.vms-pass-actions,.vms-pass-hint{display:none!important}}
