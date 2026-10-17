@@ -4,7 +4,7 @@ Tags: event management, venue management, vendor management, ticketing, woocomme
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.3.11
+Stable tag: 1.3.12
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -71,11 +71,11 @@ Backstage Venue Manager retains operational data by default. The plugin ships wi
 
 = Does Backstage Venue Manager support multisite? =
 
-Multisite is not officially supported or verified for 1.3.11.
+Multisite is not officially supported or verified for 1.3.12.
 
 = How are privacy export and erasure requests handled? =
 
-Backstage Venue Manager 1.3.11 does not add dedicated exporter or eraser automation. Operators should handle requests manually with their existing WordPress tools and site-specific operational procedures until that automation is added.
+Backstage Venue Manager 1.3.12 does not add dedicated privacy exporter or eraser automation. Operators should handle requests manually with their existing WordPress tools and site-specific operational procedures until that automation is added.
 
 = Where do I get support? =
 
@@ -117,11 +117,11 @@ Service docs, terms, and privacy: supported providers are described at https://w
 
 Backstage Venue Manager retains operational data by default on uninstall to reduce the risk of accidental data loss.
 
-Depending on the modules in use, retained data can include settings, venue and vendor records, ticketing-related operational data, Guest Pass invitation-attempt records, and related logs or status metadata. Backstage Venue Manager 1.3.11 does not add automated uninstall cleanup tooling or dedicated privacy exporter or eraser automation. Operators should review their operational data-handling process before uninstalling the plugin or responding to privacy requests.
+Depending on the modules in use, retained data can include settings, venue and vendor records, ticketing-related operational data, Guest Pass invitation-attempt records, and related logs or status metadata. Backstage Venue Manager 1.3.12 does not add automated uninstall cleanup tooling or dedicated privacy exporter or eraser automation. Operators should review their operational data-handling process before uninstalling the plugin or responding to privacy requests.
 
 == Optional Integrations / Dependencies ==
 
-WooCommerce, The Events Calendar, Event Tickets, and Backstage Outreach are optional integrations for 1.3.11. Backstage Venue Manager should continue loading without them, but dependent features remain unavailable until the required plugin stack is installed. Direct Guest Pass invitation delivery fails closed when Backstage Outreach suppression or promotional-compliance services are unavailable.
+WooCommerce, The Events Calendar, Event Tickets, and Backstage Outreach are optional integrations for 1.3.12. Backstage Venue Manager should continue loading without them, but dependent features remain unavailable until the required plugin stack is installed. Direct Guest Pass invitation delivery fails closed when Backstage Outreach suppression or promotional-compliance services are unavailable; reports identify unavailable Outreach-owned metrics without changing BVM-owned totals.
 
 Optional add-ons are distributed as separate plugins. The WordPress.org core plugin can detect compatible companion plugins when they are installed, but it does not install, license, or unlock them from inside the core plugin.
 
@@ -134,6 +134,10 @@ Product documentation: https://coneyproductions.booklivetalent.com/vms/
 Private security reports: coneyproductionsllc@gmail.com
 
 == Changelog ==
+
+= 1.3.12 =
+
+Adds one canonical read-only Guest Pass reporting layer for Per Source, Per Batch, and bounded CSV views, separating direct links and invitation attempts from reusable partner allocations, actual admissions, check-ins, paid redemptions, and historical availability.
 
 = 1.3.11 =
 
@@ -226,6 +230,10 @@ Adds guarded preview-and-confirm delivery for existing individual Guest Pass cla
 * Documented optional dependency boundaries, external-service disclosures, privacy notes, and uninstall data-retention behavior.
 
 == Upgrade Notice ==
+
+= 1.3.12 =
+
+Adds accurate read-only Guest Pass source/batch reporting and bounded CSV without changing issued rights or delivery behavior.
 
 = 1.3.11 =
 

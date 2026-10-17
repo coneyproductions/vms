@@ -746,17 +746,17 @@ if (!function_exists('bvmgr_pass_claims_print_url')) {
 }
 
 if (!function_exists('bvmgr_pass_claims_reports_export_url')) {
-	function bvmgr_pass_claims_reports_export_url(string $scope = 'source'): string
+	function bvmgr_pass_claims_reports_export_url(string $scope = 'source', array $filters = array()): string
 	{
 		$scope = sanitize_key($scope);
 		if (!in_array($scope, array('source', 'batch', 'source_event', 'event'), true)) {
 			$scope = 'source';
 		}
 		$url = add_query_arg(
-			array(
+			array_merge(array(
 				'action' => 'vms_pass_report_export_csv',
 				'scope' => $scope,
-			),
+			), array_intersect_key($filters, array_flip(array('report_source_id', 'report_batch_id', 'report_status', 'report_value_type', 'report_availability', 'report_s')))),
 			admin_url('admin-post.php')
 		);
 		return (string) wp_nonce_url($url, 'bvmgr_pass_report_export_' . $scope);
@@ -796,97 +796,18 @@ if (!function_exists('bvmgr_pass_claims_event_context_for_reports')) {
 if (!function_exists('bvmgr_pass_claims_reports_by_source')) {
 	function bvmgr_pass_claims_reports_by_source(): array
 	{
-		global $wpdb;
-		$sources = bvmgr_admission_table_pass_sources();
-		$batches = bvmgr_admission_table_pass_batches();
-		$tokens = bvmgr_admission_table_pass_tokens();
-		$claims = bvmgr_admission_table_pass_claims();
-		$entries = bvmgr_admission_table_entries();
-		$entries = bvmgr_admission_table_entries();
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass-source reporting joins plugin-owned source, batch, token, claim, and admissions tables with prepared identifiers so admin reporting reflects immediate request-fresh state.
-		$rows = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT
-					s.id,
-					s.source_name,
-					COUNT(DISTINCT b.id) AS batches_count,
-					COUNT(t.id) AS tokens_issued,
-					SUM(CASE WHEN t.status = 'claimed' THEN 1 ELSE 0 END) AS tokens_claimed,
-					COUNT(c.id) AS reservations_count,
-					SUM(CASE WHEN e.status <> 'canceled' AND e.checked_in_qty > 0 THEN 1 ELSE 0 END) AS checked_in_entries,
-					SUM(CASE WHEN e.status <> 'canceled' THEN e.checked_in_qty ELSE 0 END) AS checked_in_headcount,
-					COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END) AS unique_phones,
-					GREATEST(COUNT(c.id) - COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END), 0) AS repeat_claims
-					FROM %i s
-					LEFT JOIN %i b ON b.source_id = s.id
-					LEFT JOIN %i t ON t.batch_id = b.id
-					LEFT JOIN %i c ON c.id = t.claim_id
-					LEFT JOIN %i e ON e.id = c.reservation_entry_id
-					GROUP BY s.id, s.source_name
-					ORDER BY s.source_name ASC",
-				$sources,
-				$batches,
-				$tokens,
-				$claims,
-				$entries
-			),
-			ARRAY_A
-		);
-		return is_array($rows) ? $rows : array();
+		$filters = function_exists('bvmgr_pass_reporting_filters') ? bvmgr_pass_reporting_filters(array()) : array();
+		$result = function_exists('bvmgr_pass_reporting_sources') ? bvmgr_pass_reporting_sources($filters, 0, 100) : array('rows' => array());
+		return (array) ($result['rows'] ?? array());
 	}
 }
 
 if (!function_exists('bvmgr_pass_claims_reports_by_batch')) {
 	function bvmgr_pass_claims_reports_by_batch(): array
 	{
-		global $wpdb;
-		$batches = bvmgr_admission_table_pass_batches();
-		$sources = bvmgr_admission_table_pass_sources();
-		$tokens = bvmgr_admission_table_pass_tokens();
-		$claims = bvmgr_admission_table_pass_claims();
-		$entries = bvmgr_admission_table_entries();
-		$entries = bvmgr_admission_table_entries();
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Pass-batch reporting joins plugin-owned batch, source, token, claim, and admissions tables with prepared identifiers so admin reporting reflects immediate request-fresh state.
-		$rows = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT
-					b.id,
-					b.batch_name,
-					b.status,
-					b.validity_type,
-					b.value_type,
-					b.value_amount,
-					b.expires_at,
-					b.generated_count AS core_links_issued,
-					s.source_name,
-					COUNT(t.id) AS tokens_issued,
-					SUM(CASE WHEN t.status = 'claimed' THEN 1 ELSE 0 END) AS tokens_claimed,
-					SUM(CASE WHEN t.status = 'void' THEN 1 ELSE 0 END) AS tokens_void,
-					COUNT(c.id) AS reservations_count,
-					SUM(CASE WHEN e.status <> 'canceled' THEN e.party_size ELSE 0 END) AS reserved_admissions,
-					SUM(CASE WHEN e.status <> 'canceled' AND e.checked_in_qty > 0 THEN 1 ELSE 0 END) AS checked_in_entries,
-					SUM(CASE WHEN e.status <> 'canceled' THEN e.checked_in_qty ELSE 0 END) AS checked_in_headcount,
-					COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END) AS unique_phones,
-					GREATEST(COUNT(c.id) - COUNT(DISTINCT CASE WHEN c.phone_norm <> '' THEN c.phone_norm ELSE NULL END), 0) AS repeat_claims
-					FROM %i b
-					LEFT JOIN %i s ON s.id = b.source_id
-					LEFT JOIN %i t ON t.batch_id = b.id
-					LEFT JOIN %i c ON c.id = t.claim_id
-					LEFT JOIN %i e ON e.id = c.reservation_entry_id
-					GROUP BY b.id, b.batch_name, b.status, b.validity_type, b.value_type, b.value_amount, b.expires_at, b.generated_count, s.source_name
-					ORDER BY b.id DESC
-					LIMIT 400",
-				$batches,
-				$sources,
-				$tokens,
-				$claims,
-				$entries
-			),
-			ARRAY_A
-		);
-		return is_array($rows) ? $rows : array();
+		$filters = function_exists('bvmgr_pass_reporting_filters') ? bvmgr_pass_reporting_filters(array()) : array();
+		$result = function_exists('bvmgr_pass_reporting_batches') ? bvmgr_pass_reporting_batches($filters, 0, 100) : array('rows' => array());
+		return (array) ($result['rows'] ?? array());
 	}
 }
 
@@ -2227,6 +2148,45 @@ if (!function_exists('bvmgr_pass_claims_handle_filtered_export_csv')) {
 }
 add_action('admin_post_vms_pass_export_csv', 'bvmgr_pass_claims_handle_filtered_export_csv');
 
+if (!function_exists('bvmgr_pass_claims_stream_canonical_report_csv')) {
+	function bvmgr_pass_claims_stream_canonical_report_csv(string $scope, array $filters): void
+	{
+		if (!headers_sent()) {
+			nocache_headers();
+			header('Content-Type: text/csv; charset=utf-8');
+			header('Content-Disposition: attachment; filename="' . sanitize_file_name('bvm-guest-pass-' . $scope . '-report-' . gmdate('Ymd-His') . '.csv') . '"');
+			header('X-Content-Type-Options: nosniff');
+		}
+		$out = fopen('php://output', 'wb');
+		if ($out === false) {
+			wp_die(esc_html__('Could not open export stream.', 'backstage-venue-manager'));
+		}
+		fputcsv($out, bvmgr_pass_reporting_csv_headers($scope));
+		$page_size = 100;
+		$offset = 0;
+		$count = 0;
+		do {
+			$result = $scope === 'batch'
+				? bvmgr_pass_reporting_batches($filters, $offset, $page_size)
+				: bvmgr_pass_reporting_sources($filters, $offset, $page_size);
+			$rows = (array) ($result['rows'] ?? array());
+			foreach ($rows as $row) {
+				$values = array_map(static function ($value) {
+					return is_string($value) ? bvmgr_pass_claims_csv_safe($value) : $value;
+				}, bvmgr_pass_reporting_csv_row($scope, $row));
+				fputcsv($out, $values);
+				$count++;
+			}
+			$offset += $page_size;
+		} while (count($rows) === $page_size && $offset < 100000);
+		fclose($out); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Closes only the bounded HTTP response stream.
+		if (function_exists('bvmgr_admission_audit_log')) {
+			bvmgr_admission_audit_log(0, null, 'pass_reports_export_csv', get_current_user_id(), 'admin', array('scope' => $scope, 'row_count' => $count, 'filters' => $filters));
+		}
+		exit;
+	}
+}
+
 if (!function_exists('bvmgr_pass_claims_handle_report_export_csv')) {
 	function bvmgr_pass_claims_handle_report_export_csv(): void
 	{
@@ -2243,6 +2203,9 @@ if (!function_exists('bvmgr_pass_claims_handle_report_export_csv')) {
 			: '';
 		if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_pass_report_export_' . $scope))) {
 			wp_die(esc_html__('Invalid request nonce.', 'backstage-venue-manager'));
+		}
+		if (($scope === 'source' || $scope === 'batch') && function_exists('bvmgr_pass_reporting_filters')) {
+			bvmgr_pass_claims_stream_canonical_report_csv($scope, bvmgr_pass_reporting_filters((array) wp_unslash($_REQUEST)));
 		}
 
 		$rows = array();
@@ -2955,9 +2918,143 @@ if (!function_exists('bvmgr_pass_claims_render_batch_management')) {
 	}
 }
 
+if (!function_exists('bvmgr_pass_claims_render_canonical_reports')) {
+	function bvmgr_pass_claims_render_canonical_reports(): void
+	{
+		$filters = bvmgr_pass_reporting_filters((array) wp_unslash($_GET));
+		$offset = ($filters['page'] - 1) * $filters['per_page'];
+		$sources = bvmgr_pass_reporting_sources($filters, $offset, $filters['per_page']);
+		$batches = bvmgr_pass_reporting_batches($filters, $offset, $filters['per_page']);
+		$export_filters = array(
+			'report_source_id' => $filters['source_id'],
+			'report_batch_id' => $filters['batch_id'],
+			'report_status' => $filters['status'],
+			'report_value_type' => $filters['value_type'],
+			'report_availability' => $filters['availability'],
+			'report_s' => $filters['s'],
+		);
+		$sources_list = bvmgr_pass_claims_get_sources(true);
+
+		echo '<section class="vms-pass-card" aria-labelledby="vms-pass-report-filters-heading">';
+		echo '<h2 id="vms-pass-report-filters-heading">' . esc_html__('Guest Pass reporting filters', 'backstage-venue-manager') . '</h2>';
+		echo '<p class="description">' . esc_html__('Direct links, invitation attempts, reusable partner allocations, claims, native reserved admissions, check-ins, and paid offer redemptions are separate measures. Mail handoff means WordPress accepted the message for transport; it does not prove inbox delivery. Visits and clicks are not tracked.', 'backstage-venue-manager') . '</p>';
+		echo '<form method="get" class="vms-pass-report-filters"><input type="hidden" name="page" value="' . esc_attr(bvmgr_pass_claims_menu_slug()) . '"><input type="hidden" name="tab" value="reports">';
+		echo '<label>' . esc_html__('Source', 'backstage-venue-manager') . '<select name="report_source_id"><option value="0">' . esc_html__('All sources', 'backstage-venue-manager') . '</option>';
+		foreach ($sources_list as $source) {
+			echo '<option value="' . esc_attr((string) (int) $source['id']) . '"' . selected($filters['source_id'], (int) $source['id'], false) . '>' . esc_html((string) $source['source_name']) . '</option>';
+		}
+		echo '</select></label>';
+		echo '<label>' . esc_html__('Batch ID', 'backstage-venue-manager') . '<input type="number" min="1" name="report_batch_id" value="' . esc_attr($filters['batch_id'] > 0 ? (string) $filters['batch_id'] : '') . '"></label>';
+		echo '<label>' . esc_html__('Batch status', 'backstage-venue-manager') . '<select name="report_status"><option value="">' . esc_html__('Any status', 'backstage-venue-manager') . '</option>';
+		foreach (array('active' => __('Active', 'backstage-venue-manager'), 'draft' => __('Draft', 'backstage-venue-manager'), 'archived' => __('Archived', 'backstage-venue-manager'), 'voided' => __('Voided', 'backstage-venue-manager')) as $key => $label) { echo '<option value="' . esc_attr($key) . '"' . selected($filters['status'], $key, false) . '>' . esc_html($label) . '</option>'; }
+		echo '</select></label>';
+		echo '<label>' . esc_html__('Offer type', 'backstage-venue-manager') . '<select name="report_value_type"><option value="">' . esc_html__('Any offer', 'backstage-venue-manager') . '</option><option value="free"' . selected($filters['value_type'], 'free', false) . '>' . esc_html__('Complimentary', 'backstage-venue-manager') . '</option><option value="percentage"' . selected($filters['value_type'], 'percentage', false) . '>' . esc_html__('Percentage discount', 'backstage-venue-manager') . '</option><option value="fixed"' . selected($filters['value_type'], 'fixed', false) . '>' . esc_html__('Fixed discount', 'backstage-venue-manager') . '</option></select></label>';
+		echo '<label>' . esc_html__('Current availability', 'backstage-venue-manager') . '<select name="report_availability"><option value="">' . esc_html__('Any state', 'backstage-venue-manager') . '</option>';
+		foreach (array('available' => __('Available now', 'backstage-venue-manager'), 'expired' => __('Expired', 'backstage-venue-manager'), 'past_event' => __('Past event / period', 'backstage-venue-manager'), 'exhausted' => __('Capacity exhausted', 'backstage-venue-manager'), 'inactive' => __('Inactive / historical', 'backstage-venue-manager')) as $key => $label) { echo '<option value="' . esc_attr($key) . '"' . selected($filters['availability'], $key, false) . '>' . esc_html($label) . '</option>'; }
+		echo '</select></label>';
+		echo '<label>' . esc_html__('Search', 'backstage-venue-manager') . '<input type="search" name="report_s" value="' . esc_attr($filters['s']) . '"></label>';
+		echo '<p class="vms-pass-actions"><button class="button button-primary" type="submit">' . esc_html__('Apply filters', 'backstage-venue-manager') . '</button> <a class="button" href="' . esc_url(bvmgr_pass_claims_admin_page_url(array('tab' => 'reports'))) . '">' . esc_html__('Clear', 'backstage-venue-manager') . '</a></p></form></section>';
+
+		foreach (array('source' => array(__('Per Source', 'backstage-venue-manager'), $sources), 'batch' => array(__('Per Batch', 'backstage-venue-manager'), $batches)) as $scope => $definition) {
+			$result = $definition[1];
+			echo '<section class="vms-pass-card"><div class="vms-pass-report-heading"><div><h2>' . esc_html($definition[0]) . '</h2><p class="description">' . esc_html($scope === 'source' ? __('Totals roll up each Source without repeating shared batch capacity.', 'backstage-venue-manager') : __('Direct claim rate and reusable allocation utilization use different denominators and are never combined.', 'backstage-venue-manager')) . '</p></div><a class="button" href="' . esc_url(bvmgr_pass_claims_reports_export_url($scope, $export_filters)) . '">' . esc_html(sprintf(__('Export %s CSV', 'backstage-venue-manager'), $definition[0])) . '</a></div>';
+			echo '<div class="vms-pass-table-scroll" tabindex="0" role="region" aria-label="' . esc_attr($definition[0]) . '"><table class="widefat striped vms-pass-report-table"><thead><tr>';
+			$headings = $scope === 'source' ? array(__('Source', 'backstage-venue-manager'), __('Batches', 'backstage-venue-manager')) : array(__('Batch / Source', 'backstage-venue-manager'), __('Offer / Availability', 'backstage-venue-manager'));
+			$headings = array_merge($headings, array(__('Direct links', 'backstage-venue-manager'), __('Invitation audit', 'backstage-venue-manager'), __('Reusable partner links', 'backstage-venue-manager'), __('Claims / Admissions', 'backstage-venue-manager'), __('Paid / refunded', 'backstage-venue-manager')));
+			foreach ($headings as $heading) { echo '<th scope="col">' . esc_html($heading) . '</th>'; }
+			echo '</tr></thead><tbody>';
+			if (empty($result['rows'])) {
+				echo '<tr><td colspan="7">' . esc_html__('No reporting rows match these filters.', 'backstage-venue-manager') . '</td></tr>';
+			}
+			foreach ((array) $result['rows'] as $row) {
+				$direct_rate = $row['direct_claim_rate'] === null ? __('Not applicable', 'backstage-venue-manager') : number_format_i18n((float) $row['direct_claim_rate'], 1) . '%';
+				$allocation_rate = $row['allocation_utilization'] === null ? __('Not tracked', 'backstage-venue-manager') : number_format_i18n((float) $row['allocation_utilization'], 1) . '%';
+				echo '<tr>';
+				if ($scope === 'source') {
+					echo '<th scope="row"><strong>' . esc_html((string) $row['source_name']) . '</strong><div class="description">#' . esc_html((string) (int) $row['id']) . '</div></th><td>' . esc_html((string) (int) $row['batches_count']) . '</td>';
+				} else {
+					echo '<th scope="row"><strong>' . esc_html((string) $row['batch_name']) . '</strong><div class="description">#' . esc_html((string) (int) $row['id']) . ' · ' . esc_html((string) $row['source_name']) . '</div><a href="' . esc_url(bvmgr_pass_claims_admin_page_url(array('tab' => 'batches', 'manage_batch_id' => (int) $row['id'])) . '#vms-pass-manage-batch') . '">' . esc_html__('View batch', 'backstage-venue-manager') . '</a></th>';
+					$remaining = $row['remaining_capacity'] === null ? __('Not capped / historical', 'backstage-venue-manager') : sprintf(__('Remaining: %d', 'backstage-venue-manager'), (int) $row['remaining_capacity']);
+					echo '<td><strong>' . esc_html((string) $row['value_type']) . '</strong><br>' . esc_html((string) $row['availability_label']) . '<div class="description">' . esc_html($remaining) . '</div></td>';
+				}
+				echo '<td><strong>' . esc_html(sprintf(__('%1$d issued · %2$d claimed', 'backstage-venue-manager'), (int) $row['direct_links_issued'], (int) $row['direct_links_claimed'])) . '</strong><div class="description">' . esc_html(sprintf(__('%1$d available · %2$d void · claim rate %3$s', 'backstage-venue-manager'), (int) $row['direct_links_available'], (int) $row['direct_links_void'], $direct_rate)) . '</div></td>';
+				echo '<td><strong>' . esc_html(sprintf(__('%1$d attempts · %2$d unique links', 'backstage-venue-manager'), (int) $row['invitation_attempts'], (int) $row['unique_invited_links'])) . '</strong><div class="description">' . esc_html(sprintf(__('%1$d handoffs · %2$d failed · %3$d in-doubt', 'backstage-venue-manager'), (int) $row['handoff_attempts'], (int) $row['failed_attempts'], (int) $row['indeterminate_attempts'])) . '</div><div class="description">' . esc_html__('No audit means “Not tracked historically,” not “never sent.”', 'backstage-venue-manager') . '</div></td>';
+				if (!empty($row['outreach_available'])) {
+					echo '<td><strong>' . esc_html(sprintf(__('%1$d links · %2$d allocated admissions', 'backstage-venue-manager'), (int) $row['reusable_links'], (int) $row['allocated_admission_capacity'])) . '</strong><div class="description">' . esc_html(sprintf(__('%1$d/%2$d actual admissions · %3$s utilized', 'backstage-venue-manager'), (int) $row['reusable_reserved_headcount'], (int) $row['allocated_admission_capacity'], $allocation_rate)) . '</div></td>';
+				} else {
+					echo '<td><strong>' . esc_html__('Unavailable', 'backstage-venue-manager') . '</strong><div class="description">' . esc_html((string) $row['outreach_note']) . '</div></td>';
+				}
+				echo '<td><strong>' . esc_html(sprintf(__('%1$d claims · %2$d reserved', 'backstage-venue-manager'), (int) $row['claims'], (int) $row['reserved_headcount'])) . '</strong><div class="description">' . esc_html(sprintf(__('%1$d native entries · %2$d checked in', 'backstage-venue-manager'), (int) $row['reserved_entries'], (int) $row['checked_in_headcount'])) . '</div></td>';
+				echo '<td><strong>' . esc_html(sprintf(__('%1$d paid redemptions · %2$d admissions', 'backstage-venue-manager'), (int) $row['paid_redemptions'], (int) $row['paid_admissions'])) . '</strong><div class="description">' . esc_html(sprintf(__('%1$d refunded · %2$d canceled/failed', 'backstage-venue-manager'), (int) $row['refunded_redemptions'], (int) $row['cancelled_redemptions'])) . '</div></td>';
+				echo '</tr>';
+			}
+			echo '</tbody></table></div>';
+			$total_pages = (int) ceil((int) ($result['total'] ?? 0) / max(1, (int) $filters['per_page']));
+			if ($total_pages > 1) {
+				$pagination_base = add_query_arg(array_merge($export_filters, array('page' => bvmgr_pass_claims_menu_slug(), 'tab' => 'reports', 'report_page' => 999999999)), admin_url('admin.php'));
+				$pagination = paginate_links(array(
+					'base' => str_replace('999999999', '%#%', $pagination_base),
+					'current' => $filters['page'],
+					'total' => $total_pages,
+				));
+				if (is_string($pagination) && $pagination !== '') {
+					echo '<nav class="tablenav-pages" aria-label="' . esc_attr(sprintf(__('%s report pages', 'backstage-venue-manager'), $definition[0])) . '">' . wp_kses_post($pagination) . '</nav>';
+				}
+			}
+			echo '</section>';
+		}
+	}
+}
+
+if (!function_exists('bvmgr_pass_claims_render_event_reports')) {
+	function bvmgr_pass_claims_render_event_reports(): void
+	{
+		$reports = array(
+			array(
+				'title' => __('Source Reservations by Event', 'backstage-venue-manager'),
+				'scope' => 'source_event',
+				'rows' => bvmgr_pass_claims_reports_source_events(),
+				'empty' => __('No source/event attribution data yet.', 'backstage-venue-manager'),
+				'headers' => array(__('Source', 'backstage-venue-manager'), __('Event', 'backstage-venue-manager'), __('Reservations', 'backstage-venue-manager'), __('Checked-In Entries', 'backstage-venue-manager'), __('Checked-In Headcount', 'backstage-venue-manager'), __('Unique Phones', 'backstage-venue-manager'), __('Repeat Claims', 'backstage-venue-manager')),
+			),
+			array(
+				'title' => __('Per Event', 'backstage-venue-manager'),
+				'scope' => 'event',
+				'rows' => bvmgr_pass_claims_reports_by_event(),
+				'empty' => __('No event attribution data yet.', 'backstage-venue-manager'),
+				'headers' => array(__('Event', 'backstage-venue-manager'), __('Reservations', 'backstage-venue-manager'), __('Sources', 'backstage-venue-manager'), __('Batches', 'backstage-venue-manager'), __('Checked-In Entries', 'backstage-venue-manager'), __('Checked-In Headcount', 'backstage-venue-manager'), __('Unique Phones', 'backstage-venue-manager'), __('Repeat Claims', 'backstage-venue-manager')),
+			),
+		);
+
+		foreach ($reports as $report) {
+			echo '<section class="vms-pass-card"><div class="vms-pass-report-heading"><h2>' . esc_html($report['title']) . '</h2><a class="button" href="' . esc_url(bvmgr_pass_claims_reports_export_url($report['scope'])) . '">' . esc_html__('Export CSV', 'backstage-venue-manager') . '</a></div>';
+			echo '<div class="vms-pass-table-scroll" tabindex="0" role="region" aria-label="' . esc_attr($report['title']) . '"><table class="widefat striped"><thead><tr>';
+			foreach ($report['headers'] as $header) { echo '<th scope="col">' . esc_html($header) . '</th>'; }
+			echo '</tr></thead><tbody>';
+			if (empty($report['rows'])) { echo '<tr><td colspan="' . esc_attr((string) count($report['headers'])) . '">' . esc_html($report['empty']) . '</td></tr>'; }
+			foreach ((array) $report['rows'] as $row) {
+				$event_id = (int) ($row['event_plan_id'] ?? 0);
+				$context = bvmgr_pass_claims_event_context_for_reports($event_id);
+				$event = (string) ($context['title'] ?? '');
+				if ($event === '' && $event_id > 0) { $event = '#' . $event_id; }
+				if ($event !== '' && !empty($context['date'])) { $event .= ' (' . (string) $context['date'] . ')'; }
+				echo '<tr>';
+				if ($report['scope'] === 'source_event') { echo '<td>' . esc_html((string) ($row['source_name'] ?? '')) . '</td>'; }
+				echo '<td>' . esc_html($event) . '</td><td>' . esc_html((string) (int) ($row['reservations_count'] ?? 0)) . '</td>';
+				if ($report['scope'] === 'event') { echo '<td>' . esc_html((string) (int) ($row['source_count'] ?? 0)) . '</td><td>' . esc_html((string) (int) ($row['batch_count'] ?? 0)) . '</td>'; }
+				echo '<td>' . esc_html((string) (int) ($row['checked_in_entries'] ?? 0)) . '</td><td>' . esc_html((string) (int) ($row['checked_in_headcount'] ?? 0)) . '</td><td>' . esc_html((string) (int) ($row['unique_phones'] ?? 0)) . '</td><td>' . esc_html((string) (int) ($row['repeat_claims'] ?? 0)) . '</td></tr>';
+			}
+			echo '</tbody></table></div></section>';
+		}
+	}
+}
+
 if (!function_exists('bvmgr_pass_claims_render_reports_tab')) {
 	function bvmgr_pass_claims_render_reports_tab(): void
 	{
+		bvmgr_pass_claims_render_canonical_reports();
+		bvmgr_pass_claims_render_event_reports();
+		return;
 		$by_source = bvmgr_pass_claims_reports_by_source();
 		$by_batch = bvmgr_pass_claims_reports_by_batch();
 		$source_events = bvmgr_pass_claims_reports_source_events();

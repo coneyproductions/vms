@@ -157,14 +157,14 @@ try {
 
 	$combinedSource = implode("\n", array($settingsSource, $squareSource, $admissionsSource, $passClaimsSource));
 	vms_test_assert_same(
-		5,
+		6,
 		vms_test_count_pattern('/phpcs:ignore (?:WordPress\.WP\.AlternativeFunctions\.file_system_operations_fclose|Squiz\.PHP\.DiscouragedFunctions\.Discouraged)/', $combinedSource),
-		'The F2 runtime files should keep exactly the five owned response-stream suppressions while allowing later, separately tested remediation annotations in the same files.'
+		'The runtime files should keep exactly six owned response-stream suppressions, including the bounded canonical report stream.'
 	);
 	vms_test_assert_same(
-		5,
+		6,
 		vms_test_count_pattern('/phpcs:ignore WordPress\.WP\.AlternativeFunctions\.file_system_operations_fclose/', $combinedSource),
-		'The F2 runtime files should keep exactly five php://output fclose() suppressions.'
+		'The runtime files should keep exactly six php://output fclose() suppressions.'
 	);
 	vms_test_assert_same(
 		0,

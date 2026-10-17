@@ -71,6 +71,56 @@
   margin: 12px 0 0;
 }
 
+#vms-pass-claims-wrap .vms-pass-report-filters {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+#vms-pass-claims-wrap .vms-pass-report-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
+#vms-pass-claims-wrap .vms-pass-report-filters .vms-pass-actions {
+  grid-column: 1 / -1;
+}
+
+#vms-pass-claims-wrap .vms-pass-report-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 10px;
+}
+
+#vms-pass-claims-wrap .vms-pass-report-heading h2,
+#vms-pass-claims-wrap .vms-pass-report-heading p {
+  margin-top: 0;
+}
+
+#vms-pass-claims-wrap .vms-pass-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+#vms-pass-claims-wrap .vms-pass-table-scroll:focus {
+  outline: 2px solid #2271b1;
+  outline-offset: 2px;
+}
+
+#vms-pass-claims-wrap .vms-pass-report-table {
+  min-width: 1180px;
+}
+
+#vms-pass-claims-wrap .vms-pass-report-table th,
+#vms-pass-claims-wrap .vms-pass-report-table td {
+  vertical-align: top;
+}
+
 #vms-pass-claims-wrap [hidden] {
   display: none !important;
 }
@@ -171,6 +221,19 @@
 }
 
 @media (max-width: 900px) {
+	#vms-pass-claims-wrap .vms-pass-report-filters {
+	  grid-template-columns: 1fr;
+	}
+
+	#vms-pass-claims-wrap .vms-pass-report-filters .vms-pass-actions {
+	  grid-column: 1;
+	}
+
+	#vms-pass-claims-wrap .vms-pass-report-heading {
+	  align-items: stretch;
+	  flex-direction: column;
+	}
+
   #vms-pass-claims-wrap .vms-pass-grid {
     grid-template-columns: 1fr;
   }

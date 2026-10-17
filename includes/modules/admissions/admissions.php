@@ -11,6 +11,7 @@ require_once __DIR__ . '/rest.php';
 require_once __DIR__ . '/admin-ui.php';
 require_once __DIR__ . '/shortcodes.php';
 require_once __DIR__ . '/pass-invitations.php';
+require_once __DIR__ . '/pass-reporting.php';
 require_once __DIR__ . '/pass-claims.php';
 
 if (!function_exists('bvmgr_admission_module_boot')) {
