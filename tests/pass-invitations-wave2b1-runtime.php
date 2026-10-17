@@ -14,8 +14,13 @@ $assert = static function (bool $condition, string $message): void {
 
 global $wpdb;
 bvmgr_admission_maybe_upgrade_schema();
-$assert(defined('BVMGR_VERSION') && BVMGR_VERSION === '1.3.10', 'BVM 1.3.10 is not active.');
+$assert(defined('BVMGR_VERSION') && BVMGR_VERSION === '1.3.11', 'BVM 1.3.11 is not active.');
 $assert($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', bvmgr_admission_table_pass_invitations())) === bvmgr_admission_table_pass_invitations(), 'Invitation audit table is missing.');
+$postal_filter = null;
+if (function_exists('backstage_outreach_postal_address') && backstage_outreach_postal_address() === '') {
+	$postal_filter = static fn(): string => 'Synthetic Test Venue, 100 Test Way, Test City, TN 37000, US';
+	add_filter('backstage_outreach_postal_address', $postal_filter);
+}
 
 $marker = 'wave2b1-' . strtolower(wp_generate_password(10, false, false));
 $now = bvmgr_admission_now_mysql();
@@ -53,6 +58,13 @@ try {
 	$payload['reviewed_previous_attempt_id'] = 0;
 	$assert(str_contains((string) $payload['message'], (string) $payload['claim_url']), 'Exact canonical claim link is missing from the message.');
 	$assert(str_contains((string) $payload['message'], bvmgr_pass_invitation_default_signature()), 'Default signature is missing.');
+	$assert(str_contains((string) $payload['message'], 'This promotional email was sent by'), 'Promotional identity is missing from the exact outgoing message.');
+	$assert(str_contains((string) $payload['message'], 'Postal address:'), 'Postal address is missing from the exact outgoing message.');
+	$assert(str_contains((string) $payload['message'], 'Unsubscribe from all Backstage Outreach promotional email:'), 'Unsubscribe instruction is missing from the exact outgoing message.');
+	$assert((string) ($payload['from_name'] ?? '') !== '' && is_email((string) ($payload['from_email'] ?? '')), 'Effective sender identity is unavailable.');
+	$assert((string) ($payload['reply_to'] ?? '') === (string) $payload['from_email'], 'Reply-To does not match the reviewed sender address.');
+	$assert(in_array('From: ' . $payload['from_name'] . ' <' . $payload['from_email'] . '>', (array) ($payload['headers'] ?? array()), true), 'Reviewed From header is missing from transport headers.');
+	$assert(in_array('Reply-To: ' . $payload['reply_to'], (array) ($payload['headers'] ?? array()), true), 'Reviewed Reply-To header is missing from transport headers.');
 	$digest = bvmgr_pass_invitation_digest($payload, 1);
 	$changed = $payload;
 	$changed['recipient_email'] = 'wrong-' . $marker . '@example.test';
@@ -130,9 +142,15 @@ try {
 	wp_set_current_user(0);
 	$assert(!current_user_can(bvmgr_pass_claims_capability()), 'Anonymous user unexpectedly has invitation management capability.');
 	$wpdb->query('ROLLBACK');
+	if ($postal_filter instanceof Closure) {
+		remove_filter('backstage_outreach_postal_address', $postal_filter);
+	}
 	echo "PASS: Wave 2B.1 runtime fixtures (4 links; 2 invited/2 untouched; stale/wrong recipient; duplicate/concurrent; expired/claimed/voided; unauthorized; capacity; intercepted success/failure/in-doubt).\n";
 } catch (Throwable $error) {
 	$wpdb->query('ROLLBACK');
+	if ($postal_filter instanceof Closure) {
+		remove_filter('backstage_outreach_postal_address', $postal_filter);
+	}
 	fwrite(STDERR, 'FAIL: ' . $error->getMessage() . "\n");
 	exit(1);
 }

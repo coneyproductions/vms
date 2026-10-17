@@ -21,6 +21,14 @@ $assert(str_contains($source, "bvmgr_pass_claims_build_claim_url(\$token)"), 'Ex
 $assert(!str_contains($source, 'bvmgr_pass_claims_generate_tokens_for_batch'), 'Invitation flow must not generate tokens.');
 $assert(!str_contains($source, 'wp_create_user'), 'Invitation flow must not create customers or subscribers.');
 $assert(str_contains($source, 'vms_outreach_email_is_suppressed'), 'Global Outreach suppression check is missing.');
+$assert(str_contains($source, 'backstage_outreach_issue_unsubscribe_token'), 'Existing Outreach unsubscribe-token service is not reused.');
+$assert(str_contains($source, 'backstage_outreach_promotional_footer'), 'Required promotional footer is missing.');
+$assert(str_contains($source, 'backstage_outreach_validate_unsubscribe_token'), 'Reviewed unsubscribe-link validation is missing.');
+$assert(str_contains($source, "'From: ' . \$from_name . ' <' . \$from_email . '>'"), 'Explicit sender identity is missing.');
+$assert(str_contains($source, "'Reply-To: ' . \$from_email"), 'Explicit Reply-To identity is missing.');
+$assert(str_contains($source, "'operator_message'"), 'Editable message is not separated from the exact compliant outgoing body.');
+$assert(str_contains($source, 'The exact review adds the required promotional identity'), 'Operator compliance-preview guidance is missing.');
+$assert(!str_contains($source, 'MailPoet\\'), 'Invitation flow must not subscribe recipients through MailPoet.');
 $assert(str_contains($source, 'Trey, Dalene & Henley Coney'), 'Approved default signature is missing.');
 $assert(str_contains($source, 'This is a bearer link.'), 'Bearer-link warning is missing.');
 $assert(str_contains($source, 'Preview never sends email.'), 'Preview no-send promise is missing.');

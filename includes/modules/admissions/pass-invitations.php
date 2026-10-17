@@ -38,6 +38,10 @@ if (!function_exists('bvmgr_pass_invitation_digest')) {
 			'subject' => (string) ($payload['subject'] ?? ''),
 			'message' => (string) ($payload['message'] ?? ''),
 			'claim_url' => (string) ($payload['claim_url'] ?? ''),
+			'from_name' => (string) ($payload['from_name'] ?? ''),
+			'from_email' => strtolower((string) ($payload['from_email'] ?? '')),
+			'reply_to' => strtolower((string) ($payload['reply_to'] ?? '')),
+			'headers' => array_values(array_map('strval', (array) ($payload['headers'] ?? array()))),
 			'user_id' => $user_id,
 		);
 		return hash_hmac('sha256', (string) wp_json_encode($material), wp_salt('auth'));
@@ -247,6 +251,96 @@ if (!function_exists('bvmgr_pass_invitation_recipient_party_id')) {
 	}
 }
 
+if (!function_exists('bvmgr_pass_invitation_compliance')) {
+	function bvmgr_pass_invitation_compliance(array $payload, array $raw)
+	{
+		$required = array(
+			'backstage_outreach_issue_unsubscribe_token',
+			'backstage_outreach_validate_unsubscribe_token',
+			'backstage_outreach_unsubscribe_endpoint_readiness',
+			'backstage_outreach_promotional_footer',
+			'backstage_outreach_postal_address',
+			'backstage_outreach_mail_transport_readiness',
+		);
+		foreach ($required as $function) {
+			if (!function_exists($function)) {
+				return new WP_Error('invitation_compliance_unavailable', __('Required Outreach email compliance services are unavailable; no invitation can be reviewed or sent.', 'backstage-venue-manager'));
+			}
+		}
+		$endpoint = backstage_outreach_unsubscribe_endpoint_readiness();
+		if (empty($endpoint['ready'])) {
+			return new WP_Error('invitation_unsubscribe_unavailable', (string) ($endpoint['message'] ?? __('The required unsubscribe service is unavailable.', 'backstage-venue-manager')));
+		}
+		$postal_address = backstage_outreach_postal_address();
+		if ($postal_address === '') {
+			return new WP_Error('invitation_postal_address_unavailable', __('The required sender postal address is unavailable.', 'backstage-venue-manager'));
+		}
+		$from_email = sanitize_email((string) get_option('admin_email'));
+		if ($from_email === '' || !is_email($from_email)) {
+			return new WP_Error('invitation_sender_unavailable', __('The required sender email address is unavailable.', 'backstage-venue-manager'));
+		}
+		$from_name = trim(wp_specialchars_decode((string) get_bloginfo('name'), ENT_QUOTES));
+		if ($from_name === '') {
+			return new WP_Error('invitation_sender_unavailable', __('The required sender name is unavailable.', 'backstage-venue-manager'));
+		}
+
+		$unsubscribe_url = esc_url_raw((string) ($raw['unsubscribe_url'] ?? ''));
+		if ($unsubscribe_url === '') {
+			$issued = backstage_outreach_issue_unsubscribe_token((string) $payload['recipient_email'], array(
+				'source_type' => 'guest_pass_invitation',
+				'source_id' => (int) $payload['token_id'],
+				'campaign_id' => 0,
+			));
+			if (is_wp_error($issued)) {
+				return $issued;
+			}
+			$unsubscribe_url = esc_url_raw((string) ($issued['url'] ?? ''));
+		}
+		$query = (string) wp_parse_url($unsubscribe_url, PHP_URL_QUERY);
+		$params = array();
+		wp_parse_str($query, $params);
+		$token = sanitize_text_field((string) ($params['backstage-outreach-unsubscribe'] ?? ''));
+		$signature = sanitize_text_field((string) ($params['signature'] ?? ''));
+		$row = backstage_outreach_validate_unsubscribe_token($token, $signature);
+		$canonical_url = add_query_arg(array(
+			'backstage-outreach-unsubscribe' => $token,
+			'signature' => $signature,
+		), home_url('/'));
+		$email_norm = function_exists('vms_outreach_normalize_email') ? vms_outreach_normalize_email((string) $payload['recipient_email']) : strtolower((string) $payload['recipient_email']);
+		if (is_wp_error($row)
+			|| !is_string($canonical_url)
+			|| !hash_equals($canonical_url, $unsubscribe_url)
+			|| (string) ($row['email_norm'] ?? '') !== $email_norm
+			|| sanitize_key((string) ($row['source_type'] ?? '')) !== 'guest_pass_invitation'
+			|| (int) ($row['source_id'] ?? 0) !== (int) $payload['token_id']) {
+			return new WP_Error('invitation_unsubscribe_invalid', __('The reviewed unsubscribe link is invalid or no longer belongs to this invitation.', 'backstage-venue-manager'));
+		}
+
+		$operator_message = (string) ($payload['operator_message'] ?? $payload['message'] ?? '');
+		$message = rtrim($operator_message) . "\n\n" . backstage_outreach_promotional_footer($unsubscribe_url, $postal_address);
+		$headers = array(
+			'Content-Type: text/plain; charset=UTF-8',
+			'From: ' . $from_name . ' <' . $from_email . '>',
+			'Reply-To: ' . $from_email,
+		);
+		$transport = backstage_outreach_mail_transport_readiness();
+		$advertise_rfc8058 = !empty($transport['ready']);
+		if ($advertise_rfc8058) {
+			$headers[] = 'List-Unsubscribe: <' . $unsubscribe_url . '>';
+			$headers[] = 'List-Unsubscribe-Post: List-Unsubscribe=One-Click';
+		}
+		$payload['operator_message'] = $operator_message;
+		$payload['message'] = $message;
+		$payload['unsubscribe_url'] = $unsubscribe_url;
+		$payload['from_name'] = $from_name;
+		$payload['from_email'] = $from_email;
+		$payload['reply_to'] = $from_email;
+		$payload['headers'] = $headers;
+		$payload['advertise_rfc8058'] = $advertise_rfc8058;
+		return $payload;
+	}
+}
+
 if (!function_exists('bvmgr_pass_invitation_build_payload')) {
 	function bvmgr_pass_invitation_build_payload(int $token_id, array $raw)
 	{
@@ -263,7 +357,8 @@ if (!function_exists('bvmgr_pass_invitation_build_payload')) {
 		if (is_wp_error($recipient)) {
 			return $recipient;
 		}
-		$content = bvmgr_pass_invitation_sanitize_content((string) ($raw['subject'] ?? ''), (string) ($raw['message'] ?? ''));
+		$operator_message = (string) ($raw['operator_message'] ?? $raw['message'] ?? '');
+		$content = bvmgr_pass_invitation_sanitize_content((string) ($raw['subject'] ?? ''), $operator_message);
 		if (is_wp_error($content)) {
 			return $content;
 		}
@@ -271,7 +366,7 @@ if (!function_exists('bvmgr_pass_invitation_build_payload')) {
 		if (strpos((string) $content['message'], $claim_url) === false) {
 			return new WP_Error('claim_link_missing', __('The invitation message must contain this Guest Pass claim link.', 'backstage-venue-manager'));
 		}
-		return array(
+		$payload = array(
 			'token_id' => $token_id,
 			'token_status' => (string) $token['status'],
 			'batch_id' => (int) $batch['id'],
@@ -282,9 +377,11 @@ if (!function_exists('bvmgr_pass_invitation_build_payload')) {
 			'recipient_email' => (string) $recipient['email'],
 			'recipient_party_id' => bvmgr_pass_invitation_recipient_party_id((string) $recipient['name'], (string) $recipient['email']),
 			'subject' => (string) $content['subject'],
+			'operator_message' => (string) $content['message'],
 			'message' => (string) $content['message'],
 			'claim_url' => $claim_url,
 		);
+		return bvmgr_pass_invitation_compliance($payload, $raw);
 	}
 }
 
@@ -350,14 +447,39 @@ if (!function_exists('bvmgr_pass_invitation_release_lock')) {
 if (!function_exists('bvmgr_pass_invitation_transport')) {
 	function bvmgr_pass_invitation_transport(array $payload): array
 	{
+		if (!function_exists('backstage_outreach_email_lock_name') || !function_exists('vms_outreach_email_is_suppressed')) {
+			return array('status' => 'failed', 'failure_code' => 'outreach_compliance_unavailable');
+		}
+		global $wpdb;
+		$lock = backstage_outreach_email_lock_name((string) ($payload['recipient_email'] ?? ''));
+		if ((int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 5)', $lock)) !== 1) {
+			return array('status' => 'failed', 'failure_code' => 'outreach_send_lock_unavailable');
+		}
+		$dkim_hook = !empty($payload['advertise_rfc8058']) && function_exists('backstage_outreach_require_dkim_unsubscribe_headers');
 		try {
-			$accepted = wp_mail((string) ($payload['recipient_email'] ?? ''), (string) ($payload['subject'] ?? ''), (string) ($payload['message'] ?? ''), array('Content-Type: text/plain; charset=UTF-8'));
+			if (vms_outreach_email_is_suppressed((string) ($payload['recipient_email'] ?? ''))) {
+				return array('status' => 'failed', 'failure_code' => 'recipient_suppressed');
+			}
+			if ($dkim_hook) {
+				add_action('phpmailer_init', 'backstage_outreach_require_dkim_unsubscribe_headers', PHP_INT_MAX, 1);
+			}
+			$accepted = wp_mail(
+				(string) ($payload['recipient_email'] ?? ''),
+				(string) ($payload['subject'] ?? ''),
+				(string) ($payload['message'] ?? ''),
+				array_values(array_map('strval', (array) ($payload['headers'] ?? array())))
+			);
 			return array(
 				'status' => $accepted ? 'handed_off' : 'failed',
 				'failure_code' => $accepted ? '' : 'wp_mail_rejected',
 			);
 		} catch (Throwable $error) {
 			return array('status' => 'in_doubt', 'failure_code' => 'transport_exception');
+		} finally {
+			if ($dkim_hook) {
+				remove_action('phpmailer_init', 'backstage_outreach_require_dkim_unsubscribe_headers', PHP_INT_MAX);
+			}
+			$wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock));
 		}
 	}
 }
@@ -520,7 +642,7 @@ if (!function_exists('bvmgr_pass_invitation_render_panel')) {
 		$recipient_name = is_array($review) ? (string) $review['recipient_name'] : (is_array($latest) ? (string) $latest['recipient_name'] : '');
 		$recipient_email = is_array($review) ? (string) $review['recipient_email'] : (is_array($latest) ? (string) $latest['recipient_email'] : '');
 		$subject = is_array($review) ? (string) $review['subject'] : (string) $defaults['subject'];
-		$message = is_array($review) ? (string) $review['message'] : (string) $defaults['message'];
+		$message = is_array($review) ? (string) ($review['operator_message'] ?? $review['message']) : (string) $defaults['message'];
 		echo '<section class="vms-pass-card vms-pass-invitation"><h2>' . esc_html__('Send Guest Pass Invitation', 'backstage-venue-manager') . '</h2>';
 		echo '<p><strong>' . esc_html__('Invitation status:', 'backstage-venue-manager') . '</strong> ' . esc_html($status) . ' &middot; <strong>' . esc_html__('Batch:', 'backstage-venue-manager') . '</strong> #' . esc_html((string) $batch['id']) . ' ' . esc_html((string) $batch['batch_name']) . '</p>';
 		echo '<p class="description">' . esc_html__('This sends the existing bearer claim link. It does not create a pass, reserve admission capacity, subscribe the recipient, or prove inbox delivery.', 'backstage-venue-manager') . '</p>';
@@ -534,12 +656,12 @@ if (!function_exists('bvmgr_pass_invitation_render_panel')) {
 			echo '<div class="vms-pass-grid"><label>' . esc_html__('Recipient name', 'backstage-venue-manager') . '<input required maxlength="190" name="recipient_name" value="' . esc_attr($recipient_name) . '"></label>';
 			echo '<label>' . esc_html__('Recipient email', 'backstage-venue-manager') . '<input required type="email" maxlength="190" name="recipient_email" value="' . esc_attr($recipient_email) . '"></label>';
 			echo '<label class="vms-pass-span-2">' . esc_html__('Subject', 'backstage-venue-manager') . '<input required maxlength="255" name="subject" value="' . esc_attr($subject) . '"></label>';
-			echo '<label class="vms-pass-span-2">' . esc_html__('Message', 'backstage-venue-manager') . '<textarea required rows="13" maxlength="10000" name="message">' . esc_textarea($message) . '</textarea></label></div>';
+			echo '<label class="vms-pass-span-2">' . esc_html__('Message', 'backstage-venue-manager') . '<textarea required rows="13" maxlength="10000" name="message">' . esc_textarea($message) . '</textarea><span class="description">' . esc_html__('The exact review adds the required promotional identity, postal address, and personalized unsubscribe link.', 'backstage-venue-manager') . '</span></label></div>';
 			echo '<p class="vms-pass-actions"><button class="button button-primary">' . esc_html__('Preview Exact Invitation', 'backstage-venue-manager') . '</button> <span class="description">' . esc_html__('Preview never sends email.', 'backstage-venue-manager') . '</span></p></form>';
 		}
 		if (is_array($review) && isset($_GET['invitation_review'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only rendering of a server-side, user-bound preview transient.
 			echo '<div class="vms-pass-invitation-review" data-vms-pass-invitation-review><h3>' . esc_html__('Exact outgoing message', 'backstage-venue-manager') . '</h3>';
-			echo '<p><strong>' . esc_html__('To:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) $review['recipient_name']) . ' &lt;' . esc_html((string) $review['recipient_email']) . '&gt;<br><strong>' . esc_html__('Subject:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) $review['subject']) . '</p>';
+			echo '<p><strong>' . esc_html__('From:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) $review['from_name']) . ' &lt;' . esc_html((string) $review['from_email']) . '&gt;<br><strong>' . esc_html__('Reply-To:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) $review['reply_to']) . '<br><strong>' . esc_html__('To:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) $review['recipient_name']) . ' &lt;' . esc_html((string) $review['recipient_email']) . '&gt;<br><strong>' . esc_html__('Subject:', 'backstage-venue-manager') . '</strong> ' . esc_html((string) $review['subject']) . '</p>';
 			echo '<pre>' . esc_html((string) $review['message']) . '</pre>';
 			echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" data-vms-pass-invitation-send><input type="hidden" name="action" value="vms_pass_invitation_send"><input type="hidden" name="token_id" value="' . esc_attr((string) $token_id) . '"><input type="hidden" name="review_digest" value="' . esc_attr((string) $review['review_digest']) . '">';
 			wp_nonce_field('bvmgr_pass_invitation_send_' . $token_id);

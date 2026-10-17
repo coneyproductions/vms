@@ -167,6 +167,7 @@
                 "bvmgr_pass_invitation_acquire_lock": 1,
                 "bvmgr_pass_invitation_attempt_is_active": 1,
                 "bvmgr_pass_invitation_build_payload": 1,
+                "bvmgr_pass_invitation_compliance": 1,
                 "bvmgr_pass_invitation_default_signature": 1,
                 "bvmgr_pass_invitation_defaults": 1,
                 "bvmgr_pass_invitation_digest": 1,
