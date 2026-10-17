@@ -326,15 +326,21 @@ if (!function_exists('bvmgr_pass_reporting_sources')) {
 		$where = array('1=1');
 		$params = array();
 		if ((int) $filters['source_id'] > 0) { $where[] = 's.id=%d'; $params[] = (int) $filters['source_id']; }
-		if ((string) $filters['s'] !== '') { $where[] = 's.source_name LIKE %s'; $params[] = '%' . $wpdb->esc_like((string) $filters['s']) . '%'; }
+		$has_batch_scope = (int) $filters['batch_id'] > 0
+			|| (string) $filters['status'] !== ''
+			|| (string) $filters['value_type'] !== ''
+			|| (string) $filters['availability'] !== ''
+			|| (string) $filters['s'] !== '';
+		if ($has_batch_scope) {
+			list($batch_where, $batch_params) = bvmgr_pass_reporting_where($filters);
+			$where[] = 'EXISTS (SELECT 1 FROM %i b WHERE b.source_id=s.id AND ' . implode(' AND ', $batch_where) . ')';
+			$params[] = bvmgr_admission_table_pass_batches();
+			$params = array_merge($params, $batch_params);
+		}
 		$from = ' FROM %i s WHERE ' . implode(' AND ', $where);
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Source report pages are bounded and request-fresh.
-		$total = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*)' . $from, array_merge(array(bvmgr_admission_table_pass_sources()), $params)));
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Source report pages are bounded before batch enrichment.
-		$sources = (array) $wpdb->get_results($wpdb->prepare('SELECT s.id,s.source_name,s.status' . $from . ' ORDER BY s.source_name ASC,s.id ASC LIMIT %d OFFSET %d', array_merge(array(bvmgr_admission_table_pass_sources()), $params, array(max(1, min(100, $limit)), max(0, $offset)))), ARRAY_A);
-		$out = array();
+		$base = array_merge(array(bvmgr_admission_table_pass_sources()), $params);
 		$outreach = bvmgr_pass_reporting_outreach_tables();
-		foreach ($sources as $source) {
+		$aggregate = static function (array $source) use ($filters, $outreach): array {
 			$source_filters = $filters;
 			$source_filters['source_id'] = absint($source['id'] ?? 0);
 			$batch_offset = 0;
@@ -354,8 +360,38 @@ if (!function_exists('bvmgr_pass_reporting_sources')) {
 			} while ($batch_offset < (int) ($batch_result['total'] ?? 0) && $batch_offset < 100000);
 			$row['direct_claim_rate'] = $row['direct_links_issued'] > 0 ? round(($row['direct_links_claimed'] / $row['direct_links_issued']) * 100, 1) : null;
 			$row['allocation_utilization'] = $row['allocated_admission_capacity'] > 0 ? round(($row['reusable_reserved_headcount'] / $row['allocated_admission_capacity']) * 100, 1) : null;
-			$out[] = $row;
+			return $row;
+		};
+
+		$page_limit = max(1, min(100, $limit));
+		$page_offset = max(0, $offset);
+		if ((string) $filters['availability'] === '') {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- The correlated batch scope makes source totals match the canonical filtered batch set.
+			$total = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*)' . $from, $base));
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Source report pages are bounded before canonical batch enrichment.
+			$sources = (array) $wpdb->get_results($wpdb->prepare('SELECT s.id,s.source_name,s.status' . $from . ' ORDER BY s.source_name ASC,s.id ASC LIMIT %d OFFSET %d', array_merge($base, array($page_limit, $page_offset))), ARRAY_A);
+			return array('rows' => array_map($aggregate, $sources), 'total' => $total);
 		}
+
+		$out = array();
+		$total = 0;
+		$scan_offset = 0;
+		$scan_size = 100;
+		do {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Derived availability is evaluated in bounded source pages through the canonical batch query.
+			$sources = (array) $wpdb->get_results($wpdb->prepare('SELECT s.id,s.source_name,s.status' . $from . ' ORDER BY s.source_name ASC,s.id ASC LIMIT %d OFFSET %d', array_merge($base, array($scan_size, $scan_offset))), ARRAY_A);
+			foreach ($sources as $source) {
+				$row = $aggregate($source);
+				if ((int) ($row['batches_count'] ?? 0) === 0) {
+					continue;
+				}
+				if ($total >= $page_offset && count($out) < $page_limit) {
+					$out[] = $row;
+				}
+				$total++;
+			}
+			$scan_offset += $scan_size;
+		} while (count($sources) === $scan_size && $scan_offset < 100000);
 		return array('rows' => $out, 'total' => $total);
 	}
 }

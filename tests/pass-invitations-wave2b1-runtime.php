@@ -14,7 +14,7 @@ $assert = static function (bool $condition, string $message): void {
 
 global $wpdb;
 bvmgr_admission_maybe_upgrade_schema();
-$assert(defined('BVMGR_VERSION') && BVMGR_VERSION === '1.3.12', 'BVM 1.3.12 is not active.');
+$assert(defined('BVMGR_VERSION') && BVMGR_VERSION === '1.3.13', 'BVM 1.3.13 is not active.');
 $assert($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', bvmgr_admission_table_pass_invitations())) === bvmgr_admission_table_pass_invitations(), 'Invitation audit table is missing.');
 $postal_filter = null;
 if (function_exists('backstage_outreach_postal_address') && backstage_outreach_postal_address() === '') {
