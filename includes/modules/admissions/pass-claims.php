@@ -664,7 +664,7 @@ if (!function_exists('bvmgr_pass_claims_filtered_query')) {
 		$c = bvmgr_admission_table_pass_claims();
 		$e = bvmgr_admission_table_entries();
 		$has_business = function_exists('backstage_outreach_business_table');
-		$select = $count ? 'COUNT(DISTINCT t.id)' : 't.*, b.batch_name, b.value_type, b.source_id AS batch_source_id, s.source_name, c.first_name, c.last_name, c.phone, c.email, c.event_plan_id, c.created_at AS claimed_at, e.admission_emailed_at, e.admission_token';
+		$select = $count ? 'COUNT(DISTINCT t.id)' : 't.*, b.batch_name, b.value_type, b.source_id AS batch_source_id, b.status AS batch_status, b.expires_at AS batch_expires_at, s.source_name, c.first_name, c.last_name, c.phone, c.email, c.event_plan_id, c.created_at AS claimed_at, e.admission_emailed_at, e.admission_token';
 		if (!$count) {
 			$select .= $has_business ? ', dc.business_id, ob.business_name AS referring_business' : ", 0 AS business_id, '' AS referring_business";
 		}
@@ -2868,6 +2868,10 @@ if (!function_exists('bvmgr_pass_claims_render_batch_management')) {
 	if (!function_exists('bvmgr_pass_claims_render_filtered_passes_tab')) {
 	function bvmgr_pass_claims_render_filtered_passes_tab(): void
 	{
+		$invite_token_id = isset($_GET['invite_token_id']) && is_scalar($_GET['invite_token_id']) ? absint((string) $_GET['invite_token_id']) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only selection of an existing pass; send actions have dedicated nonces.
+		if ($invite_token_id > 0 && function_exists('bvmgr_pass_invitation_render_panel')) {
+			bvmgr_pass_invitation_render_panel($invite_token_id);
+		}
 		$filters = bvmgr_pass_claims_list_filters((array) wp_unslash($_GET)); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only administrator filters are bookmarkable.
 		$result = bvmgr_pass_claims_filtered_rows($filters);
 		$rows = $result['rows'];
@@ -2920,6 +2924,8 @@ if (!function_exists('bvmgr_pass_claims_render_batch_management')) {
 					$action .= ' <a class="button button-small" href="' . esc_url($resend_url) . '">' . esc_html__('Resend Email', 'backstage-venue-manager') . '</a>';
 				}
 			} elseif ((string) $row['status'] === 'unclaimed') {
+				$invite_url = bvmgr_pass_claims_admin_page_url(array_merge($base_args, array('tab' => 'passes', 'invite_token_id' => (int) $row['id'])));
+				$action .= '<a class="button button-small button-primary" href="' . esc_url($invite_url) . '">' . esc_html__('Send Invitation', 'backstage-venue-manager') . '</a> ';
 				if (sanitize_key((string) ($row['value_type'] ?? '')) === 'free') {
 					$print_url = bvmgr_pass_claims_print_url((int) $row['id']);
 					if ($print_url !== '') { $action .= '<a class="button button-small" target="_blank" rel="noopener" href="' . esc_url($print_url) . '">' . esc_html__('Print', 'backstage-venue-manager') . '</a> '; }
@@ -2930,7 +2936,8 @@ if (!function_exists('bvmgr_pass_claims_render_batch_management')) {
 				$url = wp_nonce_url(add_query_arg(array_merge($base_args, array('action' => 'vms_pass_token_status', 'token_id' => (int) $row['id'], 'status' => 'unclaimed', 'batch_id' => (int) $row['batch_id'], 'filter_batch_id' => $filters['batch_id'])), admin_url('admin-post.php')), 'bvmgr_pass_token_status_' . (int) $row['id'] . '_unclaimed');
 				$action = '<a class="button button-small" href="' . esc_url($url) . '" onclick="return confirm(' . esc_attr(wp_json_encode(__('Restore this pass to unclaimed status?', 'backstage-venue-manager'))) . ');">' . esc_html__('Restore', 'backstage-venue-manager') . '</a>';
 			}
-			echo '<tr><td>' . esc_html((string) $row['batch_name']) . '<div class="description">#' . esc_html((string) $row['batch_id']) . '</div></td><td>' . esc_html((string) $row['source_name']) . '</td><td>' . esc_html((string) ($row['referring_business'] ?? '')) . '</td><td><code>' . esc_html(bvmgr_pass_claims_mask_token(bvmgr_pass_claims_build_raw_token($row))) . '</code></td><td>' . esc_html((string) $row['status']) . '</td><td>' . esc_html($customer) . '<div class="description">' . esc_html((string) ($row['email'] ?? $row['phone'] ?? '')) . '</div></td><td>' . esc_html($event_id > 0 ? (string) get_the_title($event_id) : '') . '</td><td>' . esc_html((string) $row['created_at']) . '</td><td>' . $action . '</td></tr>';
+			$invitation_status = function_exists('bvmgr_pass_invitation_effective_status') ? bvmgr_pass_invitation_effective_status(bvmgr_pass_invitation_latest((int) $row['id']), $row, array('status' => (string) ($row['batch_status'] ?? ''), 'expires_at' => (string) ($row['batch_expires_at'] ?? ''))) : '';
+			echo '<tr><td>' . esc_html((string) $row['batch_name']) . '<div class="description">#' . esc_html((string) $row['batch_id']) . '</div></td><td>' . esc_html((string) $row['source_name']) . '</td><td>' . esc_html((string) ($row['referring_business'] ?? '')) . '</td><td><code>' . esc_html(bvmgr_pass_claims_mask_token(bvmgr_pass_claims_build_raw_token($row))) . '</code></td><td>' . esc_html((string) $row['status']) . ($invitation_status !== '' ? '<div class="description">' . esc_html(sprintf(__('Invitation: %s', 'backstage-venue-manager'), $invitation_status)) . '</div>' : '') . '</td><td>' . esc_html($customer) . '<div class="description">' . esc_html((string) ($row['email'] ?? $row['phone'] ?? '')) . '</div></td><td>' . esc_html($event_id > 0 ? (string) get_the_title($event_id) : '') . '</td><td>' . esc_html((string) $row['created_at']) . '</td><td>' . $action . '</td></tr>';
 		}
 		if (empty($rows)) { echo '<tr><td colspan="9">' . esc_html__('No passes match these filters.', 'backstage-venue-manager') . '</td></tr>'; }
 		echo '</tbody></table>';

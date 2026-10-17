@@ -90,4 +90,30 @@
       markDone();
     }
   });
+
+  var invitationForm = document.querySelector('[data-vms-pass-invitation-form]');
+  var invitationReview = document.querySelector('[data-vms-pass-invitation-review]');
+  var invitationSend = document.querySelector('[data-vms-pass-invitation-send]');
+  if (invitationForm && invitationReview && invitationSend) {
+    var reviewed = new URLSearchParams(new FormData(invitationForm)).toString();
+    var confirmButton = invitationSend.querySelector('[data-vms-pass-send-confirm]');
+    var staleWarning = invitationSend.querySelector('[data-vms-pass-invitation-stale]');
+    var markReviewStale = function () {
+      var stale = new URLSearchParams(new FormData(invitationForm)).toString() !== reviewed;
+      if (confirmButton) {
+        confirmButton.disabled = stale;
+      }
+      if (staleWarning) {
+        staleWarning.hidden = !stale;
+      }
+    };
+    invitationForm.addEventListener('input', markReviewStale);
+    invitationForm.addEventListener('change', markReviewStale);
+    invitationSend.addEventListener('submit', function () {
+      if (confirmButton) {
+        confirmButton.disabled = true;
+        confirmButton.textContent = 'Sending…';
+      }
+    });
+  }
 })();

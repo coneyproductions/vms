@@ -142,6 +142,34 @@
   font-size: 12px;
 }
 
+#vms-pass-claims-wrap .vms-pass-invitation-review {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid #a9bfdc;
+  border-radius: 10px;
+  background: #f7faff;
+}
+
+#vms-pass-claims-wrap .vms-pass-invitation-review pre {
+  max-width: 760px;
+  padding: 14px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  border: 1px solid #d8e2f0;
+  background: #fff;
+  font: inherit;
+}
+
+#vms-pass-claims-wrap .vms-pass-confirm {
+  display: block;
+  margin: 10px 0;
+  font-weight: 600;
+}
+
+#vms-pass-claims-wrap .vms-pass-confirm input {
+  margin-right: 6px;
+}
+
 @media (max-width: 900px) {
   #vms-pass-claims-wrap .vms-pass-grid {
     grid-template-columns: 1fr;

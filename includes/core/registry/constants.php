@@ -105,9 +105,9 @@ if (!defined('BVMGR_VERSION')) {
 			// v0.2.24.737: adds Market Vendor target/needed-slots controls in the compact Additional Vendors UI and preserves ADD visibility metadata through secondary-vendor update paths.
 			// v0.2.24.736: keeps grouped Additional Vendors compatibility meta aligned on ordinary Event Plan saves so flat/id-index readers still see Food, Dessert, and Market assignments after unrelated module saves.
 			// v0.2.24.735: adds canonical multi-type secondary vendor assignments, grouped Additional Vendor Event Plan UI, type-specific calendar/ADD slot handling, Market Vendor support, and Music Vendor/Food Vendor wording updates.
-			define('BVMGR_VERSION', '1.3.9');
+			define('BVMGR_VERSION', '1.3.10');
 	// ^ bump in sync with plugin header + vms-build.txt
-	// Public 1.3.9 adds guarded Guest Pass batch creation and management without changing issued rights.
+	// Public 1.3.10 adds guarded direct delivery of existing Guest Pass claim links without changing issued rights.
 	// IMPORTANT: keep in sync with plugin header Version.
 	// PATCH: premium modules now fail closed until they register with VMS core.
 }

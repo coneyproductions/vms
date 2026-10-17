@@ -554,6 +554,12 @@ final class VMS_Public_Release_Tooling
 				'required' => true,
 			),
 			array(
+				'id' => 'pass-invitations-wave2b1',
+				'label' => 'Guest Pass Wave 2B.1 direct invitation guards',
+				'path' => 'tests/pass-invitations-wave2b1.php',
+				'required' => true,
+			),
+			array(
 				'id' => 'ticket-claims-assignee-validation',
 				'label' => 'Qualified-ticket assignee validation regression',
 				'path' => 'tests/ticket-claims-assignee-validation.php',

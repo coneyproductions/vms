@@ -11,7 +11,15 @@ if (!function_exists('bvmgr_admission_db_option_key')) {
 if (!function_exists('bvmgr_admission_db_version_target')) {
 	function bvmgr_admission_db_version_target(): string
 	{
-		return '1.4.0';
+		return '1.5.0';
+	}
+}
+
+if (!function_exists('bvmgr_admission_table_pass_invitations')) {
+	function bvmgr_admission_table_pass_invitations(): string
+	{
+		global $wpdb;
+		return $wpdb->prefix . 'vms_pass_invitations';
 	}
 }
 
@@ -82,6 +90,7 @@ if (!function_exists('bvmgr_admission_maybe_upgrade_schema')) {
 		$batches = bvmgr_admission_table_pass_batches();
 		$tokens = bvmgr_admission_table_pass_tokens();
 		$claims = bvmgr_admission_table_pass_claims();
+		$invitations = bvmgr_admission_table_pass_invitations();
 
 		$sql_entries = "CREATE TABLE {$entries} (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -233,12 +242,44 @@ if (!function_exists('bvmgr_admission_maybe_upgrade_schema')) {
 			KEY event_claims (event_plan_id, created_at)
 		) {$charset_collate};";
 
+		$sql_invitations = "CREATE TABLE {$invitations} (
+			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			token_id BIGINT(20) UNSIGNED NOT NULL,
+			batch_id BIGINT(20) UNSIGNED NOT NULL,
+			source_id BIGINT(20) UNSIGNED NOT NULL,
+			attempt_key CHAR(64) NOT NULL,
+			review_digest CHAR(64) NOT NULL,
+			recipient_name VARCHAR(190) NOT NULL,
+			recipient_email VARCHAR(190) NOT NULL,
+			recipient_email_hash CHAR(64) NOT NULL,
+			recipient_party_id BIGINT(20) UNSIGNED NULL,
+			subject VARCHAR(255) NOT NULL,
+			message_hash CHAR(64) NOT NULL,
+			claim_link_hash CHAR(64) NOT NULL,
+			status VARCHAR(20) NOT NULL DEFAULT 'sending',
+			attempt_type VARCHAR(20) NOT NULL DEFAULT 'initial',
+			previous_attempt_id BIGINT(20) UNSIGNED NULL,
+			operator_user_id BIGINT(20) UNSIGNED NOT NULL,
+			failure_code VARCHAR(80) NULL,
+			created_at DATETIME NOT NULL,
+			completed_at DATETIME NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY attempt_key (attempt_key),
+			KEY token_time (token_id, created_at),
+			KEY batch_status (batch_id, status),
+			KEY source_status (source_id, status),
+			KEY recipient_hash (recipient_email_hash),
+			KEY recipient_party (recipient_party_id),
+			KEY operator_time (operator_user_id, created_at)
+		) {$charset_collate};";
+
 		dbDelta($sql_entries);
 		dbDelta($sql_audit);
 		dbDelta($sql_sources);
 		dbDelta($sql_batches);
 		dbDelta($sql_tokens);
 		dbDelta($sql_claims);
+		dbDelta($sql_invitations);
 
 		// Backfill: checked-in rows from older schema should count as fully checked in.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema backfills write the plugin-owned admissions table directly because no core API exposes these custom rows during upgrades.
