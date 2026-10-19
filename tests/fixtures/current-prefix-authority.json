@@ -248,6 +248,8 @@
                 "bvmgr_social_require_post_request": 1,
                 "bvmgr_social_require_queue_permission": 1,
                 "bvmgr_social_webhook_url_is_safe": 1,
+                "bvmgr_staff_portal_render_my_account_entry": 1,
+                "bvmgr_staff_portal_user_can_access_event": 1,
                 "bvmgr_staffing_assignment_overlaps": 1,
                 "bvmgr_staffing_atomic": 1,
                 "bvmgr_staffing_build_event_snapshot": 1,
