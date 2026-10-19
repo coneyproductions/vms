@@ -14,6 +14,25 @@ if (!defined('ABSPATH')) exit;
 
 add_shortcode('vms_staff_portal', 'bvmgr_staff_portal_shortcode');
 
+if (!function_exists('bvmgr_staff_portal_render_my_account_entry')) {
+    function bvmgr_staff_portal_render_my_account_entry(): void
+    {
+        if (!is_user_logged_in()) {
+            return;
+        }
+        $staff_id = absint(get_user_meta(get_current_user_id(), '_vms_staff_id', true));
+        if ($staff_id <= 0 || get_post_type($staff_id) !== 'vms_staff') {
+            return;
+        }
+        echo '<section class="vms-staff-account-entry vms-portal-card">';
+        echo '<h2>' . esc_html__('Your staff workspace', 'backstage-venue-manager') . '</h2>';
+        echo '<p>' . esc_html__('See confirmed shifts, respond to proposals, and open assigned event details.', 'backstage-venue-manager') . '</p>';
+        echo '<p><a class="button button-primary" href="' . esc_url(home_url('/staff-portal/')) . '">' . esc_html__('Open Staff Portal', 'backstage-venue-manager') . '</a></p>';
+        echo '</section>';
+    }
+}
+add_action('woocommerce_account_dashboard', 'bvmgr_staff_portal_render_my_account_entry', 4);
+
 if (!function_exists('bvmgr_staff_portal_provider_label')) {
     function bvmgr_staff_portal_provider_label(string $provider): string
     {
@@ -578,13 +597,70 @@ if (!function_exists('bvmgr_staff_portal_doc_visibility_role_ids')) {
 if (!function_exists('bvmgr_staff_portal_assignment_can_view_docs')) {
     function bvmgr_staff_portal_assignment_can_view_docs(array $assignment): bool
     {
+        if (($assignment['assignment_status'] ?? '') !== 'confirmed') {
+            return false;
+        }
         $allowed_role_ids = bvmgr_staff_portal_doc_visibility_role_ids();
+        $role_id = absint($assignment['role_id'] ?? 0);
+        $roles = function_exists('bvmgr_staffing_role_map_by_id') ? (array) bvmgr_staffing_role_map_by_id(false) : array();
+        if ($role_id <= 0 || !isset($roles[$role_id])) {
+            return false;
+        }
+        $role = (array) $roles[$role_id];
+        $slug = sanitize_title((string) ($role['slug'] ?? $role['name'] ?? ''));
+        if (in_array($slug, array('event-manager', 'show-manager', 'production-manager', 'stage-manager'), true)
+            || (function_exists('bvmgr_tech_doc_role_is_technical') && bvmgr_tech_doc_role_is_technical($role))) {
+            return true;
+        }
         if (empty($allowed_role_ids)) {
             return true;
         }
+        return in_array($role_id, $allowed_role_ids, true);
+    }
+}
 
-        $role_id = absint($assignment['role_id'] ?? 0);
-        return $role_id > 0 && in_array($role_id, $allowed_role_ids, true);
+if (!function_exists('bvmgr_staff_portal_user_can_access_event')) {
+    function bvmgr_staff_portal_user_can_access_event(int $user_id, int $plan_id, bool $require_docs = false): bool
+    {
+        global $wpdb;
+        $user_id = absint($user_id);
+        $plan_id = absint($plan_id);
+        $staff_id = $user_id > 0 ? absint(get_user_meta($user_id, '_vms_staff_id', true)) : 0;
+        if ($staff_id <= 0 || get_post_type($staff_id) !== 'vms_staff' || get_post_type($plan_id) !== 'vms_event_plan'
+            || get_post_status($plan_id) !== 'publish') {
+            return false;
+        }
+        $date = (string) get_post_meta($plan_id, '_vms_event_date', true);
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/D', $date) || $date < wp_date('Y-m-d', time(), wp_timezone())
+            || !in_array((string) bvmgr_event_plan_get_status($plan_id, 'dashboard'), bvmgr_staff_portal_visible_event_statuses(), true)) {
+            return false;
+        }
+        $roles = function_exists('bvmgr_staffing_role_map_by_id') ? (array) bvmgr_staffing_role_map_by_id(false) : array();
+        if (empty($roles)) {
+            return false;
+        }
+        $t_assignments = bvmgr_staffing_table_name('assignments');
+        $t_slots = bvmgr_staffing_table_name('event_slots');
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Recheck the current event-scoped assignment on each protected request.
+        $role_ids = $wpdb->get_col($wpdb->prepare(
+            'SELECT s.role_id FROM %i a INNER JOIN %i s ON s.slot_id = a.slot_id
+             WHERE a.staff_id = %d AND s.event_plan_id = %d AND a.status = \'confirmed\' AND s.status = \'active\'',
+            $t_assignments, $t_slots, $staff_id, $plan_id
+        ));
+        foreach ((array) $role_ids as $role_id) {
+            $role_id = absint($role_id);
+            if (!isset($roles[$role_id])) {
+                continue;
+            }
+            $user = get_userdata($user_id);
+            $user_roles = $user ? (array) $user->roles : array();
+            if (!$require_docs
+                || array_intersect($user_roles, array('event_manager', 'vms_event_manager'))
+                || bvmgr_staff_portal_assignment_can_view_docs(array('role_id' => $role_id, 'assignment_status' => 'confirmed'))) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
@@ -700,7 +776,9 @@ if (!function_exists('bvmgr_staff_portal_get_event_tech_docs')) {
                     'vendor_name' => $vendor_name,
                     'doc_key' => $doc_key,
                     'label' => (string) ($doc['label'] ?? __('Document', 'backstage-venue-manager')),
+                    'filename' => (string) ($payload['filename'] ?? ''),
                     'url' => bvmgr_vendor_portal_tech_doc_download_url($vendor_id, $doc_key, $plan_id),
+                    'preview_url' => bvmgr_vendor_portal_tech_doc_download_url($vendor_id, $doc_key, $plan_id, true),
                 );
             }
         }
@@ -825,7 +903,8 @@ if (!function_exists('bvmgr_staff_portal_build_shift_glance')) {
     function bvmgr_staff_portal_build_shift_glance(array $assignment, array $event_map = array()): array
     {
         $plan_id = absint($assignment['event_plan_id'] ?? 0);
-        $docs = bvmgr_staff_portal_assignment_can_view_docs($assignment)
+        $can_view_docs = bvmgr_staff_portal_user_can_access_event(get_current_user_id(), $plan_id, true);
+        $docs = $can_view_docs
             ? bvmgr_staff_portal_get_event_tech_docs($plan_id)
             : array();
 
@@ -834,7 +913,7 @@ if (!function_exists('bvmgr_staff_portal_build_shift_glance')) {
             'ticket_qty' => bvmgr_staff_portal_get_event_ticket_qty($plan_id),
             'docs' => $docs,
             'crew' => bvmgr_staff_portal_get_event_crew_rows($plan_id),
-            'can_view_docs' => bvmgr_staff_portal_assignment_can_view_docs($assignment),
+            'can_view_docs' => $can_view_docs,
         );
     }
 }
@@ -1008,7 +1087,7 @@ if (!function_exists('bvmgr_staff_portal_render_assigned_event_cards')) {
             return;
         }
 
-        echo '<div class="vms-staff-shift-section">';
+        echo '<div class="vms-staff-shift-section" id="vms-assigned-events">';
         echo '<h3>' . esc_html__('Assigned Events', 'backstage-venue-manager') . '</h3>';
         echo '<div class="vms-staff-shift-cards">';
 
@@ -1024,11 +1103,16 @@ if (!function_exists('bvmgr_staff_portal_render_assigned_event_cards')) {
 
             $primary_assignment = (array) reset($assignments_for_event);
             $plan_id = absint($group['event_plan_id'] ?? ($primary_assignment['event_plan_id'] ?? 0));
+            if (!bvmgr_staff_portal_user_can_access_event(get_current_user_id(), $plan_id)) {
+                continue;
+            }
             $event = bvmgr_staff_portal_assignment_event_payload($primary_assignment, $event_map);
             $ticket_qty = bvmgr_staff_portal_get_event_ticket_qty($plan_id);
-            $docs = !empty($group['can_view_docs']) ? bvmgr_staff_portal_get_event_tech_docs($plan_id) : array();
+            $can_view_docs = bvmgr_staff_portal_user_can_access_event(get_current_user_id(), $plan_id, true);
+            $docs = $can_view_docs ? bvmgr_staff_portal_get_event_tech_docs($plan_id) : array();
+            $counts = function_exists('bvmgr_vendor_portal_get_count_breakdown')
+                ? (array) bvmgr_vendor_portal_get_count_breakdown($plan_id) : array();
             $staff_rows = bvmgr_staff_portal_consolidate_crew_rows(bvmgr_staff_portal_get_event_crew_rows($plan_id));
-            $can_view_docs = !empty($group['can_view_docs']);
 
             $title = trim((string) ($group['event_title'] ?? ($event['title'] ?? '')));
             if ($title === '') {
@@ -1078,6 +1162,11 @@ if (!function_exists('bvmgr_staff_portal_render_assigned_event_cards')) {
             echo '<div class="vms-staff-shift-kpis">';
             echo '<div class="vms-staff-shift-kpi"><b>' . esc_html__('Tickets sold', 'backstage-venue-manager') . '</b><span>' . esc_html($ticket_qty === null ? '—' : (string) (int) $ticket_qty) . '</span></div>';
             echo '<div class="vms-staff-shift-kpi"><b>' . esc_html__('Staff assigned', 'backstage-venue-manager') . '</b><span>' . esc_html((string) count($staff_rows)) . '</span></div>';
+            if (!empty($counts['has_any'])) {
+                echo '<div class="vms-staff-shift-kpi"><b>' . esc_html__('Paid presales', 'backstage-venue-manager') . '</b><span>' . esc_html((string) (int) ($counts['presales'] ?? 0)) . '</span></div>';
+                echo '<div class="vms-staff-shift-kpi"><b>' . esc_html__('Paid at door', 'backstage-venue-manager') . '</b><span>' . esc_html((string) (int) ($counts['door_sales'] ?? 0)) . '</span></div>';
+                echo '<div class="vms-staff-shift-kpi"><b>' . esc_html__('Comp / guest list', 'backstage-venue-manager') . '</b><span>' . esc_html((string) (int) ($counts['comp_guest'] ?? 0)) . '</span></div>';
+            }
             if ($can_view_docs) {
                 echo '<div class="vms-staff-shift-kpi"><b>' . esc_html__('Tech docs', 'backstage-venue-manager') . '</b><span>' . esc_html((string) count($docs)) . '</span></div>';
             }
@@ -1166,7 +1255,9 @@ if (!function_exists('bvmgr_staff_portal_render_assigned_event_cards')) {
                         $label = trim((string) ($doc['label'] ?? __('Document', 'backstage-venue-manager')));
                         $vendor_name = trim((string) ($doc['vendor_name'] ?? ''));
                         $doc_text = $vendor_name !== '' ? ($vendor_name . ' · ' . $label) : $label;
-                        echo '<li><a href="' . esc_url((string) ($doc['url'] ?? '')) . '" target="_blank" rel="noopener">' . esc_html($doc_text) . '</a></li>';
+                        echo '<li><strong>' . esc_html($doc_text) . '</strong> <span>' . esc_html((string) ($doc['filename'] ?? '')) . '</span>';
+                        echo '<a href="' . esc_url((string) ($doc['preview_url'] ?? '')) . '" target="_blank" rel="noopener">' . esc_html__('Preview', 'backstage-venue-manager') . '</a> · ';
+                        echo '<a href="' . esc_url((string) ($doc['url'] ?? '')) . '">' . esc_html__('Download', 'backstage-venue-manager') . '</a></li>';
                     }
                     echo '</ul>';
                 } else {
@@ -1186,7 +1277,7 @@ if (!function_exists('bvmgr_staff_portal_render_assigned_event_cards')) {
 }
 
 if (!function_exists('bvmgr_staff_portal_get_assignment_rows')) {
-    function bvmgr_staff_portal_get_assignment_rows(int $staff_id, int $limit = 100): array
+    function bvmgr_staff_portal_get_assignment_rows(int $staff_id, int $limit = 100, string $status_filter = ''): array
     {
         global $wpdb;
 
@@ -1203,6 +1294,10 @@ if (!function_exists('bvmgr_staff_portal_get_assignment_rows')) {
         }
 
 	        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Staff portal assignment reads join normalized staffing tables with prepared identifier/filter values, and the portal timeline must observe immediate staffing changes without a persistent cache layer.
+        $today = wp_date('Y-m-d', time(), wp_timezone());
+        $status_clause = in_array($status_filter, array('proposed', 'confirmed'), true)
+            ? "a.status = '" . $status_filter . "'"
+            : "a.status IN ('proposed','confirmed')";
 	        $raw_rows = $wpdb->get_results(
 	            $wpdb->prepare(
 	                'SELECT a.assignment_id, a.staff_id, a.status AS assignment_status, a.shift_start_ts, a.shift_end_ts,
@@ -1211,13 +1306,24 @@ if (!function_exists('bvmgr_staff_portal_get_assignment_rows')) {
 	                        s.end_anchor_key, s.end_offset_minutes, s.duration_minutes, s.notes AS slot_notes
 	                 FROM %i a
 	                 INNER JOIN %i s ON s.slot_id = a.slot_id
+                 INNER JOIN %i event_date ON event_date.post_id = s.event_plan_id
+                    AND event_date.meta_key = \'_vms_event_date\' AND event_date.meta_value >= %s
+                 LEFT JOIN %i event_status ON event_status.post_id = s.event_plan_id
+                    AND event_status.meta_key = \'_vms_event_plan_status\'
+                 INNER JOIN %i p ON p.ID = s.event_plan_id AND p.post_type = \'vms_event_plan\' AND p.post_status = \'publish\'
 	                 WHERE a.staff_id = %d
-	                   AND a.status IN (\'proposed\',\'confirmed\')
+	                   AND ' . $status_clause . '
 	                   AND s.status = \'active\'
-	                 ORDER BY COALESCE(a.shift_start_ts, 9223372036854775807) ASC, s.event_plan_id ASC, s.slot_id ASC
+                   AND (event_status.meta_value IS NULL OR event_status.meta_value NOT IN (\'draft\',\'cancelled\',\'canceled\',\'archived\'))
+                 ORDER BY event_date.meta_value ASC, COALESCE(a.shift_start_ts, 9223372036854775807) ASC,
+                          s.event_plan_id ASC, s.slot_id ASC, a.assignment_id ASC
 	                 LIMIT %d',
 	                $t_assignments,
 	                $t_slots,
+                $wpdb->postmeta,
+                $today,
+                $wpdb->postmeta,
+                $wpdb->posts,
 	                $staff_id,
 	                $limit
 	            ),
@@ -1227,8 +1333,7 @@ if (!function_exists('bvmgr_staff_portal_get_assignment_rows')) {
             return array();
         }
 
-        $today = wp_date('Y-m-d', time(), wp_timezone());
-        $role_map = function_exists('bvmgr_staffing_role_map_by_id') ? (array) bvmgr_staffing_role_map_by_id(true) : array();
+        $role_map = function_exists('bvmgr_staffing_role_map_by_id') ? (array) bvmgr_staffing_role_map_by_id(false) : array();
         $plan_cache = array();
         $rows = array();
 
@@ -1297,6 +1402,9 @@ if (!function_exists('bvmgr_staff_portal_get_assignment_rows')) {
             }
 
             $role_id = isset($row['role_id']) ? absint($row['role_id']) : 0;
+            if ($role_id <= 0 || !isset($role_map[$role_id])) {
+                continue;
+            }
             $role_label = trim((string) ($row['display_label_override'] ?? ''));
             if ($role_label === '' && $role_id > 0 && isset($role_map[$role_id]['name'])) {
                 $role_label = (string) $role_map[$role_id]['name'];
@@ -1784,7 +1892,7 @@ function bvmgr_staff_portal_shortcode()
     try {
 
     echo '<div class="vms-portal" id="vms-portal-root">';
-    echo '<h2>' . esc_html__('Staff Portal:', 'backstage-venue-manager') . ' ' . esc_html($staff->post_title) . '</h2>';
+    echo '<p class="vms-staff-welcome">' . esc_html(sprintf(__('Welcome, %s', 'backstage-venue-manager'), $staff->post_title)) . '</p>';
 
     echo '<nav class="vms-portal-nav">';
     echo '<a class="' . ($tab === 'dashboard' ? 'is-active' : '') . '" href="' . esc_url($url_dashboard) . '">' . esc_html__('Dashboard', 'backstage-venue-manager') . '</a>';
@@ -1818,10 +1926,10 @@ if (!function_exists('bvmgr_staff_portal_render_dashboard')) {
     function bvmgr_staff_portal_render_dashboard(int $staff_id, string $worker_type, string $tax_tab_label, string $url_tax_tab, string $url_availability, string $url_certifications = ''): void
     {
         $tz = wp_timezone();
-        if (function_exists('bvmgr_staffing_render_lifecycle_controls')) bvmgr_staffing_render_lifecycle_controls(0, 'staff');
-        $assignments = bvmgr_staff_portal_get_assignment_rows($staff_id, 12);
-        $event_map = bvmgr_staff_portal_calendar_event_map($assignments);
-        $next_shift = !empty($assignments) ? $assignments[0] : null;
+        $confirmed = bvmgr_staff_portal_get_assignment_rows($staff_id, 12, 'confirmed');
+        $proposed = bvmgr_staff_portal_get_assignment_rows($staff_id, 12, 'proposed');
+        $event_map = bvmgr_staff_portal_calendar_event_map($confirmed);
+        $next_shift = !empty($confirmed) ? $confirmed[0] : null;
         $next_shift_glance = !empty($next_shift) ? bvmgr_staff_portal_build_shift_glance($next_shift, $event_map) : array();
 
         if ($worker_type === 'employee') {
@@ -1881,6 +1989,7 @@ if (!function_exists('bvmgr_staff_portal_render_dashboard')) {
                 echo '<div class="vms-dash-kpi"><b>' . esc_html__('Tech docs', 'backstage-venue-manager') . '</b><span>' . esc_html((string) count($next_docs)) . '</span></div>';
             }
             echo '</div>';
+            echo '<p class="vms-mt-10"><a class="button button-primary" href="#vms-assigned-events">' . esc_html__('Open event details', 'backstage-venue-manager') . '</a></p>';
         } else {
             echo '<p class="vms-muted vms-m0">' . esc_html__('No upcoming shifts are assigned yet.', 'backstage-venue-manager') . '</p>';
         }
@@ -1888,9 +1997,9 @@ if (!function_exists('bvmgr_staff_portal_render_dashboard')) {
 
         echo '<div class="vms-portal-card">';
         echo '<h3>' . esc_html__('Upcoming Schedule', 'backstage-venue-manager') . '</h3>';
-        if (!empty($assignments)) {
+        if (!empty($confirmed)) {
             echo '<ul class="vms-dash-list">';
-            foreach (array_slice($assignments, 0, 6) as $assignment) {
+            foreach (array_slice($confirmed, 0, 6) as $assignment) {
                 $line = trim((string) ($assignment['short_date_label'] ?? ''));
                 if (!empty($assignment['shift_label'])) {
                     $line .= ' @ ' . (string) $assignment['shift_label'];
@@ -1942,7 +2051,26 @@ if (!function_exists('bvmgr_staff_portal_render_dashboard')) {
         echo '</div>';
         echo '</div>';
 
-        bvmgr_staff_portal_render_assigned_event_cards($staff_id, array_slice($assignments, 0, 6), $event_map);
+        echo '<section class="vms-portal-card vms-staff-pending">';
+        echo '<h3>' . esc_html__('Pending proposals', 'backstage-venue-manager') . '</h3>';
+        if (!empty($proposed)) {
+            echo '<ul class="vms-dash-list">';
+            foreach ($proposed as $assignment) {
+                echo '<li><strong>' . esc_html((string) ($assignment['date_label'] ?? '')) . '</strong> · '
+                    . esc_html((string) ($assignment['event_title'] ?? '')) . ' · '
+                    . esc_html((string) ($assignment['role_label'] ?? '')) . '</li>';
+            }
+            echo '</ul><p><a class="button button-primary" href="#vms-staff-responses">' . esc_html__('Review and respond', 'backstage-venue-manager') . '</a></p>';
+        } else {
+            echo '<p class="vms-muted">' . esc_html__('No proposals need a response.', 'backstage-venue-manager') . '</p>';
+        }
+        echo '</section>';
+
+        echo '<div id="vms-staff-responses" class="vms-staff-responses">';
+        if (function_exists('bvmgr_staffing_render_lifecycle_controls')) bvmgr_staffing_render_lifecycle_controls(0, 'staff');
+        echo '</div>';
+
+        bvmgr_staff_portal_render_assigned_event_cards($staff_id, array_slice($confirmed, 0, 6), $event_map);
 
         echo '</div>';
     }

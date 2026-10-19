@@ -43,6 +43,8 @@ final class VMS_Test_WPDB
 {
 	public string $prefix = 'wp_';
 	public string $usermeta = 'wp_usermeta';
+	public string $postmeta = 'wp_postmeta';
+	public string $posts = 'wp_posts';
 	public int $insert_id = 901;
 	/** @var array<int,array<string,mixed>> */
 	public array $call_log = array();
@@ -852,9 +854,9 @@ try {
 	vms_test_assert_same('Ops', $assignment_rows[0]['role_label'] ?? '', 'Assignment-row reads should retain the normalized role label.');
 	$prepare = vms_test_find_prepare($wpdb, 'SELECT a.assignment_id, a.staff_id, a.status AS assignment_status');
 	vms_test_assert_same(
-		array('wp_vms_assignments', 'wp_vms_event_slots', 51, 25),
+		array('wp_vms_assignments', 'wp_vms_event_slots', 'wp_postmeta', wp_date('Y-m-d', time(), wp_timezone()), 'wp_postmeta', 'wp_posts', 51, 25),
 		$prepare['args'],
-		'Assignment-row reads should prepare the staffing table identifiers, staff ID, and limit.'
+		'Assignment-row reads should prepare the staffing and event-date tables, today, staff ID, and limit.'
 	);
 	vms_test_assert_no_placeholders(vms_test_last_call($wpdb, 'get_results')['query'], 'Assignment-row reads should execute fully prepared SQL.');
 

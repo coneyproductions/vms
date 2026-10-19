@@ -2001,6 +2001,30 @@ details.vms-av-method[data-method="ics"] .field input[type="url"] {
   gap: 12px
 }
 
+.vms-portal .vms-staff-welcome {
+  color: #334155;
+  font-size: 1.05rem;
+  font-weight: 650;
+  margin: 0 0 16px;
+}
+
+.vms-portal .vms-staff-pending,
+.vms-portal .vms-staff-responses,
+.vms-portal .vms-staff-shift-section {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.vms-portal .vms-staff-pending {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.vms-portal .vms-staff-shift-list li a {
+  display: inline-block;
+  margin-inline-start: 8px;
+}
+
 @media (max-width:820px) {
   .vms-dash-grid {
     grid-template-columns: 1fr

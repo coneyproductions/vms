@@ -6650,22 +6650,23 @@ if (!function_exists('bvmgr_vendor_portal_tech_doc_label')) {
 }
 
 if (!function_exists('bvmgr_vendor_portal_tech_doc_download_url')) {
-    function bvmgr_vendor_portal_tech_doc_download_url(int $vendor_id, string $doc_key, int $plan_id = 0): string
+    function bvmgr_vendor_portal_tech_doc_download_url(int $vendor_id, string $doc_key, int $plan_id = 0, bool $preview = false): string
     {
         $vendor_id = absint($vendor_id);
         $doc_key = sanitize_key($doc_key);
         $plan_id = absint($plan_id);
+        $query = array(
+            'action' => 'vms_vendor_portal_download_tech_doc',
+            'vendor_id' => $vendor_id,
+            'doc_key' => $doc_key,
+            'plan_id' => $plan_id,
+        );
+        if ($preview) {
+            $query['preview'] = 1;
+        }
 
         return wp_nonce_url(
-            add_query_arg(
-                array(
-                    'action' => 'vms_vendor_portal_download_tech_doc',
-                    'vendor_id' => $vendor_id,
-                    'doc_key' => $doc_key,
-                    'plan_id' => $plan_id,
-                ),
-                admin_url('admin-post.php')
-            ),
+            add_query_arg($query, admin_url('admin-post.php')),
             'bvmgr_vendor_portal_download_tech_doc_' . $vendor_id . '_' . $doc_key . '_' . $plan_id
         );
     }
@@ -6788,22 +6789,11 @@ if (!function_exists('bvmgr_vendor_portal_user_can_download_tech_doc')) {
             }
         }
 
-        if ($plan_id > 0 && function_exists('bvmgr_staff_portal_get_assignment_rows') && function_exists('bvmgr_staff_portal_assignment_can_view_docs')) {
-            $staff_id = (int) get_user_meta($user_id, '_vms_staff_id', true);
-            if ($staff_id > 0) {
-                $assignments = (array) bvmgr_staff_portal_get_assignment_rows($staff_id, 250);
-                foreach ($assignments as $assignment) {
-                    if (!is_array($assignment)) {
-                        continue;
-                    }
-                    if (absint($assignment['event_plan_id'] ?? 0) !== $plan_id) {
-                        continue;
-                    }
-                    if (bvmgr_staff_portal_assignment_can_view_docs($assignment)) {
-                        return true;
-                    }
-                }
-            }
+        if ($plan_id > 0 && function_exists('bvmgr_staff_portal_user_can_access_event')
+            && bvmgr_staff_portal_user_can_access_event($user_id, $plan_id, true)
+            && function_exists('bvmgr_tech_doc_vendor_ids')
+            && in_array($vendor_id, bvmgr_tech_doc_vendor_ids($plan_id), true)) {
+            return true;
         }
 
         return false;
@@ -6836,10 +6826,13 @@ if (!function_exists('bvmgr_vendor_portal_download_tech_doc_handler')) {
             $mime = 'application/octet-stream';
         }
 
+        $preview = isset($_GET['preview']) && !is_array($_GET['preview']) && (string) $_GET['preview'] === '1'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The authenticated and nonce-checked preview flag only selects safe response disposition.
+        $inline = $preview && in_array($mime, array('application/pdf', 'image/jpeg', 'image/png', 'image/webp'), true);
         bvmgr_private_files_stream_path(
             (string) ($payload['path'] ?? ''),
             (string) ($payload['filename'] ?? 'tech-doc'),
-            $mime
+            $mime,
+            $inline ? 'inline' : 'attachment'
         );
     }
 }
