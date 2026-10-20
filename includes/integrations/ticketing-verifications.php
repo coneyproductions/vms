@@ -547,6 +547,32 @@ if (!function_exists('bvmgr_ticketing_verification_get_effective_allowance')) {
     }
 }
 
+if (!function_exists('bvmgr_ticketing_verification_qualified_lock_name')) {
+    function bvmgr_ticketing_verification_qualified_lock_name(): string
+    {
+        global $wpdb;
+        return 'bvmgr_qt_' . substr(hash('sha256', DB_NAME . ':' . $wpdb->prefix), 0, 32);
+    }
+}
+
+if (!function_exists('bvmgr_ticketing_verification_qualified_lock_acquire')) {
+    function bvmgr_ticketing_verification_qualified_lock_acquire(): bool
+    {
+        global $wpdb;
+        $name = bvmgr_ticketing_verification_qualified_lock_name();
+        return 1 === (int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 30)', $name));
+    }
+}
+
+if (!function_exists('bvmgr_ticketing_verification_qualified_lock_release')) {
+    function bvmgr_ticketing_verification_qualified_lock_release(): void
+    {
+        global $wpdb;
+        $name = bvmgr_ticketing_verification_qualified_lock_name();
+        $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $name));
+    }
+}
+
 if (!function_exists('bvmgr_ticketing_verification_resolve_ticket_limit')) {
     function bvmgr_ticketing_verification_resolve_ticket_limit(int $user_id, string $program, int $ticket_max_qty = 0): int
     {
@@ -554,9 +580,6 @@ if (!function_exists('bvmgr_ticketing_verification_resolve_ticket_limit')) {
         $ticket_max_qty = max(0, absint($ticket_max_qty));
         if ($ticket_max_qty <= 0) {
             return $allowance;
-        }
-        if ($allowance <= 0) {
-            return $ticket_max_qty;
         }
         return min($allowance, $ticket_max_qty);
     }
@@ -1312,29 +1335,39 @@ if (!function_exists('bvmgr_ticketing_verification_assign_program')) {
             return false;
         }
 
-        $role = bvmgr_ticketing_verification_role_for_program($program);
-        if ($role !== '' && !in_array($role, (array) $user->roles, true)) {
-            $user->add_role($role);
+        $lock = in_array($program, array('veteran', 'first_responder'), true);
+        if ($lock && !bvmgr_ticketing_verification_qualified_lock_acquire()) {
+            return false;
         }
+        try {
+            $role = bvmgr_ticketing_verification_role_for_program($program);
+            if ($role !== '' && !in_array($role, (array) $user->roles, true)) {
+                $user->add_role($role);
+            }
 
-        $verified_programs = bvmgr_ticketing_get_user_verified_programs($user_id);
-        if (!in_array($program, $verified_programs, true)) {
-            $verified_programs[] = $program;
-            sort($verified_programs, SORT_STRING);
+            $verified_programs = bvmgr_ticketing_get_user_verified_programs($user_id);
+            if (!in_array($program, $verified_programs, true)) {
+                $verified_programs[] = $program;
+                sort($verified_programs, SORT_STRING);
+            }
+
+            update_user_meta($user_id, 'vms_verified_programs', $verified_programs);
+            update_user_meta($user_id, 'vms_verified_at_' . $program, current_time('mysql'));
+            if ($reviewer_id > 0) {
+                update_user_meta($user_id, 'vms_verified_by_' . $program, $reviewer_id);
+            }
+
+            $notes = trim(sanitize_text_field($notes));
+            if ($notes !== '') {
+                update_user_meta($user_id, 'vms_verified_notes_' . $program, $notes);
+            }
+
+            return true;
+        } finally {
+            if ($lock) {
+                bvmgr_ticketing_verification_qualified_lock_release();
+            }
         }
-
-        update_user_meta($user_id, 'vms_verified_programs', $verified_programs);
-        update_user_meta($user_id, 'vms_verified_at_' . $program, current_time('mysql'));
-        if ($reviewer_id > 0) {
-            update_user_meta($user_id, 'vms_verified_by_' . $program, $reviewer_id);
-        }
-
-        $notes = trim(sanitize_text_field($notes));
-        if ($notes !== '') {
-            update_user_meta($user_id, 'vms_verified_notes_' . $program, $notes);
-        }
-
-        return true;
     }
 }
 
@@ -1352,29 +1385,39 @@ if (!function_exists('bvmgr_ticketing_verification_remove_program')) {
             return false;
         }
 
-        $role = bvmgr_ticketing_verification_role_for_program($program);
-        if ($role !== '' && in_array($role, (array) $user->roles, true)) {
-            $user->remove_role($role);
+        $lock = in_array($program, array('veteran', 'first_responder'), true);
+        if ($lock && !bvmgr_ticketing_verification_qualified_lock_acquire()) {
+            return false;
         }
+        try {
+            $role = bvmgr_ticketing_verification_role_for_program($program);
+            if ($role !== '' && in_array($role, (array) $user->roles, true)) {
+                $user->remove_role($role);
+            }
 
-        $meta_programs = get_user_meta($user_id, 'vms_verified_programs', true);
-        $meta_programs = is_array($meta_programs) ? $meta_programs : array();
-        $updated_programs = array();
-        foreach ($meta_programs as $stored_program) {
-            $stored_program = sanitize_key((string) $stored_program);
-            if ($stored_program !== '' && $stored_program !== $program) {
-                $updated_programs[$stored_program] = $stored_program;
+            $meta_programs = get_user_meta($user_id, 'vms_verified_programs', true);
+            $meta_programs = is_array($meta_programs) ? $meta_programs : array();
+            $updated_programs = array();
+            foreach ($meta_programs as $stored_program) {
+                $stored_program = sanitize_key((string) $stored_program);
+                if ($stored_program !== '' && $stored_program !== $program) {
+                    $updated_programs[$stored_program] = $stored_program;
+                }
+            }
+            $updated_programs = array_values($updated_programs);
+            sort($updated_programs, SORT_STRING);
+
+            update_user_meta($user_id, 'vms_verified_programs', $updated_programs);
+            delete_user_meta($user_id, 'vms_verified_at_' . $program);
+            delete_user_meta($user_id, 'vms_verified_by_' . $program);
+            delete_user_meta($user_id, 'vms_verified_notes_' . $program);
+
+            return true;
+        } finally {
+            if ($lock) {
+                bvmgr_ticketing_verification_qualified_lock_release();
             }
         }
-        $updated_programs = array_values($updated_programs);
-        sort($updated_programs, SORT_STRING);
-
-        update_user_meta($user_id, 'vms_verified_programs', $updated_programs);
-        delete_user_meta($user_id, 'vms_verified_at_' . $program);
-        delete_user_meta($user_id, 'vms_verified_by_' . $program);
-        delete_user_meta($user_id, 'vms_verified_notes_' . $program);
-
-        return true;
     }
 }
 
@@ -2675,10 +2718,17 @@ if (!function_exists('bvmgr_ticketing_verification_handle_save_allowances')) {
 
         $raw = bvmgr_ticketing_verification_post_array('vms_verification_program_allowances');
         $allowances = bvmgr_ticketing_verification_sanitize_allowances($raw);
-        $ok = update_option(bvmgr_ticketing_verification_allowances_option_key(), $allowances, false);
-        if (!$ok) {
-            $saved = get_option(bvmgr_ticketing_verification_allowances_option_key(), array());
-            $ok = (bvmgr_ticketing_verification_sanitize_allowances($saved) === $allowances);
+        $ok = false;
+        if (bvmgr_ticketing_verification_qualified_lock_acquire()) {
+            try {
+                $ok = update_option(bvmgr_ticketing_verification_allowances_option_key(), $allowances, false);
+                if (!$ok) {
+                    $saved = get_option(bvmgr_ticketing_verification_allowances_option_key(), array());
+                    $ok = (bvmgr_ticketing_verification_sanitize_allowances($saved) === $allowances);
+                }
+            } finally {
+                bvmgr_ticketing_verification_qualified_lock_release();
+            }
         }
 
         $notice = $ok ? 'allowances_saved' : 'allowances_failed';

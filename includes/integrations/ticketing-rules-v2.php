@@ -3693,7 +3693,8 @@ function bvmgr_ticketing_v2_resolve_claim_eligibility_for_user(
 
 /**
  * Resolve per-assignee event usage limit for claim assignment validation.
- * Falls back to ticket claim settings and raises cap for matched credential/direct-grant rules.
+ * A matched credential's effective allowance is authoritative, including zero;
+ * an event-specific direct grant may independently raise the limit.
  */
 function bvmgr_ticketing_v2_assignee_claims_per_event_limit(array $context, WP_User $assignee_user, array $resolved = array()): int
 {
@@ -3719,8 +3720,8 @@ function bvmgr_ticketing_v2_assignee_claims_per_event_limit(array $context, WP_U
         // overrides like 4 behave as though they were still limited to the
         // ticket/card setting.
         $program_limit = max(0, absint(bvmgr_ticketing_v2_resolve_verified_ticket_limit((int) $assignee_user->ID, $matched_program, 0)));
-        if ($program_limit > 0) {
-            $base_limit = max($base_limit, $program_limit);
+        if ($matched_rule_path !== 'event_direct_grant') {
+            $base_limit = $program_limit;
         }
     }
 
@@ -3754,7 +3755,7 @@ function bvmgr_ticketing_v2_assignee_claims_per_event_limit(array $context, WP_U
         }
     }
 
-    return max(1, $base_limit);
+    return max(0, $base_limit);
 }
 
 /**
