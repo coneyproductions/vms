@@ -1,6 +1,11 @@
 (function () {
     'use strict';
 
+    // Also protect against an old cached enqueue on an existing-order pay page.
+    if (document.querySelector('form#order_review') || (document.body && document.body.classList.contains('woocommerce-order-pay'))) {
+        return;
+    }
+
     var cfg = window.VMSXCheckoutPolicies || {};
     if (!cfg.ajaxUrl || !cfg.nonce) {
         return;
