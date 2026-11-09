@@ -1,0 +1,20 @@
+[
+  {
+    "test": "cart-recovery.cjs",
+    "original_sha256": "f51cfe2121c81557892ac40566d31f592a4ceb8c4360c4d2dc2bc7fd036b0640",
+    "published_sha256": "968a970e6b050810a1d58c8ab17340cf91c5fe39de0850186b3110d67c5e65ce",
+    "adaptation": "Dependency/source/output paths made configurable; fixture order ID changed to 7001. Assertions and application source are unchanged."
+  },
+  {
+    "test": "status-browser.cjs",
+    "original_sha256": "316c8ef7c8115beb8e531e865a827a2c7acff29f981b38ecb6b1a4b869aeca7b",
+    "published_sha256": "66fde209d7593021beb9ab7ed6850cadedc389b4d164b7679a3719c41286e1cc",
+    "adaptation": "Dependency/source/output paths made configurable; fixture order ID changed to 7001. Assertions and application source are unchanged."
+  },
+  {
+    "test": "admission-workflows.cjs",
+    "original_sha256": "1537f029e36ed452654e34a0171d385d2eb8a3b0528426942a75c6ee9ad3d015",
+    "published_sha256": "0269223661f3954f86d63aa7f7bf726b8b55520b926585c3593f2174bab8fa77",
+    "adaptation": "Dependency/source/output paths made configurable; fixture order ID changed to 7001. Assertions and application source are unchanged."
+  }
+]

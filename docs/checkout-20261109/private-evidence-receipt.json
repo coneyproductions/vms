@@ -1,0 +1,11 @@
+{
+  "identifier": "checkout-source-recovery-20261109",
+  "recorded_at_utc": "2026-11-09T23:08:26.124430+00:00",
+  "archive_sha256": "bb050c88cfedf2c975ba3b53eba786c45933eabf268f6722ea0d727c76012e16",
+  "bytes": 157197710,
+  "regular_files": 42785,
+  "inventory_sha256": "e2c98808fbc0dfaee915bce6dbaebc3102024ed28942a6415bccdf5d62407c62",
+  "mode": "0400 within private 0700 directory",
+  "scope": "Complete local investigation before source-control reconstruction; private raw evidence is excluded from GitHub",
+  "verified_full_archive": true
+}
