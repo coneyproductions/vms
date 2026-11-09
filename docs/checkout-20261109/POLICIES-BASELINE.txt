@@ -1,0 +1,5 @@
+Issue #124 — standalone VMS Checkout Policies baseline.
+
+Exact retained 0.2.4-rc1 runtime, four files, preceding the November 9 manual-order correction. This is the earlier #119 policy-click-race release, not evidence of the November 9 fix. Imported as a new snapshot checkpoint at companion-plugins/vmsx-checkout-policies, following the existing standalone companion layout. Its current canonical tree identity is 4905fe0e54f65e4c4995a7a656c710792fc801f2d4f3c37eb8a020e2083a1fdd. The earlier #119 report used a different manifest serialization; per-file source bytes remain authoritative.
+
+The policy correction PR targets this branch. No plugin version or artifact is rebuilt or relabeled by this import, and no deployment or merge is authorized.
