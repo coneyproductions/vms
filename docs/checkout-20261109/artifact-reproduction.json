@@ -1,0 +1,35 @@
+[
+  {
+    "component": "BVM Staging .1",
+    "source_commit": "cfaf4ec15636a6407db0908c98b857962081f81c",
+    "runtime_prefix": "",
+    "files": 431,
+    "tree_sha256": "1555b2fd1f7d6428cb07f06078c1d0b91af6a1ffc387099ad2515189d88a5e27",
+    "retained_zip_sha256": "c1b1cc96d0d44c77731f8dfd1d43218d1cf27eb3c65d9144d5d5263aa5dc8f89",
+    "rebuilt_zip_sha256": "c1b1cc96d0d44c77731f8dfd1d43218d1cf27eb3c65d9144d5d5263aa5dc8f89",
+    "byte_identical": true,
+    "build_generated_source_exceptions": []
+  },
+  {
+    "component": "Policies Staging .1",
+    "source_commit": "489bef43c7664112f865df072ce2ad8b94731158",
+    "runtime_prefix": "companion-plugins/vmsx-checkout-policies/",
+    "files": 4,
+    "tree_sha256": "c717cf85d3214d14352ea34d6c22e94648eba15e9f1fd05a9d750d7cb33ef569",
+    "retained_zip_sha256": "ac8e144f00cfe3954bee19d6687f0844bf5ca7e4a688c9b1d07de2635c5d4094",
+    "rebuilt_zip_sha256": "ac8e144f00cfe3954bee19d6687f0844bf5ca7e4a688c9b1d07de2635c5d4094",
+    "byte_identical": true,
+    "build_generated_source_exceptions": []
+  },
+  {
+    "component": "BVM quantity .2",
+    "source_commit": "1f5fa9880b23ce035092bffac0a6c4151a765b44",
+    "runtime_prefix": "",
+    "files": 431,
+    "tree_sha256": "f0ad3fdde68fb066fd4771ec402e6fcc94ea038aabb0e5373586ba17dc9c66b9",
+    "retained_zip_sha256": "1979232d04c3a024deaf6925f340dd6e89d64f7a5ed580bf67101887b5117df7",
+    "rebuilt_zip_sha256": "1979232d04c3a024deaf6925f340dd6e89d64f7a5ed580bf67101887b5117df7",
+    "byte_identical": true,
+    "build_generated_source_exceptions": []
+  }
+]

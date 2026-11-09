@@ -16,5 +16,11 @@
     "original_sha256": "1537f029e36ed452654e34a0171d385d2eb8a3b0528426942a75c6ee9ad3d015",
     "published_sha256": "0269223661f3954f86d63aa7f7bf726b8b55520b926585c3593f2174bab8fa77",
     "adaptation": "Dependency/source/output paths made configurable; fixture order ID changed to 7001. Assertions and application source are unchanged."
+  },
+  {
+    "test": "quantity-lifecycle.cjs",
+    "original_sha256": "80772d85947b8dd459a84b18472d388820d54c4fe960e7fcc59bf0a48e8081a7",
+    "published_sha256": "e2b3f43c6601b644e1f23a9eea42ddfc9c7eb3f218166b2cbb69d6da51a4fe51",
+    "adaptation": "Dependency/source/output paths made configurable; fixture order ID changed to 7001. Assertions and application source are unchanged."
   }
 ]

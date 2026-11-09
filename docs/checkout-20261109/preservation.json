@@ -1,0 +1,18 @@
+{
+  "unrelated_bvm_files_identical": 425,
+  "no_runtime_files_added_or_removed": true,
+  "changed_runtime_files": [
+    "assets/css/vms-ticketing-front.css",
+    "assets/vms-ticketing-front.js",
+    "backstage-venue-manager.php",
+    "includes/core/registry/constants.php",
+    "readme.txt",
+    "vms-build.txt"
+  ],
+  "staff_files_sha256": {
+    "includes/portal/staff-console.php": "3b89f19d411ffdbd578e2d3dc4336bcbeea363e5dbeedf4ab40d7e3c10f90aac",
+    "includes/portal/staff-portal.php": "8365d570aa8acd04b567dff1760db8efd045983e343d8abde41221de117e0bfd"
+  },
+  "server_ticketing_sha256": "474b1749afafadfa2b503bd028f8217408f586d890f71d30eb0e9ceb366b8994",
+  "runtime_baseline_commit": "cfaf4ec15636a6407db0908c98b857962081f81c"
+}

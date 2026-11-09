@@ -1,0 +1,34 @@
+{
+  "local_focused_assertions": 131,
+  "original_result_summaries": [
+    {
+      "suite": "quantity-lifecycle-results.txt",
+      "passes": 71,
+      "original_result_sha256": "757f258f6521548850c765c8d65ee2693c9dfe74a06837140b6ac794121e6651"
+    },
+    {
+      "suite": "cart-recovery-results.txt",
+      "passes": 28,
+      "original_result_sha256": "00871c71809a5896fd854cb9c584306cd2f2c3821e2359c3a4fee478900cfdde"
+    },
+    {
+      "suite": "status-browser-results.txt",
+      "passes": 21,
+      "original_result_sha256": "b16179ca8388117e8243e2460da930f3d5a2250318559731725e927eddc7556a"
+    },
+    {
+      "suite": "admission-workflows-results.txt",
+      "passes": 11,
+      "original_result_sha256": "0c6bb9fc8bf3b6d9d100dd496005a941f78f590b93a6b2d666173512865d0e98"
+    }
+  ],
+  "source_tree": "f0ad3fdde68fb066fd4771ec402e6fcc94ea038aabb0e5373586ba17dc9c66b9",
+  "scope": "Local synthetic browser/cart fixtures; real TEC quantity JS where stated. Not a provider payment or renewed Staging acceptance.",
+  "reuse": "Unchanged original 9 PHP checks, native policy/ownership/status/staff evidence, original frozen 37-check correction and source identities remain in the private archive. No broad acceptance rerun for Git recovery.",
+  "existing_stage": "70 focused positive assertions plus failed quantity-consistency case; HOLD",
+  "outstanding": [
+    "Exact .2 Staging installation and focused nonpayment acceptance under renewed approval",
+    "Square SDK/provider transactions, replay/callback/financial issuance acceptance under separate authorization",
+    "Physical iPhone Safari/Android, enlarged-text and assistive-technology acceptance"
+  ]
+}
