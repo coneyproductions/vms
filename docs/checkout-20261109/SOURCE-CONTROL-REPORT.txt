@@ -15,8 +15,11 @@ scoped exporter in scripts/checkout-20261109; sanitized documentation/manifests
 in docs/checkout-20261109. The full raw investigation remains private.
 
 Only a fresh isolated clone was changed. Main project's 14 tracked modifications
-and 1,682 untracked files remain byte-identical. The earlier Issue #119 worktree
-and frozen public-review BVM mirror retain their HEAD, branch and working bytes.
+and 1,682 untracked files remain byte-identical. The frozen public-review BVM mirror retains its HEAD, branch and working bytes.
+The earlier Issue #119 source/branches remain unchanged by this recovery. Its existing
+monitor concurrently added three observation files and updated two monitoring files
+after the earlier byte-preservation check; those unrelated updates were left alone.
+See concurrent-monitor-observation.json. The original preflight state is archived.
 No Staging/Production, Local WordPress install, real-order or transaction change.
 No merge, force-push, rebase, dirty reset, security exception or artifact overwrite.
 
