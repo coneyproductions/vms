@@ -6346,9 +6346,8 @@ function bvmgr_ticketing_v2_filter_my_tickets_link_ticket_count_by_type(array $c
         return $count_by_type;
     }
 
-    $active_count = function_exists('bvmgr_ticketing_v2_active_ticket_count_for_event_user')
-        ? bvmgr_ticketing_v2_active_ticket_count_for_event_user($event_id, $user_id)
-        : -1;
+    $purchase_status = bvmgr_ticketing_v2_event_purchase_status($event_id, $user_id, bvmgr_ticketing_v2_event_ticket_product_ids_for_event($event_id));
+    $active_count = (int) ($purchase_status['issued_count'] ?? 0);
     if ($active_count < 0) {
         return $count_by_type;
     }
@@ -6527,6 +6526,98 @@ function bvmgr_ticketing_v2_sale_quantity_text(array $sale_state, array $ticket_
     }
     /* translators: %d: early bird. */
     return sprintf(_n('Early Bird: %d available', 'Early Bird: %d available', $remaining, 'backstage-venue-manager'), $remaining);
+}
+
+/**
+ * Read the signed-in buyer's status for one event without treating an unpaid
+ * order, a held order or a cart reservation as an issued admission.
+ */
+function bvmgr_ticketing_v2_event_purchase_status(int $event_id, int $user_id, array $product_ids): array
+{
+    $result = array('issued_count' => 0, 'paid_count' => 0, 'payment_orders' => array(), 'confirmation_orders' => array(), 'paid_orders' => array(), 'tickets_url' => '');
+    $product_ids = array_values(array_unique(array_filter(array_map('absint', $product_ids))));
+    if ($event_id <= 0 || $user_id <= 0 || $user_id !== (int) get_current_user_id() || empty($product_ids) || !function_exists('wc_get_orders')) {
+        return $result;
+    }
+    static $cache = array();
+    sort($product_ids);
+    $cache_key = $event_id . '|' . $user_id . '|' . implode(',', $product_ids);
+    if (isset($cache[$cache_key])) {
+        return $cache[$cache_key];
+    }
+    $product_set = array_fill_keys($product_ids, true);
+    $page = 1;
+    do {
+        $batch = wc_get_orders(array(
+            'customer_id' => $user_id,
+            'status' => array('pending', 'failed', 'on-hold', 'processing', 'completed'),
+            'limit' => 50,
+            'page' => $page,
+            'paginate' => true,
+            'orderby' => 'date',
+            'order' => 'DESC',
+            'return' => 'objects',
+        ));
+        $orders = is_object($batch) && isset($batch->orders) ? (array) $batch->orders : array();
+        foreach ($orders as $order) {
+            // Never reveal another account's order or its bearer payment key.
+            if (!$order instanceof WC_Order || (int) $order->get_customer_id() !== $user_id) {
+                continue;
+            }
+            $event_items = array();
+            foreach ($order->get_items('line_item') as $item_id => $item) {
+                $pid = (int) ($item->get_variation_id() ?: $item->get_product_id());
+                if (!isset($product_set[$pid])) {
+                    continue;
+                }
+                $remaining = max(0, (int) $item->get_quantity() - abs((int) $order->get_qty_refunded_for_item($item_id)));
+                if ($remaining > 0) {
+                    $event_items[(int) $item_id] = $remaining;
+                }
+            }
+            if (empty($event_items)) {
+                continue;
+            }
+            $summary = array('id' => (int) $order->get_id(), 'url' => esc_url_raw($order->get_view_order_url()));
+            if ($order->needs_payment()) {
+                $summary['url'] = esc_url_raw($order->get_checkout_payment_url());
+                $summary['total'] = html_entity_decode(wp_strip_all_tags($order->get_formatted_order_total()), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $result['payment_orders'][] = $summary;
+                continue;
+            }
+            if (!$order->is_paid()) {
+                $result['confirmation_orders'][] = $summary;
+                continue;
+            }
+            $result['paid_count'] += array_sum($event_items);
+            $result['paid_orders'][] = $summary;
+            $attendees = get_posts(array(
+                'post_type' => 'tribe_wooticket',
+                'post_status' => array('publish', 'private'),
+                'posts_per_page' => -1,
+                'fields' => 'ids',
+                'no_found_rows' => true,
+                'meta_query' => array(
+                    array('key' => '_tribe_wooticket_order', 'value' => (int) $order->get_id()),
+                    array('key' => '_tribe_wooticket_event', 'value' => $event_id),
+                ),
+            ));
+            foreach ($attendees as $attendee_id) {
+                $item_id = (int) get_post_meta($attendee_id, '_tribe_wooticket_order_item', true);
+                if (empty($event_items[$item_id])) {
+                    continue;
+                }
+                $event_items[$item_id]--;
+                $result['issued_count']++;
+            }
+        }
+        $page++;
+    } while ($page <= (int) (is_object($batch) ? ($batch->max_num_pages ?? 1) : 1));
+    if ($result['issued_count'] > 0 && class_exists('Tribe__Tickets__Tickets_View')) {
+        $result['tickets_url'] = esc_url_raw(Tribe__Tickets__Tickets_View::instance()->get_tickets_page_url($event_id));
+    }
+    $cache[$cache_key] = $result;
+    return $result;
 }
 
 function bvmgr_ticketing_v2_enqueue_front_bundle(): void
@@ -7120,6 +7211,23 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
         }
     }
 
+    // TEC restores these quantities into the ticket form. The atomic endpoint
+    // accepts additions, so the browser must send only increases over this cart.
+    $cart_ticket_quantities = array();
+    foreach ($event_ticket_product_ids as $cart_ticket_product_id) {
+        $cart_ticket_qty = bvmgr_ticketing_v2_cart_qty_for_product_id((int) $cart_ticket_product_id);
+        if ($cart_ticket_qty > 0) {
+            $cart_ticket_quantities[(string) $cart_ticket_product_id] = $cart_ticket_qty;
+        }
+    }
+
+    $event_purchase_status = ($is_event && $current_user_id > 0)
+        ? bvmgr_ticketing_v2_event_purchase_status((int) $tec_event_id, (int) $current_user_id, $event_ticket_product_ids)
+        : array();
+    if ($is_event && $current_user_id > 0) {
+        $my_active_ticket_count = (int) ($event_purchase_status['issued_count'] ?? 0);
+    }
+
     wp_localize_script('bvmgr-ticketing-front', 'BVMGR_TICKETING_FRONT', array(
         'tecEventId' => (int) $tec_event_id,
         'eventPlanId' => (int) $plan_id_for_event,
@@ -7171,6 +7279,8 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
         'checkoutBlockerMessages' => (($is_cart || $is_checkout) ? bvmgr_ticketing_v2_capture_checkout_blocker_error_messages() : array()),
         'eventIsRsvp' => !empty($event_is_rsvp) ? 1 : 0,
         'ticketAccessMap' => $ticket_access_map,
+        'cartTicketQuantities' => $cart_ticket_quantities,
+        'eventPurchaseStatus' => $event_purchase_status,
         'ticketRemainingMap' => $ticket_remaining_map,
         'ticketPriceMap' => $ticket_price_map,
         'disabledTicketProductIds' => array_values(array_unique(array_filter(array_map('absint', $disabled_ticket_product_ids)))),

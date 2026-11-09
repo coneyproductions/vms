@@ -1,0 +1,2160 @@
+{
+  "tree_sha256": "1555b2fd1f7d6428cb07f06078c1d0b91af6a1ffc387099ad2515189d88a5e27",
+  "files": [
+    {
+      "path": "LICENSE.txt",
+      "bytes": 683,
+      "sha256": "1dafd042348c3ca45492539bcdbe184fd38799717e8dec5a1b06875faaac265f"
+    },
+    {
+      "path": "admin/docs-page.php",
+      "bytes": 213,
+      "sha256": "41d0d5f43ec5d9a02f922736c082a8b71fc13dc0ac92369bae8b34d069973ed8"
+    },
+    {
+      "path": "admin/load.php",
+      "bytes": 368,
+      "sha256": "bb4fdb1a9bc84888635c94adfe783eff3a614103c0e742d28645b60e7ec7e719"
+    },
+    {
+      "path": "artifacts/business-discount-qr/customer-offer.png",
+      "bytes": 194837,
+      "sha256": "cc2bbc482e9b5b72c9129340b99de13c834a934e807bd9aac7e87f29889e29ea"
+    },
+    {
+      "path": "artifacts/business-discount-qr/operator-distribution.png",
+      "bytes": 119665,
+      "sha256": "d12da24b35a300f361cbb367c5213cabbf996510c474db17b430221ce3f3096d"
+    },
+    {
+      "path": "assets/admin-dashboard-prefs.js",
+      "bytes": 9052,
+      "sha256": "c3dbd3be48360d0b80b0a81774f5edbde78b73c14da970a6f308521e22dc02f7"
+    },
+    {
+      "path": "assets/admin-dashboard.js",
+      "bytes": 29772,
+      "sha256": "a79fef0f23de2045332523df838341859b83ee12db0534d4b52d94c9b30a776a"
+    },
+    {
+      "path": "assets/admin-help-tooltips.js",
+      "bytes": 4675,
+      "sha256": "ec4c88d155256c62d9a02d5d8a362bd2374edf310eae79f8b44f03488a54c971"
+    },
+    {
+      "path": "assets/admin-ticketing.js",
+      "bytes": 199703,
+      "sha256": "2e35846b8c81ae7b4adf2330c5c1180c1933ccda8f38aeef81513ce182372dc5"
+    },
+    {
+      "path": "assets/css/admin-ticket-integrity.css",
+      "bytes": 16296,
+      "sha256": "f38417c021542851369eb8423dad626e5ebc0ac7e2b5f066b927a247fc960b9c"
+    },
+    {
+      "path": "assets/css/docs-public.css",
+      "bytes": 846,
+      "sha256": "7df90937ca28627d9bbbfc26141f1cf434ca474000ac93735000f2a4bc121374"
+    },
+    {
+      "path": "assets/css/staff-tasks-calendar.css",
+      "bytes": 6726,
+      "sha256": "d20ebd577f13601507c5173a7feedcd13cf9c3f2212e6f118d7fee7035a685b9"
+    },
+    {
+      "path": "assets/css/ticketing-front/00-addons-modal.css",
+      "bytes": 4812,
+      "sha256": "13c094dc746470b4915932c00b45d3386425a6951c1bdeecb2ad319a2211146f"
+    },
+    {
+      "path": "assets/css/ticketing-front/10-ticket-core.css",
+      "bytes": 6849,
+      "sha256": "d0287804d3bc8696a5b350f3e56c1931da3a4841bddb16798125afe6e420b8f7"
+    },
+    {
+      "path": "assets/css/ticketing-front/20-footer-cta.css",
+      "bytes": 6161,
+      "sha256": "0d1b162493e16068572891d9d762e81734d44e195e7e2eac1a3afd1c4a5f6a69"
+    },
+    {
+      "path": "assets/css/ticketing-front/30-ticket-polish.css",
+      "bytes": 19777,
+      "sha256": "507d5b4eee4445c3e0c7233853d0c0c07c6cdf0d93d7109e312024ae1737a9f9"
+    },
+    {
+      "path": "assets/css/ticketing-front/40-ticket-locking.css",
+      "bytes": 8592,
+      "sha256": "9278c59193e4f6aaa81c08d132f9baf3c2be33668f9b6bf89f1d42c86bfd45c1"
+    },
+    {
+      "path": "assets/css/ticketing-front/50-verification-panel.css",
+      "bytes": 5812,
+      "sha256": "7235dde8f92cb169a69c2285d0d3e6e72bdd0b9ce6ff3dacb20bd70318e3039f"
+    },
+    {
+      "path": "assets/css/ticketing-front/60-cancelled-event.css",
+      "bytes": 2255,
+      "sha256": "84e240d0aeaf37bf35512a42fbc5b4ef2aa70f5c1f1d0a94e8877d70f1adf6b6"
+    },
+    {
+      "path": "assets/css/ticketing-front/70-ticket-ui-v2.css",
+      "bytes": 18482,
+      "sha256": "0ce8f42e781a98ed364a2005949048ffd16ade099b22bcb3c17b574ff072f32d"
+    },
+    {
+      "path": "assets/css/ticketing-front/80-ticket-ui-rewrite.css",
+      "bytes": 43969,
+      "sha256": "d55f117ea82f01cc8ff7b16677f529824ba3b20a6167dd86655b300360920c18"
+    },
+    {
+      "path": "assets/css/ticketing-front/90-ticket-progressive-ui.css",
+      "bytes": 17055,
+      "sha256": "dd6c3175aa16e7893cd562a5ef074b601cb84cfef3250cbd84c0054d97f6d03d"
+    },
+    {
+      "path": "assets/css/ticketing-front/95-ticket-public-polish.css",
+      "bytes": 6478,
+      "sha256": "77cffc0813bda964061ee8692b12050d5214817dac1390be0a3ad75ffe4f43a7"
+    },
+    {
+      "path": "assets/css/vendor-profile-public.css",
+      "bytes": 9313,
+      "sha256": "4dd14254391447a8cd99cd5971305f3ab2d5f574a12c15d07cf445dd633b5398"
+    },
+    {
+      "path": "assets/css/vms-add-dispatch-admin.css",
+      "bytes": 7190,
+      "sha256": "210c5715dff5dff82845c6b1a06b3052c09dc7cb2a60ff5ff6d347ff7d63667f"
+    },
+    {
+      "path": "assets/css/vms-add-dispatch-public-shell.css",
+      "bytes": 1200,
+      "sha256": "1b2618d485c3b1991e6d6d7e0611a826ba7f9e529a51c17431d4d2e233d14f32"
+    },
+    {
+      "path": "assets/css/vms-admin-menu.css",
+      "bytes": 1763,
+      "sha256": "e01d4269e492a5223cc3bf1da5f9088a5e0ff9e93558e91fec8980672477451f"
+    },
+    {
+      "path": "assets/css/vms-admin-ui.css",
+      "bytes": 54929,
+      "sha256": "fa440d53ae13fd9a9b183e37b5cc9badefddf7dd0efb660585c0caafceb20881"
+    },
+    {
+      "path": "assets/css/vms-admin.css",
+      "bytes": 171980,
+      "sha256": "73d8800d3dc44d87b059c6d2e7731059ba8d034c4213127c9ee68096d5f3e447"
+    },
+    {
+      "path": "assets/css/vms-admissions-admin.css",
+      "bytes": 3004,
+      "sha256": "3451c03ec7f1fbc2608d803269ab7b3466772389b918f2b20f8337d5cbd6a358"
+    },
+    {
+      "path": "assets/css/vms-door-checkin.css",
+      "bytes": 1975,
+      "sha256": "5ac1df5082dec142eaa806209867291c39d51e4c2712f84bf0e5e1e6ce0697a8"
+    },
+    {
+      "path": "assets/css/vms-email-followups-admin.css",
+      "bytes": 5010,
+      "sha256": "a702dfa08f8d3fdaeffe1b170ba6e882cc0fc44de2cadf367e55089b61b13b49"
+    },
+    {
+      "path": "assets/css/vms-entitlements-public.css",
+      "bytes": 45586,
+      "sha256": "550018dcc7765d5752631143d5147670f21a1269c20e7b5dec63aa27f38c79b3"
+    },
+    {
+      "path": "assets/css/vms-event-command-center.css",
+      "bytes": 18443,
+      "sha256": "28cb6c66696558847cec01a04860073ffa08e2ef68d1c3fdaf23658e6e593bb2"
+    },
+    {
+      "path": "assets/css/vms-event-day-report.css",
+      "bytes": 7919,
+      "sha256": "55b07a49c4b483ff7bf44bb6ac2d7e918c9a1bc1b29c2d290e7e36eaad329ba6"
+    },
+    {
+      "path": "assets/css/vms-event-details.css",
+      "bytes": 6598,
+      "sha256": "c47071282545586de2a28a342d07745479b51e8d9fa08d6be61e1018f66ac1db"
+    },
+    {
+      "path": "assets/css/vms-event-feedback.css",
+      "bytes": 5120,
+      "sha256": "72abf68a363794850a3770c3899b77f1d9a349d67d72f0c2304a6dd5536d1569"
+    },
+    {
+      "path": "assets/css/vms-event-profitability-admin.css",
+      "bytes": 5284,
+      "sha256": "4534a497f164e5ba9c3858b1e4f4189d9eb3d72ceef7a89d768af740a04da664"
+    },
+    {
+      "path": "assets/css/vms-goals-forecast-admin.css",
+      "bytes": 1704,
+      "sha256": "7bd4bef0d637a9b9e8773b3f8b631287415152a549c9bdda904028d6360c886a"
+    },
+    {
+      "path": "assets/css/vms-notices-front.css",
+      "bytes": 3828,
+      "sha256": "3c0a730fb10085b9f48274fa8283f6c2a970ead26e802ab68c526fb80828808a"
+    },
+    {
+      "path": "assets/css/vms-pass-claims-admin.css",
+      "bytes": 5460,
+      "sha256": "f70847ade96837c61968216c76e8871de48b70852bc63fece806fe8cc63ab115"
+    },
+    {
+      "path": "assets/css/vms-pass-claims-public.css",
+      "bytes": 5148,
+      "sha256": "19c2a901dd12f67b01fa0febbeef8306c9a3f20690c6a033e82faccf91d236c8"
+    },
+    {
+      "path": "assets/css/vms-portal.css",
+      "bytes": 83152,
+      "sha256": "befeb73768202ba8dbf22fc0b511fe08798412dbf45ce160b906f8b481a37fbe"
+    },
+    {
+      "path": "assets/css/vms-safety-admin.css",
+      "bytes": 1577,
+      "sha256": "a76d8cfa16424abf1b8f24c99e37b21886c8d55ce28a8541d8ff6f34155ebf4c"
+    },
+    {
+      "path": "assets/css/vms-shared.css",
+      "bytes": 2535,
+      "sha256": "23315854034baba747bcc1bee048f9f9ff6ce731a4f124b15d0f8288c90c23af"
+    },
+    {
+      "path": "assets/css/vms-staffing-admin.css",
+      "bytes": 1612,
+      "sha256": "c801af41ad474b36519ebe6f61203a2358b33e70c88b8bb00518a36da71cea37"
+    },
+    {
+      "path": "assets/css/vms-staffing-lifecycle.css",
+      "bytes": 855,
+      "sha256": "8da884ead46bf99bb3a6c2eaf795e0f3bedf3e6986efeb3d1eff7c58d795a03a"
+    },
+    {
+      "path": "assets/css/vms-status-notices-admin.css",
+      "bytes": 4413,
+      "sha256": "07101b10f7147853d7b26b9761504ca8bb2fbbcf7f514453268eee357daca8c7"
+    },
+    {
+      "path": "assets/css/vms-ticketing-claims-admin.css",
+      "bytes": 2112,
+      "sha256": "ecc8cf68cb5aa0399d459c93e8edbd181ab26599f422f81a41d58f0004000836"
+    },
+    {
+      "path": "assets/css/vms-ticketing-front.css",
+      "bytes": 147865,
+      "sha256": "f36429f98d750310edb311a4f4af7ff908d1937ed3c7a415daf99ecfcd441f4d"
+    },
+    {
+      "path": "assets/css/vms-tours-admin.css",
+      "bytes": 351,
+      "sha256": "50bd67f98b4932c2a7aa818d5840cf49b84b4a1cf4a0fe2b2ce318b8c6feb932"
+    },
+    {
+      "path": "assets/css/vms-tours.css",
+      "bytes": 4913,
+      "sha256": "fe076f23c5bfb745dbfcc969a434dd18466db62bad1efc3cb0b17df9834a1062"
+    },
+    {
+      "path": "assets/css/vms-ui.css",
+      "bytes": 26238,
+      "sha256": "c2b5c6bce54baa84b1e7281b7b9796bef5b5031d1614ff65a701ea8b2519db5c"
+    },
+    {
+      "path": "assets/js/admin-ticket-integrity.js",
+      "bytes": 1677,
+      "sha256": "90be721ee1f8f7b1d7052130fa79bf46842ce64a255b506c5d0504238324d52b"
+    },
+    {
+      "path": "assets/js/vms-add-dispatch-admin.js",
+      "bytes": 5162,
+      "sha256": "196679f6f165ecb20803ad55b98d3113bcd78171cd5667bc4c79f232330d2ba5"
+    },
+    {
+      "path": "assets/js/vms-admin-menu.js",
+      "bytes": 1740,
+      "sha256": "e89920d29f7c0c090834e10758c9c0b0b29397fc42cfb953a35392af080ce724"
+    },
+    {
+      "path": "assets/js/vms-admin-ui.js",
+      "bytes": 26115,
+      "sha256": "a915b1e44342a646b8dc33d79ce8f7761a9202681d140a6d149554a1b386c370"
+    },
+    {
+      "path": "assets/js/vms-admissions-admin.js",
+      "bytes": 22238,
+      "sha256": "083063f54a06f0a49c6d1f3c10099f2db68b25c6171de36b961f429b88d0a66c"
+    },
+    {
+      "path": "assets/js/vms-compensation-admin.js",
+      "bytes": 28373,
+      "sha256": "e3e168e29e59cea586894b3b7396cb21530cb2ef8e0e4b2b77bb6213d556f086"
+    },
+    {
+      "path": "assets/js/vms-continuity-binder.js",
+      "bytes": 1757,
+      "sha256": "764c65422e600cea15d5b8913d85464570a170d7676dcd069bf3436628ba7d94"
+    },
+    {
+      "path": "assets/js/vms-door-checkin.js",
+      "bytes": 7422,
+      "sha256": "70c4b11ec26d803267caa66c9a4c7ea1059e1d8294980ea6e6ec06b212dc3d3a"
+    },
+    {
+      "path": "assets/js/vms-email-followups-admin.js",
+      "bytes": 2922,
+      "sha256": "16633a0a264525d49fbe8c3e4d4e1a853dcb892c692ef8ece503b5fecc700d51"
+    },
+    {
+      "path": "assets/js/vms-event-day-report.js",
+      "bytes": 2139,
+      "sha256": "e5e54e423a7e1f674faa8d67ef33e8263f96561f66e4d887984854297d9916c4"
+    },
+    {
+      "path": "assets/js/vms-event-feedback.js",
+      "bytes": 3391,
+      "sha256": "d6168c5e7074cf6c535ec26b8d7b720bc5033522d3e7d10c002b7540b6e71048"
+    },
+    {
+      "path": "assets/js/vms-event-plan-compensation.js",
+      "bytes": 45432,
+      "sha256": "28aa65dd5b51037176fd6e7bc984e0c73a11cdf0cae77a287b8f5dbcff806637"
+    },
+    {
+      "path": "assets/js/vms-event-plan-import.js",
+      "bytes": 2029,
+      "sha256": "570950ca1c88a6475d61b72035bf9c692b2b98063a51c7a512148a88dc6f4f2f"
+    },
+    {
+      "path": "assets/js/vms-event-plan-primary-vendor.js",
+      "bytes": 13033,
+      "sha256": "6bad0e27bc2d5f6289d8388fa28c791c57501d357f663478bb02b2a69d1e5253"
+    },
+    {
+      "path": "assets/js/vms-event-plan-secondary-vendors.js",
+      "bytes": 42786,
+      "sha256": "29728da41f0f096ba2471e7d7115f3ef5b2aa0fd753609e24b8382e2459b41bc"
+    },
+    {
+      "path": "assets/js/vms-event-plan-shell.js",
+      "bytes": 21719,
+      "sha256": "09b6b450763027d0f586d26c62d43fb4fe37639299449f956c07228c64027a9d"
+    },
+    {
+      "path": "assets/js/vms-event-plan-staff.js",
+      "bytes": 8861,
+      "sha256": "eaa8a7d98d221e373e4b9c4c0aa8518bd0dfadf85bdc539a15c28602e99ed6f7"
+    },
+    {
+      "path": "assets/js/vms-event-plan-title.js",
+      "bytes": 4540,
+      "sha256": "db988c1423df720e9a44f51019f793ab928b8fb56cb03aaf7ca43c08434b05d9"
+    },
+    {
+      "path": "assets/js/vms-event-plan-workflow.js",
+      "bytes": 4881,
+      "sha256": "44b227aae477cef8c7d91e7ca27f84ce1c58cfdc9dffdd2a297a1f9ad3091688"
+    },
+    {
+      "path": "assets/js/vms-holidays-admin.js",
+      "bytes": 467,
+      "sha256": "9fdee40ea9837fd3601a43ed2aa92021ecc843d68730fc496ad0db6cc5ee02bc"
+    },
+    {
+      "path": "assets/js/vms-image-normalize.js",
+      "bytes": 4923,
+      "sha256": "9a12b0ec7e2e87d1bf94e2e00cf2b316cee15a01db72a951a0c391ecd569d1bd"
+    },
+    {
+      "path": "assets/js/vms-lineup-schedule-admin.js",
+      "bytes": 36375,
+      "sha256": "3c938390f0e7675a1ccd28e4f3c036ea400574aa41d55d3f7d6d27a44771e118"
+    },
+    {
+      "path": "assets/js/vms-notices-front.js",
+      "bytes": 21512,
+      "sha256": "a2e06c20cc0d475dd6a9b06440532b1f0ff997b6a4106ddfbfa63317a5de7d9e"
+    },
+    {
+      "path": "assets/js/vms-pass-claims-admin.js",
+      "bytes": 4232,
+      "sha256": "e195bd41d2abde28a1730163c363def0e9124b58b910db1fe345f7541c210b5e"
+    },
+    {
+      "path": "assets/js/vms-pass-claims-public.js",
+      "bytes": 1516,
+      "sha256": "fc7dc311b366870344c7d8f34b67714c71b96ea7b708d40cb451cc40a15bd0fa"
+    },
+    {
+      "path": "assets/js/vms-portal-calendar-modal.js",
+      "bytes": 4434,
+      "sha256": "0640e31ce572db719532f7b25889387ab55a0e5688f2f1f21027bccb598abee4"
+    },
+    {
+      "path": "assets/js/vms-public-calendar.js",
+      "bytes": 10531,
+      "sha256": "44131c259be7ceb35a009039832fca380d4daa4db8ac11a19a50501d199a9317"
+    },
+    {
+      "path": "assets/js/vms-reference-keys-map.js",
+      "bytes": 1171,
+      "sha256": "d07efa1e9e9bb40d00cde4dd31ed3358517033220f5516a248b941d2f186b9cf"
+    },
+    {
+      "path": "assets/js/vms-safety-admin.js",
+      "bytes": 629,
+      "sha256": "0b5d230a63df4f7010437f17aa6a847ab735bc8e4457942da5d76ff60d554f42"
+    },
+    {
+      "path": "assets/js/vms-settings-color-picker.js",
+      "bytes": 216,
+      "sha256": "aa6cd47e32a78ebac5a28fcc476b9b5b40733741c46fdb6b0892f04f37d7a1f6"
+    },
+    {
+      "path": "assets/js/vms-social-admin.js",
+      "bytes": 4734,
+      "sha256": "26d1a3d04ba95fc772f010557bd4c4d643f383e7fa1f4fa8b528e3873d4c4514"
+    },
+    {
+      "path": "assets/js/vms-staff-cpt-admin.js",
+      "bytes": 7494,
+      "sha256": "9886d61332f63754e27c2f253233831ab487f14d7af4272cbf45dce37a4e415a"
+    },
+    {
+      "path": "assets/js/vms-staff-portal.js",
+      "bytes": 5950,
+      "sha256": "4d68cd59f6b4e701e82d1705a5e2b864ff28fb4ed754e480bff6faea7d3827b8"
+    },
+    {
+      "path": "assets/js/vms-staffing-admin.js",
+      "bytes": 6047,
+      "sha256": "39772809cdf14de92be34f64ab85659f77aa7c99e665aedc71b8baae01a76634"
+    },
+    {
+      "path": "assets/js/vms-staffing-lifecycle.js",
+      "bytes": 2484,
+      "sha256": "451cc362a3e1e1b486b043de122d8eea942c3736b4df143e25c97552feecb48c"
+    },
+    {
+      "path": "assets/js/vms-status-notices-admin.js",
+      "bytes": 20537,
+      "sha256": "b81f959d7851f0171297f8814796d06b404bde49678d4484425bdc7a60d91d3e"
+    },
+    {
+      "path": "assets/js/vms-tasks-admin-pages.js",
+      "bytes": 3389,
+      "sha256": "c9cbab77f53d51dd3c6fc72b76ec115b9312587db5cf153514d8e4c4efda3260"
+    },
+    {
+      "path": "assets/js/vms-tasks-event-plan-metabox.js",
+      "bytes": 5127,
+      "sha256": "27dcbe4b785860de357d07f9c4c6621fcd3353fdda97916757acd4343f83fc74"
+    },
+    {
+      "path": "assets/js/vms-tax-bypass-admin.js",
+      "bytes": 763,
+      "sha256": "e3962d2d965b20a49ae48f0f2ed4513fd37374650017460197818b6e1db1fc5b"
+    },
+    {
+      "path": "assets/js/vms-ticketing-front.js",
+      "bytes": 914,
+      "sha256": "1256b00630aadae36687defef8e662f5af79caf50828d111763bd207ee2cf587"
+    },
+    {
+      "path": "assets/js/vms-tours-admin.js",
+      "bytes": 464,
+      "sha256": "8995df8b926af7d88c0169b5696c0457f13a3b93e6e02d1d438d12abfd7cac49"
+    },
+    {
+      "path": "assets/js/vms-tours-runtime.js",
+      "bytes": 36610,
+      "sha256": "afcd695b35406fc12293d12e6ca37f3a2701088ea9cea54986c5bd4b558b7f43"
+    },
+    {
+      "path": "assets/js/vms-tours.js",
+      "bytes": 24924,
+      "sha256": "29eff3559f5ecd1a0c80c68ef2bc9036512827cd59999b06e5720220dafb5380"
+    },
+    {
+      "path": "assets/js/vms-vendor-apply.js",
+      "bytes": 4547,
+      "sha256": "1856166b2a3785803148bc9019867e7b9e387e6b953f2099959ebb2af99e685c"
+    },
+    {
+      "path": "assets/js/vms-vendor-guest-portal.js",
+      "bytes": 3743,
+      "sha256": "d05a0cbf714b239ad476845112954abe6d18bbd6c21b502f0de4ea0111b9af3c"
+    },
+    {
+      "path": "assets/js/vms-vendor-portal.js",
+      "bytes": 15482,
+      "sha256": "e8cfe2895462dbe720e8ad21563ede0e4dc79ff9b980d57de608f72fa3334edd"
+    },
+    {
+      "path": "assets/js/vms-verification-upload.js",
+      "bytes": 11098,
+      "sha256": "db4f9f23177dde1ef6ef29dbef1e991bb701f02e0859073c019cea6f88a5803d"
+    },
+    {
+      "path": "assets/vendor/driverjs/LICENSE.txt",
+      "bytes": 1074,
+      "sha256": "ca0b9b973b1ebdfcd5ba71b0e48cb53680f0f7fc7e06c465a07c8c951928e154"
+    },
+    {
+      "path": "assets/vendor/driverjs/README.txt",
+      "bytes": 158,
+      "sha256": "7d3da8e45a2c4a927ebd4f0fdaf6427fd9d6c18cc4e440f9bf74cb8a950a6dbd"
+    },
+    {
+      "path": "assets/vendor/driverjs/driver.css",
+      "bytes": 3938,
+      "sha256": "4b398481a7ce8375af4d9f58f39410c73a0b70726fe513686d3d51c10ad76cb5"
+    },
+    {
+      "path": "assets/vendor/driverjs/driver.js",
+      "bytes": 21302,
+      "sha256": "c52b7d064ed31623e94ee144127c9751e4cb0b6e2c2de1e78ef99182ae11063d"
+    },
+    {
+      "path": "assets/vendor/driverjs/driver.min.css",
+      "bytes": 3938,
+      "sha256": "4b398481a7ce8375af4d9f58f39410c73a0b70726fe513686d3d51c10ad76cb5"
+    },
+    {
+      "path": "assets/vendor/driverjs/driver.min.js",
+      "bytes": 21302,
+      "sha256": "c52b7d064ed31623e94ee144127c9751e4cb0b6e2c2de1e78ef99182ae11063d"
+    },
+    {
+      "path": "assets/vms-number-input-guard.js",
+      "bytes": 694,
+      "sha256": "f162bc7028c49c92d116ea2a78fadd0d7d27e5240f9827beae731acd05b4266c"
+    },
+    {
+      "path": "assets/vms-ticketing-front-fallback.js",
+      "bytes": 26518,
+      "sha256": "4604797d191aff628b68c5f8e999e351225232aedc9b9263f9177c5b1a6260f3"
+    },
+    {
+      "path": "assets/vms-ticketing-front-server-controls.js",
+      "bytes": 30287,
+      "sha256": "7fc17733776c7d2033212b3bfab0942f017f21c61c3e5c1b0ba3e939aadb3f3a"
+    },
+    {
+      "path": "assets/vms-ticketing-front.js",
+      "bytes": 220286,
+      "sha256": "595b7f4114903bf7419a95adc0fb6689084c69b2e847ce098e1fd8217eeb1272"
+    },
+    {
+      "path": "assets/vms-ticketing-post-cart-offer.js",
+      "bytes": 5796,
+      "sha256": "c0733f4e077d4296aad25ffd6e59a21a72d21343bb7598ac28f2c5b512f2a3b1"
+    },
+    {
+      "path": "assets/vms-ticketing-progressive-ui.js",
+      "bytes": 23334,
+      "sha256": "5cd087d5509e54d1f8a3e1e75f7bb76c31b337dd6e381d1e776966c4e3eae259"
+    },
+    {
+      "path": "backstage-venue-manager.php",
+      "bytes": 3608,
+      "sha256": "af71f91d6df4ec0852b3010ef88ad76f6dd00ecf59780eddb1ca915eb5f71e16"
+    },
+    {
+      "path": "includes/activation.php",
+      "bytes": 23391,
+      "sha256": "7ba81723c194a4439ebd9eb4b7d2959221356bae932f1b94f2308d406f349c81"
+    },
+    {
+      "path": "includes/admin/admin-notices.php",
+      "bytes": 3072,
+      "sha256": "6392fd5b78cd638796c6b21a7d431a8da947704c4fe1f6ba3fea1706ed737bc2"
+    },
+    {
+      "path": "includes/admin/approvals-review-queue.php",
+      "bytes": 48032,
+      "sha256": "28ef2c6d87344a8bd05ad3bd303aa6895c02a71485415c10e286aafc5e4a4162"
+    },
+    {
+      "path": "includes/admin/budget-calculator.php",
+      "bytes": 76163,
+      "sha256": "8d87a4411b1cb28027876e6918a6cf256d2d8f704bce6137aeffd671e0bfa9cf"
+    },
+    {
+      "path": "includes/admin/cancellation-report.php",
+      "bytes": 14164,
+      "sha256": "a5f72575d8a8718e85484b205f9eea0be5099339c16c23207b432ac1c63c506f"
+    },
+    {
+      "path": "includes/admin/cancelled-event-cost-review.php",
+      "bytes": 5081,
+      "sha256": "cccd006ff0baacd513e954673050eb58e27622001049f40b599a74a8e3ad9d0b"
+    },
+    {
+      "path": "includes/admin/continuity-binder.php",
+      "bytes": 13647,
+      "sha256": "6ade0761d1c00be81c1ea887916133f82c61f570be9d1bfd00420a6900ce31a4"
+    },
+    {
+      "path": "includes/admin/dashboard.php",
+      "bytes": 4763,
+      "sha256": "afec3cd8f33bb5e6a834f247bed751ceb80ac303730910907205999d3eac0dfb"
+    },
+    {
+      "path": "includes/admin/data-tools/actions-event-plan-import.php",
+      "bytes": 18523,
+      "sha256": "8aaec9fb0e0da3c0f042f293118bdac39a5171cea56e6f78456cf55f2246c723"
+    },
+    {
+      "path": "includes/admin/data-tools/page-event-plan-import.php",
+      "bytes": 19446,
+      "sha256": "23e2245b2a9dba83eb227457780c4ec49591ddb9450aa569f90972f635ef4ce3"
+    },
+    {
+      "path": "includes/admin/docs-page.php",
+      "bytes": 4386,
+      "sha256": "e90d170eaecaa2699e0ef3ac50110e29f3684b23d00d8625f44808c4b4767a7b"
+    },
+    {
+      "path": "includes/admin/due-dates.php",
+      "bytes": 52714,
+      "sha256": "ae5dda5c05b4ef872bedade40553d580731145beeceea647b68a449b8e0fa77d"
+    },
+    {
+      "path": "includes/admin/event-command-center-context.php",
+      "bytes": 12745,
+      "sha256": "d4fee9334a82ee971179a602fb98d39a7fd6daf41f01905e0c6c785dd081270a"
+    },
+    {
+      "path": "includes/admin/event-command-center-dashboard.php",
+      "bytes": 28025,
+      "sha256": "7b21564e20379df32c02786a50e1e9c7e278f38edff07d8de3518ea532bb69ac"
+    },
+    {
+      "path": "includes/admin/event-command-center.php",
+      "bytes": 141931,
+      "sha256": "c00eccbe3e1b8cdabf6f55cb22590e59d2efc207916de0be523ae5330fa6e56d"
+    },
+    {
+      "path": "includes/admin/event-communications.php",
+      "bytes": 35529,
+      "sha256": "497d06b60f89ec5233811cf96c2d1a26c9193abc41094dd9b98935285123f40f"
+    },
+    {
+      "path": "includes/admin/event-day-report.php",
+      "bytes": 91978,
+      "sha256": "7819561c7f4f2e2ec1704f1fc1f3e910baf12fdc7150c1e322f8ebe503717f72"
+    },
+    {
+      "path": "includes/admin/event-feedback.php",
+      "bytes": 50158,
+      "sha256": "83825eff7e8e5012742fe6f420b7077f56815362304a8a655f88e163bc4600a9"
+    },
+    {
+      "path": "includes/admin/event-profitability-report.php",
+      "bytes": 23298,
+      "sha256": "0ba8c3d8933026fa48ae26bc0d6f7282b3e33cd674a93622e055b42a2fc744c8"
+    },
+    {
+      "path": "includes/admin/event-reschedule.php",
+      "bytes": 19447,
+      "sha256": "73a3d578f7d2899b448f4777ba2f40bfcf1a3ffdaf78f15aec7fc76fd6340c7e"
+    },
+    {
+      "path": "includes/admin/express-bar.php",
+      "bytes": 15143,
+      "sha256": "63f41839eeab39b58588243fdd9780e07736aa58fdf1e8b9edde718a7d673ab7"
+    },
+    {
+      "path": "includes/admin/goals-forecast.php",
+      "bytes": 49085,
+      "sha256": "b79e2cb3bbfbe4964730c703feb217f9aa02dad52c80b9e6ff0952509bb9aa1a"
+    },
+    {
+      "path": "includes/admin/holidays.php",
+      "bytes": 28041,
+      "sha256": "3c4d2143337a17c2bfd50149fd2f3f62c5d087ecae03b34388d1f62b3670fde3"
+    },
+    {
+      "path": "includes/admin/integrity-calendar-reconcile.php",
+      "bytes": 20504,
+      "sha256": "27ea2929768b3df3a0345d8f1b7adac0d6dd0540edef768ad2148e096375afe7"
+    },
+    {
+      "path": "includes/admin/integrity-venue-reconcile.php",
+      "bytes": 10760,
+      "sha256": "bb47f0c8b1169a676791f938e6c807388305fc6a5746564e75da3168325e77dc"
+    },
+    {
+      "path": "includes/admin/load.php",
+      "bytes": 3792,
+      "sha256": "99d1860cd27ed4e24c13c02b8efcf6f43192342ec6d5fe6f785d709de76653ce"
+    },
+    {
+      "path": "includes/admin/menu.php",
+      "bytes": 19316,
+      "sha256": "31579f39ad17759062d3d341efc75aab58d12df947e0a59d76e849db798b6538"
+    },
+    {
+      "path": "includes/admin/pages-tools.php",
+      "bytes": 2367,
+      "sha256": "fb9d6a9041c8f8c3f4c1655dbbe65c7fad28f9624abf0f16c688d6adc583233f"
+    },
+    {
+      "path": "includes/admin/reference/keys-map.php",
+      "bytes": 3315,
+      "sha256": "dbea617440e36cd6e1af1d75e1dc00986fb29c380791dbcd1dab1c1d181ecf5d"
+    },
+    {
+      "path": "includes/admin/schedule.php",
+      "bytes": 66511,
+      "sha256": "ade7cb05c4d0070be0b4cb44c70450fb95381568ac39351f65600a47fd4c1c7c"
+    },
+    {
+      "path": "includes/admin/season-board.php",
+      "bytes": 873,
+      "sha256": "5f0d54276017f82ed9c9503cc8d12f8882587a9a98fae7be6d26d14b0e7364a8"
+    },
+    {
+      "path": "includes/admin/season-dates.php",
+      "bytes": 40062,
+      "sha256": "60ee9feca6ab8431883624f6068c863642ba3128d940b8414bc16a8e683b780f"
+    },
+    {
+      "path": "includes/admin/settings/class-vms-settings-notifications.php",
+      "bytes": 7187,
+      "sha256": "bcb53ca2079e1040985dd23024d5c422e7c2066dddcdd5c8dec1ec45fa1c56b4"
+    },
+    {
+      "path": "includes/admin/settings/class-vms-settings-tours.php",
+      "bytes": 6512,
+      "sha256": "1dd2fb26937a3a39376d50953a82a8b7d7a15fec20ffb898ce952ee38e8cb1b9"
+    },
+    {
+      "path": "includes/admin/settings/notifications-user-profile.php",
+      "bytes": 4529,
+      "sha256": "2ca16fc5bd852040a3d55ef0f695943bc04cb60234fe6a1806bcbaa622907ea1"
+    },
+    {
+      "path": "includes/admin/settings-page.php",
+      "bytes": 141600,
+      "sha256": "637063e92e228b684487783df2cd34aa764db8ee5dc62eba7baab6a905765f0e"
+    },
+    {
+      "path": "includes/admin/square-sync-protection.php",
+      "bytes": 13659,
+      "sha256": "6eca182a248c331ca7f03cab42314c30a262a84e8986184329defd4070c6d040"
+    },
+    {
+      "path": "includes/admin/square-ticket-mirror.php",
+      "bytes": 13403,
+      "sha256": "e866d529f92d7d3b10b8cbb3e26d09e8d2e8c5fc2757fe12cae0582228dcc2fa"
+    },
+    {
+      "path": "includes/admin/staff-certifications.php",
+      "bytes": 9803,
+      "sha256": "aa060dbd09592d5cb09c35f40aa4d91e5b64ca9e8d20eb4f686115a0c7c847a3"
+    },
+    {
+      "path": "includes/admin/staff-list-columns.php",
+      "bytes": 12743,
+      "sha256": "56820eec782501f0c2abec40d7455b639b9430ab5b204e06f45b1d6bcdcfaf7a"
+    },
+    {
+      "path": "includes/admin/staff-tax-sidebar.php",
+      "bytes": 20432,
+      "sha256": "6f2fe0a3886716e9f43d1d0693ea9fc5e3598ec96bb16100b176fe1641abff37"
+    },
+    {
+      "path": "includes/admin/staff-user-link.php",
+      "bytes": 5909,
+      "sha256": "ce050bb5f4595f87280631e641971cd2a4fbe2aae0f96c2cedb22da62f9d5be4"
+    },
+    {
+      "path": "includes/admin/staff-vendor-link.php",
+      "bytes": 6686,
+      "sha256": "bbaa1c08ba18ccb77200e2348a5d02478259162f3ab6ae6bf388be138e883245"
+    },
+    {
+      "path": "includes/admin/staff-worker-type.php",
+      "bytes": 3247,
+      "sha256": "4f23b2b4f9c6d83e2fb874b59a32df722305927df6729b5069d2529618936414"
+    },
+    {
+      "path": "includes/admin/staffing-notifications.php",
+      "bytes": 8307,
+      "sha256": "06b6b312cace0c532bb0ebaac1b52e76cff1ac44ab5faaf8e283fc702c571ab8"
+    },
+    {
+      "path": "includes/admin/staffing.php",
+      "bytes": 52424,
+      "sha256": "3453acb0173f020b09c31eaa4f2c39f4181bb35be776122c88292f38d51d601d"
+    },
+    {
+      "path": "includes/admin/tax-bypass-ajax.php",
+      "bytes": 1833,
+      "sha256": "3b5575732713aa61e875db4076c73706ac328138157fddc3cd7894ac1bea4705"
+    },
+    {
+      "path": "includes/admin/tax-bypass.php",
+      "bytes": 11789,
+      "sha256": "5109dcf9b29721e8a029218566feda5615630617dcb37f7b7e133173a5d35030"
+    },
+    {
+      "path": "includes/admin/tax-profile-admin-metabox.php",
+      "bytes": 16841,
+      "sha256": "90959a1c2295b18b1fd14a8283aec61da8cbe4fa9233de53c1bae7de6cc678f1"
+    },
+    {
+      "path": "includes/admin/tech-document-notifications.php",
+      "bytes": 11209,
+      "sha256": "241564846d1b3d0f195a3d0ead1dd2153e2ac21b31563f1a59a9de394288182f"
+    },
+    {
+      "path": "includes/admin/ticket-integrity-page.php",
+      "bytes": 126910,
+      "sha256": "4510e2cf11edd12509b42bbacf34e7f99a91db11bf9c1b874280902a72c6a8bc"
+    },
+    {
+      "path": "includes/admin/vendor-availability.php",
+      "bytes": 88764,
+      "sha256": "5f00f21d1f645df8cce9c669a2e321c0bfa8e87f2e152614d4fc5cde72f62b95"
+    },
+    {
+      "path": "includes/admin/vendor-booking-onboarding.php",
+      "bytes": 12794,
+      "sha256": "b53b7c1d0da830ae5919f581af6cc30ab69fea201d79b985dfb653afc1b78a4f"
+    },
+    {
+      "path": "includes/admin/vendor-command-center.php",
+      "bytes": 107619,
+      "sha256": "ddba72c763824fba294aecdad1bbcc22a948cfe8a522cd49ab99091a71139a96"
+    },
+    {
+      "path": "includes/admin/vendor-comp-packages.php",
+      "bytes": 26485,
+      "sha256": "274b68baa7617eafbddea01799c55c0b2d66ca62a790a9707bbfb8f889a520fb"
+    },
+    {
+      "path": "includes/admin/vendor-details.php",
+      "bytes": 61725,
+      "sha256": "1fbbba92090178afd9341641344335c26bcfa8d1135147821146deb685a55d39"
+    },
+    {
+      "path": "includes/admin/vendor-list-columns.php",
+      "bytes": 9594,
+      "sha256": "76b2e83173e9689dfe447ff29a7472ebe99e6a2070fa992f4d1ec157cebf9704"
+    },
+    {
+      "path": "includes/admin/vendor-list-ui.php",
+      "bytes": 20387,
+      "sha256": "6f6dc8b50888fb47ea2df00f5a4658f51ce01fa68c8880f7636a20ee605ce880"
+    },
+    {
+      "path": "includes/admin/vendor-staff-link.php",
+      "bytes": 10224,
+      "sha256": "960ef1864c34dca3fc41329872f0a3b2377e4b5d0bbbd0658f1f3724e469c9d2"
+    },
+    {
+      "path": "includes/admin/vendor-user-link.php",
+      "bytes": 13352,
+      "sha256": "006a9f9c001da46b6f198088d88b68dc1af3023e40141962308374ecfddd0de0"
+    },
+    {
+      "path": "includes/admin/vendors/tax-bulk-actions.php",
+      "bytes": 3464,
+      "sha256": "612271b09fe227595a5e6d3588b438e32760efafba0446067e5cde70fa79e843"
+    },
+    {
+      "path": "includes/admin/vendors/tax-columns.php",
+      "bytes": 2669,
+      "sha256": "810327757296eb6d9cef017be0e2ae0e786d0b488649008449b1fbe89b6dd106"
+    },
+    {
+      "path": "includes/admin/vendors/tax-export-csv.php",
+      "bytes": 4231,
+      "sha256": "e8085a5a0ab1f423f155536d4842f74dc75e23c52fad82992b6ac14e86d7c39d"
+    },
+    {
+      "path": "includes/admin/vendors/tax-filters.php",
+      "bytes": 1775,
+      "sha256": "221446d45da744e396fffa6fd578cf83ac5b01a5e2f2d2a108ee0ee3283b2385"
+    },
+    {
+      "path": "includes/admin/vendors/tax-metabox.php",
+      "bytes": 8169,
+      "sha256": "750233df8215503184f23342b85b6e1ca7a396cb88ef59c7e691b21287849b5a"
+    },
+    {
+      "path": "includes/admin/venue-calendar.php",
+      "bytes": 5745,
+      "sha256": "154d00222cf62c0568d8fe163c3909499c10cb3fa433313e38c2475fd36974f0"
+    },
+    {
+      "path": "includes/admin/venue-comp-defaults.php",
+      "bytes": 11846,
+      "sha256": "cd39819e748d92bf2e7ca9e9d1470d3ac006ade4e8501c870c6e2b14953f08a6"
+    },
+    {
+      "path": "includes/admin/venue-context.php",
+      "bytes": 12502,
+      "sha256": "41c2b1f9d3a45bcf9aa4e64432e13db6a621f4d1e2431f2897c98a1c48d4f47f"
+    },
+    {
+      "path": "includes/admin/venue-duplicate-templates.php",
+      "bytes": 15975,
+      "sha256": "8c185d8e9bb8639636f626721d13642fe42bad2c4c4b4edc1799063da7a719ff"
+    },
+    {
+      "path": "includes/admin/venue-duplicate.php",
+      "bytes": 4573,
+      "sha256": "159c38053a682a29dfaac4f785bf4b94cd2f4f2135a14cfccb95c930992cd0ac"
+    },
+    {
+      "path": "includes/admin/venue-health-check.php",
+      "bytes": 7333,
+      "sha256": "8f23e752f8fdd614b1a4a479fd84720bca2110c31e0a40f7af00e7ed1f1efcf6"
+    },
+    {
+      "path": "includes/admin/woo-product-event-columns.php",
+      "bytes": 4405,
+      "sha256": "852f692bf53298a46d97e582e2321815dded308e8b542db48c3a193bbaf64271"
+    },
+    {
+      "path": "includes/admin-ui/assets.php",
+      "bytes": 2908,
+      "sha256": "768c15f96ff4792a5ae6f3c26ae23ff0bd4ff56c21bac0ab583c80b3cdf08c70"
+    },
+    {
+      "path": "includes/admin-ui/context.php",
+      "bytes": 8382,
+      "sha256": "0e043cfe2c7fb2e8d3e7acc605fd8cd66947ca4ff244d94c4483e7c414ed5d6b"
+    },
+    {
+      "path": "includes/admin-ui/helpers.php",
+      "bytes": 921,
+      "sha256": "c4b44ade783b69efe74db20cc4e6870149837002662009ff2d6e37de273cce4c"
+    },
+    {
+      "path": "includes/admin-ui/nav.php",
+      "bytes": 49476,
+      "sha256": "3a6611dfd6698dbad33371245790a932e26eba7cff8360dcae53dac104d6a112"
+    },
+    {
+      "path": "includes/admin-ui/shell.php",
+      "bytes": 8107,
+      "sha256": "d6d127e0886e90912bcc1324b911c10a73562942355ffc59526b62701b17a49f"
+    },
+    {
+      "path": "includes/bootstrap.php",
+      "bytes": 2394,
+      "sha256": "a38630492b119069cc8cc014e85af309e68b4b8c60e2dceeb46e5f3da68666f0"
+    },
+    {
+      "path": "includes/calendar-queries.php",
+      "bytes": 5198,
+      "sha256": "acd3096392eb659612f36e6e05deff2d06182722d5efe6a76eb0731bcd99a55a"
+    },
+    {
+      "path": "includes/core/bootstrap.php",
+      "bytes": 346,
+      "sha256": "fe1d01b161d861f594fac657fb0dbd57cefe321b3a9049c7ff27138c39c52bb9"
+    },
+    {
+      "path": "includes/core/calendar-feed.php",
+      "bytes": 39897,
+      "sha256": "2b8cdef964916943755204dc6880b84a4de865a27d4bc42c2cd1dcb71b58762a"
+    },
+    {
+      "path": "includes/core/calendar-ticket-counts.php",
+      "bytes": 10409,
+      "sha256": "cdf670235fe6d43bfc17621cb18168351631825865703c2e2a06948767374515"
+    },
+    {
+      "path": "includes/core/cancellation-adapters.php",
+      "bytes": 53585,
+      "sha256": "9163f82bab5f2a07629da8ec5d2e64208f5935500860a80c482340fa8837161a"
+    },
+    {
+      "path": "includes/core/cancellation-purchases.php",
+      "bytes": 31122,
+      "sha256": "a8ee1046fe8275de22324709687d6ad897d4812da6828014381198ed681895c6"
+    },
+    {
+      "path": "includes/core/cancellation.php",
+      "bytes": 70475,
+      "sha256": "3f63833fe28dae0bb79ec53882d44646317dfa44f7c59f0bcc978b9e5c25e4e5"
+    },
+    {
+      "path": "includes/core/cli/event-reschedule.php",
+      "bytes": 26969,
+      "sha256": "ff4acc863764dd237a21c0d66c5ccd4c926ada066b604057ca8ca007285f9f69"
+    },
+    {
+      "path": "includes/core/cli/square-ticket-mirror.php",
+      "bytes": 12509,
+      "sha256": "8dd870bfb6812506613a6c2863ec2f1ecf11b2898b430655019b7d487fcc4e3a"
+    },
+    {
+      "path": "includes/core/cli/stale-check.php",
+      "bytes": 57434,
+      "sha256": "cd5970b3b6f1f2ff580b836cc390d7da7217fe1e027df89a89baa03f2456778a"
+    },
+    {
+      "path": "includes/core/cli/state-of-range.php",
+      "bytes": 8277,
+      "sha256": "f3d2cbb9594be483c5b6611c9ecf6410a64bd16396e2edfe229f66f269ee159c"
+    },
+    {
+      "path": "includes/core/due-dates.php",
+      "bytes": 33218,
+      "sha256": "e028c64c5283107ae845c28c39bf207cc1f92e2f20def774937bb55559a8639a"
+    },
+    {
+      "path": "includes/core/ecc-extensions.php",
+      "bytes": 9922,
+      "sha256": "260bd9cb36a02127edac03e51deaa47393a50134fd905a3a7a3044a17b6dfdec"
+    },
+    {
+      "path": "includes/core/event-communications.php",
+      "bytes": 54269,
+      "sha256": "8f6044978d5905085591e4a18c74914089ec8ad424ecf190907f8dd7c4f598e5"
+    },
+    {
+      "path": "includes/core/event-credits.php",
+      "bytes": 47734,
+      "sha256": "c81cfbd5c14779e8f03e36070f48a8fa209c1d6e2daafd0a6ccfcaba3206d085"
+    },
+    {
+      "path": "includes/core/event-feedback.php",
+      "bytes": 34466,
+      "sha256": "c37ac0741b556527b26a3c5ebbe72117878d5139d26f818ec6fcd7334dc15f26"
+    },
+    {
+      "path": "includes/core/event-plan-inclusion.php",
+      "bytes": 7197,
+      "sha256": "c22bc3b4b1b85d4903f101733482d4e9f105150444ac6324f0f543908fd45f9e"
+    },
+    {
+      "path": "includes/core/event-plan-performance.php",
+      "bytes": 62455,
+      "sha256": "53bc9f4a6dbee4276693cef52471cda54414b659c2e51a00172a52453dd88fd1"
+    },
+    {
+      "path": "includes/core/event-plan-publication.php",
+      "bytes": 25844,
+      "sha256": "b530d8968be38179998cd7006d48a2a37a0fb6b17767a7f6fb892c83de0470fc"
+    },
+    {
+      "path": "includes/core/event-plan-review.php",
+      "bytes": 62981,
+      "sha256": "a9ff4e97c2077209cc339d1780f7891ce9a92d834149d47c6abf3ac9f5db3c76"
+    },
+    {
+      "path": "includes/core/event-plan-save-profiler.php",
+      "bytes": 68362,
+      "sha256": "e48082f8887a76afc7e1ca12864585e859455eed59be483aae09faeb32380956"
+    },
+    {
+      "path": "includes/core/event-reschedule.php",
+      "bytes": 104381,
+      "sha256": "c139c65c6970111c7981e38f0e744857d0d39dc69fdc406e6dc0b408496a31dd"
+    },
+    {
+      "path": "includes/core/financial-snapshot.php",
+      "bytes": 14268,
+      "sha256": "e763be7be8f831770db14f9b25bd42c11bcc62f3900ce75a54f4303185a32aae"
+    },
+    {
+      "path": "includes/core/financial-ticket-source.php",
+      "bytes": 13656,
+      "sha256": "1370061b12d9c130d3b8e769e1553203a4d0bbf3d1f3ff0f310cfa5725787a35"
+    },
+    {
+      "path": "includes/core/goals-forecast.php",
+      "bytes": 47751,
+      "sha256": "2b62ed3520501b1837e0e4e9a4e66ccc1ce636bc39b82c6115ce1527bbda4635"
+    },
+    {
+      "path": "includes/core/lineup-schedule.php",
+      "bytes": 32356,
+      "sha256": "ea709464efc4155cc1f489d5f90673602b9266065943ab30cadb35e258cc1aa0"
+    },
+    {
+      "path": "includes/core/load.php",
+      "bytes": 3478,
+      "sha256": "829a9b63cf61d83cf8c1a6c7783307e2fd4a2d3d1305fed2345265849444f89c"
+    },
+    {
+      "path": "includes/core/notifications.php",
+      "bytes": 27583,
+      "sha256": "52c55e15fb50e133d19209053606d2c48f63bcadabcc685b62938ce71fecdd68"
+    },
+    {
+      "path": "includes/core/operational-context.php",
+      "bytes": 19318,
+      "sha256": "c1163a6e2931f4129edc3fd64c07f30f62dc664b17d154c8b9a3889d8aae0393"
+    },
+    {
+      "path": "includes/core/operational-scope.php",
+      "bytes": 3182,
+      "sha256": "c077f974a29bc7e31b7e33a777066cf169858ad5e6dc98989b4e9209b4f6b00c"
+    },
+    {
+      "path": "includes/core/payables.php",
+      "bytes": 15694,
+      "sha256": "0e2c1775ff3be9ccbcea100f3c736d50ca5b03eb7634c6ab5232e52989555410"
+    },
+    {
+      "path": "includes/core/plugin.php",
+      "bytes": 7790,
+      "sha256": "01a2f1470f0bb19eb1d4a16a6dfb39c49b9cf33d579023051ba2d7319f34f16f"
+    },
+    {
+      "path": "includes/core/prefix-b4-compat.php",
+      "bytes": 9192,
+      "sha256": "d43b1677196bfb580ac763661c1daf3c2e3de49d3cd041b596722cf59fe45904"
+    },
+    {
+      "path": "includes/core/private-files.php",
+      "bytes": 34236,
+      "sha256": "037433ba6d4d2309534ff082604fde25709264a4dca2a138dd4831dd968beff8"
+    },
+    {
+      "path": "includes/core/private-storage-migration.php",
+      "bytes": 21269,
+      "sha256": "99f509f7c8e42faec21bc63b026c22a80d89ecf9a689fd54cfb98bc6ab39cc99"
+    },
+    {
+      "path": "includes/core/private-storage.php",
+      "bytes": 14150,
+      "sha256": "2f4971728bc21baf4a6d492d5fcffddd912dfc9871fb9ac14868a9c51584a5cd"
+    },
+    {
+      "path": "includes/core/registry/admin-menu.php",
+      "bytes": 37060,
+      "sha256": "fe92378c7f7e15a45267040484d1112198764bba640f06894afc643384f35b87"
+    },
+    {
+      "path": "includes/core/registry/admin-slugs.php",
+      "bytes": 1361,
+      "sha256": "ab07d100f4df3d991633cbd4dedd75dda5d94c7a2d60db94d0567a34272588c1"
+    },
+    {
+      "path": "includes/core/registry/class-vms-vendor-meta-registry.php",
+      "bytes": 2942,
+      "sha256": "e57acd551ed3ef0ca99fcdf2aed76117f37d8d948c2ed11b947e7c1e83490084"
+    },
+    {
+      "path": "includes/core/registry/class-vms-vendor-schema-registry.php",
+      "bytes": 8916,
+      "sha256": "c3ade55dbf1ab21ac7214ef10af6451d2e467e29680dcc567bb8431819f23629"
+    },
+    {
+      "path": "includes/core/registry/constants.php",
+      "bytes": 29510,
+      "sha256": "8d8fe082adb2761384dba5a785b5cfbe9a9e51c8d620d2dd2fda4ee693480554"
+    },
+    {
+      "path": "includes/core/registry/csv-contracts.php",
+      "bytes": 2202,
+      "sha256": "de3a4a84c2aebc7acc53d307548fc1d96fa2ca2460eb34966bc8773e516a6811"
+    },
+    {
+      "path": "includes/core/registry/meta-keys.php",
+      "bytes": 23350,
+      "sha256": "38b3491c7c67deb8290aa90a861a537632c287f28e9b3008b5458a9fe52ee1cc"
+    },
+    {
+      "path": "includes/core/registry/normalizers.php",
+      "bytes": 1989,
+      "sha256": "a24a2fe0cac61341a1177e5e225a4aa2ac744d39ca58267d1ed2cffcb647e21e"
+    },
+    {
+      "path": "includes/core/registry/statuses.php",
+      "bytes": 2179,
+      "sha256": "753506dc85915e8dc9a0cd91181117f5b1ad8d4ed4ace0017ce6bf1012858237"
+    },
+    {
+      "path": "includes/core/registry/tours.php",
+      "bytes": 2666,
+      "sha256": "27fb2f13dc8fcf7cf2b35908c329cac4198475a8f040f71c04986c268cf04095"
+    },
+    {
+      "path": "includes/core/registry/vendor-schema.php",
+      "bytes": 11757,
+      "sha256": "a42ff7d017decea868f87f0e1fa9b19ccfe76e4eb544f946ed32a05ab9625d0a"
+    },
+    {
+      "path": "includes/core/registry/vms-keys-map.php",
+      "bytes": 27742,
+      "sha256": "ee213d5f55735624af47b5933f0cd8708448f4b1d0e658bbdefcea56d6f62e0e"
+    },
+    {
+      "path": "includes/core/reporting-providers.php",
+      "bytes": 8766,
+      "sha256": "6ce14e7d600abd982e8ca3a0ea004b426e68fdd51ac1b35404bfffb3a8e2a686"
+    },
+    {
+      "path": "includes/core/secondary-vendor-assignments.php",
+      "bytes": 51055,
+      "sha256": "bd032c8adf33cb77e7835ebe453d5798595fd701e513abc2bf89e2180ef372b0"
+    },
+    {
+      "path": "includes/core/slow-request-logger.php",
+      "bytes": 16277,
+      "sha256": "d4a08a0542d9a15746d17a0ef26591816c08470f9b56fe5fb85efa10dc80ad5c"
+    },
+    {
+      "path": "includes/core/staffing-dispatch.php",
+      "bytes": 8177,
+      "sha256": "8337d0d3bc85d9fe9aa2bf32b321df61a7cda349872fceae760834088cb64dfa"
+    },
+    {
+      "path": "includes/core/staffing-financial.php",
+      "bytes": 11622,
+      "sha256": "8eed4ec3601b476e62dd7a464f7ab6c29594cce56f21a59e025e44b628bd249d"
+    },
+    {
+      "path": "includes/core/staffing-lifecycle-ui.php",
+      "bytes": 13032,
+      "sha256": "dd0b0b1624c683b473cc6217e93294cb702ab73d4f4ba15c2297228b89a036ff"
+    },
+    {
+      "path": "includes/core/staffing-lifecycle.php",
+      "bytes": 32686,
+      "sha256": "acd5d51907c1c5cb895be0fa74e5736a181535173cacc59f04d2eced957b5939"
+    },
+    {
+      "path": "includes/core/staffing-notifications.php",
+      "bytes": 14239,
+      "sha256": "d20076349d6cc759e5b7f8afb4f71603732b8519299c6b8e34fb6fd060c204a9"
+    },
+    {
+      "path": "includes/core/staffing.php",
+      "bytes": 203303,
+      "sha256": "2f7d97e2a377258bf42f8a48f5199003706b8700f87d2600168df557a5f7b949"
+    },
+    {
+      "path": "includes/core/tax-bypass.php",
+      "bytes": 5693,
+      "sha256": "0a85c89aa74ea46757a955f203a1efbc846f3c335a8fa15bbb9fccfe1164ca20"
+    },
+    {
+      "path": "includes/core/tech-document-notifications.php",
+      "bytes": 17405,
+      "sha256": "259d6feb85851f9fbb92bc0a744154f01e7d1235ad5d4d9b491590ff11bee5f1"
+    },
+    {
+      "path": "includes/core/ticket-revenue.php",
+      "bytes": 50811,
+      "sha256": "d8298e39112230ac2348ec466e4967fccf27e66e4417d09b3c58e2f2c028e035"
+    },
+    {
+      "path": "includes/core/ticket-sales-resolver.php",
+      "bytes": 35365,
+      "sha256": "be4273c6ad822d8a48185f84a78d9471f0e6b78e640e86e2ea24b4c890f31b9f"
+    },
+    {
+      "path": "includes/core/tours/class-vms-tours-maintenance.php",
+      "bytes": 2066,
+      "sha256": "8bd9269e4bcbdb6f029110dd174d09e01983578ef8234fb66131644d0c82b359"
+    },
+    {
+      "path": "includes/core/tours/class-vms-tours.php",
+      "bytes": 36360,
+      "sha256": "38cad01739f835187518891e24f670bc0905b21eb48a663799db2f9d36ef5029"
+    },
+    {
+      "path": "includes/core/validation/vendor.php",
+      "bytes": 1246,
+      "sha256": "3baa0e5d4f20c54a6c501a75995f823fd813e6723a803032f13e19b31eaf1421"
+    },
+    {
+      "path": "includes/core/vendor-application-confirmation.php",
+      "bytes": 90899,
+      "sha256": "2a3c07be14f065fcc9cc2d1d7151ed646b108e0e720b7dea64187f520993bb97"
+    },
+    {
+      "path": "includes/core/vendor-booking-onboarding.php",
+      "bytes": 48910,
+      "sha256": "9e8fc9ee53da751cc793f5f4f5c4c294e16dd52f4aa1122f764ad58ce178ab13"
+    },
+    {
+      "path": "includes/core/vendor-document-alerts.php",
+      "bytes": 16097,
+      "sha256": "25d77afda4e2ef67c36eb5c9e100b13fdd51db8956429c7b3cc622a0288c4273"
+    },
+    {
+      "path": "includes/core/vendor-user-links.php",
+      "bytes": 47251,
+      "sha256": "79eaac7b5e143070b2e858e2c68763e3cd56296436d809369b4ca96ac0d125d7"
+    },
+    {
+      "path": "includes/cpt/event-plans/partials/advanced-controls.php",
+      "bytes": 33318,
+      "sha256": "1f344764c7255fe8f6ff69d7279a432f539d80756371ca8ba3504a66d0bf3caf"
+    },
+    {
+      "path": "includes/cpt/event-plans/partials/comp-ack.php",
+      "bytes": 6276,
+      "sha256": "7d9002a098a3f81c5105e191bf8fad29d7fe7e3efc6059661b7903d136cfd64a"
+    },
+    {
+      "path": "includes/cpt/event-plans/partials/compensation.php",
+      "bytes": 38331,
+      "sha256": "daf7f4b5f9169de8dd632ee4e9f60825fb0efb4d50d61cbb4b53abfc722fa5e9"
+    },
+    {
+      "path": "includes/cpt/event-plans/partials/legacy-imported-ticketing-integration.php",
+      "bytes": 9722,
+      "sha256": "7ffdd6df5469f4a43f63a796b7803080da7a5d514463c303e2f389a81f13c24d"
+    },
+    {
+      "path": "includes/cpt/event-plans/partials/readiness-details.php",
+      "bytes": 4886,
+      "sha256": "34c2845e180870ab96eb20fd2b16d28a76198c164c2178aaa668c8f3e8ea1206"
+    },
+    {
+      "path": "includes/cpt/event-plans/partials/secondary-vendors.php",
+      "bytes": 39200,
+      "sha256": "f0961b54075bf9c19b81157ed318d4c4ff3d0c06a1e7bfd10b75663657a5aa72"
+    },
+    {
+      "path": "includes/cpt/event-plans/partials/staff.php",
+      "bytes": 35329,
+      "sha256": "91113146d509eeaa64dbc19c9b91330d47d27016ebf246c0eee7f1fbee5f2ff2"
+    },
+    {
+      "path": "includes/cpt/event-plans/partials/ticketing-v2.php",
+      "bytes": 39696,
+      "sha256": "0f2f246ccbd0adff101c7cf3784b6e5c310066b22b5dab8885e5b9a0e648fc69"
+    },
+    {
+      "path": "includes/cpt/event-plans/partials/time-lineup.php",
+      "bytes": 56989,
+      "sha256": "0e7e25d524137c25ec19331f2124e2181a024b2a6f021acc41b517351045bb63"
+    },
+    {
+      "path": "includes/cpt/event-plans/partials/title.php",
+      "bytes": 1062,
+      "sha256": "be9a9ca652d14b0935e25dce1028f6f02819bc9c35a7a2b8a40d88d4143afa7a"
+    },
+    {
+      "path": "includes/cpt/event-plans/partials/workflow-status.php",
+      "bytes": 10084,
+      "sha256": "28d0c576340b5f62fb3b60498d5ce51ff712c08dfef817c889a8c4e56929e6e4"
+    },
+    {
+      "path": "includes/cpt/event-plans.php",
+      "bytes": 913030,
+      "sha256": "68cd6f0d20fd14397be064272500d8c6bdf989ee30efdd6d4dd0ef19a042d6da"
+    },
+    {
+      "path": "includes/cpt/ratings.php",
+      "bytes": 24148,
+      "sha256": "5cc17e2f40eca6bd660a1e85a9b836d3911e2ea71ca0cdb8a6d4982ce3c9c490"
+    },
+    {
+      "path": "includes/cpt/staff.php",
+      "bytes": 22078,
+      "sha256": "6cce63b7f564a368bbbc829db7b0237ca662d949b3198676ad5d36a266494005"
+    },
+    {
+      "path": "includes/cpt/vendors.php",
+      "bytes": 29519,
+      "sha256": "285da8500d37c4a99b17fc86572fbf0ccabd0cbbac1c9a1f1048b021c0da2b2d"
+    },
+    {
+      "path": "includes/cpt/venues.php",
+      "bytes": 36856,
+      "sha256": "df1652779c33728b6d21ae3155b310aa4ede5c630dc57e87bdf77a6e7bcf1e8d"
+    },
+    {
+      "path": "includes/data-tools/load.php",
+      "bytes": 295,
+      "sha256": "783487c5529e6acd6490ea916db73c3538487a92230b8a885885066896aa080c"
+    },
+    {
+      "path": "includes/db/migrations.php",
+      "bytes": 24324,
+      "sha256": "87ed77799deca05c0ed2522f350a1ca986b831d64214917dcd8c161084798c0b"
+    },
+    {
+      "path": "includes/db/staffing-lifecycle-preflight.php",
+      "bytes": 16394,
+      "sha256": "cde64bb21fa51c78e560a6056b008ae0f45af2e76b6d4a461d0674c7cbc8d728"
+    },
+    {
+      "path": "includes/db/staffing-lifecycle.php",
+      "bytes": 3888,
+      "sha256": "467cb011c9f740d6e39dc2581fcc0aedbd9a02175890eb4f568965f7cafee7d9"
+    },
+    {
+      "path": "includes/docs/load.php",
+      "bytes": 386,
+      "sha256": "4aecdbaea5dd8b3d705e5bde31171c1f277a0c3fc8dacb9c076d640362a8b9a0"
+    },
+    {
+      "path": "includes/docs-public.php",
+      "bytes": 2140,
+      "sha256": "8b15e315f85e55b268c3b42f88ebec9e284518bc306d0d19e64b87a91b01fd47"
+    },
+    {
+      "path": "includes/docs-registry.php",
+      "bytes": 4294,
+      "sha256": "7817acf8d5f72432f9e35b5503a695b2055d10821f28d46c86aeeb07cbe799b2"
+    },
+    {
+      "path": "includes/docs-render.php",
+      "bytes": 3809,
+      "sha256": "8e715f27aed5f9ab4c91c61b81295b54f50752161fd2a465a6de46f6e6fdf3f0"
+    },
+    {
+      "path": "includes/helpers/checkin-close.php",
+      "bytes": 8447,
+      "sha256": "3ca14bab80b593b949c12d0e1ca9f04a334224d43d99bdea0bd8ef6e5dfac938"
+    },
+    {
+      "path": "includes/helpers/image-normalization.php",
+      "bytes": 5657,
+      "sha256": "a426256c39feacafd22e2e33e993049389ab761e25c89e15209462426e9c25f0"
+    },
+    {
+      "path": "includes/helpers/schedule-helpers.php",
+      "bytes": 5389,
+      "sha256": "1306809c2de8ae57df78dcce8441684c0489c12cfb5280668658dd3e41c92717"
+    },
+    {
+      "path": "includes/helpers.php",
+      "bytes": 200066,
+      "sha256": "5c558d36f0a901b1816abec50a4b634870b4a7dc950cc04a9f2777dc8f06d2d3"
+    },
+    {
+      "path": "includes/integrations/attendance-woo.php",
+      "bytes": 1278,
+      "sha256": "b3c1e1b332e1467823d0de38ae84f0dbd5346d37271578ad30998f36c500f107"
+    },
+    {
+      "path": "includes/integrations/availability-engine.php",
+      "bytes": 37,
+      "sha256": "803142f407baac7e36134596425936176e3b4815d651b3c5e9d88b944c712b72"
+    },
+    {
+      "path": "includes/integrations/load.php",
+      "bytes": 1391,
+      "sha256": "b8a40561864ed3073e389dc0717de2507fb21fe6f30bd28763c0199e6a5a40b3"
+    },
+    {
+      "path": "includes/integrations/square-sync-firewall.php",
+      "bytes": 23819,
+      "sha256": "9d23d446e99b8a7fc10a17d18661f94dd49de07687ffc9f7e7e2f8356724ff3e"
+    },
+    {
+      "path": "includes/integrations/square-ticket-mirror.php",
+      "bytes": 103045,
+      "sha256": "df56f85fca8a892166220fa5b5710622d9098ff33066d6af3c71ade45902cff8"
+    },
+    {
+      "path": "includes/integrations/tec-sync.php",
+      "bytes": 37,
+      "sha256": "803142f407baac7e36134596425936176e3b4815d651b3c5e9d88b944c712b72"
+    },
+    {
+      "path": "includes/integrations/ticketing-claims-admin.php",
+      "bytes": 118020,
+      "sha256": "87e1cb1251ce407f05ae0fa6cacf97b9b7c6c66260af866a75ad82eb78256590"
+    },
+    {
+      "path": "includes/integrations/ticketing-claims-customer.php",
+      "bytes": 35158,
+      "sha256": "d76bd715feae3407337d1e02fa049aa5f6e97879029c2a02601d96a17866d389"
+    },
+    {
+      "path": "includes/integrations/ticketing-claims-framework.php",
+      "bytes": 50849,
+      "sha256": "1c70f15a1b9a2ebc7f8bc98b6a6669b39725eafcdab61940c9e8760d5053750d"
+    },
+    {
+      "path": "includes/integrations/ticketing-create-recovery.php",
+      "bytes": 32828,
+      "sha256": "4c29cf2e3cf6d3f0ab62e39433bf3064c1792fedfe82c8cc41ed5e64ff0bf37a"
+    },
+    {
+      "path": "includes/integrations/ticketing-phase-b.php",
+      "bytes": 451221,
+      "sha256": "f8fa0d3f038df9028a199164fb6951aaaf775342bec7e5430be7778433a82438"
+    },
+    {
+      "path": "includes/integrations/ticketing-rules-v2.php",
+      "bytes": 434751,
+      "sha256": "474b1749afafadfa2b503bd028f8217408f586d890f71d30eb0e9ceb366b8994"
+    },
+    {
+      "path": "includes/integrations/ticketing-verifications.php",
+      "bytes": 172502,
+      "sha256": "ad0b153dbe1d82eeb87b6653c374f08df2c768ebb67afb18bce5f0561d1a45ab"
+    },
+    {
+      "path": "includes/integrations/ticketing.php",
+      "bytes": 30227,
+      "sha256": "85fd2327264e4696a11cfb9d5f5a9c65074fe77707a8fe985c5ef0189347d6d9"
+    },
+    {
+      "path": "includes/integrations/vendor-ics-sync.php",
+      "bytes": 27099,
+      "sha256": "d5d770bdb416f04a8507be8e217a3234ad028e5a89421bbd87b0caa3cf7c2a0c"
+    },
+    {
+      "path": "includes/modules/admissions/admin-ui.php",
+      "bytes": 8196,
+      "sha256": "1c32ae5ed2537cb03b4abe415b04e28ce47ba92ad88792673e13feca9ba39f81"
+    },
+    {
+      "path": "includes/modules/admissions/admission-tokens.php",
+      "bytes": 23555,
+      "sha256": "ed58f34e7706c08d6bf0eaf99ce76a0413890d01ff49a370af9d4f15f374e40e"
+    },
+    {
+      "path": "includes/modules/admissions/admissions.php",
+      "bytes": 1113,
+      "sha256": "7b2b282b246bcac0dc7eb51959a71b1cc9aae8579be44754ab1b3d61fe57616d"
+    },
+    {
+      "path": "includes/modules/admissions/audit.php",
+      "bytes": 1939,
+      "sha256": "646b585bc04937c5b35cd2cd729acccd9efed7340997dad534e5afc568b73c9c"
+    },
+    {
+      "path": "includes/modules/admissions/caps.php",
+      "bytes": 2194,
+      "sha256": "7f645fc986aba1e0d4dda225784a07a14e59a3cb564a4e38f8848b9d42d4cc90"
+    },
+    {
+      "path": "includes/modules/admissions/db.php",
+      "bytes": 12141,
+      "sha256": "3b7e0c49910ff88c79eebbd79910dbee3b8a95d701c9368bd6979506952f123c"
+    },
+    {
+      "path": "includes/modules/admissions/local-qr.php",
+      "bytes": 4026,
+      "sha256": "263e7550698145d33116fc1b7488216687893b0bb53d3f76b9082714c405c78f"
+    },
+    {
+      "path": "includes/modules/admissions/normalize.php",
+      "bytes": 1705,
+      "sha256": "3cee78f9c962d0070b8c4f63333514faf37c2e9cb8072576f1cc4c4bb2d86f9d"
+    },
+    {
+      "path": "includes/modules/admissions/pass-claims.php",
+      "bytes": 219083,
+      "sha256": "915513d9de9dc8e8c3332f2b42a78fe54f3599305f8e90c0018223e9c5b97745"
+    },
+    {
+      "path": "includes/modules/admissions/pass-invitations.php",
+      "bytes": 38761,
+      "sha256": "fca5853433be1eae2128f429d25cf03d578b4a8e6d5048425374a3b2f74bdf08"
+    },
+    {
+      "path": "includes/modules/admissions/pass-reporting.php",
+      "bytes": 27439,
+      "sha256": "c850731965e51b3c73f9e745a3c4e844dcde5aefc6a186c2c6c42acef58a7a57"
+    },
+    {
+      "path": "includes/modules/admissions/qr/QRCode.php",
+      "bytes": 48435,
+      "sha256": "8514746aebb16240ae41fd64179b56faacf76de8a65bc36f63246e0494f9f8be"
+    },
+    {
+      "path": "includes/modules/admissions/qr/README.md",
+      "bytes": 847,
+      "sha256": "337a037fbc830374e85217c12c83470c151d4b1ee5e4a0e3ba1b61b40bc4c40a"
+    },
+    {
+      "path": "includes/modules/admissions/rest.php",
+      "bytes": 37812,
+      "sha256": "d4812dd5d9a71cbb38a874438fde41fccc73430aad55122afae8d58980edb585"
+    },
+    {
+      "path": "includes/modules/admissions/shortcodes.php",
+      "bytes": 2765,
+      "sha256": "e5f70b7d385dc525bb44db96d5db1e6e47f5de42e30ed25f71be2f9ede9075a6"
+    },
+    {
+      "path": "includes/modules/admissions/vendor-guest-portal.php",
+      "bytes": 78815,
+      "sha256": "ab80d656f7c113ca5670e8f335e94f0812f568c3274d4e5f022f3afe318dce34"
+    },
+    {
+      "path": "includes/modules/availability-date-dispatch/admin-ui.php",
+      "bytes": 71213,
+      "sha256": "98ea0df6656137d59341494d0d9c47e97013851c9f75c203dbb0d02a97b6c0a0"
+    },
+    {
+      "path": "includes/modules/availability-date-dispatch/availability-date-dispatch.php",
+      "bytes": 947,
+      "sha256": "88ac6d620e73703802c65913528ea0a934a5ce4b1284cb4af95f201a69828fec"
+    },
+    {
+      "path": "includes/modules/availability-date-dispatch/db.php",
+      "bytes": 4520,
+      "sha256": "f824dd319b51d476b19b9d993b7ccfcb02c5718b0f18758547037f0468b566bf"
+    },
+    {
+      "path": "includes/modules/availability-date-dispatch/email.php",
+      "bytes": 17722,
+      "sha256": "645702b44b1d5b422397d689e714992f372d92ddb04d97b6055bb7fc35c705aa"
+    },
+    {
+      "path": "includes/modules/availability-date-dispatch/helpers.php",
+      "bytes": 107430,
+      "sha256": "10d92c2eabaa5502052f874336a3fbfc3d85a72c435eb5d4524c2a8bb9f4cc18"
+    },
+    {
+      "path": "includes/modules/availability-date-dispatch/public.php",
+      "bytes": 8652,
+      "sha256": "f1277a945f8f8d3d9500bcc7c395eb662b97ef63842756c8caaf58706a81e0b4"
+    },
+    {
+      "path": "includes/modules/email-followups/admin-ui.php",
+      "bytes": 55138,
+      "sha256": "394f0e185751ff170047b275cf2eb99fda9a607426acc4a2c88d79a3a5c234c9"
+    },
+    {
+      "path": "includes/modules/email-followups/email-followups.php",
+      "bytes": 890,
+      "sha256": "868ab09ffc1c4bcecaf22442686a96b28b12e637a1c0b7c6d4e2623786b7ddf1"
+    },
+    {
+      "path": "includes/modules/email-followups/logs.php",
+      "bytes": 2589,
+      "sha256": "4106e315df4ab987a56582ff2f52e2ee4df71e354b45d74b6809cbd1b8af979f"
+    },
+    {
+      "path": "includes/modules/email-followups/mailpoet.php",
+      "bytes": 4154,
+      "sha256": "53c6672f3be271557c46fee9ed1575b2301b3f1149a26703c85ae9799798c454"
+    },
+    {
+      "path": "includes/modules/email-followups/recipients.php",
+      "bytes": 15476,
+      "sha256": "d2acd6958062a1b8463d0dd43ed6a8256c9c519133ea291f1b1864214d25d515"
+    },
+    {
+      "path": "includes/modules/email-followups/scheduler.php",
+      "bytes": 4469,
+      "sha256": "917b14a188a1565c2b9bf7ab8ba692db38fcd442e69088771f1e563f09019424"
+    },
+    {
+      "path": "includes/modules/email-followups/sender.php",
+      "bytes": 14835,
+      "sha256": "e9271f994627a3c557af96ca5dad1c677c6f6d5d7e24bfcd78e7df15e0ba7965"
+    },
+    {
+      "path": "includes/modules/email-followups/settings.php",
+      "bytes": 22225,
+      "sha256": "d5ade92b582fc3f58699c90fd94cead4192cc334c0b484916c7081c8cf658ba0"
+    },
+    {
+      "path": "includes/modules/email-followups/templates.php",
+      "bytes": 8911,
+      "sha256": "67d81331194b8fdfbf2215702c2be8a05e38b36a17dd6d54a50077f6fedcccc7"
+    },
+    {
+      "path": "includes/modules/load.php",
+      "bytes": 4028,
+      "sha256": "a113096d261c73f227753ceef149b2f7f22055f0ab8636c647c726bd7a1e8eaa"
+    },
+    {
+      "path": "includes/modules/loader.php",
+      "bytes": 198,
+      "sha256": "a26c1f2be7fd90dd1278706865cad69c226f1de4ad2f285b4ad2115f46d026ee"
+    },
+    {
+      "path": "includes/modules/staff-tasks/admin-ui.php",
+      "bytes": 124929,
+      "sha256": "f0af6278ef15017bd93b1db9a1200c7ca1f6a7196f1d5db1885fa48b08b4ae54"
+    },
+    {
+      "path": "includes/modules/staff-tasks/authority-ui.php",
+      "bytes": 12025,
+      "sha256": "518a02c32f2b05d52a2d68d5d9ef1486a2b17042b0ca1ae795e650223376bbf5"
+    },
+    {
+      "path": "includes/modules/staff-tasks/authority.php",
+      "bytes": 34047,
+      "sha256": "423189b1b3d775417a08447e6df5db93cdfa1f1943ebc15c0f348b0ea23ff8c6"
+    },
+    {
+      "path": "includes/modules/staff-tasks/calendar/read.php",
+      "bytes": 16569,
+      "sha256": "94c2e4f22634f48b3e5fb81e2c19fad4d6d98aafd590fcf599fa24bee094ebe6"
+    },
+    {
+      "path": "includes/modules/staff-tasks/calendar/ui.php",
+      "bytes": 20513,
+      "sha256": "2453e1384e8d0341ae6142be03a9539098620f2a4ffc83217b7a237e24e9fff0"
+    },
+    {
+      "path": "includes/modules/staff-tasks/caps.php",
+      "bytes": 4071,
+      "sha256": "d9304ac931b1021d84951061a207d40cf51d73f36ae4bf964c0b274c8e64f71f"
+    },
+    {
+      "path": "includes/modules/staff-tasks/db.php",
+      "bytes": 8150,
+      "sha256": "fab5fe42d96c1653399ea9916d7e3fad76c8277030de673e487b91e0aace3c64"
+    },
+    {
+      "path": "includes/modules/staff-tasks/delivery.php",
+      "bytes": 8753,
+      "sha256": "1fd62e024139926c995983f8931d7ff356fa6c8934efe7dddbdf9ed6916237da"
+    },
+    {
+      "path": "includes/modules/staff-tasks/event-authority.php",
+      "bytes": 9466,
+      "sha256": "e912568d454f59c018c84e1c5dd31842f9013e169377828fdec7e2104274f632"
+    },
+    {
+      "path": "includes/modules/staff-tasks/generator.php",
+      "bytes": 27002,
+      "sha256": "715b75e0e2f5949275b8e0463f43af1df19fabe8ee5aabf700f6a37178569785"
+    },
+    {
+      "path": "includes/modules/staff-tasks/google/mapping.php",
+      "bytes": 5871,
+      "sha256": "411ccb349949a4de3f6d97bb7d5b605782e89a6d1612f70db20d7a2864048fd6"
+    },
+    {
+      "path": "includes/modules/staff-tasks/google/oauth.php",
+      "bytes": 5589,
+      "sha256": "e662c3f164a7e94adc39b3b4731778bd75080914f076a74685b6878d830203d1"
+    },
+    {
+      "path": "includes/modules/staff-tasks/google/provider.php",
+      "bytes": 4929,
+      "sha256": "5de0bcd9707b52dc884864eba529f3413a4a95b2786bf8ef295afa8a340c4b05"
+    },
+    {
+      "path": "includes/modules/staff-tasks/google/state.php",
+      "bytes": 4452,
+      "sha256": "76359d0e3ad7e4d30b65178acd210321ed0706bc7fc9ea6286f4db6f0e072100"
+    },
+    {
+      "path": "includes/modules/staff-tasks/google/sync.php",
+      "bytes": 15469,
+      "sha256": "29962ce403d37609a8c2bc3ce2f33fcde8ebeb4ebaca905b5c45ccd63cb9a33f"
+    },
+    {
+      "path": "includes/modules/staff-tasks/google/ui.php",
+      "bytes": 8226,
+      "sha256": "cf390afdb8f0206a3942e1b349fb4f373b82c28f06a18070fa58dc9d92188bd2"
+    },
+    {
+      "path": "includes/modules/staff-tasks/notifications.php",
+      "bytes": 6025,
+      "sha256": "b697f2bd70e1e8a8102859a15d813e50b137262feabeb951d877406c8254c892"
+    },
+    {
+      "path": "includes/modules/staff-tasks/settings.php",
+      "bytes": 3620,
+      "sha256": "5d2f0dc7af12566955fae01829eecfe72c97d776d9aa141363c95a934a837602"
+    },
+    {
+      "path": "includes/modules/staff-tasks/staff-tasks.php",
+      "bytes": 1496,
+      "sha256": "cd30f3e03af8d152503706714cc8dc92243f6ab37d53363663f80f594b92bd5e"
+    },
+    {
+      "path": "includes/modules/staff-tasks/store.php",
+      "bytes": 54210,
+      "sha256": "2a3f574bfc24f939b9cb9753266c5bdb2b33be6d65ca83b1ea0954c773c79582"
+    },
+    {
+      "path": "includes/modules/staff-tasks/tours.php",
+      "bytes": 7699,
+      "sha256": "25b816182682e84f1a8e7fcd25dc1b6072bafa920561005e57f789dd98f7bf0c"
+    },
+    {
+      "path": "includes/modules/status-notices/admin-ui.php",
+      "bytes": 44581,
+      "sha256": "d6acbc6d0afa92ed737a14c1d931840cabb5d00c5ec417658afc296652ddf4ef"
+    },
+    {
+      "path": "includes/modules/status-notices/cpt.php",
+      "bytes": 787,
+      "sha256": "fbebe7f511b92ee731ac6ee2e30b7a6b76ce60007aacac34db72e5e76821e7e3"
+    },
+    {
+      "path": "includes/modules/status-notices/defaults.php",
+      "bytes": 9896,
+      "sha256": "738bfeb9b1ee887a1a4024b35315af3a6cb0f5525ed59bc01c7503a1a1101976"
+    },
+    {
+      "path": "includes/modules/status-notices/front.php",
+      "bytes": 8171,
+      "sha256": "406f13e8f7d889846e25e6c28f3868b6f17c1b5f8a2a85ffb7fa94a8c21be2c9"
+    },
+    {
+      "path": "includes/modules/status-notices/status-notices.php",
+      "bytes": 744,
+      "sha256": "9caa7b1a6592938ca3056497e45a4cb78efdc7eebd4ddc9392a34eb60f02a4d2"
+    },
+    {
+      "path": "includes/modules/status-notices/store.php",
+      "bytes": 16656,
+      "sha256": "4b9f6aad8d986918b4a2c2debcb2455b9cf688f3ac4f0691ad86deca01dd2acb"
+    },
+    {
+      "path": "includes/plugin-basename-compat.php",
+      "bytes": 1716,
+      "sha256": "55058230e956cdc7cd70fb02cd922f4ddac4934cff771f22441f2863e56fba75"
+    },
+    {
+      "path": "includes/portal/load.php",
+      "bytes": 278,
+      "sha256": "5445f4318efb2f945613be4bbc516aa2da21cbcd3239bb0ac3584c2ede5fd09e"
+    },
+    {
+      "path": "includes/portal/staff-console.php",
+      "bytes": 3040,
+      "sha256": "3b89f19d411ffdbd578e2d3dc4336bcbeea363e5dbeedf4ab40d7e3c10f90aac"
+    },
+    {
+      "path": "includes/portal/staff-portal.php",
+      "bytes": 157870,
+      "sha256": "8365d570aa8acd04b567dff1760db8efd045983e343d8abde41221de117e0bfd"
+    },
+    {
+      "path": "includes/portal/vendor-portal.php",
+      "bytes": 349143,
+      "sha256": "50b07b61d4d2f99ec11fd6d861fc0a20ed6ce4c3aab25e3eedd80c71219b06f4"
+    },
+    {
+      "path": "includes/portal/vendor-profile.php",
+      "bytes": 315,
+      "sha256": "3be5f92b327f2105025de9d6111fbcdfe26aee5dde8993e1b5fc33c0734cce37"
+    },
+    {
+      "path": "includes/portal/vendor-tax-profile.php",
+      "bytes": 14791,
+      "sha256": "4eda62c352a69d77f8efbe017c0e672f0d0985e04737f6880469104811dd8ba3"
+    },
+    {
+      "path": "includes/portal/vendor-tech-profile.php",
+      "bytes": 170,
+      "sha256": "3c06ca6b9996d242926a112b944792ab9a7bda890bfc2efbc02c993af15179a4"
+    },
+    {
+      "path": "includes/public/calendar-ics.php",
+      "bytes": 12511,
+      "sha256": "56035fc7fc0a914148ebbf20d7d183a6b605be6b960062e565889ffd1cd5e01d"
+    },
+    {
+      "path": "includes/public/event-details.php",
+      "bytes": 60459,
+      "sha256": "8e6e4874b2ad37c048752c53ecc17fcec44acae93bb0e14ae1c0227daf839aa3"
+    },
+    {
+      "path": "includes/public/event-feedback.php",
+      "bytes": 33613,
+      "sha256": "a92968537a8cb66996a68aa3710af7824cc66473070fce3db800e43c95a6d1f0"
+    },
+    {
+      "path": "includes/public/event-sidebar.php",
+      "bytes": 6839,
+      "sha256": "40b52f7a18cfbbb090ac7eacb288036f96e1af43e52c3c3233f8a5c1197c65e6"
+    },
+    {
+      "path": "includes/public/events-photo-shortcode.php",
+      "bytes": 18293,
+      "sha256": "2226ec50db4509064e9a492a7718c8c0ff7e3589f3bb75e643ed8748e94120ba"
+    },
+    {
+      "path": "includes/public/express-bar.php",
+      "bytes": 13599,
+      "sha256": "dfcfb7a744ffdfeb15d87c4e9cb5fe7c2c397645e11552adc5f013de07d916d7"
+    },
+    {
+      "path": "includes/public/legacy-shortcodes.php",
+      "bytes": 731,
+      "sha256": "2fc279018ffc3d684ea8b6d2f08fbe40482ced1cc0afe669efe98649d1663e3e"
+    },
+    {
+      "path": "includes/public/load.php",
+      "bytes": 485,
+      "sha256": "91a9ce83315826da95d1c18e93989d4d7f6be36c23f60f3cb9a562d0ebe0852c"
+    },
+    {
+      "path": "includes/public/templates/vendor-profile.php",
+      "bytes": 15694,
+      "sha256": "688e86cc231a6e199d2ff652dd64108d2dc8e2b7285139dca0ab98538618eb97"
+    },
+    {
+      "path": "includes/public/vendor-profiles.php",
+      "bytes": 56628,
+      "sha256": "9ee293cceea61473cc48f67c937aa2eb581b8dd20718636c39f0ce6b8ae18266"
+    },
+    {
+      "path": "includes/public/venue-calendar-shortcode.php",
+      "bytes": 60207,
+      "sha256": "5078d142d4c78e5368a580b5d2e7a5ec49380c87491dc6084ccf4efdf57e37e0"
+    },
+    {
+      "path": "includes/rest/class-vms-rest-tours.php",
+      "bytes": 6480,
+      "sha256": "10ff098127f3735c14a97dcf33ab2c0c9506efba0dbe12d6bee734eac1d562a6"
+    },
+    {
+      "path": "includes/rest/load.php",
+      "bytes": 133,
+      "sha256": "e670c5f809e46c2d1ae784d15ae1727523f59d46f921c90c1894e97142ccf137"
+    },
+    {
+      "path": "includes/rest-dashboard.php",
+      "bytes": 43771,
+      "sha256": "def8c99e8e20e3d129ed937f8f06c7df4dfd45315acfc72bfe5e3ead0b8da576"
+    },
+    {
+      "path": "includes/rest-due-dates.php",
+      "bytes": 5071,
+      "sha256": "d9ea5a57cb6acdedebabc2f53363988e12d71625f672946cca90f681580ea3d7"
+    },
+    {
+      "path": "includes/runtime-guards.php",
+      "bytes": 81027,
+      "sha256": "5cbd2c88597856fc1c9cc29be3f859585bd56da858357aba01357ecf1e69c8b3"
+    },
+    {
+      "path": "includes/schedule/helpers.php",
+      "bytes": 8916,
+      "sha256": "854e46697382e77d12340267257761accc0852ceb3e51158b90877d0b4f847a8"
+    },
+    {
+      "path": "includes/schedule/schedule.php",
+      "bytes": 29242,
+      "sha256": "a1fff58cedd80cbcfbc29d01cf0e247e86ffeb2d87076b50208be12583cac319"
+    },
+    {
+      "path": "includes/schedule/season-dates.php",
+      "bytes": 23303,
+      "sha256": "72256e0f06b438ef910419dee9bc2b0b238eeea16e2621e593a8ef19ebfb6c32"
+    },
+    {
+      "path": "includes/services/event-plan-import/event-plan-import-engine.php",
+      "bytes": 89750,
+      "sha256": "afddaf3970c73c874a079a084f83d2698f86a88ac3bbaf305b18908891c14ee4"
+    },
+    {
+      "path": "includes/social-share/admin.php",
+      "bytes": 37752,
+      "sha256": "c2388f73f4e65ed24986a866c3b561fb5883c914375cec2b610c3386e9d109bb"
+    },
+    {
+      "path": "includes/social-share/audit.php",
+      "bytes": 3588,
+      "sha256": "3d2c3c19f7b0aadf662635cf53fd9b3044a4e3d7120890f90520fc374ac2fdf9"
+    },
+    {
+      "path": "includes/social-share/context.php",
+      "bytes": 8221,
+      "sha256": "65bad41d925e69833ac7248ceb65eec04019664fa5045d2e3bb951ec28b35409"
+    },
+    {
+      "path": "includes/social-share/crypto.php",
+      "bytes": 3444,
+      "sha256": "4ff067ace9aa48a6bc6944c7f52ff36b9e121b0e6c126a801e5127fc801eab0f"
+    },
+    {
+      "path": "includes/social-share/event-plan-panel.php",
+      "bytes": 37264,
+      "sha256": "33241b38348e5030afcec9542c22625866ad50322f16bad47052997a2018bac8"
+    },
+    {
+      "path": "includes/social-share/installer.php",
+      "bytes": 10187,
+      "sha256": "5a615dbee194d5145c9a80f22940b15521e9127016fc389b0cfee964cba10b1a"
+    },
+    {
+      "path": "includes/social-share/load.php",
+      "bytes": 809,
+      "sha256": "82f3b030f0e951fc5274bd5cbf3fef0e0dcba9ddbdb8bb75bfe8eb995dcfa5df"
+    },
+    {
+      "path": "includes/social-share/permissions.php",
+      "bytes": 4804,
+      "sha256": "b97569285274f263e041e7f63b6f39e2089f8c5fd663dadd93846a7aad8272bd"
+    },
+    {
+      "path": "includes/social-share/providers/class-provider-linkedin.php",
+      "bytes": 1809,
+      "sha256": "263ae1062c521fac3dc654d1fd23942608a80b3d63b3d949016fc500269a34d4"
+    },
+    {
+      "path": "includes/social-share/providers/class-provider-meta.php",
+      "bytes": 1859,
+      "sha256": "c64d0e7bf3a7f78569811555d1365f72a5b91e88da84e9afa4a7aa02ec6913fb"
+    },
+    {
+      "path": "includes/social-share/providers/class-provider-webhook.php",
+      "bytes": 5413,
+      "sha256": "596987a38c2e9e2c82c8e99f7601c5e689587ce6dac69bbab5a1c4655b370fe0"
+    },
+    {
+      "path": "includes/social-share/providers/interface-provider.php",
+      "bytes": 1263,
+      "sha256": "9343902e6868e706122a930017c38894340a76680ef5a1bc4bacf6e0fc7d7c61"
+    },
+    {
+      "path": "includes/social-share/providers/registry.php",
+      "bytes": 1719,
+      "sha256": "a50da37fddd3c7db68a10529edb8f26bf67e98f522a112359d5d6c42880f1e2b"
+    },
+    {
+      "path": "includes/social-share/queue-repo.php",
+      "bytes": 22681,
+      "sha256": "93d7623daca0af87991dca2b105656369c12661dbf94b7752b2bfd888106410d"
+    },
+    {
+      "path": "includes/social-share/queue-runner.php",
+      "bytes": 15023,
+      "sha256": "2f0648a5d81fd4533c5109d2962473ee7be1c6ce0b7381cea97dfbda40824e07"
+    },
+    {
+      "path": "includes/social-share/template-engine.php",
+      "bytes": 5917,
+      "sha256": "6d4b0f1714b3794cec01f4e7e2fe0bdc8634c646d28d3a6f6a4168c833236563"
+    },
+    {
+      "path": "includes/support/load.php",
+      "bytes": 336,
+      "sha256": "0739df76fc2f487a096772d4a3a6608c2ff4d341b0730e29ed37fda6b84460f6"
+    },
+    {
+      "path": "includes/taxonomies/vendor-category.php",
+      "bytes": 13928,
+      "sha256": "80d60379f30f8e54a6b73a8b723af7d9ab7cee08ae8a76e466dbea74d5e96d28"
+    },
+    {
+      "path": "includes/taxonomies/vendor-type.php",
+      "bytes": 14937,
+      "sha256": "2f9c2ecff867351052f9afde7c004eadc9092abbb2d8af550db66abff6f0634c"
+    },
+    {
+      "path": "includes/ticketing/ticket-integrity-checks.php",
+      "bytes": 66569,
+      "sha256": "fef46ef73417ab4372ef55287dfac03d881c2cae145b9e278c799c40406ea1c1"
+    },
+    {
+      "path": "includes/ticketing/ticket-integrity-cron.php",
+      "bytes": 27442,
+      "sha256": "916cb74c932a73b8d66fa43748b1042562b144ac62a5a0ee28bd0026c922ffc4"
+    },
+    {
+      "path": "includes/ticketing/ticket-integrity-daily-report.php",
+      "bytes": 52065,
+      "sha256": "cf2f43018a53cd8a2afbd98fc3349625cc04e38285171a2872e61aa45e8b22de"
+    },
+    {
+      "path": "includes/ticketing/ticket-integrity-monitor.php",
+      "bytes": 50212,
+      "sha256": "35fc89f102027fb4d66eb2bfa05da704daf176107b524f1c5e33bb3236cf4d17"
+    },
+    {
+      "path": "includes/ticketing/ticket-integrity-payment-gateway-health.php",
+      "bytes": 38204,
+      "sha256": "ed2089d1f16e4eac79d49d64c25b50ce6b59d4557ea41e23a6aa146bf975f9d9"
+    },
+    {
+      "path": "includes/ticketing/ticket-integrity-tours.php",
+      "bytes": 4153,
+      "sha256": "b2b8aa65c76ba1ebfd2e6deda232f123d7a6f2d9f6335617201eb37046616a01"
+    },
+    {
+      "path": "includes/ticketing/ticket-inventory-forensics.php",
+      "bytes": 130402,
+      "sha256": "92c5e2a6eef0484d8f30b9c8d09c565209eb8f52387778d26aea03c4d0be5bc6"
+    },
+    {
+      "path": "includes/ticketing/ticket-legacy-repair.php",
+      "bytes": 62605,
+      "sha256": "067fcdd17928bbe411b3ecb5705153ad8c564044d6ac65931e5044b4aa48d5b2"
+    },
+    {
+      "path": "includes/ticketing/ticket-mutation-audit.php",
+      "bytes": 55154,
+      "sha256": "d1e4cdd852a27bd4386ec6c5b011d67200331b9d333e351cb2774bafd3cc8734"
+    },
+    {
+      "path": "includes/tours/class-vms-tours-admin.php",
+      "bytes": 13050,
+      "sha256": "6fb056fdf05257b848e165e0d0988c846d0cd168edb851cb70c58eb8520d15ef"
+    },
+    {
+      "path": "includes/tours/class-vms-tours-compat.php",
+      "bytes": 6764,
+      "sha256": "49cf2574de3fb39841dbefbe29d4998ab8b86f77f9cc763145b0a36abd3cbc5a"
+    },
+    {
+      "path": "includes/tours/class-vms-tours-registry.php",
+      "bytes": 15092,
+      "sha256": "5d40fb9b26a46a3ce8a83a513203f0f61c9fe31ee6cb39927ab17c5ebcc363e1"
+    },
+    {
+      "path": "includes/tours/class-vms-tours-screen.php",
+      "bytes": 2725,
+      "sha256": "01db47d42f3143ab4483aba1b4358ad6474643ccfab95001e94ef0b62d13006d"
+    },
+    {
+      "path": "includes/tours/class-vms-tours-service.php",
+      "bytes": 32653,
+      "sha256": "7c3325e8637df93fc38d5e684ec0c2de2e0c16f2bb28114a721e4d94bb214df9"
+    },
+    {
+      "path": "includes/tours/class-vms-tours-storage.php",
+      "bytes": 8869,
+      "sha256": "282169f57d8caa899dc21b379472d337a93675ce708b0a67827eb1de152aa399"
+    },
+    {
+      "path": "includes/tours/tours.php",
+      "bytes": 2495,
+      "sha256": "373d84898b0f8079a5ccfc3e398b31f2682d57c9dc5ad8ce64079a9bad98d4af"
+    },
+    {
+      "path": "includes/vendor-applications.php",
+      "bytes": 150014,
+      "sha256": "2ad0f9b418f148f8f150055326dbdfd738fae4afd31fae96bfc43fff728d91ac"
+    },
+    {
+      "path": "readme.txt",
+      "bytes": 21260,
+      "sha256": "75af2f72be4a56a03ba1a71362e8ee18cbdc632ca8f108439a6eb2b0c73c930a"
+    },
+    {
+      "path": "uninstall.php",
+      "bytes": 46,
+      "sha256": "5f73ffa261763b00d65db0d73773e96d3174b90c54e6614ea751b9a30fe69f1d"
+    },
+    {
+      "path": "vendor-management-system.php",
+      "bytes": 764,
+      "sha256": "a3e91ceec815965448a233876dc83431b414633440c63cc0809fc47819d6b393"
+    },
+    {
+      "path": "vms-build.txt",
+      "bytes": 27,
+      "sha256": "cdb070c3b66661822b26ac21aecac73bb594443cded8a7c182777b5b548c7038"
+    },
+    {
+      "path": "vms.php",
+      "bytes": 327,
+      "sha256": "b7a81774295e2eed21dadb848364a4d20779975110e02476384d57fece16ff6c"
+    }
+  ]
+}

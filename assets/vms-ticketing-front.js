@@ -9,6 +9,17 @@
 
   var cfg = window.BVMGR_TICKETING_FRONT || {};
 
+  // Returning from payment must re-read cart/order status rather than restore
+  // an old "awaiting payment" or "in your cart" message from browser history.
+  if (toInt(cfg.tecEventId, 0) > 0 && !configFlag(cfg.isCart) && !configFlag(cfg.isCheckout)) {
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted && (configFlag(cfg.isLoggedIn) || Object.keys(mapObject(cfg.cartTicketQuantities)).length > 0)) {
+        window.location.reload();
+      }
+    });
+  }
+
+
   function collectPurchaseExtensions(state, options) {
     var registry = window.BVMGR_TICKETING_PURCHASE_EXTENSIONS;
     var handlers = registry && registry.handlers && typeof registry.handlers === 'object' ? registry.handlers : {};
@@ -1106,6 +1117,13 @@
   // cart/checkout pages, but do not claim, move, or observe the event ticket
   // surface. The fallback bundle may enhance BVM add-ons without owning TEC.
   if (!useV2Layout()) {
+    // Show status in native Safe Mode without taking ownership of TEC controls.
+    var mountNativeStatus = function () {
+      var nativeForm = document.querySelector('#tribe-tickets__tickets-form, form.tribe-tickets__tickets-form');
+      if (nativeForm) ensureExistingCartNotice({ ticketsSection: nativeForm });
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountNativeStatus, { once: true });
+    else mountNativeStatus();
     window.BVMGR_TICKETING_FRONT_BUNDLE = {
       loaded: false,
       nativeAuthority: true,
@@ -1496,7 +1514,7 @@
         access: access,
         rule: rule,
         groupKey: rule ? ticketRatioGroupKey(productId, access) : '',
-        qty: Math.max(0, readTicketQty(input)),
+        qty: rule ? readTicketQty(input) : additionalTicketQty(state, input),
         countsTowardUnlock: ticketCountsTowardUnlock(access)
       });
     });
@@ -2754,6 +2772,78 @@
     return Math.max(0, toInt(input.value, 0));
   }
 
+  function cartTicketQty(state, productId) {
+    var access = getTicketAccessEntry(state, productId) || {};
+    var canonicalId = toInt(access.woo_product_id, productId);
+    return Math.max(0, toInt(mapObject(cfg.cartTicketQuantities)[String(canonicalId)], 0));
+  }
+
+  function additionalTicketQty(state, input) {
+    return Math.max(0, readTicketQty(input) - cartTicketQty(state, resolveTicketProductId(state, input)));
+  }
+
+  function hasEventTicketsInCart() {
+    return Object.keys(mapObject(cfg.cartTicketQuantities)).some(function (productId) {
+      return toInt(cfg.cartTicketQuantities[productId], 0) > 0;
+    });
+  }
+
+  function pendingEventPayment() {
+    var orders = (cfg.eventPurchaseStatus || {}).payment_orders;
+    return Array.isArray(orders) ? orders.filter(function (order) { return order && order.url; })[0] || null : null;
+  }
+
+  function ensureExistingCartNotice(state) {
+    if (!state.ticketsSection || query('.vms-event-purchase-status', state.ticketsSection)) {
+      return;
+    }
+    var status = cfg.eventPurchaseStatus || {};
+    var inCart = hasEventTicketsInCart();
+    var pending = Array.isArray(status.payment_orders) ? status.payment_orders : [];
+    var held = Array.isArray(status.confirmation_orders) ? status.confirmation_orders : [];
+    var paid = Array.isArray(status.paid_orders) ? status.paid_orders : [];
+    var issuedCount = Math.max(0, toInt(status.issued_count, 0));
+    if (!inCart && !pending.length && !held.length && !paid.length && !issuedCount) {
+      return;
+    }
+    var notice = createEl('section', 'vms-event-purchase-status vms-existing-cart-notice vms-ticket-lock-note vms-ticket-benefit-note');
+    notice.setAttribute('aria-label', 'Your tickets and orders for this event');
+    notice.appendChild(createEl('strong', null, 'Your tickets and orders for this event'));
+    function addStatus(message, actions) {
+      var item = createEl('div', 'vms-event-purchase-status__item');
+      item.appendChild(createEl('p', null, message));
+      var actionList = createEl('div', 'vms-ticket-lock-actions');
+      renderTicketClaimActions(actionList, actions);
+      item.appendChild(actionList);
+      notice.appendChild(item);
+    }
+    pending.forEach(function (order) {
+      addStatus('Order #' + order.id + ' is awaiting payment' + (order.total ? ' (' + order.total + ')' : '') + '. Your purchase is not complete. Complete payment for this order instead of placing it again.', [
+        { label: 'Complete Payment — Order #' + order.id, url: order.url }
+      ]);
+    });
+    if (inCart) {
+      var cartCount = Object.keys(mapObject(cfg.cartTicketQuantities)).reduce(function (sum, pid) { return sum + Math.max(0, toInt(cfg.cartTicketQuantities[pid], 0)); }, 0);
+      var actions = [{ label: 'Review cart', url: cfg.cartUrl || '/cart/' }];
+      if (!pending.length) actions.push({ label: 'Complete checkout', url: cfg.checkoutUrl || '/checkout/' });
+      addStatus('You have ' + cartCount + ' ticket' + (cartCount === 1 ? '' : 's') + ' in your cart for this event. These cart items have not been purchased. The quantities below include them. Increase a quantity only to add more tickets; use Review cart to remove tickets.', actions);
+    }
+    if (issuedCount > 0) {
+      addStatus('You have ' + issuedCount + ' issued ticket' + (issuedCount === 1 ? '' : 's') + ' for this event.', [
+        { label: 'View your tickets', url: status.tickets_url || (paid[0] || {}).url }
+      ]);
+    }
+    if (toInt(status.paid_count, 0) > issuedCount) {
+      addStatus('Your payment is complete. Some tickets are still being prepared. Please do not purchase them again.', paid.map(function (order) { return { label: 'View order #' + order.id, url: order.url }; }));
+    }
+    held.forEach(function (order) {
+      addStatus('Order #' + order.id + ' is awaiting confirmation. Tickets are not shown as issued. Please review the order before purchasing again.', [
+        { label: 'View order #' + order.id, url: order.url }
+      ]);
+    });
+    state.ticketsSection.insertBefore(notice, state.ticketsSection.firstChild);
+  }
+
   function totalNativeTicketQty(state) {
     if (!state || !state.form) {
       return 0;
@@ -2765,7 +2855,7 @@
       if (isDisabledPendingSyncTicketProductId(state, productId) || input.disabled || (row && row.hidden)) {
         return sum;
       }
-      return sum + readTicketQty(input);
+      return sum + additionalTicketQty(state, input);
     }, 0);
   }
 
@@ -2907,6 +2997,7 @@
 
     state.flowRoot = flow;
     state.ticketsSection = ticketsSection;
+    ensureExistingCartNotice(state);
     state.addonsSection = addonsSection;
     state.summarySection = summarySection;
     state.stickybarSection = stickybarSection;
@@ -2986,6 +3077,10 @@
     }
     if (subtotal.parentNode !== subtotalHost) {
       subtotalHost.appendChild(subtotal);
+    }
+    if (hasEventTicketsInCart()) {
+      setText(query('.vms-ticketing-subtotal__line-label', subtotal), 'Additional tickets');
+      setText(query('.vms-ticketing-subtotal__line--subtotal .vms-ticketing-subtotal__line-label', subtotal), 'Additional items subtotal');
     }
     state.subtotalNode = subtotal;
     state.subtotalTicketNode = query('[data-vms-subtotal-ticket]', subtotal);
@@ -3163,7 +3258,7 @@
     var lines = [];
     hideDisabledTicketRows(state);
     queryAll(SELECTORS.nativeQty, state.form).forEach(function (input) {
-      var qty = readTicketQty(input);
+      var qty = additionalTicketQty(state, input);
       var productId = resolveTicketProductId(state, input);
       var row = getTicketRow(input);
       if (isDisabledPendingSyncTicketProductId(state, productId) || input.disabled || (row && row.hidden)) {
@@ -3233,7 +3328,7 @@
       if (productId <= 0 || isDisabledPendingSyncTicketProductId(state, productId) || input.disabled || (row && row.hidden)) {
         return;
       }
-      var qty = Math.max(0, readTicketQty(input));
+      var qty = additionalTicketQty(state, input);
       qtyByProduct[productId] = qty;
     });
     return qtyByProduct;
@@ -3620,6 +3715,12 @@
       } else {
         noteText = 'Your account covers ' + String(claimAllowanceQty) + ' ticket' + (claimAllowanceQty === 1 ? '' : 's') + ' for ' + ticketName + '.';
       }
+      var assignedCartQty = Math.max(0, toInt(access.current_user_assigned_cart_qty, 0));
+      if (assignedCartQty > 0) {
+        noteText = String(assignedCartQty) + ' ' + ticketName + ' ticket' + (assignedCartQty === 1 ? ' is' : 's are') + ' already assigned to your account in your cart. ' +
+          (selectedQty > 0 ? noteText : 'You can continue to checkout without adding a guest email.');
+        actions.push({ label: 'Review cart', url: cfg.cartUrl || '/cart/' });
+      }
       if (cfg.myBenefitsUrl) {
         actions.push({ label: 'My Benefits', url: cfg.myBenefitsUrl });
       }
@@ -3712,7 +3813,7 @@
     var ticketModel = ensureTicketClaimModel(state, productId);
     ticketModel.rowEl = getTicketRow(input);
     ticketModel.inputEl = input;
-    ticketModel.context = resolveTicketClaimContext(state, input, productId, readTicketQty(input));
+    ticketModel.context = resolveTicketClaimContext(state, input, productId, additionalTicketQty(state, input));
     if (ticketModel.rowEl && ticketModel.context) {
       ensureTicketVisibleTitle(ticketModel.rowEl, ticketModel.context.access);
       ensureQualifiedTicketDescription(ticketModel.rowEl, ticketModel.context.access, ticketModel.context);
@@ -4358,7 +4459,8 @@
     var hasAddons = addonLines.length > 0;
     var hasExtensions = extensionResult.quantity > 0;
     var hasTickets = ticketLines.length > 0 || hasNativeTicketSelection(state);
-    var shouldEnable = state.isSubmitting ? false : (hasTickets || hasAddons || hasExtensions);
+    var continueExistingCart = !hasTickets && !hasAddons && !hasExtensions && (hasEventTicketsInCart() || pendingEventPayment());
+    var shouldEnable = state.isSubmitting ? false : (hasTickets || hasAddons || hasExtensions || continueExistingCart);
 
     state.submitButtons.forEach(function (button) {
       if (!button) {
@@ -4366,7 +4468,7 @@
       }
       setDisabled(button, !shouldEnable || state.isSubmitting);
       var defaultLabel = button.getAttribute('data-vms-label-default') || state.originalSubmitLabel || 'Get Tickets';
-      var nextLabel = state.isSubmitting ? 'Adding…' : (shouldEnable ? 'Add items to cart' : defaultLabel);
+      var nextLabel = state.isSubmitting ? 'Adding…' : (continueExistingCart ? (pendingEventPayment() ? 'Complete Payment' : 'Continue to checkout') : (shouldEnable ? 'Add items to cart' : defaultLabel));
       if (button.tagName && button.tagName.toLowerCase() === 'input') {
         if (button.value !== nextLabel) {
           button.value = nextLabel;
@@ -5446,6 +5548,14 @@
     }
 
     if (!ticketLines.length && !addonLines.length && extensionResult.quantity <= 0) {
+      if (pendingEventPayment()) {
+        window.location.href = pendingEventPayment().url;
+        return;
+      }
+      if (hasEventTicketsInCart()) {
+        window.location.href = cfg.checkoutUrl || normalizeUrl('/checkout/');
+        return;
+      }
       if (hasNativeTicketSelection(state)) {
         requestNativeSubmit(state);
         return;
