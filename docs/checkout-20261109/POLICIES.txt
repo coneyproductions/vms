@@ -1,0 +1,7 @@
+Issue #124 — installed manual-order policy correction.
+
+Source commit 489bef43c7664112f865df072ce2ad8b94731158. Runtime path: companion-plugins/vmsx-checkout-policies, four manifest-whitelisted files. Version 0.2.4-checkout.20261109.1; retained ZIP SHA-256 ac8e144f00cfe3954bee19d6687f0844bf5ca7e4a688c9b1d07de2635c5d4094; source tree c717cf85d3214d14352ea34d6c22e94648eba15e9f1fd05a9d750d7cb33ef569.
+
+The native Pay for Order page displays the required acknowledgement. Server validation precedes authorization, preserves Woo ownership/order-key/payable-state checks, and records scoped acceptance on the order. Square processing code is unchanged. Consent is not proof of payment. Reuse unchanged native policy/ownership/paid-order evidence; no provider transaction was repeated for source-control recovery.
+
+Only PHP, policy CSS and policy JS differ from the explicit policy baseline; cart-wallet-guard.js is identical. This PR does not include the older #119 discount repair or authorize deployment. Current Staging installation exists under its earlier exact-artifact approval and remains on HOLD for the separate BVM quantity defect. No Production or Square sandbox authorization follows from this commit.
