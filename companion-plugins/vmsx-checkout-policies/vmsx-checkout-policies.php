@@ -2,7 +2,7 @@
 /**
  * Plugin Name: VMS Checkout Policies
  * Description: Requires acknowledgement of venue/event policies for event-scoped WooCommerce checkouts, including Square digital wallets and Checkout Blocks.
- * Version: 0.2.4-rc1
+ * Version: 0.2.4-checkout.20261109.1
  * Author: Coney Productions
  * Text Domain: vmsx-checkout-policies
  * Requires at least: 6.4
@@ -12,7 +12,7 @@
 
 defined('ABSPATH') || exit;
 
-define('VMSX_CP_VERSION', '0.2.4-rc1');
+define('VMSX_CP_VERSION', '0.2.4-checkout.20261109.1');
 define('VMSX_CP_FILE', __FILE__);
 define('VMSX_CP_PATH', plugin_dir_path(__FILE__));
 define('VMSX_CP_URL', plugin_dir_url(__FILE__));
@@ -263,6 +263,9 @@ function vmsx_cp_filter_square_wallet_pages(array $pages): array {
 add_filter('wc_square_display_digital_wallet_on_pages', 'vmsx_cp_filter_square_wallet_pages', 20);
 
 function vmsx_cp_body_classes(array $classes): array {
+    if (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-pay')) {
+        return $classes;
+    }
     if (! vmsx_cp_cart_has_event_products()) {
         return $classes;
     }
@@ -539,8 +542,124 @@ function vmsx_cp_store_api_update_order_from_request(WC_Order $order, WP_REST_Re
 }
 add_action('woocommerce_store_api_checkout_update_order_from_request', 'vmsx_cp_store_api_update_order_from_request', 10, 2);
 
+/** Existing-order policy acknowledgement ************************************/
+function vmsx_cp_order_requires_policy(WC_Order $order): bool {
+    if (! vmsx_cp_enabled()) {
+        return false;
+    }
+    foreach ($order->get_items('line_item') as $item) {
+        if (vmsx_cp_is_event_product((int) ($item->get_variation_id() ?: $item->get_product_id()))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function vmsx_cp_order_policy_scope(WC_Order $order): string {
+    $items = array();
+    foreach ($order->get_items('line_item') as $id => $item) {
+        $items[(int) $id] = array((int) $item->get_product_id(), (int) $item->get_variation_id(), (int) $item->get_quantity());
+    }
+    ksort($items);
+    return hash('sha256', wp_json_encode(array($order->get_id(), $order->get_customer_id(), $order->get_currency(), $order->get_total(), $items)));
+}
+
+function vmsx_cp_order_pay_access(WC_Order $order): bool {
+    $key = isset($_GET['key']) && is_string($_GET['key']) ? wc_clean(wp_unslash($_GET['key'])) : '';
+    return $order->needs_payment() && current_user_can('pay_for_order', $order->get_id())
+        && $key !== '' && hash_equals($order->get_order_key(), $key);
+}
+
+function vmsx_cp_current_pay_order() {
+    $order = wc_get_order(absint(get_query_var('order-pay')));
+    return $order instanceof WC_Order && vmsx_cp_order_pay_access($order) ? $order : false;
+}
+
+function vmsx_cp_render_order_pay_policy(): void {
+    $order = vmsx_cp_current_pay_order();
+    if (! $order || ! vmsx_cp_order_requires_policy($order)) {
+        return;
+    }
+    $settings = vmsx_cp_settings();
+    $accepted = $order->get_meta('_vmsx_checkout_policies_accepted') === 'yes'
+        && hash_equals(vmsx_cp_policy_hash(), (string) $order->get_meta('_vmsx_checkout_policies_hash'))
+        && hash_equals(vmsx_cp_order_policy_scope($order), (string) $order->get_meta('_vmsx_order_pay_policy_scope_hash'));
+    ?>
+    <section class="vmsx-checkout-policies vmsx-order-pay-policies" aria-labelledby="vmsx-order-policy-title">
+        <h3 id="vmsx-order-policy-title"><?php echo esc_html((string) $settings['policy_title']); ?></h3>
+        <p id="vmsx-order-policy-help"><?php esc_html_e('Please read and agree to the Event Policies before paying for this order.', 'vmsx-checkout-policies'); ?></p>
+        <details class="vmsx-checkout-policies__details" <?php echo ! empty($settings['open_by_default']) ? 'open' : ''; ?>>
+            <summary><?php echo esc_html((string) $settings['summary_label']); ?></summary>
+            <div class="vmsx-checkout-policies__content"><?php echo wp_kses_post(wpautop((string) $settings['policy_body'])); ?></div>
+        </details>
+        <label class="vmsx-checkout-policies__accept" for="vmsx-order-pay-policy-accept">
+            <input type="checkbox" id="vmsx-order-pay-policy-accept" name="vmsx_order_pay_policy_accept" value="1" required aria-required="true" aria-describedby="vmsx-order-policy-help" <?php checked($accepted); ?> />
+            <span><?php echo esc_html((string) $settings['checkbox_label']); ?></span>
+        </label>
+        <input type="hidden" name="vmsx_order_pay_policy_hash" value="<?php echo esc_attr(vmsx_cp_policy_hash()); ?>" />
+        <input type="hidden" name="vmsx_order_pay_policy_scope" value="<?php echo esc_attr(vmsx_cp_order_policy_scope($order)); ?>" />
+        <?php wp_nonce_field('vmsx_order_pay_policy_' . $order->get_id(), 'vmsx_order_pay_policy_nonce'); ?>
+    </section>
+    <?php
+}
+add_action('woocommerce_pay_order_before_submit', 'vmsx_cp_render_order_pay_policy', 5);
+
+function vmsx_cp_validate_order_pay_policy(WC_Order $order): void {
+    if (! vmsx_cp_order_requires_policy($order)) {
+        return;
+    }
+    // Woo has already checked its payment nonce, key and payable status. Retain
+    // those checks and explicitly require the native account permission here.
+    if (! vmsx_cp_order_pay_access($order)) {
+        wc_add_notice(__('Please sign in to the account that owns this order before paying.', 'vmsx-checkout-policies'), 'error');
+        return;
+    }
+    $fields = array();
+    foreach (array('accept', 'hash', 'scope', 'nonce') as $field) {
+        $name = 'vmsx_order_pay_policy_' . $field;
+        $fields[$field] = isset($_POST[$name]) && is_string($_POST[$name]) ? wc_clean(wp_unslash($_POST[$name])) : '';
+    }
+    if (! wp_verify_nonce($fields['nonce'], 'vmsx_order_pay_policy_' . $order->get_id())
+        || ! hash_equals(vmsx_cp_policy_hash(), $fields['hash'])
+        || ! hash_equals(vmsx_cp_order_policy_scope($order), $fields['scope'])) {
+        wc_add_notice(__('The order or Event Policies have changed. Please reload this payment page, then read and agree to the policies again.', 'vmsx-checkout-policies'), 'error');
+        return;
+    }
+    if ($fields['accept'] !== '1') {
+        wc_add_notice(vmsx_cp_policy_error_message(), 'error');
+        return;
+    }
+    // Record acceptance independently of cart/session state, before the gateway
+    // can authorize payment. Failed payment retries retain the same audit.
+    $order->update_meta_data('_vmsx_checkout_policies_accepted', 'yes');
+    $order->update_meta_data('_vmsx_checkout_policies_accepted_at', gmdate('Y-m-d H:i:s'));
+    $settings = vmsx_cp_settings();
+    $order->update_meta_data('_vmsx_checkout_policies_version', (string) $settings['policy_version']);
+    foreach (array('title' => 'policy_title', 'checkbox_label' => 'checkbox_label') as $meta => $setting) {
+        $order->update_meta_data('_vmsx_checkout_policies_' . $meta, (string) $settings[$setting]);
+    }
+    $order->update_meta_data('_vmsx_checkout_policies_hash', vmsx_cp_policy_hash());
+    $order->update_meta_data('_vmsx_order_pay_policy_scope_hash', vmsx_cp_order_policy_scope($order));
+    $order->update_meta_data('_vmsx_checkout_policies_checkout_type', 'order_pay');
+    $order->update_meta_data('_vmsx_checkout_policies_plugin_version', VMSX_CP_VERSION);
+    $order->update_meta_data('_vmsx_order_pay_policy_user_id', get_current_user_id());
+    $order->save();
+}
+add_action('woocommerce_before_pay_action', 'vmsx_cp_validate_order_pay_policy', 1);
+
 /** Front-end assets **********************************************************/
 function vmsx_cp_enqueue_assets(): void {
+    // Existing-order payments are authorized and validated against that order.
+    // Cart policy controls belong only to cart/new-checkout flows; order-pay
+    // has no cart acceptance panel and may be opened with an unrelated cart.
+    if (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-pay')) {
+        $order = vmsx_cp_current_pay_order();
+        if ($order && vmsx_cp_order_requires_policy($order)) {
+            wp_enqueue_style('vmsx-checkout-policies', VMSX_CP_URL . 'assets/checkout-policies.css', array(), VMSX_CP_VERSION);
+        }
+        return;
+    }
+
     if (! vmsx_cp_cart_has_event_products()) {
         return;
     }

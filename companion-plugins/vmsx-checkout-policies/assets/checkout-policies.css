@@ -49,6 +49,10 @@
     margin-top: .2rem;
     flex: 0 0 auto;
 }
+.vmsx-order-pay-policies { box-sizing: border-box; max-width: 100%; overflow-wrap: anywhere; }
+.vmsx-order-pay-policies .vmsx-checkout-policies__accept { min-height: 44px; align-items: center; }
+.vmsx-order-pay-policies input[type="checkbox"] { min-width: 22px; min-height: 22px; }
+.vmsx-order-pay-policies input[type="checkbox"]:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
 .vmsx-checkout-policies__status {
     min-height: 1.2em;
     margin-top: .45rem;

@@ -1,0 +1,25 @@
+{
+  "tree_sha256": "c717cf85d3214d14352ea34d6c22e94648eba15e9f1fd05a9d750d7cb33ef569",
+  "files": [
+    {
+      "path": "assets/cart-wallet-guard.js",
+      "bytes": 1143,
+      "sha256": "873e60fa9563a0bbf2653bd86d743530fc1f9050d8cf29a799bd10bd075c275f"
+    },
+    {
+      "path": "assets/checkout-policies.css",
+      "bytes": 5380,
+      "sha256": "85d4832bb183944edc3a4c2170b1dae6627b140fff8ad2aa6f7af5826902e20e"
+    },
+    {
+      "path": "assets/checkout-policies.js",
+      "bytes": 20469,
+      "sha256": "eb82f74c051358bce5391e5c056700a842ec19e759049119ce6e2bf3075e83de"
+    },
+    {
+      "path": "vmsx-checkout-policies.php",
+      "bytes": 39159,
+      "sha256": "3ff9021d39a26a9ebb2d095713fa19096b4feca6daf9aa839722fad543f191e6"
+    }
+  ]
+}
