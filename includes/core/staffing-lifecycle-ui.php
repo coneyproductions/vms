@@ -68,17 +68,17 @@ function bvmgr_staffing_lifecycle_ajax(string $context): void
 add_action('wp_ajax_bvmgr_staffing_operator_transition', static function (): void { bvmgr_staffing_lifecycle_ajax('operator'); });
 add_action('wp_ajax_bvmgr_staffing_staff_transition', static function (): void { bvmgr_staffing_lifecycle_ajax('staff'); });
 
-function bvmgr_staffing_render_lifecycle_controls(int $plan_id, string $context = 'operator'): void
+function bvmgr_staffing_render_lifecycle_controls(int $plan_id, string $context = 'operator', int $assignment_id = 0): void
 {
     global $wpdb;
     $staff_id = $context === 'staff' ? (int) get_user_meta(get_current_user_id(), '_vms_staff_id', true) : 0;
-    if (!is_user_logged_in() || ($context === 'operator' && ($plan_id <= 0 || !current_user_can('edit_post', $plan_id))) || ($context === 'staff' && get_post_type($staff_id) !== 'vms_staff')) return;
+    if (!in_array($context, array('operator', 'staff'), true) || !is_user_logged_in() || ($context === 'operator' && ($plan_id <= 0 || !current_user_can('edit_post', $plan_id))) || ($context === 'staff' && get_post_type($staff_id) !== 'vms_staff')) return;
     bvmgr_staffing_lifecycle_enqueue_assets();
-    $rows = $wpdb->get_results($wpdb->prepare('SELECT a.*, s.event_plan_id, s.role_id, s.status AS slot_status FROM %i a INNER JOIN %i s ON s.slot_id=a.slot_id WHERE (%d=0 OR s.event_plan_id=%d) AND (%d=0 OR a.staff_id=%d) ORDER BY s.event_plan_id, s.role_id, a.assignment_id',
-        bvmgr_staffing_table_name('assignments'), bvmgr_staffing_table_name('event_slots'), $plan_id, $plan_id, $staff_id, $staff_id), ARRAY_A);
+    $rows = $wpdb->get_results($wpdb->prepare('SELECT a.*, s.event_plan_id, s.role_id, s.status AS slot_status FROM %i a INNER JOIN %i s ON s.slot_id=a.slot_id WHERE (%d=0 OR s.event_plan_id=%d) AND (%d=0 OR a.staff_id=%d) AND (%d=0 OR a.assignment_id=%d) ORDER BY s.event_plan_id, s.role_id, a.assignment_id',
+        bvmgr_staffing_table_name('assignments'), bvmgr_staffing_table_name('event_slots'), $plan_id, $plan_id, $staff_id, $staff_id, $assignment_id, $assignment_id), ARRAY_A);
     echo '<section class="bvm-staffing-lifecycle" data-staffing-saving="' . esc_attr__('Saving assignment…', 'backstage-venue-manager') . '" data-staffing-network-error="' . esc_attr__('The save result could not be verified. Retry this same action to check its recorded result.', 'backstage-venue-manager') . '" data-staffing-url="' . esc_url(admin_url('admin-ajax.php')) . '"><h4>' . esc_html__('Assignment responses', 'backstage-venue-manager') . '</h4>';
-    if ($context === 'operator') echo '<p>' . esc_html__('Use the matrix to propose new staff. Confirm, cancel, or repropose existing assignments here. Existing states are preserved by matrix saves.', 'backstage-venue-manager') . '</p>';
-    if ($context === 'operator') {
+    if ($context === 'operator' && !$assignment_id) echo '<p>' . esc_html__('Use the matrix to propose new staff. Confirm, cancel, or repropose existing assignments here. Existing states are preserved by matrix saves.', 'backstage-venue-manager') . '</p>';
+    if ($context === 'operator' && !$assignment_id) {
         $snapshot = bvmgr_staffing_resolve_event_snapshot($plan_id);
         echo '<p class="bvm-staffing-counts">' . esc_html(sprintf(
             /* translators: 1: planned positions, 2: active assignments, 3: proposed assignments, 4: confirmed assignments, 5: open planned positions, 6: open required positions. */
@@ -91,10 +91,11 @@ function bvmgr_staffing_render_lifecycle_controls(int $plan_id, string $context 
     foreach ($rows as $row) {
         $plan = (int) $row['event_plan_id'];
         $date = (string) get_post_meta($plan, '_vms_event_date', true);
-        if ($context === 'staff' && (!preg_match('/^\d{4}-\d{2}-\d{2}$/D', $date) || $date < wp_date('Y-m-d') || !in_array(bvmgr_event_plan_get_status($plan, 'dashboard'), array('ready','published','tentative','confirmed'), true))) continue;
+        if ($context === 'staff' && (!bvmgr_staffing_assignment_owned_by($row, get_current_user_id()) || bvmgr_staffing_response_event_block_reason($plan) !== '')) continue;
         $shown++;
         $window = bvmgr_staffing_lifecycle_window($row);
         $active = $row['slot_status'] === 'active' && (int) ($window['end_ts'] ?? 0) > time() && (int) ($window['start_ts'] ?? 0) > 0 && (int) $window['end_ts'] > (int) $window['start_ts'] && $date >= wp_date('Y-m-d');
+        $active = $context === 'staff' ? bvmgr_staffing_response_block_reason($row, $window) === '' : $active;
         $role = get_term((int) $row['role_id'], 'vms_staff_role');
         echo '<div class="bvm-staffing-assignment" data-staffing-assignment="' . esc_attr((string) $row['assignment_id']) . '"><strong>' . esc_html($context === 'staff' ? get_the_title($plan) : get_the_title((int) $row['staff_id'])) . '</strong> · ' . esc_html($role instanceof WP_Term ? $role->name : __('Role', 'backstage-venue-manager'));
         echo '<p>' . esc_html($date . ' ' . (!empty($window['start_ts']) ? wp_date('g:ia', $window['start_ts']) : '') . '–' . (!empty($window['end_ts']) ? wp_date('g:ia', $window['end_ts']) : '')) . '</p>';

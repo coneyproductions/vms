@@ -6539,11 +6539,25 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
 
     if (!$is_event && !$is_cart && !$is_checkout) return;
 
+    $front_script_path = dirname(BVMGR_PLUGIN_FILE) . '/assets/vms-ticketing-front.js';
+    $front_script_hash = is_file($front_script_path) && is_readable($front_script_path)
+        ? @hash_file('sha256', $front_script_path)
+        : false;
+    if ($front_script_hash === false) {
+        _doing_it_wrong(
+            __FUNCTION__,
+            __('The ticketing controller could not be fingerprinted and was not enqueued.', 'backstage-venue-manager'),
+            '1.3.13'
+        );
+        return;
+    }
+
     $front_script_version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
+    $front_script_version = $front_script_version !== '' ? $front_script_version . '-' . $front_script_hash : $front_script_hash;
 
     $fallback_script_version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
 
-    $build_stamp = $front_script_version !== '' ? $front_script_version : gmdate('YmdHis');
+    $build_stamp = $front_script_version;
 
     $post_cart_offer_script_version = function_exists('bvmgr_asset_version') ? bvmgr_asset_version() : (defined('BVMGR_VERSION') ? (string) BVMGR_VERSION : '');
     wp_enqueue_script(

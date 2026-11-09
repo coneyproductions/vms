@@ -1,6 +1,8 @@
 <?php
 defined('ABSPATH') || exit;
 
+require_once __DIR__ . '/ticketing-create-recovery.php';
+
 /**
  * Ticketing Integration (Phase B)
  *
@@ -775,11 +777,34 @@ function bvmgr_ticketing_v2_ticket_product_is_safe_to_retire_from_config(int $pr
         return false;
     }
 
+    $owner = absint(get_post_meta($product_id, '_vms_event_plan_id', true));
+    $source_owner = absint(get_post_meta($product_id, '_vms_ticketing_source_plan_id', true));
+    if (($owner > 0 && $owner !== $plan_id) || ($source_owner > 0 && $source_owner !== $plan_id)) { return false; }
+    try {
+        bvmgr_ticketing_v2_assert_product_mapping_owner($product_id, $plan_id);
+    } catch (RuntimeException $error) {
+        return false;
+    }
+    $local_sync = bvmgr_ticketing_v2_get_sync($plan_id);
+    $ticket_claims = 0;
+    foreach (array('tickets', 'entitlements') as $bucket) {
+        foreach (($local_sync['map'][$bucket] ?? array()) as $row) {
+            if ((int) ($row['woo_product_id'] ?? 0) === $product_id) {
+                if ($bucket === 'entitlements' || ++$ticket_claims > 1) { return false; }
+            }
+        }
+    }
+    if (absint(get_post_meta($product_id, '_vms_tec_event_id', true)) > 0 && absint(get_post_meta($product_id, '_vms_tec_event_id', true)) !== $tec_event_id) { return false; }
+    if ((string) get_post_meta($product_id, '_vms_ticketing_entitlement_id', true) !== '') { return false; }
+    if (bvmgr_ticketing_v2_recovery_dependencies($product_id)) { return false; }
     $stale_mapped_product_ids = array_values(array_unique(array_filter(array_map('absint', $stale_mapped_product_ids))));
     if (in_array($product_id, $stale_mapped_product_ids, true)) {
         return true;
     }
 
+    // An unmapped orphan cannot be retired just because its event/owner looks familiar.
+    // Preserve sold/claimed inventory and require a concrete ticket identity.
+    if ((string) get_post_meta($product_id, '_vms_ticketing_ticket_key', true) === '') { return false; }
     $source_plan = absint(get_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_source_plan_id'), true));
     if ($source_plan === $plan_id) {
         return true;
@@ -793,7 +818,7 @@ function bvmgr_ticketing_v2_ticket_product_is_safe_to_retire_from_config(int $pr
     $marker_version = trim((string) get_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_marker_version'), true));
     $role = sanitize_key((string) get_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('product_role'), true));
     $ticket_key = sanitize_key((string) get_post_meta($product_id, bvmgr_ticketing_v2_product_meta_key('ticketing_ticket_key'), true));
-    if ($marker_version !== '' && $role === 'ga_ticket' && $ticket_key !== '') {
+    if ($marker_version !== '' && $role === 'ga_ticket' && $ticket_key !== '' && ($owner === $plan_id || $source_owner === $plan_id)) {
         return true;
     }
 
@@ -814,6 +839,10 @@ function bvmgr_ticketing_v2_retire_ticket_product_from_config(int $product_id, i
         return array('ok' => false, 'message' => 'retire_linkage_mismatch');
     }
 
+    $existing_sync = bvmgr_ticketing_v2_get_sync($plan_id);
+    if (!bvmgr_ticketing_v2_ticket_product_is_safe_to_retire_from_config($product_id, $plan_id, $tec_event_id, bvmgr_ticketing_v2_collect_sync_map_product_ids($existing_sync['map'] ?? array()))) {
+        return array('ok' => false, 'message' => 'Unproven or protected product #' . $product_id . ' cannot be automatically retired. Reconcile its identity and dependencies.');
+    }
     $did = false;
     if (function_exists('wc_get_product')) {
         $product = wc_get_product($product_id);
@@ -6004,93 +6033,16 @@ function bvmgr_ticketing_v2_find_product_ids_by_sku(string $sku): array {
 /**
  * Pick an existing entitlement product by SKU.
  *
- * This prevents stock from being reset if an operator re-commits ticketing config and the
- * sync map fails to match the previously sold product ID.
+ * Only a proven canonical identity may be reused. SKU matches never select a winner
+ * by sale count or marker preference when the mapping is missing.
  */
 function bvmgr_ticketing_v2_pick_entitlement_product_by_sku(string $sku, int $plan_id = 0, string $entitlement_id = ''): int {
-    $sku = trim((string) $sku);
-    $plan_id = absint($plan_id);
-    $entitlement_id = sanitize_key((string) $entitlement_id);
-
-    if ($sku === '' || !function_exists('bvmgr_ticketing_v2_find_product_ids_by_sku')) {
-        return 0;
-    }
-
-    $ids = bvmgr_ticketing_v2_find_product_ids_by_sku($sku);
-    if (empty($ids)) {
-        return 0;
-    }
-
-    $k_role = function_exists('bvmgr_ticketing_v2_product_meta_key')
-        ? bvmgr_ticketing_v2_product_meta_key('product_role')
-        : '_vms_product_role';
-    $k_plan = function_exists('bvmgr_ticketing_v2_product_meta_key')
-        ? bvmgr_ticketing_v2_product_meta_key('event_plan_id')
-        : '_vms_event_plan_id';
-    $k_ent = function_exists('bvmgr_ticketing_v2_product_meta_key')
-        ? bvmgr_ticketing_v2_product_meta_key('ticketing_entitlement_id')
-        : '_vms_ticketing_entitlement_id';
-
-    $cands = array();
-    foreach ($ids as $pid) {
-        $pid = absint($pid);
-        if ($pid <= 0) {
-            continue;
-        }
-        $role = (string) get_post_meta($pid, $k_role, true);
-        $role = sanitize_key($role);
-        if ($role !== '' && $role !== 'entitlement') {
-            continue;
-        }
-        $cands[] = $pid;
-    }
-    if (empty($cands)) {
-        $cands = $ids;
-    }
-
-    $best = 0;
-    $best_sold = -1;
-    $best_score = -1;
-
-    foreach ($cands as $pid) {
-        $pid = absint($pid);
-        if ($pid <= 0) {
-            continue;
-        }
-
-        $score = 0;
-        if ($plan_id > 0 && absint(get_post_meta($pid, $k_plan, true)) === $plan_id) {
-            $score += 10;
-        }
-        if ($entitlement_id !== '' && sanitize_key((string) get_post_meta($pid, $k_ent, true)) === $entitlement_id) {
-            $score += 5;
-        }
-
-        $sold = 0;
-        if (function_exists('bvmgr_ticketing_v2_calc_sold_qty_for_product')) {
-            $res = bvmgr_ticketing_v2_calc_sold_qty_for_product($pid);
-            if (!empty($res['ok'])) {
-                $sold = max(0, absint($res['sold_qty'] ?? 0));
-            }
-        }
-
-        $is_better = false;
-        if ($sold > $best_sold) {
-            $is_better = true;
-        } elseif ($sold == $best_sold && $score > $best_score) {
-            $is_better = true;
-        } elseif ($sold == $best_sold && $score == $best_score && ($best == 0 || $pid < $best)) {
-            $is_better = true;
-        }
-
-        if ($is_better) {
-            $best = $pid;
-            $best_sold = $sold;
-            $best_score = $score;
-        }
-    }
-
-    return absint($best);
+    $ids = bvmgr_ticketing_v2_recovery_sku_candidates(trim($sku));
+    if (!$ids) { return 0; }
+    if (count($ids) !== 1 || $plan_id <= 0 || $entitlement_id === '') { throw new RuntimeException('Ambiguous or unproven add-on SKU products #' . implode(', #', $ids)); }
+    $event_id = bvmgr_ticketing_b_get_linked_tec_event_id($plan_id);
+    bvmgr_ticketing_v2_validate_product_reuse((int) $ids[0], $plan_id, $event_id, 'entitlement', sanitize_key($entitlement_id));
+    return (int) $ids[0];
 }
 
 
@@ -6449,6 +6401,21 @@ function bvmgr_ticketing_v2_retire_legacy_duplicate_product(int $legacy_product_
 
     // Make the legacy product non-purchasable/hidden while keeping it in the DB (reversible).
     try {
+        $plan_id = absint(get_post_meta($canonical_product_id, '_vms_event_plan_id', true));
+        $event_id = absint(get_post_meta($canonical_product_id, '_vms_tec_event_id', true));
+        $entitlement_id = (string) get_post_meta($canonical_product_id, '_vms_ticketing_entitlement_id', true);
+        if ($legacy_product_id === $canonical_product_id || $plan_id <= 0 || $event_id <= 0 || $entitlement_id === ''
+            || absint(get_post_meta($legacy_product_id, '_vms_event_plan_id', true)) !== $plan_id
+            || absint(get_post_meta($legacy_product_id, '_vms_tec_event_id', true)) !== $event_id
+            || (string) get_post_meta($legacy_product_id, '_vms_ticketing_entitlement_id', true) !== $entitlement_id
+            || bvmgr_ticketing_v2_recovery_dependencies($legacy_product_id)) { return false; }
+        bvmgr_ticketing_v2_assert_product_mapping_owner($legacy_product_id, $plan_id);
+        $local_sync = bvmgr_ticketing_v2_get_sync($plan_id);
+        if (in_array($legacy_product_id, bvmgr_ticketing_v2_collect_sync_map_product_ids($local_sync['map'] ?? array()), true)) { return false; }
+        $legacy_source = absint(get_post_meta($legacy_product_id, '_vms_ticketing_source_plan_id', true));
+        $legacy_event = absint(get_post_meta($legacy_product_id, '_tribe_wooticket_for_event', true));
+        if (($legacy_source > 0 && $legacy_source !== $plan_id) || ($legacy_event > 0 && $legacy_event !== $event_id)) { return false; }
+        bvmgr_ticketing_v2_validate_product_reuse($canonical_product_id, $plan_id, $event_id, 'entitlement', $entitlement_id);
         $did = false;
 
         if (function_exists('wc_get_product')) {
@@ -7551,18 +7518,15 @@ function bvmgr_ticketing_v2_upsert_entitlement_product(int $plan_id, int $tec_ev
     // Use a short entitlement ID suffix to keep SKUs readable.
     $sku = 'VMS-TEC' . $tec_event_id . '-ENT-' . substr($ent_id, 0, 12);
 
-    $product = null;
-    if ($existing_product_id > 0 && function_exists('wc_get_product')) {
-        $product = wc_get_product($existing_product_id);
+    $sku_ids = bvmgr_ticketing_v2_recovery_sku_candidates($sku);
+    if ($existing_product_id <= 0 && $sku_ids) {
+        throw new RuntimeException('Add-on SKU collision: products #' . implode(', #', $sku_ids) . '. Verify canonical identity and dependencies; no SKU fallback is allowed.');
     }
-
-    if (!$product && $existing_product_id <= 0 && function_exists('bvmgr_ticketing_v2_pick_entitlement_product_by_sku') && function_exists('wc_get_product')) {
-        $picked = bvmgr_ticketing_v2_pick_entitlement_product_by_sku((string) $sku, $plan_id, $ent_id);
-        if ($picked > 0) {
-            $product = wc_get_product($picked);
-            $existing_product_id = $picked;
-        }
+    if ($existing_product_id > 0) {
+        bvmgr_ticketing_v2_validate_product_reuse($existing_product_id, $plan_id, $tec_event_id, 'entitlement', $ent_id);
     }
+    $product = $existing_product_id > 0 ? wc_get_product($existing_product_id) : null;
+    if ($existing_product_id > 0 && !$product) { throw new RuntimeException('Canonical add-on product #' . $existing_product_id . ' cannot be loaded.'); }
 
     $existing_inventory_state = ($existing_product_id > 0)
         ? bvmgr_ticketing_v2_read_product_inventory_state($existing_product_id)
@@ -8238,7 +8202,7 @@ function bvmgr_ticketing_v2_preview_sync(int $plan_id): array {
         }
 
         if (!empty($left_alone)) {
-            $warnings[] = 'Linked TEC event has existing ticket products not mapped to current config and not clearly VMS-owned: #' . implode(', #', array_values(array_map('absint', $left_alone))) . '. VMS will leave them alone.';
+            $warnings[] = 'Linked TEC event has existing ticket products not mapped to current config and not safe to retire (ownership, mapping, identity or protected dependencies): #' . implode(', #', array_values(array_map('absint', $left_alone))) . '. VMS will leave them alone.';
         }
     }
 
@@ -8914,7 +8878,7 @@ function bvmgr_ticketing_v2_cleanup_preview_keys(array $preview_ids, string $pri
     }
 }
 
-function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array $options = array()): array {
+function bvmgr_ticketing_v2_commit_sync_unlocked(int $plan_id, string $preview_id, array $options = array()): array {
     $plan_id = absint($plan_id);
     $preview_id_raw = trim((string) $preview_id);
     $preview_id = sanitize_key($preview_id_raw);
@@ -9133,6 +9097,9 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
         }
     }
 
+    $provider_ready = bvmgr_ticketing_v2_prepare_woo_provider($tec_event_id);
+    if (empty($provider_ready['ok'])) { return $provider_ready; }
+
     if ($requested_phase === 'prepare') {
         bvmgr_ticketing_v2_set_commit_progress($plan_id, $preview_id, array(
             'status' => 'prepared',
@@ -9337,10 +9304,12 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
         $batch_cursor = max(0, (int) ($batch_meta['cursor'] ?? $batch_cursor));
     }
 
-    foreach ($batch_actions as $a) {
+    foreach ($batch_actions as $action_offset => $a) {
         if (!is_array($a)) {
             continue;
         }
+        $GLOBALS['bvmgr_ticketing_commit_diagnostic']['cursor'] = $batch_cursor + (int) $action_offset;
+        $GLOBALS['bvmgr_ticketing_commit_diagnostic']['action_key'] = sanitize_key((string) ($a['ticket_key'] ?? $a['entitlement_id'] ?? ''));
         $scope = (string) ($a['scope'] ?? '');
         $act = (string) ($a['action'] ?? '');
 
@@ -9382,6 +9351,8 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
             } catch (Throwable $e) {
                 $row['message'] = 'exception: ' . $e->getMessage();
                 $results[] = $row;
+            } finally {
+                bvmgr_ticketing_v2_checkpoint_action($plan_id, $tec_event_id, $sync_map, $row);
             }
 
             continue;
@@ -9447,7 +9418,14 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                 'woo_product_id' => 0,
             );
 
+            $intent = get_option(bvmgr_ticketing_v2_create_intent_key($plan_id, $tec_event_id, 'ticket', $ticket_key), array());
+            if ($intent && ($intent['status'] ?? '') !== 'complete' && in_array($act, array('create','update','adopt','noop','skip'), true)) { $act = 'create'; }
             try {
+                $existing_pid = absint($a['woo_product_id'] ?? $sync_map['tickets'][$ticket_key]['woo_product_id'] ?? 0);
+                if ($existing_pid > 0 && $act !== 'create') { bvmgr_ticketing_v2_validate_product_reuse($existing_pid, $plan_id, $tec_event_id, 'ticket', $ticket_key); }
+                if ($act === 'adopt' && absint(get_post_meta(absint($a['woo_product_id'] ?? 0), '_vms_event_plan_id', true)) !== $plan_id) {
+                    throw new RuntimeException('Unproven interrupted CREATE ownership for product #' . absint($a['woo_product_id'] ?? 0) . '. Reconcile identity and dependencies before adoption.');
+                }
                 if ($act === 'disable') {
                     $pid = absint($a['woo_product_id'] ?? 0);
                     if ($pid <= 0 && isset($sync_map['tickets'][$ticket_key]) && is_array($sync_map['tickets'][$ticket_key])) {
@@ -9513,7 +9491,11 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                 }
 
                 if ($act === 'create') {
-                    $created = bvmgr_ticketing_v2_create_ticket($tec_event_id, $ticket_cfg);
+                    $created = bvmgr_ticketing_v2_recoverable_create(
+                        $plan_id, $tec_event_id, 'ticket', $ticket_key, $ticket_hash, $ticket_label, $preview_id,
+                        static function () use ($tec_event_id, $ticket_cfg): array { return bvmgr_ticketing_v2_create_ticket($tec_event_id, $ticket_cfg); },
+                        static function (int $id) use ($tec_event_id, $ticket_cfg): array { return bvmgr_ticketing_v2_apply_ticket_to_product($id, $tec_event_id, $ticket_cfg); }
+                    );
                     if (empty($created['ok'])) {
                         $row['message'] = (string) ($created['message'] ?? 'create_failed');
                         $results[] = $row;
@@ -9729,6 +9711,8 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
             } catch (Throwable $e) {
                 $row['message'] = 'exception: ' . $e->getMessage();
                 $results[] = $row;
+            } finally {
+                bvmgr_ticketing_v2_checkpoint_action($plan_id, $tec_event_id, $sync_map, $row);
             }
 
             continue;
@@ -9772,15 +9756,25 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
                 'message' => '',
             );
 
+            $intent = get_option(bvmgr_ticketing_v2_create_intent_key($plan_id, $tec_event_id, 'entitlement', $ent_id), array());
+            if ($intent && ($intent['status'] ?? '') !== 'complete' && in_array($act, array('create','update','adopt','noop','skip'), true)) { $act = 'create'; }
             try {
+                $existing_pid = absint($a['woo_product_id'] ?? $sync_map['entitlements'][$ent_id]['woo_product_id'] ?? 0);
+                if ($existing_pid > 0 && $act !== 'create') { bvmgr_ticketing_v2_validate_product_reuse($existing_pid, $plan_id, $tec_event_id, 'entitlement', $ent_id); }
                 if ($act === 'create') {
-                    $created = bvmgr_ticketing_v2_upsert_entitlement_product($plan_id, $tec_event_id, $ent_cfg, 0);
+                    $created = bvmgr_ticketing_v2_recoverable_create(
+                        $plan_id, $tec_event_id, 'entitlement', $ent_id, $ent_hash, (string) ($ent_cfg['label'] ?? ''), $preview_id,
+                        static function () use ($plan_id, $tec_event_id, $ent_cfg): array { return bvmgr_ticketing_v2_upsert_entitlement_product($plan_id, $tec_event_id, $ent_cfg, 0); },
+                        static function (int $id) use ($plan_id, $tec_event_id, $ent_cfg): array { return bvmgr_ticketing_v2_upsert_entitlement_product($plan_id, $tec_event_id, $ent_cfg, $id); }
+                    );
                     if (empty($created['ok'])) {
                         $row['message'] = (string) ($created['message'] ?? 'create_failed');
                         $results[] = $row;
                         continue;
                     }
                     $pid = absint($created['woo_product_id'] ?? 0);
+                    $publish = wp_update_post(array('ID' => $pid, 'post_status' => 'publish'), true);
+                    if (is_wp_error($publish) || get_post_status($pid) !== 'publish') { throw new RuntimeException('Cannot publish the completed add-on #' . $pid); }
                     $sync_map['entitlements'][$ent_id] = array(
                         'provider' => 'woo',
                         'woo_product_id' => $pid,
@@ -9872,6 +9866,8 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
             } catch (Throwable $e) {
                 $row['message'] = 'exception: ' . $e->getMessage();
                 $results[] = $row;
+            } finally {
+                bvmgr_ticketing_v2_checkpoint_action($plan_id, $tec_event_id, $sync_map, $row);
             }
         }
     }
@@ -10005,6 +10001,13 @@ function bvmgr_ticketing_v2_commit_sync(int $plan_id, string $preview_id, array 
         );
     }
 
+    bvmgr_ticketing_v2_assert_commit_lock();
+    foreach (array('tickets' => 'ticket', 'entitlements' => 'entitlement') as $bucket => $product_scope) {
+        foreach (($sync_map[$bucket] ?? array()) as $identity => $mapped_row) {
+            $mapped_id = absint($mapped_row['woo_product_id'] ?? 0);
+            if ($mapped_id > 0) { bvmgr_ticketing_v2_validate_product_reuse($mapped_id, $plan_id, $tec_event_id, $product_scope, (string) $identity); }
+        }
+    }
     $sort_reapply = bvmgr_ticketing_v2_apply_saved_product_sort_orders($plan_id, $cfg, $sync_map);
 
     $reconciliation = bvmgr_ticketing_v2_reconcile_event_plan_ticket_cache($plan_id, $tec_event_id, $sync_map, true);

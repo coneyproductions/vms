@@ -1,0 +1,9 @@
+Issue #124 — explicit source snapshot baseline, created during November 9 recovery.
+
+This branch imports the exact retained pre-checkout Staging BVM 1.3.19-rc1 runtime (431 files). Its tree identity is 49e22800ca9463d275b369b205e8014e8ad2914d65095e8a4eeaa9ab5bcd2824. The snapshot was read from the installed environment and separately matched to the approved Unified Staff Console candidate. Current Staging now contains the separate checkout .1 correction.
+
+Git parent 8359519c438abacd8521efc36328c9a0a2f76b38 is an existing published BVM source revision. It is historical ancestry only, not the current runtime baseline. This import is a new recovery commit; no past commit, deployment or acceptance is being fabricated. Runtime paths are replaced by the verified current snapshot, including removal of obsolete runtime paths. Existing repository-only documentation, tests, tools and companion plugins remain separate.
+
+The exact runtime export is the manifest whitelist. Repository-only files are not distributable runtime additions. Checkout draft PRs target this explicit snapshot branch, not legacy main. This branch is not merged, installed, tagged or approved for production. The WordPress.org/public-review checkout and regular Local plugins remain untouched.
+
+Repository ownership: coneyproductions/vms owns BVM at its root and uses companion-plugins/ for standalone plugins. The standalone Checkout Policies snapshots belong at companion-plugins/vmsx-checkout-policies; no separate policy repository was found. Tests live under tests/checkout-20261109, documentation and sanitized manifests under docs/checkout-20261109. Private evidence stays outside GitHub. See #119 only for the distinct November 7–8 antecedent repairs.

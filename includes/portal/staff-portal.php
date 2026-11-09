@@ -13,6 +13,7 @@ if (!defined('ABSPATH')) exit;
  */
 
 add_shortcode('vms_staff_portal', 'bvmgr_staff_portal_shortcode');
+require_once __DIR__ . '/staff-console.php';
 
 if (!function_exists('bvmgr_staff_portal_render_my_account_entry')) {
     function bvmgr_staff_portal_render_my_account_entry(): void
@@ -1806,6 +1807,35 @@ if (!function_exists('bvmgr_staff_portal_day_visual_state')) {
     }
 }
 
+/** Navigation mirrors destination permission checks; destination servers remain authoritative. */
+function bvmgr_staff_portal_operational_shortcuts(): string
+{
+    if (!is_user_logged_in()) {
+        return '';
+    }
+    $staff_id = (int) get_user_meta(get_current_user_id(), '_vms_staff_id', true);
+    $staff = $staff_id > 0 ? get_post($staff_id) : null;
+    if (!$staff || $staff->post_type !== 'vms_staff') {
+        return '';
+    }
+
+    $links = array();
+    $rules = get_option('rewrite_rules', array());
+    if (function_exists('vms_ops_staff_console_access') && vms_ops_staff_console_access()
+        && is_array($rules) && ($rules['^vms-ops/?$'] ?? '') === 'index.php?vms_ops_pwa=1') {
+        $links[] = array(home_url('/vms-ops/'), __('Open Staff Console', 'backstage-venue-manager'));
+    }
+    if (!$links) {
+        return '';
+    }
+
+    $html = '<nav class="vms-staff-operations" aria-label="' . esc_attr__('Staff operations', 'backstage-venue-manager') . '">';
+    foreach ($links as $link) {
+        $html .= '<a class="vms-staff-operation-link" href="' . esc_url($link[0]) . '">' . esc_html($link[1]) . '</a>';
+    }
+    return $html . '</nav>';
+}
+
 function bvmgr_staff_portal_shortcode()
 {
     if (function_exists('wp_enqueue_style')) {
@@ -1893,6 +1923,8 @@ function bvmgr_staff_portal_shortcode()
 
     echo '<div class="vms-portal" id="vms-portal-root">';
     echo '<p class="vms-staff-welcome">' . esc_html(sprintf(__('Welcome, %s', 'backstage-venue-manager'), $staff->post_title)) . '</p>';
+
+    echo bvmgr_staff_portal_operational_shortcuts();
 
     echo '<nav class="vms-portal-nav">';
     echo '<a class="' . ($tab === 'dashboard' ? 'is-active' : '') . '" href="' . esc_url($url_dashboard) . '">' . esc_html__('Dashboard', 'backstage-venue-manager') . '</a>';

@@ -4,7 +4,7 @@ Tags: event management, venue management, vendor management, ticketing, woocomme
 Requires at least: 6.8
 Tested up to: 7.1
 Requires PHP: 8.3
-Stable tag: 1.3.13
+Stable tag: 1.3.19-rc1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -134,6 +134,17 @@ Product documentation: https://coneyproductions.booklivetalent.com/vms/
 Private security reports: coneyproductionsllc@gmail.com
 
 == Changelog ==
+
+= 1.3.16 =
+
+* Link pending vendor video submissions to the exact authorized Event Plan review destination (Issue #105).
+* Keep profile acknowledgement separate from explicit video publication or removal and reject stale submission actions.
+
+= 1.3.15 =
+
+* Allow assigned staff to view and respond to valid future Draft Event Plan proposals through their personal assignment links (Issue #104).
+* Keep personal links scoped to the requested assignment and preserve staff authorization, response persistence, audit history and notification deduplication.
+
 
 = 1.3.13 =
 

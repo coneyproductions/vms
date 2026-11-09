@@ -3624,10 +3624,114 @@ function bvmgr_vendor_mark_profile_reviewed($vendor_id, $user_id = null)
     update_post_meta($vendor_id, '_vms_vendor_profile_needs_review', '0');
 }
 
+/** Serialize only promo-video writers; the connection also releases on failure. */
+function bvmgr_promo_video_lock_name(int $plan_id): string
+{
+    global $wpdb;
+    return 'bvm-video-' . md5($wpdb->prefix . ':' . $plan_id);
+}
+
+function bvmgr_promo_video_lock_owned(int $plan_id): bool
+{
+    global $wpdb;
+    return (string) $wpdb->get_var($wpdb->prepare('SELECT IS_USED_LOCK(%s) = CONNECTION_ID()', bvmgr_promo_video_lock_name($plan_id))) === '1';
+}
+
+function bvmgr_promo_video_lock(int $plan_id): bool
+{
+    global $wpdb;
+    if ((string) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 3)', bvmgr_promo_video_lock_name($plan_id))) !== '1') {
+        return false;
+    }
+    register_shutdown_function(static function () use ($plan_id) {
+        global $wpdb;
+        $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', bvmgr_promo_video_lock_name($plan_id)));
+    });
+    // A waiting request may have read metadata before the other writer completed.
+    wp_cache_delete($plan_id, 'post_meta');
+    return true;
+}
+
+function bvmgr_promo_video_submission_version(int $plan_id): string
+{
+    $values = array($plan_id);
+    foreach (array('pending_attachment_id', 'pending_uploaded_at_gmt', 'pending_uploaded_by') as $field) {
+        $values[] = get_post_meta($plan_id, '_vms_headliner_promo_video_' . $field, true);
+    }
+    return wp_hash(serialize($values));
+}
+
+/** The portal remove button can target pending or live video; bind both. */
+function bvmgr_promo_video_removal_version(int $plan_id): string
+{
+    $values = array(bvmgr_promo_video_submission_version($plan_id));
+    foreach (array('attachment_id', 'source_type', 'external_url', 'hidden', 'uploaded_at_gmt', 'uploaded_by') as $field) {
+        $values[] = get_post_meta($plan_id, '_vms_headliner_promo_video_' . $field, true);
+    }
+    return wp_hash(serialize($values));
+}
+
+/**
+ * Pending video review belongs to each Event Plan, independently of profile
+ * acknowledgement. Do not restrict to the next booking or latest update type:
+ * another booking or a later tax/tech update must not hide submitted work.
+ * Read raw pending identity so an unavailable attachment still requires review.
+ */
+function bvmgr_vendor_pending_video_plan_ids($vendor_id): array
+{
+    $vendor_id = (int) $vendor_id;
+    if ($vendor_id <= 0 || get_post_type($vendor_id) !== 'vms_vendor') {
+        return array();
+    }
+
+    return array_map('intval', get_posts(array(
+        'post_type' => 'vms_event_plan',
+        'post_status' => array('publish', 'draft', 'pending', 'private', 'future', 'trash'),
+        'posts_per_page' => -1,
+        'fields' => 'ids',
+        'orderby' => 'ID',
+        'order' => 'ASC',
+        'no_found_rows' => true,
+        // No date join: undated, past and cancelled plans must remain visible.
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Review inventory intersects the canonical headliner and pending-submission identities.
+        'meta_query' => array(
+            array('key' => '_vms_band_vendor_id', 'value' => (string) $vendor_id),
+            array('key' => '_vms_headliner_promo_video_pending_attachment_id', 'value' => 0, 'compare' => '>', 'type' => 'NUMERIC'),
+        ),
+    )));
+}
+
+function bvmgr_vendor_render_pending_video_reviews($vendor_id, array $plan_ids): void
+{
+    if (!current_user_can('manage_options') || !current_user_can('edit_post', $vendor_id)) {
+        return;
+    }
+    if (!$plan_ids) {
+        return;
+    }
+
+    echo '<p><strong>' . esc_html__('Needs video review', 'backstage-venue-manager') . '</strong></p><ul>';
+    foreach ($plan_ids as $plan_id) {
+        if (!current_user_can('edit_post', $plan_id)) {
+            echo '<li>' . esc_html__('A pending submission requires an authorized event administrator.', 'backstage-venue-manager') . '</li>';
+            continue;
+        }
+        $date = (string) get_post_meta($plan_id, '_vms_event_date', true);
+        $status = (string) get_post_meta($plan_id, '_vms_event_plan_status', true);
+        $label = get_the_title($plan_id) . ' — ' . ($date !== '' ? $date : __('Date not set', 'backstage-venue-manager')) . ' (#' . $plan_id . ')';
+        if (in_array($status, array('cancelled', 'canceled', 'archived'), true) || get_post_status($plan_id) === 'trash') {
+            $label .= ' — ' . (get_post_status($plan_id) === 'trash' ? __('Trashed plan', 'backstage-venue-manager') : $status);
+        }
+        $url = add_query_arg(array('page' => 'vms-event-command-center', 'plan_id' => $plan_id), admin_url('admin.php')) . '#vms-promo-video-control';
+        echo '<li style="margin-bottom:12px;"><div>' . esc_html($label) . '</div><a href="' . esc_url($url) . '">' . esc_html__('View/Review Submitted Video', 'backstage-venue-manager') . '</a></li>';
+    }
+    echo '</ul><p>' . esc_html__('Preview each event submission in Promo Video Control. Use Submitted Clip publishes that clip; Remove Submitted Clip rejects it. Opening the preview or acknowledging a profile update does not approve or publish a video.', 'backstage-venue-manager') . '</p>';
+}
+
 function bvmgr_vendor_profile_needs_review($vendor_id)
 {
     $flag = get_post_meta((int) $vendor_id, '_vms_vendor_profile_needs_review', true);
-    return ($flag === '1');
+    return ($flag === '1' || !empty(bvmgr_vendor_pending_video_plan_ids($vendor_id)));
 }
 
 /**
@@ -3659,6 +3763,7 @@ function bvmgr_vendor_render_updates_column($column, $post_id)
     if ($column !== 'vms_vendor_updates') return;
 
     $needs = bvmgr_vendor_profile_needs_review($post_id);
+    $video_needs = !empty(bvmgr_vendor_pending_video_plan_ids($post_id));
 
     $last_gmt = get_post_meta($post_id, '_vms_vendor_profile_last_updated_gmt', true);
     $last_context = sanitize_key((string) get_post_meta($post_id, '_vms_vendor_profile_last_update_context', true));
@@ -3675,7 +3780,7 @@ function bvmgr_vendor_render_updates_column($column, $post_id)
     }
 
     if ($needs) {
-        echo '<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:#fee2e2;color:#991b1b;font-weight:700;font-size:11px;letter-spacing:.02em;text-transform:uppercase;">Needs review</span>';
+        echo '<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:#fee2e2;color:#991b1b;font-weight:700;font-size:11px;letter-spacing:.02em;text-transform:uppercase;">' . esc_html($video_needs ? __('Needs video review', 'backstage-venue-manager') : __('Needs review', 'backstage-venue-manager')) . '</span>';
         if ($context_label !== '') {
             echo '<div style="margin-top:4px;font-size:12px;opacity:.85;">' . esc_html($context_label) . '</div>';
         }
@@ -3712,8 +3817,12 @@ function bvmgr_vendor_add_change_tracking_metabox()
 function bvmgr_vendor_change_tracking_metabox_cb($post)
 {
     $vendor_id = (int) $post->ID;
-
-    $needs = bvmgr_vendor_profile_needs_review($vendor_id);
+    if (!current_user_can('edit_post', $vendor_id)) {
+        return;
+    }
+    $pending_plans = bvmgr_vendor_pending_video_plan_ids($vendor_id);
+    $profile_needs = get_post_meta($vendor_id, '_vms_vendor_profile_needs_review', true) === '1';
+    $needs = $profile_needs || !empty($pending_plans);
 
     $updated_gmt = get_post_meta($vendor_id, '_vms_vendor_profile_last_updated_gmt', true);
     $updated_by  = (int) get_post_meta($vendor_id, '_vms_vendor_profile_last_updated_by', true);
@@ -3728,7 +3837,7 @@ function bvmgr_vendor_change_tracking_metabox_cb($post)
     echo '<div style="line-height:1.35;">';
 
     if ($needs) {
-        echo '<div style="margin:0 0 8px 0;"><strong style="color:#991b1b;">Needs review</strong></div>';
+        echo '<div style="margin:0 0 8px 0;"><strong style="color:#991b1b;">' . esc_html($pending_plans ? __('Needs video review', 'backstage-venue-manager') : __('Needs review', 'backstage-venue-manager')) . '</strong></div>';
     } else {
         echo '<div style="margin:0 0 8px 0;"><strong>All caught up</strong></div>';
     }
@@ -3759,16 +3868,24 @@ function bvmgr_vendor_change_tracking_metabox_cb($post)
         $who_name = $who ? $who->display_name : '';
 
         echo '<div style="margin:0 0 10px 0;">';
-        echo '<div><strong>Last reviewed:</strong></div>';
+        echo '<div><strong>Last profile acknowledgement:</strong></div>';
         echo '<div>' . esc_html($when) . ($who_name ? ' <span style="opacity:.8;">(' . esc_html($who_name) . ')</span>' : '') . '</div>';
         echo '</div>';
     }
 
-    if ($needs) {
+    bvmgr_vendor_render_pending_video_reviews($vendor_id, $pending_plans);
+    if ($update_context === 'tech_docs') {
+        echo '<p><a href="#bvm-vendor-tech-documents">' . esc_html__('Review technical documents', 'backstage-venue-manager') . '</a></p>';
+    } elseif (in_array($update_context, array('tax_w9_upload', 'tax_w9_offsite_attest'), true) && current_user_can('manage_options')) {
+        echo '<p><a href="#vms_vendor_tax_status">' . esc_html__('Review private tax status', 'backstage-venue-manager') . '</a></p>';
+    }
+
+    if ($profile_needs) {
         $nonce = wp_create_nonce('bvmgr_vendor_mark_reviewed_' . $vendor_id);
         $url = admin_url('admin-post.php?action=vms_vendor_mark_reviewed&vendor_id=' . $vendor_id . '&_wpnonce=' . $nonce);
 
-        echo '<p style="margin:0;"><a class="button button-primary" href="' . esc_url($url) . '">Mark as Reviewed</a></p>';
+        echo '<p style="margin:0;"><a class="button button-primary" href="' . esc_url($url) . '">' . esc_html__('Acknowledge Vendor Profile Update', 'backstage-venue-manager') . '</a></p>';
+        echo '<p>' . esc_html__('Records a profile acknowledgement only. Pending event videos still need separate review; no video is approved, published or removed.', 'backstage-venue-manager') . '</p>';
     }
 
     echo '</div>';

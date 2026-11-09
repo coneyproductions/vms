@@ -3801,3 +3801,35 @@ details.vms-av-method[data-method="ics"] .field input[type="url"] {
     margin-top: 10px;
   }
 }
+
+/* Staff Portal operational entrypoints; existing tabs and cards retain their layout. */
+.vms-portal .vms-staff-operations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.vms-portal .vms-staff-operation-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 48px;
+  max-width: 100%;
+  padding: 10px 18px;
+  border: 1px solid #101820;
+  border-radius: 12px;
+  background: #101820;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  text-decoration: none;
+}
+
+.vms-portal .vms-staff-operation-link:focus-visible {
+  outline: 3px solid #1765a3;
+  outline-offset: 3px;
+}

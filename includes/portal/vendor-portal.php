@@ -3460,6 +3460,7 @@ if (!function_exists('bvmgr_vendor_portal_render_headliner_promo_video_card')) {
         $return_url = $base_url !== ''
             ? add_query_arg(array('tab' => 'dashboard', 'vendor_id' => $vendor_id), $base_url)
             : home_url('/vendor-portal/?tab=dashboard');
+        $removal_version = bvmgr_promo_video_removal_version($plan_id);
         $video = bvmgr_vendor_portal_get_headliner_promo_video_data($plan_id);
         $submitted = bvmgr_vendor_portal_get_headliner_promo_video_submission_data($plan_id);
         $max_bytes = bvmgr_vendor_portal_headliner_promo_video_max_bytes();
@@ -3578,6 +3579,7 @@ if (!function_exists('bvmgr_vendor_portal_render_headliner_promo_video_card')) {
             echo '<input type="hidden" name="vendor_id" value="' . esc_attr((string) $vendor_id) . '">';
             echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '">';
             echo '<input type="hidden" name="return_url" value="' . esc_attr($return_url) . '">';
+            echo '<input type="hidden" name="removal_version" value="' . esc_attr($removal_version) . '">';
             wp_nonce_field('bvmgr_vendor_portal_headliner_promo_video_remove_' . $plan_id, '_bvmgr_headliner_promo_video_remove_nonce');
             $remove_label = !empty($submitted['attachment_id']) ? __('Remove Submitted Video', 'backstage-venue-manager') : __('Remove Current Video', 'backstage-venue-manager');
             echo '<button type="submit" class="button button-secondary">' . esc_html($remove_label) . '</button>';
@@ -3647,6 +3649,10 @@ if (!function_exists('bvmgr_vendor_portal_handle_headliner_promo_video_upload'))
             exit;
         }
 
+        if (!bvmgr_promo_video_lock($plan_id)) {
+            wp_die(esc_html__('Another video update is in progress. Please retry your submission.', 'backstage-venue-manager'));
+        }
+
         $attachment_id = function_exists('bvmgr_vendor_portal_handle_headliner_promo_video_media_upload')
             ? bvmgr_vendor_portal_handle_headliner_promo_video_media_upload('vms_headliner_promo_video', $plan_id)
             : new WP_Error('promo_video_upload_unavailable', __('The promo video upload handler is unavailable.', 'backstage-venue-manager'));
@@ -3656,6 +3662,10 @@ if (!function_exists('bvmgr_vendor_portal_handle_headliner_promo_video_upload'))
             bvmgr_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => sprintf(__('Upload failed: %s', 'backstage-venue-manager'), $attachment_id->get_error_message())));
             wp_safe_redirect($return_url);
             exit;
+        }
+
+        if (!bvmgr_promo_video_lock_owned($plan_id)) {
+            wp_die(esc_html__('Video update lock was lost. Please retry your submission.', 'backstage-venue-manager'));
         }
 
         update_post_meta($plan_id, bvmgr_vendor_portal_headliner_promo_video_meta_key('pending_attachment_id'), (int) $attachment_id);
@@ -3709,6 +3719,15 @@ if (!function_exists('bvmgr_vendor_portal_handle_headliner_promo_video_remove'))
             bvmgr_vendor_portal_set_flash($user_id, array('type' => 'error', 'message' => __('You do not have permission to manage that promo video.', 'backstage-venue-manager')));
             wp_safe_redirect($return_url);
             exit;
+        }
+
+        if (!bvmgr_promo_video_lock($plan_id)) {
+            wp_die(esc_html__('Another video update is in progress. Reload before removing a video.', 'backstage-venue-manager'));
+        }
+
+        $expected = bvmgr_request_read_scalar($_POST, 'removal_version');
+        if ($expected === '' || !hash_equals(bvmgr_promo_video_removal_version($plan_id), $expected)) {
+            wp_die(esc_html__('The video changed. Reload and review it before removing it.', 'backstage-venue-manager'));
         }
 
         $removed_submission = false;

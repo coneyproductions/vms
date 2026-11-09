@@ -85,7 +85,8 @@ function bvmgr_staffing_notify_landing(): void
     $id = isset($_GET['assignment_id']) && is_scalar($_GET['assignment_id']) ? absint($_GET['assignment_id']) : 0;
     $row = bvmgr_staffing_lifecycle_row($id);
     $operator = $row && current_user_can('edit_post', (int) $row['event_plan_id']);
-    if (!$row || (!$operator && (int) get_user_meta(get_current_user_id(), '_vms_staff_id', true) !== (int) $row['staff_id'])) {
+    $personal = $row && bvmgr_staffing_assignment_owned_by($row, get_current_user_id());
+    if (!$row || (!$operator && !$personal)) {
         wp_die(esc_html__('This assignment is not available to your account.', 'backstage-venue-manager'), '', array('response' => 403));
     }
     nocache_headers();
@@ -93,8 +94,8 @@ function bvmgr_staffing_notify_landing(): void
     bvmgr_staffing_lifecycle_enqueue_assets();
     echo '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . esc_html__('Staffing assignment', 'backstage-venue-manager') . '</title>';
     wp_print_styles(array('bvmgr-staffing-lifecycle'));
-    echo '</head><body><main><h1>' . esc_html__('Your current staffing assignments', 'backstage-venue-manager') . '</h1>';
-    bvmgr_staffing_render_lifecycle_controls((int) $row['event_plan_id'], $operator ? 'operator' : 'staff');
+    echo '</head><body><main><h1>' . esc_html__('Staffing assignment', 'backstage-venue-manager') . '</h1>';
+    bvmgr_staffing_render_lifecycle_controls((int) $row['event_plan_id'], $personal ? 'staff' : 'operator', $id);
     echo '</main>'; wp_print_scripts(array('bvmgr-staffing-lifecycle')); echo '</body></html>'; exit;
 }
 add_action('admin_post_bvmgr_staffing_assignment', 'bvmgr_staffing_notify_landing');

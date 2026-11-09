@@ -122,6 +122,16 @@ if (!function_exists('bvmgr_event_command_center_handle_promo_video_action')) {
             wp_die(esc_html__('You do not have permission to manage this event.', 'backstage-venue-manager'));
         }
 
+        if (!bvmgr_promo_video_lock($plan_id)) {
+            bvmgr_event_command_center_redirect_with_notice('error', __('Another video update is in progress. Reload and review the current submission.', 'backstage-venue-manager'), $plan_id);
+        }
+        if (in_array($promo_action, array('use_submission', 'remove_submission', 'upload_public'), true)) {
+            $expected = bvmgr_request_read_scalar($_POST, 'submission_version');
+            if ($expected === '' || !hash_equals(bvmgr_promo_video_submission_version($plan_id), $expected)) {
+                bvmgr_event_command_center_redirect_with_notice('error', __('The submitted video changed. Reload and preview it before approving, replacing or removing it.', 'backstage-venue-manager'), $plan_id);
+            }
+        }
+
         $attachment_key = function_exists('bvmgr_vendor_portal_headliner_promo_video_meta_key') ? bvmgr_vendor_portal_headliner_promo_video_meta_key('attachment_id') : '_vms_headliner_promo_video_attachment_id';
         $hidden_key = function_exists('bvmgr_vendor_portal_headliner_promo_video_meta_key') ? bvmgr_vendor_portal_headliner_promo_video_meta_key('hidden') : '_vms_headliner_promo_video_hidden';
         $uploaded_key = function_exists('bvmgr_vendor_portal_headliner_promo_video_meta_key') ? bvmgr_vendor_portal_headliner_promo_video_meta_key('uploaded_at_gmt') : '_vms_headliner_promo_video_uploaded_at_gmt';
@@ -137,6 +147,9 @@ if (!function_exists('bvmgr_event_command_center_handle_promo_video_action')) {
             $pending_id = (int) get_post_meta($plan_id, $pending_attachment_key, true);
             if ($pending_id <= 0) {
                 bvmgr_event_command_center_redirect_with_notice('error', __('There is no submitted vendor clip waiting for review on this event.', 'backstage-venue-manager'), $plan_id);
+            }
+            if (empty(bvmgr_vendor_portal_get_headliner_promo_video_submission_data($plan_id)['attachment_id'])) {
+                bvmgr_event_command_center_redirect_with_notice('error', __('The submitted video is unavailable. Review or remove the submission instead.', 'backstage-venue-manager'), $plan_id);
             }
             update_post_meta($plan_id, $attachment_key, $pending_id);
             update_post_meta($plan_id, $source_key, 'attachment');
@@ -158,6 +171,9 @@ if (!function_exists('bvmgr_event_command_center_handle_promo_video_action')) {
             if (is_wp_error($result)) {
                 /* translators: %s: upload error message. */
                 bvmgr_event_command_center_redirect_with_notice('error', sprintf(__('Upload failed: %s', 'backstage-venue-manager'), $result->get_error_message()), $plan_id);
+            }
+            if (!bvmgr_promo_video_lock_owned($plan_id)) {
+                bvmgr_event_command_center_redirect_with_notice('error', __('Video review lock was lost. Reload and review the current submission.', 'backstage-venue-manager'), $plan_id);
             }
             update_post_meta($plan_id, $attachment_key, (int) $result);
             update_post_meta($plan_id, $source_key, 'attachment');
@@ -484,6 +500,11 @@ if (!function_exists('bvmgr_event_command_center_resolve_plan_id')) {
 
         if ($plan_id > 0 && get_post_type($plan_id) === 'vms_event_plan') {
             return $plan_id;
+        }
+
+        // An explicit stale review link must never silently select another event.
+        if ($plan_id > 0) {
+            return 0;
         }
 
         $ids = bvmgr_event_command_center_get_plan_ids();
@@ -1111,10 +1132,11 @@ if (!function_exists('bvmgr_event_command_center_get_marketing_snapshot')) {
 if (!function_exists('bvmgr_event_command_center_render_promo_video_manager')) {
     function bvmgr_event_command_center_render_promo_video_manager(int $plan_id, array $marketing = array()): void
     {
-        if ($plan_id <= 0 || !current_user_can('manage_options')) {
+        if (!current_user_can('manage_options') || !bvmgr_event_command_center_can_manage_promo_video($plan_id)) {
             return;
         }
 
+        $submission_version = bvmgr_promo_video_submission_version($plan_id);
         $current = function_exists('bvmgr_vendor_portal_get_headliner_promo_video_data')
             ? (array) bvmgr_vendor_portal_get_headliner_promo_video_data($plan_id)
             : array();
@@ -1122,9 +1144,9 @@ if (!function_exists('bvmgr_event_command_center_render_promo_video_manager')) {
             ? (array) bvmgr_vendor_portal_get_headliner_promo_video_submission_data($plan_id)
             : array();
 
-        echo '<section class="vms-cc-card vms-cc-card--promo-manager">';
+        echo '<section id="vms-promo-video-control" class="vms-cc-card vms-cc-card--promo-manager">';
         echo '<div class="vms-cc-card__header"><h3>' . esc_html__('Promo Video Control', 'backstage-venue-manager') . '</h3></div>';
-        echo '<p class="vms-cc-card__note">' . esc_html__('Use this area to choose what actually appears on the public event page. Vendor uploads stay in review until you approve them, replace them, or swap in a link.', 'backstage-venue-manager') . '</p>';
+        echo '<p class="vms-cc-card__note">' . esc_html__('Preview the pending submission here. Use Submitted Clip approves and publishes the clip on the public event page. Remove Submitted Clip rejects the submission. Opening this panel or acknowledging a vendor profile update does not complete video review. Saving an external link keeps the pending submission for separate review.', 'backstage-venue-manager') . '</p>';
         echo '<div class="vms-cc-promo-grid">';
 
         echo '<div class="vms-cc-promo-column">';
@@ -1153,28 +1175,37 @@ if (!function_exists('bvmgr_event_command_center_render_promo_video_manager')) {
 
         echo '<div class="vms-cc-promo-column">';
         echo '<h4>' . esc_html__('Vendor submission', 'backstage-venue-manager') . '</h4>';
-        if (!empty($submitted['attachment_id']) && function_exists('bvmgr_vendor_portal_render_headliner_promo_video_markup_from_data')) {
-            echo wp_kses(bvmgr_vendor_portal_render_headliner_promo_video_markup_from_data($submitted, array(
-                'context' => 'portal',
-                'heading' => __('Waiting for review', 'backstage-venue-manager'),
-                'wrap_class' => 'vms-cc-promo-preview',
-            )), bvmgr_event_command_center_allowed_markup());
-            if (!empty($marketing['promo_submission_uploaded_label'])) {
-                /* translators: %s: formatted submission timestamp label. */
-                echo '<p class="vms-cc-card__note">' . esc_html(sprintf(__('Submitted: %s', 'backstage-venue-manager'), (string) $marketing['promo_submission_uploaded_label'])) . '</p>';
+        if ((int) get_post_meta($plan_id, '_vms_headliner_promo_video_pending_attachment_id', true) > 0) {
+            $can_preview_submission = !empty($submitted['attachment_id']);
+            if ($can_preview_submission) {
+                echo wp_kses(bvmgr_vendor_portal_render_headliner_promo_video_markup_from_data($submitted, array(
+                    'context' => 'portal',
+                    'heading' => __('Waiting for review', 'backstage-venue-manager'),
+                    'wrap_class' => 'vms-cc-promo-preview',
+                )), bvmgr_event_command_center_allowed_markup());
+                if (!empty($marketing['promo_submission_uploaded_label'])) {
+                    /* translators: %s: formatted submission timestamp label. */
+                    echo '<p class="vms-cc-card__note">' . esc_html(sprintf(__('Submitted: %s', 'backstage-venue-manager'), (string) $marketing['promo_submission_uploaded_label'])) . '</p>';
+                }
+            } else {
+                echo '<p>' . esc_html__('The submitted video is unavailable. Review the event and remove this submission explicitly if appropriate.', 'backstage-venue-manager') . '</p>';
             }
             echo '<div class="vms-cc-inline-actions">';
-            echo '<form class="vms-cc-promo-form" method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-            echo '<input type="hidden" name="action" value="vms_event_command_center_promo_video">';
-            echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '">';
-            echo '<input type="hidden" name="promo_action" value="use_submission">';
-            wp_nonce_field('bvmgr_cc_promo_video_' . $plan_id, '_bvmgr_cc_promo_nonce');
-            echo '<button type="submit" class="button button-primary">' . esc_html__('Use Submitted Clip', 'backstage-venue-manager') . '</button>';
-            echo '</form>';
+            if ($can_preview_submission) {
+                echo '<form class="vms-cc-promo-form" method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+                echo '<input type="hidden" name="action" value="vms_event_command_center_promo_video">';
+                echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '">';
+                echo '<input type="hidden" name="promo_action" value="use_submission">';
+                echo '<input type="hidden" name="submission_version" value="' . esc_attr($submission_version) . '">';
+                wp_nonce_field('bvmgr_cc_promo_video_' . $plan_id, '_bvmgr_cc_promo_nonce');
+                echo '<button type="submit" class="button button-primary">' . esc_html__('Use Submitted Clip', 'backstage-venue-manager') . '</button>';
+                echo '</form>';
+            }
             echo '<form class="vms-cc-promo-form" method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
             echo '<input type="hidden" name="action" value="vms_event_command_center_promo_video">';
             echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '">';
             echo '<input type="hidden" name="promo_action" value="remove_submission">';
+            echo '<input type="hidden" name="submission_version" value="' . esc_attr($submission_version) . '">';
             wp_nonce_field('bvmgr_cc_promo_video_' . $plan_id, '_bvmgr_cc_promo_nonce');
             echo '<button type="submit" class="button button-secondary">' . esc_html__('Remove Submitted Clip', 'backstage-venue-manager') . '</button>';
             echo '</form>';
@@ -1190,6 +1221,7 @@ if (!function_exists('bvmgr_event_command_center_render_promo_video_manager')) {
         echo '<input type="hidden" name="action" value="vms_event_command_center_promo_video">';
         echo '<input type="hidden" name="plan_id" value="' . esc_attr((string) $plan_id) . '">';
         echo '<input type="hidden" name="promo_action" value="upload_public">';
+        echo '<input type="hidden" name="submission_version" value="' . esc_attr($submission_version) . '">';
         wp_nonce_field('bvmgr_cc_promo_video_' . $plan_id, '_bvmgr_cc_promo_nonce');
         echo '<label class="vms-cc-promo-field"><span><strong>' . esc_html__('Upload a replacement video', 'backstage-venue-manager') . '</strong></span><input type="file" name="vms_cc_headliner_promo_video" accept="video/mp4,video/quicktime,video/webm,.mp4,.m4v,.mov,.webm" required></label>';
         echo '<button type="submit" class="button">' . esc_html__('Upload Public Video', 'backstage-venue-manager') . '</button>';

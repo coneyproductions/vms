@@ -175,6 +175,46 @@ function bvmgr_staffing_lifecycle_row(int $id): ?array
         bvmgr_staffing_table_name('assignments'), bvmgr_staffing_table_name('event_slots'), $id), ARRAY_A);
 }
 
+/** Personal staffing responses do not publish or otherwise configure an Event Plan. */
+function bvmgr_staffing_response_event_block_reason(int $plan): string
+{
+    if (get_post_type($plan) !== 'vms_event_plan' || !in_array(get_post_status($plan), array('draft', 'pending', 'private', 'future', 'publish'), true)) return 'assignment_unavailable';
+    $key = bvmgr_meta_key('event_plan', 'status');
+    $raw = (string) get_post_meta($plan, $key, true);
+    $status = bvmgr_event_plan_status_normalize($raw);
+    $allowed = array('draft', 'ready', 'published', 'tentative', 'confirmed');
+    // Do not let the legacy status fallback turn corrupt/terminal metadata into Draft.
+    if (($raw !== '' && !in_array($status, $allowed, true)) || !in_array(bvmgr_event_plan_get_status($plan, 'dashboard'), $allowed, true)) return 'assignment_unavailable';
+    $timing = bvmgr_staffing_event_plan_datetime($plan);
+    $end = $timing['end_local'] ?? null;
+    if (!$end instanceof DateTimeImmutable) return 'event_schedule_unavailable';
+    return $end <= current_datetime() ? 'event_already_ended' : '';
+}
+
+/** Use the same current identity for personal links, rendering and writes. */
+function bvmgr_staffing_assignment_owned_by(array $row, int $actor): bool
+{
+    $staff = (int) $row['staff_id'];
+    $users = get_users(array('meta_key' => '_vms_staff_id', 'meta_value' => (string) $staff, 'fields' => 'ids', 'number' => 2));
+    if (count($users) !== 1 || (int) $users[0] !== $actor) return false;
+    $linked = (int) get_post_meta($staff, '_vms_linked_user_id', true);
+    return $actor > 0 && get_post_type($staff) === 'vms_staff' && !in_array(get_post_status($staff), array('trash', 'auto-draft'), true)
+        && (int) get_user_meta($actor, '_vms_staff_id', true) === $staff && (!$linked || $linked === $actor);
+}
+
+/** Shared eligibility for proposed-notification delivery, staff buttons and staff writes. */
+function bvmgr_staffing_response_block_reason(array $row, array $window): string
+{
+    $block = bvmgr_staffing_response_event_block_reason((int) $row['event_plan_id']);
+    if ($block !== '') return $block;
+    if ($row['status'] !== 'proposed' || $row['slot_status'] !== 'active'
+        || (int) ($window['start_ts'] ?? 0) <= 0 || (int) ($window['end_ts'] ?? 0) <= time()
+        || (int) $window['end_ts'] <= (int) $window['start_ts']) return 'assignment_expired';
+    if (get_post_type((int) $row['staff_id']) !== 'vms_staff' || in_array(get_post_status((int) $row['staff_id']), array('trash', 'auto-draft'), true)
+        || empty(bvmgr_staffing_staff_candidate_status_for_role((int) $row['staff_id'], (int) $row['role_id'])['eligible'])) return 'staff_ineligible';
+    return '';
+}
+
 function bvmgr_staffing_lifecycle_window(array $row): array
 {
     global $wpdb;
@@ -263,7 +303,7 @@ function bvmgr_staffing_transition_assignment(int $id, string $target, array $op
         if ($context === 'operator') {
             if (!current_user_can('edit_post', $plan) || !in_array($target, array('confirmed', 'canceled', 'proposed'), true)) throw new BVMGR_Staffing_Failure('forbidden');
         } elseif ($context === 'staff') {
-            if ((int) get_user_meta($actor, '_vms_staff_id', true) !== (int) $row['staff_id'] || !in_array($target, array('confirmed', 'declined'), true)) throw new BVMGR_Staffing_Failure('forbidden');
+            if (!bvmgr_staffing_assignment_owned_by($row, $actor) || !in_array($target, array('confirmed', 'declined'), true)) throw new BVMGR_Staffing_Failure('forbidden');
         } else { throw new BVMGR_Staffing_Failure('forbidden'); }
         if ((int) ($options['event_plan_id'] ?? 0) !== $plan) throw new BVMGR_Staffing_Failure('forbidden');
         $operation = (string) ($options['operation_id'] ?? '');
@@ -285,8 +325,11 @@ function bvmgr_staffing_transition_assignment(int $id, string $target, array $op
         if ($target !== 'canceled') {
             if ($row['slot_status'] !== 'active' || (int) ($window['end_ts'] ?? 0) <= time() || (int) ($window['start_ts'] ?? 0) <= 0 || (int) $window['end_ts'] <= (int) $window['start_ts']) throw new BVMGR_Staffing_Failure('assignment_expired');
             $date = (string) get_post_meta($plan, '_vms_event_date', true);
-            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/D', $date) || $date < wp_date('Y-m-d')) throw new BVMGR_Staffing_Failure('assignment_expired');
-            if ($context === 'staff' && !in_array(bvmgr_event_plan_get_status($plan, 'dashboard'), array('ready','published','tentative','confirmed'), true)) throw new BVMGR_Staffing_Failure('assignment_unavailable');
+            if ($context !== 'staff' && (!preg_match('/^\d{4}-\d{2}-\d{2}$/D', $date) || $date < wp_date('Y-m-d'))) throw new BVMGR_Staffing_Failure('assignment_expired');
+            if ($context === 'staff') {
+                $block = bvmgr_staffing_response_block_reason($row, $window);
+                if ($block !== '') throw new BVMGR_Staffing_Failure($block);
+            }
         }
         if (in_array($target, array('proposed','confirmed'), true)) {
             $candidate = bvmgr_staffing_staff_candidate_status_for_role((int) $row['staff_id'], (int) $row['role_id']);

@@ -28,6 +28,7 @@ require_once __DIR__ . '/validation/vendor.php';
  */
 require_once __DIR__ . '/../cpt/vendors.php';
 require_once __DIR__ . '/../cpt/venues.php';
+require_once __DIR__ . '/event-plan-publication.php';
 require_once __DIR__ . '/../cpt/event-plans.php';
 require_once __DIR__ . '/event-plan-save-profiler.php';
 require_once __DIR__ . '/../cpt/ratings.php';

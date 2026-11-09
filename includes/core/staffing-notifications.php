@@ -28,6 +28,7 @@ function bvmgr_staffing_notify_key(int $audit_id): string { return 'staffing_aud
 /** Fail closed when an Event Plan has no valid future performance end. */
 function bvmgr_staffing_notify_event_block_reason(int $plan): string
 {
+    // Informative updates (especially cancellations) retain delivery after a plan is canceled.
     $timing = bvmgr_staffing_event_plan_datetime($plan);
     $end = $timing['end_local'] ?? null;
     if (!$end instanceof DateTimeImmutable) return 'event_schedule_unavailable';
@@ -73,6 +74,7 @@ function bvmgr_staffing_notify_recipient(int $staff): array
             array('staff_contact_email' => '_vms_contact_email', 'staff_primary_email' => '_vms_vendor_primary_email', 'staff_legacy_email' => '_vms_vendor_email')[$source] ?? '', true);
         if (strtolower(trim((string) $raw)) !== $identity['email']) $identity['error'] = 'invalid_email';
     }
+    if ((int) $identity['user_id'] > 0 && !bvmgr_staffing_assignment_owned_by(array('staff_id' => $staff), (int) $identity['user_id'])) $identity['error'] = 'invalid_staff_user_link';
     if ((int) $identity['user_id'] > 0 && !bvmgr_notify_user_channel_enabled((int) $identity['user_id'], 'email')) $identity['error'] = 'email_channel_disabled';
     return $identity;
 }
@@ -104,6 +106,7 @@ function bvmgr_staffing_notify_work(array $audit): array
 function bvmgr_staffing_notify_obsolete(array $work): bool
 {
     $row = bvmgr_staffing_lifecycle_row((int) $work['assignment_id']);
+    if ($row && $work['status'] === 'proposed' && bvmgr_staffing_response_block_reason($row, bvmgr_staffing_lifecycle_window($row)) !== '') return true;
     return !$row || (int) $row['staff_id'] !== (int) $work['staff_id'] || (int) $row['event_plan_id'] !== (int) $work['plan_id']
         || (int) $row['revision'] !== (int) $work['revision'] || $row['status'] !== $work['status']
         || get_post_type((int) $work['plan_id']) !== 'vms_event_plan' || get_post_status((int) $work['plan_id']) === 'trash';
@@ -133,9 +136,9 @@ function bvmgr_staffing_notify_deliver(array $latest, bool $manual = false): voi
     if (!is_array($work) || !isset($work['audit_id'], $work['assignment_id'], $work['revision'])) return;
     if (in_array($latest['status'], array('sent', 'skipped'), true) || ($work['phase'] ?? '') === 'attempt') return;
     if ($latest['status'] === 'failed' && ((!$manual && (int) $work['attempts'] >= 3) || time() - strtotime($latest['created_at'] . ' UTC') < 60)) return;
-    if (bvmgr_staffing_notify_obsolete($work)) { bvmgr_staffing_notify_record($work, 'skipped', 'superseded', 'superseded_by_current_assignment'); return; }
     $event_block = bvmgr_staffing_notify_event_block_reason((int) $work['plan_id']);
     if ($event_block !== '') { bvmgr_staffing_notify_record($work, 'skipped', 'suppressed', $event_block); return; }
+    if (bvmgr_staffing_notify_obsolete($work)) { bvmgr_staffing_notify_record($work, 'skipped', 'superseded', 'superseded_by_current_assignment'); return; }
     $person = bvmgr_staffing_notify_recipient((int) $work['staff_id']);
     if (!empty($work['recipient']['email']) && ($person['email'] !== $work['recipient']['email'] || (int) $person['user_id'] !== (int) $work['recipient']['user_id'])) {
         bvmgr_staffing_notify_record($work, 'skipped', 'superseded', 'recipient_identity_changed'); return;
@@ -148,6 +151,7 @@ function bvmgr_staffing_notify_deliver(array $latest, bool $manual = false): voi
     // Recheck at the last safe point before recording an attempt and calling transport.
     $event_block = bvmgr_staffing_notify_event_block_reason((int) $work['plan_id']);
     if ($event_block !== '') { bvmgr_staffing_notify_record($work, 'skipped', 'suppressed', $event_block); return; }
+    if (bvmgr_staffing_notify_obsolete($work)) { bvmgr_staffing_notify_record($work, 'skipped', 'superseded', 'superseded_by_current_assignment'); return; }
     // Durable marker BEFORE transport: a crash/unknown result must never auto-resend.
     if (!bvmgr_staffing_notify_record($work, 'queued', 'attempt', 'delivery_outcome_unknown')) return;
     try { $result = bvmgr_notify_provider_core_email_send(array_merge($message, array('to' => $person['email']))); }

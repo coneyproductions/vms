@@ -358,6 +358,10 @@
     }
 
     function restoreButton(button) {
+      // Readiness and processing locks belong to their checkout owners.
+      if (button && (button.hasAttribute('data-vms-payment-loading') || button.hasAttribute('data-vmsx-processing-disabled'))) {
+        return;
+      }
       if (!button || button.dataset.vmsButtonStateSaved !== '1') {
         return;
       }
@@ -654,6 +658,11 @@
 
     function recoverNativeCheckoutButton(reason) {
       if (state.blocked || !isCheckoutMode) {
+        return;
+      }
+      // Do not unlock another owner's button or clear its processing form.
+      var lockedCheckout = document.querySelector('form.checkout #place_order[data-vms-payment-loading], form.checkout #place_order[data-vmsx-processing-disabled]');
+      if (lockedCheckout) {
         return;
       }
       Array.prototype.forEach.call(document.querySelectorAll(buttonSelectors()), function (button) {
@@ -5029,10 +5038,12 @@
   }
 
   function activateServerControlsState(state) {
-    if (!state || !state.addons || !state.addons.length) {
+    if (!state || !state.form || !state.sourceBlock || !Array.isArray(state.addons)) {
       return false;
     }
 
+    // Ticket labels and eligibility controls still need initialization when every
+    // amenity is sold out and there are no selectable add-on controls.
     state.sourceBlock.classList.add('vms-rw-addons', 'vms-rw-addons--server-controls', 'vms-entitlements--compact');
     state.sourceBlock.setAttribute('data-vms-server-controls-active', '1');
     state.sourceBlock.setAttribute('data-vms-inline-controller-active', '1');
