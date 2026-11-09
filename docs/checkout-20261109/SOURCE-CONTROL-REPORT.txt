@@ -1,0 +1,104 @@
+Serenade Range — November 9 checkout source-control recovery
+
+DISPOSITION: SOURCE CONTROL PASS.
+Issue: https://github.com/coneyproductions/vms/issues/124
+Earlier context: https://github.com/coneyproductions/vms/issues/119 (November 7–8;
+its earlier release/payment approvals do not authorize November 9 work).
+
+Repository ownership and isolation
+
+Use the existing coneyproductions/vms repository: BVM runtime at the repository
+root; standalone policies at companion-plugins/vmsx-checkout-policies, following
+its existing companion-plugin convention. No separate policies repository was
+found or invented. Portable synthetic tests are in tests/checkout-20261109;
+scoped exporter in scripts/checkout-20261109; sanitized documentation/manifests
+in docs/checkout-20261109. The full raw investigation remains private.
+
+Only a fresh isolated clone was changed. Main project's 14 tracked modifications
+and 1,682 untracked files remain byte-identical. The earlier Issue #119 worktree
+and frozen public-review BVM mirror retain their HEAD, branch and working bytes.
+No Staging/Production, Local WordPress install, real-order or transaction change.
+No merge, force-push, rebase, dirty reset, security exception or artifact overwrite.
+
+Verified baseline branches (new snapshot imports, not fabricated past commits):
+- codex/checkout-20261109-bvm-baseline
+  07b8608403c66c5e26e8dd824cd1c3b7a4d95e00
+  Exact retained BVM 1.3.19-rc1 staff runtime; tree
+  49e22800ca9463d275b369b205e8014e8ad2914d65095e8a4eeaa9ab5bcd2824.
+- codex/checkout-20261109-policies-baseline
+  f3fe212a6c6ae72282648d14ddeecfb98d2157fb
+  Exact retained standalone policy 0.2.4-rc1; tree
+  4905fe0e54f65e4c4995a7a656c710792fc801f2d4f3c37eb8a020e2083a1fdd.
+The historical published Git ancestor is
+8359519c438abacd8521efc36328c9a0a2f76b38, not the current release baseline.
+No PR targets outdated legacy main, and no baseline/release branch was merged.
+
+Development branches and draft PRs
+
+BVM installed .1: codex/checkout-20261109-bvm-staging
+  Source checkpoint: cfaf4ec15636a6407db0908c98b857962081f81c
+  Documentation tip: f58d2d4d2950e8cc3b67af507db352304affee28
+  Draft https://github.com/coneyproductions/vms/pull/125
+  Base: codex/checkout-20261109-bvm-baseline
+Policies installed .1: codex/checkout-20261109-policies-staging
+  Source checkpoint: 489bef43c7664112f865df072ce2ad8b94731158
+  Documentation tip: 1db24942946055d8a905349a2bee7b11bde9f3b6
+  Draft https://github.com/coneyproductions/vms/pull/126
+  Base: codex/checkout-20261109-policies-baseline
+BVM prepared .2: codex/checkout-20261109-quantity
+  Source checkpoint: 1f5fa9880b23ce035092bffac0a6c4151a765b44
+  Draft https://github.com/coneyproductions/vms/pull/127
+  Base: codex/checkout-20261109-bvm-staging
+  Later commits contain supporting documentation/tests only; source stays exact.
+All five branches have matching origin upstreams. Remote ref and GitHub commit/tree
+read-back verified the source checkpoints; draft PR bases, heads and open status
+were checked. Current branch tips can be read from those PRs and final local report.
+
+Source-to-artifact verification
+
+Committed Git blobs match every retained runtime file, including binary assets.
+The manifest whitelist excludes repo-only docs/tests/tools and rejects obsolete
+runtime files. No build-generated source exception or source transformation exists.
+Each deterministic rebuild reproduced the retained ZIP byte for byte:
+
+BVM 1.3.19-checkout.20261109.1, 431 files (currently installed on Staging)
+  ZIP c1b1cc96d0d44c77731f8dfd1d43218d1cf27eb3c65d9144d5d5263aa5dc8f89
+  Tree 1555b2fd1f7d6428cb07f06078c1d0b91af6a1ffc387099ad2515189d88a5e27
+Policies 0.2.4-checkout.20261109.1, 4 files (currently installed on Staging)
+  ZIP ac8e144f00cfe3954bee19d6687f0844bf5ca7e4a688c9b1d07de2635c5d4094
+  Tree c717cf85d3214d14352ea34d6c22e94648eba15e9f1fd05a9d750d7cb33ef569
+BVM 1.3.19-checkout.20261109.2, 431 files (prepared, NOT installed)
+  ZIP 1979232d04c3a024deaf6925f340dd6e89d64f7a5ed580bf67101887b5117df7
+  Tree f0ad3fdde68fb066fd4771ec402e6fcc94ea038aabb0e5373586ba17dc9c66b9
+Original retained packages/manifests are unchanged; rebuilds were separate files.
+
+Preservation and evidence
+
+All 425 non-target BVM files are identical between installed .1 and prepared .2.
+Both protected staff files match the approved current staff snapshot exactly:
+  staff-console.php 3b89f19d411ffdbd578e2d3dc4336bcbeea363e5dbeedf4ab40d7e3c10f90aac
+  staff-portal.php 8365d570aa8acd04b567dff1760db8efd045983e343d8abde41221de117e0bfd
+Server eligibility, policy/payment, Ops and Square source are unchanged by .2.
+The frozen original 37-check correction and all preceding candidates remain retained.
+
+Private initial archive: 42,785 files, 157,197,710 bytes, mode 0400 in private 0700
+storage. Full member hashes were verified. SHA-256:
+bb050c88cfedf2c975ba3b53eba786c45933eabf268f6722ea0d727c76012e16
+Supplemental recovery tools/evidence are separately archived and verified; receipt
+in private-supplement-receipt.json. Public Git contains only curated source,
+portable synthetic browser tests, scoped exporter, manifests and sanitized summaries.
+Credentials, customer records, raw logs, native database/payment fixtures and backups
+are excluded. Publication scans found no credential or known private customer/order
+markers; the unchanged runtime README retains its public business contact address.
+Portable test path/fixture-ID adaptations are explicitly recorded; no broad suite was
+rerun because source was committed. Exporter/test syntax and Git whitespace checks pass.
+
+Remaining boundaries
+
+No remaining source-control blocker was found. Draft PR review/merge is still pending
+and not authorized by this recovery. This does not modernize or merge legacy main.
+Quantity .2 final local readiness documentation is complete using the valid 131
+focused assertions and unchanged evidence. It still needs fresh exact-artifact
+Staging approval/acceptance. Provider payment, callbacks/financial issuance and
+physical-device/assistive-technology checks remain outstanding. Production remains
+unauthorized. Neither Git synchronization nor earlier #119 approval expands that scope.

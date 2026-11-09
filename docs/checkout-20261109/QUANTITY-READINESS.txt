@@ -1,0 +1,110 @@
+Serenade Range — BVM quantity correction readiness, November 9, 2026
+
+RECOMMENDATION: READY FOR STAGING APPROVAL.
+Source-control recovery: PASS, Issue #124; draft quantity PR #127.
+This is readiness for a new approval, not an installation or Staging acceptance.
+Production, Square sandbox transactions and security exceptions remain unauthorized.
+
+Exact BVM-only release scope
+
+Version: 1.3.19-checkout.20261109.2
+ZIP SHA-256:
+1979232d04c3a024deaf6925f340dd6e89d64f7a5ed580bf67101887b5117df7
+Source-tree SHA-256:
+f0ad3fdde68fb066fd4771ec402e6fcc94ea038aabb0e5373586ba17dc9c66b9
+Source checkpoint: 1f5fa9880b23ce035092bffac0a6c4151a765b44
+Draft PR: https://github.com/coneyproductions/vms/pull/127
+431 runtime files; no additions or removals compared with installed BVM .1.
+The retained ZIP was preserved and rebuilt independently from committed blobs with
+an identical hash. Install only from that retained artifact, not a whole Git checkout.
+
+Root cause and corrected behavior
+
+TEC's native template renders quantity zero. BVM already treated fields as totals
+including existing cart tickets, but never restored those totals when TEC left zero.
+A cart notice for GA 1 + Veteran 2 could therefore contradict both zero fields.
+The correction explicitly restores/labels totals and reports each admission's
+existing and additional quantities. The original delta calculation still submits
+only increases above the cart snapshot. Continuing checkout with unchanged totals
+sends no addition. Existing cart tickets are removed through Review cart.
+
+Guest fields appear only for genuine extra claims beyond the current self allowance.
+Reloads, cart return/removal/reduction, native resets/replacement, keyboard editing
+and history refresh preserve that contract. Ratio caps cannot erase existing cart
+visibility or enable extra tickets without qualifiers. Missing atomic configuration
+blocks native submission of totals, with a meaningful Review cart error, to prevent
+an unsafe fallback from replaying existing cart items.
+
+Exactly changed runtime files
+
+assets/vms-ticketing-front.js — total display/labels/help, cart minimum, ratio safety,
+  commit normalization and safe failure when delta submission is unavailable.
+assets/css/vms-ticketing-front.css — scoped, wrapping total-label/help layout.
+backstage-venue-manager.php — version only.
+includes/core/registry/constants.php — version only.
+readme.txt — version only.
+vms-build.txt — version only.
+
+All 425 unrelated BVM files are byte-identical to installed .1, including protected
+Staff Portal and Unified Staff Console code. Server eligibility, guest validation,
+manual-order policy/ownership, Ops, Square and security source are unchanged.
+Checkout Policies stays at 0.2.4-checkout.20261109.1; do not reinstall it.
+
+Qualification and limits
+
+Retained final Local results: 71 quantity lifecycle + 28 original browser + 21 status
++ 11 other-admission/mobile assertions = 131 passing assertions. They cover native
+zero defaults/prefill, no-add checkout continuation, paid delta/subtotal, repeated
+activation, valid/rejected guests, returns/reload/removal, first responders, ratios,
+missing endpoint safety, keyboard labels and 390/320px layouts. The quantity fixture
+uses real native TEC quantity JS with a stateful synthetic cart, intercepted network
+and no WordPress or payment writes. Synthetic screenshots were visually inspected.
+Original 9 PHP regressions and unchanged native server/policy/staff evidence are reused.
+The frozen original 37-check correction remains unchanged. Source-control recovery
+verified all Git bytes, full deterministic ZIP reproduction, no obsolete runtime
+files, source preservation, portable-test/exporter syntax and remote commit read-back.
+No broad acceptance suite was repeated for committing unchanged code.
+
+The installed .1 Staging run has 70 positive assertions plus the known quantity
+failure. The .2 fix has NOT been installed or accepted on Staging. Local fragment
+layouts are not full-theme/physical-device acceptance. No independent human or
+assistive-technology acceptance is claimed. Square SDK/provider payment, financial
+issuance, callbacks, provider replay and physical-device tests remain pending under
+separate authorization; nonpayment results do not establish provider charge safety.
+
+Minimal Staging redeployment plan — only after fresh explicit approval
+
+1. Rehash the exact retained .2 ZIP and manifest. Recheck actual Staging BVM .1 tree
+   1555b2fd1f7d6428cb07f06078c1d0b91af6a1ffc387099ad2515189d88a5e27,
+   Policies tree c717cf85d3214d14352ea34d6c22e94648eba15e9f1fd05a9d750d7cb33ef569
+   and unchanged staff/Ops/Square/security composition. STOP for unexplained drift.
+2. Retain/hash an immediate complete BVM preimage with the configured helper. If
+   synthetic fixtures are authorized, retain the appropriate private data recovery
+   point before fixture writes. No schema or settings migration is included.
+3. Extract .2 into a fresh directory and verify all 431 files. Preview the configured
+   scripts/deploy staging backstage-venue-manager --source EXTRACTED_PLUGIN --dry-run.
+   Require only the six listed content changes and no deletions. Installation with
+   --write requires that separate approval. No in-place patch or companion update.
+4. Verify installed version/full manifest and actual runtime adoption. Served JS must
+   hash 992af36b77ffc0f3b9a06b1eb7ce59ed84608ab14180bd005692310756f740d9;
+   CSS must hash c804495c9b00afa0e190cfb8e572bbdd7fa622e08641f18e4b085f2cbb34b8a2.
+5. Use authorized synthetic nonpayment fixtures to check untouched default totals,
+   approved self/guest and rejected guest, exact paid increases, no-add continuation,
+   repeated activation, quantity changes/removal/reload/cart return, ratio controls,
+   keyboard/mobile labels and safe endpoint failure. Check actual theme wrapping and
+   protected staff routes/navigation. Reuse unchanged policy/ownership/status checks;
+   do not repeat large suites or submit payment. Preserve guards without exceptions.
+6. Clean only the authorized synthetic fixtures, retain evidence and source/runtime
+   read-back, and report any failure. Real customer orders remain untouched.
+
+Rollback
+
+Restore the immediate preimage of currently installed BVM .1. The retained fallback
+is backstage-venue-manager-1.3.19-checkout.20261109.1.zip, ZIP SHA-256
+c1b1cc96d0d44c77731f8dfd1d43218d1cf27eb3c65d9144d5d5263aa5dc8f89,
+restoring tree 1555b2fd1f7d6428cb07f06078c1d0b91af6a1ffc387099ad2515189d88a5e27.
+Hash-check/extract and restore only BVM with the same configured helper under the
+approved recovery scope; verify source, runtime/cache, checkout and staff routes.
+Do not roll back to 1.3.19-rc1: that would remove the accepted checkout/status work.
+Do not roll back Policies, Ops or Square, or overwrite business data with a blanket
+DB restore. Preserve failure evidence. No rollback or installation occurred here.
