@@ -1,0 +1,13 @@
+{
+  "archive": "/Users/treyconey/.codex-private/issue124-staging-20261109/staging-deployment-and-acceptance.tar.gz",
+  "sha256": "f2feef10e392553dcab9f70e55aba39e9e61c2a0d3167f1d7c8c73e4d0d86f32",
+  "bytes": 6599263,
+  "regular_files": 74,
+  "mode": "0400",
+  "directory_mode": "0700",
+  "contains_generated_passwords": false,
+  "customer_database_copied": false,
+  "fixture_credentials_removed": true,
+  "private_browser_dom_files": 3,
+  "investigation_sources_and_raw_evidence_published": false
+}
