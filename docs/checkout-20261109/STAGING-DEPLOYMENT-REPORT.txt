@@ -1,0 +1,134 @@
+Issue #124 — Staging BVM .2 deployment and focused nonpayment acceptance
+
+FINAL RECOMMENDATION: HOLD.
+Installation and source preservation: PASS. Focused acceptance: INCOMPLETE.
+Production remains unauthorized. No further acceptance retries or code changes were
+made after the final synthetic sign-in check failed. No rollback has been performed.
+
+Exact installed release
+
+Backstage Venue Manager: 1.3.19-checkout.20261109.2
+ZIP SHA-256:
+1979232d04c3a024deaf6925f340dd6e89d64f7a5ed580bf67101887b5117df7
+Installed source-tree SHA-256:
+f0ad3fdde68fb066fd4771ec402e6fcc94ea038aabb0e5373586ba17dc9c66b9
+Source checkpoint: 1f5fa9880b23ce035092bffac0a6c4151a765b44
+Issue: https://github.com/coneyproductions/vms/issues/124
+Draft PR: https://github.com/coneyproductions/vms/pull/127 (not merged)
+
+Preflight matched the approved Staging .1 baseline, tree
+1555b2fd1f7d6428cb07f06078c1d0b91af6a1ffc387099ad2515189d88a5e27.
+Retained artifact/provenance, complete extraction, backup and six-file-only preview
+were verified before the configured manual BVM-only transfer. Final read-back
+matches all 431 approved runtime files; served JS and CSS hashes and runtime version
+also match .2. The approved ZIP was installed without rebuilding or patching it.
+An unsupported stdin transport failed before executing its runtime preflight script;
+the supported native eval transport then passed preflight before installation.
+The standalone inventory emitted an ea-php-cli cache-directory warning, returned
+valid complete inventories with exit 0, and required no workaround or guard change.
+
+Exactly six content changes; no file additions or removals
+
+- assets/vms-ticketing-front.js
+- assets/css/vms-ticketing-front.css
+- backstage-venue-manager.php
+- includes/core/registry/constants.php
+- readme.txt
+- vms-build.txt
+
+All 425 unrelated BVM files are byte-identical to preinstall .1, including protected
+Staff Portal and Unified Staff Console code. All 48 companion plugin inventories
+are unchanged, including Checkout Policies .1, Square, Ops, Express Bar and Rentals.
+Active plugins, observed configuration options, wp-config.php, .htaccess and the
+Staging isolation guard are unchanged. Native staff routes, portal registration,
+anonymous denial and HTTP/mail containment passed fresh checks. Earlier authenticated
+Staff Portal/Console navigation evidence is reused; no staff operations were mutated.
+
+Passing focused evidence
+
+13 fresh native assertions passed: veteran and first-responder self eligibility,
+approved additional guests, rejection of unapproved guests and accounts; protected
+staff route/shortcode registration and anonymous denial; HTTP/mail containment.
+
+The first browser run passed 34 assertions before its classic-cart selector timed
+out. It established, using real synthetic customer carts and native atomic addition:
+- Empty-cart zero defaults; own veteran ticket without an extra email.
+- Native cart return restores totals without manually prefilling the inputs.
+- Missing/unapproved guests blocked; one approved guest adds one veteran ticket.
+- The reported GA 1 + Veteran 2 cart displays 1 and 2, agrees with the three-ticket
+  unpurchased notice, hides unnecessary guest fields and has zero additional subtotal.
+- Reload retains totals. Continue checkout adds nothing and chooses /checkout/.
+- Increasing GA from 1 to 2 sends only quantity 1 and a $20 additional subtotal;
+  double activation still sends one atomic request. Return confirms GA 2 + Veteran 2.
+- Reverting an unsent increase, keyboard entry, accessible total labels/help and
+  390/320px viewport overflow checks pass. A separate 320px viewport screenshot
+  confirms wrapping quantity help; these are desktop Chromium checks, not devices.
+
+The checkout destination GET was deliberately intercepted by the browser test;
+no checkout/payment form was submitted or newly certified. Browser JS/CSS adoption
+was observed with exact approved hashes. Original 37 regressions, 131 qualified
+local browser assertions, prior policy/ownership/status and staff Staging evidence
+are reused for unchanged functionality; no large suite was repeated.
+
+Incomplete acceptance and retained failures
+
+The actual cart is a WooCommerce Cart block. The first driver expected a classic
+form. Two scoped continuations then checked block rows before full hydration; their
+captured DOMs show loading placeholders. Those are test-driver failures, not proof
+that cart contents disappeared. Each continuation first confirmed the preserved
+GA 2 + Veteran 2 cart and narrow viewport; repeated assertions are not double-counted.
+
+One continuation also recorded cart-page exceptions: isFormFields/getPaymentMethodData
+access on undefined objects, WC_Square_Payment_Form_Handler undefined, and Cookies
+undefined. Other runs had no page exceptions. Their cause is unresolved; these
+results do not certify Square or attribute a defect to BVM. No provider call or
+security exception was used to investigate around the existing containment.
+
+The next corrected driver failed its post-login assertion before assigning its page
+to the diagnostic handler, so no failure-page capture exists for that sign-in.
+The evidence cannot distinguish a native login rejection from a navigation/test
+issue. Acceptance stopped. No lockout, security exception, alternate identity or
+plugin patch was introduced to bypass it.
+
+Consequently native Cart-block quantity reduction, removal/empty-cart recovery,
+remaining first-responder browser lifecycle/cap checks and final unapproved-account
+browser checks are NOT newly accepted. Their local/native evidence remains valid
+but cannot replace the incomplete Staging journey. Diagnose legitimate synthetic
+sign-in and wait for actual hydrated cart controls, then run only the remaining
+nonpayment checks under the release process. Do not report STAGING PASS yet.
+
+Cleanup and boundaries
+
+Cleanup removed users 465–467, event/plan/products 9091–9095, 60 fixture claim-log
+rows, native sessions/tokens and the fixture ledger. No fixture orders or attendees
+were created. Independent verification found no remaining fixture Woo sessions,
+Ops presence, TEC events or occurrences. Temporary generated credentials were removed;
+private failure DOMs are retained only in the protected evidence archive.
+Native totals remain exactly 442 orders, 974 order items and 932 attendees.
+No real customer/order, including the protected reported order, was modified. No Square sandbox/live
+transaction, capture, refund, guard change, PR merge or Production write occurred.
+
+Rollback readiness and recommendation
+
+Rollback is not currently necessary: installation/source verification passed, the
+quantity/addition cases passed, and incomplete cart/login testing does not establish
+a harmful .2 source change. Keep .2 on private Staging with HOLD. If rollback is
+required, restore only the verified immediate .1 BVM preimage using the configured
+manual staging transfer, then verify tree/runtime/staff routes. Never restore the
+older 1.3.19-rc1 staff baseline or roll back companion plugins.
+
+Verified/test-extracted BVM recovery archive:
+/home/coney/.serenade-range-release-backups/issue124-quantity-20261109.2/source-before.tar.gz
+SHA-256: fb8f00c86e3af468537b5a539afaed1cde3aaf011da15d72160396702a130f74
+Restored tree: 1555b2fd1f7d6428cb07f06078c1d0b91af6a1ffc387099ad2515189d88a5e27
+Manual helper's additional immediate preimage:
+/home/coney/.serenade-range-release-backups/20261109T234613Z-94529/staging/backstage-venue-manager/source-before.tar.gz
+SHA-256: 82d06532c483d0f9ae0aed72512ea1a4efa5a612bc0d8545e41d314f7385c8b3
+Private database recovery point (server only, mode 0600, 54,871,256 bytes):
+/home/coney/.serenade-range-release-backups/issue124-quantity-20261109.2/database-before.sql
+SHA-256: b9f72597a541fbbeb64e13d1e78268edc0b919fe2fd1f3bde459e979e54fdf53
+No blanket database restore is recommended; preserve intervening business data.
+
+Outstanding after nonpayment acceptance: separately authorized Square sandbox,
+provider replay/callback/financial issuance and physical iPhone Safari/Android,
+enlarged text and assistive-technology testing. No Production promotion is approved.

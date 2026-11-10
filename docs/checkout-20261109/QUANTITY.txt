@@ -1,0 +1,15 @@
+Issue #124 — quantity correction, prepared but not installed.
+
+Source commit 1f5fa9880b23ce035092bffac0a6c4151a765b44. BVM 1.3.19-checkout.20261109.2. The retained artifact identity is recorded in artifact-reproduction.json; no artifact has been replaced, relabeled or installed by this source-control recovery.
+
+Root cause: native TEC quantity templates render zero defaults. The BVM recovery controller interpreted those fields as totals and subtracted the existing cart baseline, but did not restore the displayed totals. The notice therefore said three tickets were included while the untouched fields remained zero.
+
+Corrected behavior: show totals including the cart, identify each field by admission type, explain existing and additional quantities, and send only the increase above the authoritative cart snapshot. Existing cart tickets are removed through Review cart. Guest validation remains required only for genuine additional claims beyond the remaining self allowance. Keyboard edits can complete before normalization; reloads, restored native controls and browser-history returns recover current totals. Ratio-limited rows retain existing cart visibility while extra quantities still need qualifying admissions. When atomic delta submission is unavailable, the controller refuses a native fallback that could replay existing totals.
+
+Exactly six files differ from the currently installed BVM .1: front JS, its CSS and four version metadata files. The server eligibility/payment code, policy plugin and all 425 unrelated BVM files are unchanged. Staff hashes are in preservation.json. No redesign, new gateway path, security exception or financial transaction is included.
+
+Focused prior Local results: 71 quantity lifecycle checks, original 28 browser checks, 21 status checks and 11 other-admission/mobile checks, all passing. These are retained evidence, not acceptance repeated because source was committed. Native ownership/policy/staff evidence remains reusable for unchanged source. See test-evidence.json for limits.
+
+Reproduction: scripts/checkout-20261109/export_snapshot.py exports only manifest-whitelisted Git blobs and builds the original deterministic ZIP metadata. All three source checkpoints reproduced the exact retained ZIP hashes. Repository-only docs/tests/tools are excluded by this explicit manifest; no generated-source exception was needed.
+
+Staging and Production remain unchanged. Quantity .2 needs completed readiness documentation and fresh exact-artifact Staging approval after source-control read-back. No Square sandbox transaction or guard exception is authorized.

@@ -1,0 +1,26 @@
+{
+  "recommendation": "HOLD",
+  "deployment": "PASS",
+  "acceptance": "INCOMPLETE",
+  "version": "1.3.19-checkout.20261109.2",
+  "zip_sha256": "1979232d04c3a024deaf6925f340dd6e89d64f7a5ed580bf67101887b5117df7",
+  "source_tree_sha256": "f0ad3fdde68fb066fd4771ec402e6fcc94ea038aabb0e5373586ba17dc9c66b9",
+  "source_commit": "1f5fa9880b23ce035092bffac0a6c4151a765b44",
+  "fresh_native_checks": 13,
+  "initial_browser_checks_before_harness_stop": 34,
+  "remaining_native_cart_browser_journey": "NOT ACCEPTED",
+  "companion_plugins_unchanged": 48,
+  "unrelated_bvm_files_preserved": 425,
+  "cleanup_verified": true,
+  "native_counts_unchanged": {
+    "native_order_count": 442,
+    "native_order_item_count": 974,
+    "native_attendee_count": 932
+  },
+  "temporary_credentials_removed": true,
+  "rollback_performed": false,
+  "rollback_currently_required": false,
+  "production_authorized": false,
+  "payments_submitted": 0,
+  "guards_changed": false
+}

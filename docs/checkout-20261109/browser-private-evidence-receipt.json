@@ -1,0 +1,11 @@
+{
+  "archive": "/Users/treyconey/.codex-private/issue124-browser-acceptance-20261109/browser-acceptance-evidence.tar.gz",
+  "sha256": "64a69bbfdc7c829cf9680b262a769b4b7be8980f92af18cdf23f56126127860a",
+  "bytes": 9266080,
+  "regular_files": 147,
+  "archive_mode": "0400",
+  "directory_mode": "0700",
+  "generated_password_file_removed": true,
+  "customer_database_copied": false,
+  "raw_browser_diagnostics_published": false
+}

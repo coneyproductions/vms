@@ -5,3 +5,5 @@ node tests/checkout-20261109/status-browser.cjs /path/to/BVM
 node tests/checkout-20261109/admission-workflows.cjs /path/to/BVM
 
 Original hashes and path-only adaptations are recorded in docs/checkout-20261109/test-adaptations.json. Earlier passing results apply to the retained original harnesses. Any rerun of these portable copies must be reported separately. Raw native fixtures, remote helpers and payment harnesses remain in the private evidence archive to prevent accidental live execution or exposure of credentials/private data.
+
+The quantity-lifecycle test also needs BVM_EVENT_TICKETS_ROOT and BVM_WORDPRESS_ROOT pointing to read-only native assets. It uses those files in synthetic HTML, never a running WordPress instance. Run it only with the intended .2 BVM source. All network requests are intercepted at the synthetic quantity.test origin.

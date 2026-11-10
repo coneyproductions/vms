@@ -1544,6 +1544,16 @@
 
     Object.keys(groups).forEach(function (groupKey) {
       var group = groups[groupKey];
+      // Ticket-only forms have no add-on block supplying cartGaQty. Count the
+      // qualifying cart tickets once, alongside the additional selections below.
+      if (!state.sourceBlock) {
+        (rows || []).forEach(function (item) {
+          if (item.countsTowardUnlock && !group.limitedProductIds[String(item.productId)]
+            && (!state.qualifyingTicketIds.length || state.qualifyingTicketIds.indexOf(item.productId) >= 0)) {
+            group.qualifyingQty += cartTicketQty(state, item.productId);
+          }
+        });
+      }
       // Ratio-limited tickets may unlock add-ons, but cannot qualify their own group.
       (rows || []).forEach(function (item) {
         if (!item || !item.countsTowardUnlock || item.qty <= 0) {
@@ -1606,7 +1616,8 @@
       }
       var group = groups[item.groupKey];
       var otherLimitedQty = Math.max(0, toInt(group && group.selectedQty, 0) - Math.max(0, item.qty || 0));
-      var maxForInput = Math.max(0, toInt(group && group.allowedQty, 0) - otherLimitedQty);
+      var cartQty = cartTicketQty(state, item.productId);
+      var maxForInput = Math.max(cartQty, toInt(group && group.allowedQty, 0) - otherLimitedQty);
       var currentQty = Math.max(0, readTicketQty(item.input));
       var clampedQty = Math.min(currentQty, maxForInput);
       if (currentQty !== clampedQty) {
@@ -1634,7 +1645,7 @@
         setDisabled(button, maxForInput <= clampedQty || state.isSubmitting);
       });
       buttons.minus.forEach(function (button) {
-        setDisabled(button, clampedQty <= 0 || state.isSubmitting);
+        setDisabled(button, clampedQty <= cartQty || state.isSubmitting);
       });
     });
 
@@ -2782,6 +2793,54 @@
     return Math.max(0, readTicketQty(input) - cartTicketQty(state, resolveTicketProductId(state, input)));
   }
 
+  function syncTicketCartTotals(state, commit) {
+    if (!state || !state.form || !hasEventTicketsInCart()) {
+      return;
+    }
+    queryAll(SELECTORS.nativeQty, state.form).forEach(function (input) {
+      var productId = resolveTicketProductId(state, input);
+      var row = getTicketRow(input);
+      if (!row || input.disabled || row.hidden || isDisabledPendingSyncTicketProductId(state, productId)) {
+        return;
+      }
+      var inCart = cartTicketQty(state, productId);
+      // TEC renders zero by default. These controls are totals; only the delta
+      // above the server cart snapshot is submitted by additionalTicketQty().
+      // Allow an unfinished keyboard edit until change/submit commits it.
+      if (readTicketQty(input) < inCart && (commit || document.activeElement !== input)) {
+        input.value = String(inCart);
+        setAttributeIfChanged(input, 'value', inCart);
+      }
+      setAttributeIfChanged(input, 'min', inCart);
+      if (input.hasAttribute('max') && toInt(input.getAttribute('max'), 0) < inCart) {
+        // Keep existing cart contents representable without permitting an increase.
+        setAttributeIfChanged(input, 'max', inCart);
+      }
+      var name = resolveTicketDisplayName(input, getTicketAccessEntry(state, productId));
+      var labelText = 'Total ' + name + ' tickets';
+      var note = query('.vms-ticket-total-note', row);
+      if (!note) {
+        note = createEl('div', 'vms-ticket-total-note');
+        var label = createEl('label', null, labelText);
+        if (!input.id) input.id = 'vms-ticket-total-' + productId;
+        label.htmlFor = input.id;
+        note.appendChild(label);
+        var detail = createEl('p');
+        detail.id = input.id + '-cart-total-help';
+        note.appendChild(detail);
+        row.appendChild(note);
+      }
+      if (!input.id) input.id = 'vms-ticket-total-' + productId;
+      query('label', note).htmlFor = input.id;
+      var describedBy = String(input.getAttribute('aria-describedby') || '').trim().split(/\s+/).filter(Boolean);
+      var helpId = query('p', note).id;
+      if (describedBy.indexOf(helpId) < 0) describedBy.push(helpId);
+      setAttributeIfChanged(input, 'aria-describedby', describedBy.join(' '));
+      setAttributeIfChanged(input, 'aria-label', labelText);
+      setText(query('p', note), String(inCart) + ' already in cart. ' + String(additionalTicketQty(state, input)) + ' additional selected. To remove cart tickets, use Review cart above.');
+    });
+  }
+
   function hasEventTicketsInCart() {
     return Object.keys(mapObject(cfg.cartTicketQuantities)).some(function (productId) {
       return toInt(cfg.cartTicketQuantities[productId], 0) > 0;
@@ -2826,7 +2885,10 @@
       var cartCount = Object.keys(mapObject(cfg.cartTicketQuantities)).reduce(function (sum, pid) { return sum + Math.max(0, toInt(cfg.cartTicketQuantities[pid], 0)); }, 0);
       var actions = [{ label: 'Review cart', url: cfg.cartUrl || '/cart/' }];
       if (!pending.length) actions.push({ label: 'Complete checkout', url: cfg.checkoutUrl || '/checkout/' });
-      addStatus('You have ' + cartCount + ' ticket' + (cartCount === 1 ? '' : 's') + ' in your cart for this event. These cart items have not been purchased. The quantities below include them. Increase a quantity only to add more tickets; use Review cart to remove tickets.', actions);
+      var selectionHelp = state.form
+        ? 'Each Total tickets field includes the tickets already in your cart. Increase a total only to add more tickets. '
+        : 'Review your cart before selecting more tickets. ';
+      addStatus('You have ' + cartCount + ' ticket' + (cartCount === 1 ? '' : 's') + ' in your cart for this event. These cart items have not been purchased. ' + selectionHelp + 'To remove tickets, choose Review cart.', actions);
     }
     if (issuedCount > 0) {
       addStatus('You have ' + issuedCount + ' issued ticket' + (issuedCount === 1 ? '' : 's') + ' for this event.', [
@@ -3338,6 +3400,7 @@
     if (!state || !state.form) {
       return;
     }
+    syncTicketCartTotals(state);
     state.ticketQtyByProduct = readCurrentTicketQtyByProduct(state);
   }
 
@@ -4489,6 +4552,7 @@
 
   function refresh(state, options) {
     hideDisabledTicketRows(state);
+    syncTicketCartTotals(state);
     syncTicketRatioRuleUi(state);
     var opts = options || {};
     if (opts.clearGlobalMessage) {
@@ -4879,6 +4943,7 @@
     ['input', 'change'].forEach(function (type) {
       state.form.addEventListener(type, function (event) {
         if (event.target && event.target.matches && event.target.matches(SELECTORS.nativeQty)) {
+          if (type === 'change') syncTicketCartTotals(state, true);
           trackedRefresh();
         }
       });
@@ -5525,6 +5590,7 @@
       return;
     }
 
+    syncTicketCartTotals(state, true);
     var ticketBuild = buildAtomicTicketLines(state, { requireComplete: true });
     var ticketLines = ticketBuild.ok ? ticketBuild.ticketLines : [];
     var addonLines = collectAddonLines(state);
@@ -5588,6 +5654,12 @@
 
         if (!cfg.atomicAddUrl || !cfg.atomicAddNonce) {
           diagLog('atomic-add-missing-config');
+          if (hasEventTicketsInCart()) {
+            // Native submission adds the displayed totals, which would replay
+            // existing cart tickets. Keep the cart intact if delta submission
+            // is unavailable.
+            throw new Error('We could not safely add more tickets. Choose Review cart to check your existing tickets, then try again.');
+          }
           if (!addonLines.length && extensionResult.quantity <= 0) {
             state.isSubmitting = false;
             refresh(state, { clampAddons: true });

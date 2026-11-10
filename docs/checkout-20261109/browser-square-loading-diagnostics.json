@@ -1,0 +1,131 @@
+{
+  "historical_messages": [
+    "Cannot read properties of undefined (reading 'isFormFields')",
+    "Cannot read properties of undefined (reading 'getPaymentMethodData')",
+    "WC_Square_Payment_Form_Handler is not defined",
+    "Cookies is not defined"
+  ],
+  "historical_stacks_available": false,
+  "historical_individual_causes_proven": false,
+  "current_exact_exceptions": [
+    {
+      "type": "exception",
+      "phase": "cart-navigation",
+      "ms": 104742,
+      "url": "https://staging.serenaderange.com/checkout/",
+      "message": "Cannot read properties of undefined (reading 'payments')",
+      "stack": "TypeError: Cannot read properties of undefined (reading 'payments')\n    at window.WC_Square_Digital_Wallet_Handler.load_square_form (https://staging.serenaderange.com/wp-content/plugins/woocommerce-square/build/assets/frontend/wc-square-digital-wallet.js?ver=5.5.2.1-sr.20261108.2:1:2606)\n    at https://staging.serenaderange.com/wp-content/plugins/woocommerce-square/build/assets/frontend/wc-square-digital-wallet.js?ver=5.5.2.1-sr.20261108.2:1:1165"
+    },
+    {
+      "type": "exception",
+      "phase": "cart-navigation",
+      "ms": 104837,
+      "url": "https://staging.serenaderange.com/checkout/",
+      "message": "Cannot read properties of undefined (reading 'payments')",
+      "stack": "TypeError: Cannot read properties of undefined (reading 'payments')\n    at window.WC_Square_Payment_Form_Handler.set_payment_fields (https://staging.serenaderange.com/wp-content/plugins/woocommerce-square/build/assets/frontend/wc-square.js?ver=5.5.2-SR-I84-WSQ552-20261101.2-readiness-0.1.2:1:4295)\n    at HTMLBodyElement.<anonymous> (https://staging.serenaderange.com/wp-content/plugins/woocommerce-square/build/assets/frontend/wc-square.js?ver=5.5.2-SR-I84-WSQ552-20261101.2-readiness-0.1.2:1:2545)\n    at HTMLBodyElement.dispatch (https://staging.serenaderange.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:40035)\n    at v.handle (https://staging.serenaderange.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:38006)\n    at Object.trigger (https://staging.serenaderange.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:70124)\n    at HTMLBodyElement.<anonymous> (https://staging.serenaderange.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:70726)\n    at ce.each (https://staging.serenaderange.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:3129)\n    at e.<computed>.each (https://staging.serenaderange.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:1594)\n    at e.<computed>.trigger (https://staging.serenaderange.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:70701)\n    at Object.success (https://staging.serenaderange.com/wp-content/plugins/woocommerce/assets/js/frontend/checkout.min.js?ver=11.2.1:1:13140)"
+    },
+    {
+      "type": "exception",
+      "phase": "event",
+      "ms": 122752,
+      "url": "https://staging.serenaderange.com/checkout/",
+      "message": "Cannot read properties of undefined (reading 'payments')",
+      "stack": "TypeError: Cannot read properties of undefined (reading 'payments')\n    at window.WC_Square_Payment_Form_Handler.set_payment_fields (https://staging.serenaderange.com/wp-content/plugins/woocommerce-square/build/assets/frontend/wc-square.js?ver=5.5.2.1-sr.20261108.2:1:4295)\n    at HTMLBodyElement.<anonymous> (https://staging.serenaderange.com/wp-content/plugins/woocommerce-square/build/assets/frontend/wc-square.js?ver=5.5.2.1-sr.20261108.2:1:2545)\n    at HTMLBodyElement.dispatch (https://staging.serenaderange.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:40035)\n    at v.handle (https://staging.serenaderange.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:38006)\n    at Object.trigger (https://staging.serenaderange.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:70124)\n    at HTMLBodyElement.<anonymous> (https://staging.serenaderange.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:70726)\n    at ce.each (https://staging.serenaderange.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:3129)\n    at e.<computed>.each (https://staging.serenaderange.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:1594)\n    at e.<computed>.trigger (https://staging.serenaderange.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:70701)\n    at Object.success (https://staging.serenaderange.com/wp-content/plugins/woocommerce/assets/js/frontend/checkout.min.js?ver=11.2.1:1:13140)"
+    }
+  ],
+  "cart_exceptions_observed": [],
+  "checkout_sdk_blocked_by_native_csp": true,
+  "test_route_external_requests_aborted": 0,
+  "native_domcontent_snapshot": [
+    {
+      "type": "domcontent_snapshot",
+      "phase": "native-domcontent-observation",
+      "ms": 157381,
+      "data": {
+        "ready_state": "complete",
+        "loading_rows": 2,
+        "quantity_controls": 0,
+        "Cookies": "object",
+        "square_handler": "function"
+      }
+    }
+  ],
+  "native_cart_lifecycle_events": [
+    {
+      "phase": "cart-ready",
+      "label": "diagnostic-native-cart",
+      "errors": [],
+      "violations": [
+        {
+          "blockedURI": "https://sandbox.web.squarecdn.com/v1/square.js?ver=5.5.2.1-sr.20261108.2",
+          "directive": "script-src-elem",
+          "sourceFile": "",
+          "line": 0
+        }
+      ],
+      "lifecycle": [
+        {
+          "event": "DOMContentLoaded",
+          "ms": 7682.60000038147,
+          "readyState": "interactive",
+          "Cookies": "object",
+          "squareHandler": "undefined"
+        },
+        {
+          "event": "load",
+          "ms": 7698.5,
+          "readyState": "complete",
+          "Cookies": "object",
+          "squareHandler": "function"
+        }
+      ]
+    }
+  ],
+  "ready_global_states": [
+    {
+      "Cookies": "object",
+      "square_handler": "function"
+    },
+    {
+      "Cookies": "object",
+      "square_handler": "function"
+    },
+    {
+      "Cookies": "object",
+      "square_handler": "function"
+    },
+    {
+      "Cookies": "object",
+      "square_handler": "function"
+    },
+    {
+      "Cookies": "object",
+      "square_handler": "function"
+    },
+    {
+      "Cookies": "object",
+      "square_handler": "function"
+    },
+    {
+      "Cookies": "object",
+      "square_handler": "function"
+    },
+    {
+      "Cookies": "object",
+      "square_handler": "function"
+    },
+    {
+      "Cookies": "object",
+      "square_handler": "function"
+    },
+    {
+      "Cookies": "object",
+      "square_handler": "function"
+    },
+    {
+      "Cookies": "object",
+      "square_handler": "function"
+    }
+  ],
+  "native_http_failures_this_run": []
+}

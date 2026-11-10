@@ -1,0 +1,135 @@
+Issue #124 — focused Staging browser acceptance completion
+
+RECOMMENDATION: STAGING PASS — authorized synthetic nonpayment browser scope only.
+Production and payment/provider acceptance remain HOLD. No plugin was installed,
+patched, rebuilt, merged or reconfigured in this continuation. No rollback is needed.
+
+Installed BVM remains 1.3.19-checkout.20261109.2.
+ZIP SHA-256: 1979232d04c3a024deaf6925f340dd6e89d64f7a5ed580bf67101887b5117df7
+Tree SHA-256: f0ad3fdde68fb066fd4771ec402e6fcc94ea038aabb0e5373586ba17dc9c66b9
+Source checkpoint: 1f5fa9880b23ce035092bffac0a6c4151a765b44
+Issue https://github.com/coneyproductions/vms/issues/124; draft PR #127, unmerged.
+The previous installation report remains a historical record; this report supersedes
+its incomplete browser-workflow disposition, not its immutable artifact identities.
+
+Cart-block root cause and classification: TEST HARNESS.
+
+The Cart page uses native WooCommerce Blocks, not a classic .woocommerce-cart-form.
+Its placeholder tr elements share .wc-block-cart-items__row with real rows. Even
+readyState=complete and the browser load event do not establish React/Store readiness:
+the diagnostic captured two loading rows and zero quantity controls after document
+completion. The corrected harness waits for wc/store/cart.getCartData() to contain
+the expected native item totals, actual editable quantity controls, no loading rows
+and no busy/loading indicators. After mutations it also waits for the real Store API
+response and then observes the persisted state on a new event-page request.
+
+Selectors use the hydrated row's product name, native quantity controls and native
+remove button. Native /cart/update-item and /batch responses were retained. No test
+reducer dispatch, injected cart data, forced form submission, simulated API response
+or mocked checkout destination was used.
+
+One new preparation grouped self+guest veteran admissions into a single qty=2 row.
+Native Remove correctly removed that whole row. The initial continuation expected
+one ticket to remain and timed out; that expectation was corrected from the actual
+native item/assignee data. This was not a disappearance or duplicate-ticket defect.
+
+Original synthetic sign-in failure: STAGING HTTP/SERVICE RESPONSE.
+
+Read-only Apache access evidence identifies the exact failed request:
+09/Nov/2026:17:10:21 -0700, POST /wp-login.php, HTTP 503.
+The old driver asserted only that the URL had left wp-login and failed before
+retaining its page, so it could not distinguish unavailable service from bad
+credentials. The evidence establishes a 503, not a WordPress password/permission
+rejection. The lower-level reason for that historical 503 is not established.
+No authentication or hosting setting was changed to make the test pass.
+
+Fresh native authentication passed for both the approved and unapproved synthetic
+customer. Each form had valid populated required fields, POST returned 302 to the
+normal profile redirect, and the final /my-account/ page had native secure HttpOnly
+logged-in cookies. Account role/program data and native session existence were
+checked. Cookie paths/domain were appropriate, WP_CACHE was false and responses
+were private/no-store; no stale credential-cache result was observed.
+
+An intermediate continuation did not emit a POST and timed out. It did not capture
+live validity at that moment, so its individual client-side cause remains unproven.
+The final diagnostic captures form validity, submit/invalid events, POST response,
+redirects and cookie metadata before asserting authentication. Both account types
+then completed native submission; no alternate customer identity, manually supplied
+cookie, captcha exception or security bypass was used.
+
+Square/Cookies disposition: KNOWN STAGING SDK RESTRICTION; historical variants limited.
+
+Exact current errors and stacks are retained in evidence/square-loading-diagnostics.json.
+Checkout produced "Cannot read properties of undefined (reading 'payments')" from
+WC_Square_Digital_Wallet_Handler.load_square_form in wc-square-digital-wallet.js and
+WC_Square_Payment_Form_Handler.set_payment_fields in wc-square.js, following native
+checkout/update_order_review callbacks. Browser policy events explicitly show the
+sandbox Square SDK blocked by script-src-elem/CSP before those callbacks. The test
+router aborted zero external requests; this was the unchanged native Staging policy.
+The actual paid checkout page is accessible, but its existing readiness message and
+disabled Place order button remain while the SDK is unavailable. Payment initialization
+and completion are NOT accepted by these nonpayment tests.
+
+No exception occurred on the hydrated Cart pages; native edits/removal and checkout
+navigation completed. Cookies was an object and the local Square handler a function
+at Cart readiness. Native events also showed the handler becoming defined between
+DOMContentLoaded and load, reinforcing why early global inspection is insufficient.
+
+The four older variants (isFormFields/getPaymentMethodData undefined, Square handler
+undefined, Cookies undefined) did NOT reproduce in this instrumented journey.
+Their original stacks were never captured and cannot be reconstructed from access
+logs. Their individual causes remain unproven; do not label all four CSP-caused or
+claim they were fixed. The repeatable CSP/payments errors are a separate, directly
+observed environment condition. No BVM defect was confirmed. Historical diagnostics
+remain documented for the separately authorized provider window; there is no observed
+Cart workflow blocker in the completed nonpayment acceptance.
+
+Focused results: 19 additional passing assertions; previous 47 passing checks reused.
+
+- Native quantity reduction persists; event return and refresh show the edited total.
+- Increasing that edited total submits one requested difference, with no replayed
+  additions or unexpected native item totals/lines.
+- Grouped veteran-row removal removes its actual two seats; event quantity becomes
+  zero and approved self allowance returns without an unnecessary guest.
+- Removing the final paid row clears all displayed totals and the stale cart notice.
+- First-responder totals restore correctly, existing assigned seats do not request
+  another guest, and an already assigned guest cannot be reused beyond allowance.
+- An unapproved synthetic customer has no veteran self allowance and cannot submit
+  an unapproved self admission.
+- Real paid and free-ticket checkout forms are reachable after legitimate changes;
+  no checkout destination interception or payment submission was used.
+- A diagnostic Cart load explicitly waits beyond document completion for hydration.
+
+Five assertions were retained before the grouped-row expectation stop, nine before
+the intermediate non-POST stop, and five in the final completed diagnostic. These
+are positive scoped results across preserved trials, not a claim every driver trial
+exited successfully. The 47 prior passes, original 37 eligibility regressions,
+qualified local quantity/status/mobile checks and unchanged policy/ownership/staff
+acceptance were reused. No broad suite or original 47-check rerun was performed.
+
+Preservation and cleanup: PASS.
+
+All 431 installed BVM files still match the exact approved tree, including all 425
+unrelated files and protected Staff Portal/Unified Staff Console source. All 49
+plugin inventories (BVM plus 48 companions) match before/after this continuation.
+Checkout Policies, Square, Ops, Express Bar and Rentals are unchanged. Observed
+settings, active plugins, wp-config.php, .htaccess and isolation guard are unchanged.
+Guard SHA-256: 1655cea97ade7184998602b478329896b3977429daba0af6f02bfb9acdea03b9.
+
+Cleanup removed synthetic users 468–470, event/plan/products 9096–9100 and 82 fixture
+claim-log rows. Verification found no fixture users, usermeta, customer lookup,
+Woo sessions, Ops presence, TEC events/occurrences or fixture ledger. Generated
+password material was removed and browser sessions closed. No fixture orders or
+attendees were created. Counts remain 442 orders, 974 order items, 932 attendees.
+No real customer/order was modified; no Square transaction, capture, refund,
+security exception, hosting change, Production write or PR merge occurred.
+
+Remaining release requirements
+
+This PASS is for the authorized nonpayment browser workflows. Historical exception
+limits and the unestablished lower-level 503 cause are retained explicitly. Square
+SDK/payment initialization, provider transactions/replay/callbacks/financial issuance,
+and physical-device/assistive-technology acceptance remain outstanding. They require
+the applicable separate authorization; this report does not authorize a guard change
+or Production promotion. The previously verified .1 rollback copy remains available
+as documented in the installation report; no rollback or new release artifact is needed.

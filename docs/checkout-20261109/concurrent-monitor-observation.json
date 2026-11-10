@@ -1,0 +1,10 @@
+{
+  "recorded_at_utc": "2026-11-09T23:22:16.917291+00:00",
+  "component": "Earlier Issue #119 worktree",
+  "observation": "Concurrent existing transaction-monitor observation updates after the earlier unchanged-work check; this recovery did not write those paths.",
+  "added_observation_files": 3,
+  "updated_monitor_observation_files": 2,
+  "preexisting_main_project_and_frozen_mirror_bytes_unchanged": true,
+  "plugin_source_and_branches_unchanged": true,
+  "action": "Leave unrelated monitoring files untouched; retain original preflight archive and qualify preservation statements by verification time."
+}

@@ -1,0 +1,22 @@
+{
+  "installed_version": "1.3.19-checkout.20261109.2",
+  "zip_sha256": "1979232d04c3a024deaf6925f340dd6e89d64f7a5ed580bf67101887b5117df7",
+  "installed_tree_sha256": "f0ad3fdde68fb066fd4771ec402e6fcc94ea038aabb0e5373586ba17dc9c66b9",
+  "installed_bvm_files_verified": 431,
+  "all_plugins_unchanged": 49,
+  "companion_plugins_unchanged": 48,
+  "protected_staff_portal_and_console_preserved": true,
+  "observed_settings_unchanged": true,
+  "security_controls_unchanged": {
+    "wp-config.php": "6d92616aea29b6d83a34d526c9c38f03874d63ef0c9b7a4c5adad393b32d14c0",
+    ".htaccess": "8a871006bc1cd4c7452748a4bb7533544f6e54b31b5f61cd22e99477a3b25d65",
+    "guard": "1655cea97ade7184998602b478329896b3977429daba0af6f02bfb9acdea03b9"
+  },
+  "native_counts_unchanged": {
+    "native_order_count": 442,
+    "native_order_item_count": 974,
+    "native_attendee_count": 932
+  },
+  "fixture_cleanup_verified": true,
+  "rollback_required": false
+}
