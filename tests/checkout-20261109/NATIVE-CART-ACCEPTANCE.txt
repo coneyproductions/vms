@@ -1,0 +1,28 @@
+Native Cart-block acceptance harness notes — Issue 124
+
+native-cart-block-ready.cjs exports the exact readiness predicate exercised in the
+retained Staging trials, plus the hydrated product-name row selector. Its wrapper
+was syntax-checked; no runtime plugin code or release artifact changed.
+
+Call waitForNativeCart(page, expectedProductTotals) after normal native navigation
+and, for mutations, after the actual Store API response. Document load/DOMContentLoaded
+and generic tr selectors are insufficient. Observe native expected store totals,
+real editable controls and no placeholders/busy indicators. Confirm persistence
+with a new event-page request. Never dispatch test data into the store.
+
+Remove applies to a complete native row key and its quantity/assignees. Derive the
+expected remaining totals from actual grouped row data; do not assume every row is
+one ticket. Changing event totals must submit only the difference above current cart.
+
+Native login diagnostics retain actual POST status, redirects, live form validity,
+submit/invalid events and cookie metadata without values. A URL-only assertion does
+not classify authentication failure: the historical POST was 503. Preserve the page
+before asserting, including failures inside login. Do not inject cookies or bypass
+captcha/authentication. One intermediate no-POST trial has an unproven client cause;
+both native account types passed in the final instrumented run.
+
+The complete synthetic-only native drivers, resource/exception traces, fixture tools
+and cleanup evidence are retained in the private archive identified by the public
+receipt. No passwords, raw browser DOM, cart/auth tokens, or customer data are copied
+to Git. The 47 earlier passes are reused; only remaining lifecycle/diagnostic checks
+were added. See STAGING-BROWSER-ACCEPTANCE.txt for trial limits and payment restrictions.

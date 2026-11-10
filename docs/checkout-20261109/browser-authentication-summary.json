@@ -1,0 +1,31 @@
+{
+  "historical_post": {
+    "at": "09/Nov/2026:17:10:21 -0700",
+    "method": "POST",
+    "path": "/wp-login.php",
+    "query_keys": [],
+    "status": 503
+  },
+  "fresh_native_authentication": [
+    {
+      "synthetic_role": "unapproved",
+      "post_status": 302,
+      "redirect": "https://staging.serenaderange.com/wp-admin/profile.php",
+      "final_url": "https://staging.serenaderange.com/my-account/",
+      "login_error": null,
+      "native_logged_in_cookie_present": true,
+      "logged_in_cookie_secure_http_only": true
+    },
+    {
+      "synthetic_role": "approved",
+      "post_status": 302,
+      "redirect": "https://staging.serenaderange.com/wp-admin/profile.php",
+      "final_url": "https://staging.serenaderange.com/my-account/",
+      "login_error": null,
+      "native_logged_in_cookie_present": true,
+      "logged_in_cookie_secure_http_only": true
+    }
+  ],
+  "cache_condition": "private, no-store; WP_CACHE false; no cached credential result observed",
+  "intermediate_no_post_attempt": "No POST was emitted. That attempt lacked live form validity capture; its exact client-side cause remains unproven. Final instrumented valid forms submitted successfully for both accounts."
+}

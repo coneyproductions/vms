@@ -1,0 +1,8 @@
+{
+  "predicate_sha256": "53101d8a78f549f6449174f2ad80c0da1dd5f98104bd14b3487ab3f15781e3ad",
+  "predicate_identical_to_tested_inline_function": true,
+  "tested_source": "tests/cart-lifecycle.cjs",
+  "published_helper": "tests/native-cart-block-ready.cjs",
+  "wrapper_validation": "Node syntax check; native predicate and row selector exercised in retained Staging trials",
+  "runtime_plugin_files_changed": 0
+}
