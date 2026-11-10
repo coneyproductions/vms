@@ -1,0 +1,9 @@
+{
+  "passes": 2,
+  "baseline": true,
+  "records": [
+    "chromium: .2 deterministically reproduces late native ready disabling Continue to checkout",
+    "webkit: .2 deterministically reproduces late native ready disabling Continue to checkout"
+  ],
+  "scope": "local synthetic cart; native TEC JS; Chromium and WebKit; no WP/gateway/security writes"
+}

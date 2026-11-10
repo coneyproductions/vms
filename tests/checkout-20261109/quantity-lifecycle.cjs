@@ -51,7 +51,7 @@ const row=(pid,initial=0)=>`<div class="tribe-tickets__tickets-item tribe-ticket
   }
   async function qty(pid,n){await page.locator('#q'+pid).fill(String(n));await page.locator('#q'+pid).dispatchEvent('change');await page.waitForTimeout(100);}
   async function context(){return page.evaluate(pid=>window.BVMGR_TICKETING_FRONT_BUNDLE.state.ticketClaimsByProduct[pid]?.context,admission);}
-  async function submit(){await page.locator('#tribe-tickets__tickets-submit').click();await page.waitForTimeout(220);}
+  async function submit(){const action=page.locator('#vms-ticket-cart-continue:visible, #tribe-tickets__tickets-submit:visible').first();if(await action.isEnabled())await action.click();await page.waitForTimeout(220);}
   const calls=()=>atomicCalls;
   await visit();return{page,requests,errors,cart,visit,qty,context,submit,calls,admission};
  }

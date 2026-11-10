@@ -1,0 +1,19 @@
+{
+  "candidate_assertions": {
+    "Chromium_and_WebKit_device_lifecycle": 158,
+    "existing_quantity_and_duplicate_admission_regression": 71,
+    "read_only_Woo_cart_summary": 7
+  },
+  "candidate_total": 236,
+  "baseline_reproduction_assertions": 2,
+  "runtime_tree_tested": "52944323f26f0cdf965815107831b7ebce79c75730ed9481621751a30d4ea5c3",
+  "physical_Safari_acceptance": false,
+  "WordPress_gateway_writes": false,
+  "remote_environment_access": false,
+  "evidence": {
+    "device-results.json": "6be3ebb8e91eb244a0b1c4fd3908b6dce23ae6b0a0602f1a2613155da3a2c307",
+    "baseline-device-results.json": "e90430eca5d965ae2ab2d674f25699c9f8cd5c5f4b516c113ecc8487dd892329",
+    "quantity-results.txt": "757f258f6521548850c765c8d65ee2693c9dfe74a06837140b6ac794121e6651",
+    "cart-summary-results.txt": "503e2ffa82bd817a8147c815e02453764c51910b9c28d8598ee3fbf27d926756"
+  }
+}
