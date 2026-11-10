@@ -1,0 +1,25 @@
+{
+  "version": "1.3.19-checkout.20261109.3",
+  "source_commit": "13ccd54dfa1e1a62b91a3c0ee2a68edb399cecb2",
+  "baseline_source_checkpoint": "1f5fa9880b23ce035092bffac0a6c4151a765b44",
+  "baseline_tree_sha256": "f0ad3fdde68fb066fd4771ec402e6fcc94ea038aabb0e5373586ba17dc9c66b9",
+  "tree_sha256": "52944323f26f0cdf965815107831b7ebce79c75730ed9481621751a30d4ea5c3",
+  "zip_sha256": "f856ae22e70f1bbe9aba0918b7847e7996f1a41ff93d22e32cb9dc82ba048c7e",
+  "changed_runtime_files": [
+    "assets/css/vms-ticketing-front.css",
+    "assets/vms-ticketing-front.js",
+    "backstage-venue-manager.php",
+    "includes/core/registry/constants.php",
+    "includes/integrations/ticketing-rules-v2.php",
+    "readme.txt",
+    "vms-build.txt"
+  ],
+  "runtime_files": 431,
+  "unrelated_runtime_files_preserved": 424,
+  "deployment_authorized": false,
+  "zip_filename": "backstage-venue-manager-1.3.19-checkout.20261109.3.zip",
+  "manifest_filename": "backstage-venue-manager-1.3.19-checkout.20261109.3-manifest.json",
+  "github_publication_authorized": false,
+  "issue": 124,
+  "parent_draft_pr": 127
+}
