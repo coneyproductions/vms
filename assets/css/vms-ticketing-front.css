@@ -3496,13 +3496,13 @@ a.vms-entitlements-add.vms-ent-link-hidden{
     padding: 14px !important;
   }
 
-  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui-progressive .vms-claim-seat-input-wrap {
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-input-wrap {
     grid-template-columns: 1fr !important;
     align-items: stretch !important;
   }
 
-  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui-progressive .vms-claim-seat-input,
-  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui-progressive .vms-claim-seat-validate {
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-input,
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-validate {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -4619,3 +4619,83 @@ body.bvmgr-post-cart-offer-open{overflow:hidden}.bvmgr-post-cart-offer{position:
 :is(.single-tribe_events,.tribe-events-single) .tribe-tickets__tickets-buy:disabled{border-color:#5f7890!important;background:#5f7890!important;color:#fff!important;-webkit-text-fill-color:#fff!important;cursor:not-allowed!important;opacity:.68!important}
 
 .vms-ticket-progressive-content .bvmgr-amenities>.bvmgr-enhance-night__header{display:none}
+
+/* Issue #124: cart navigation is separate from TEC's purchase submit control. */
+.vms-ticket-cart-continue {
+  display: flex !important;
+  pointer-events: auto !important;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: 14px 20px;
+  border-radius: 14px;
+  background: #1967a2;
+  color: #fff !important;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  text-decoration: none !important;
+}
+.vms-ticket-cart-continue[hidden],
+.vms-ticket-ui #vms-ticketing-action-stack > #tribe-tickets__tickets-submit[data-vms-cart-navigation-hidden="1"],
+.vms-ticket-ui #vms-ticketing-action-stack > [data-vms-cart-navigation-hidden="1"] {
+  display: none !important;
+}
+.vms-ticket-cart-continue[aria-disabled="true"] {
+  opacity: .55;
+  cursor: wait;
+}
+.vms-ticket-cart-continue:focus-visible,
+.vms-ticket-edit-cart:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 3px;
+}
+.vms-ticket-edit-cart {
+  display: inline-block;
+  margin-top: 8px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+.vms-ticketing-cart-details {
+  border-bottom: 1px solid #d7dee8;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+}
+.vms-ticketing-cart-details p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.vms-ticket-ui .vms-claim-seat-panel,
+.vms-ticket-ui .vms-claim-seat-row,
+.vms-ticket-ui .vms-claim-seat-input-wrap,
+.vms-ticket-ui .vms-claim-seat-input,
+.vms-ticket-ui .vms-claim-seat-status {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.vms-ticket-ui .vms-claim-seat-label,
+.vms-ticket-ui .vms-claim-seat-status,
+.vms-ticket-ui .vms-claim-seat-help,
+.vms-ticketing-cart-details,
+.vms-ticket-total-note {
+  overflow-wrap: anywhere;
+}
+.vms-ticketing-cart-details .vms-ticketing-subtotal__line,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-summary .vms-ticketing-cart-details .vms-ticketing-subtotal__line {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px 12px;
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.vms-ticketing-cart-details [data-vms-existing-ticket-value],
+.vms-ticketing-cart-details [data-vms-selected-ticket-value],
+.vms-ticketing-cart-details [data-vms-current-cart-total] {
+  white-space: nowrap;
+}

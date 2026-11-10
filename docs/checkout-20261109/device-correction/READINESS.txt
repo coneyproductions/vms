@@ -1,0 +1,164 @@
+Issue #124 — targeted physical-device checkout corrections
+Recommendation: READY FOR STAGING APPROVAL (local qualification only).
+Production remains HOLD. Installation, security exceptions and transactions are
+not authorized by this report. No additional owner-operated device test is requested.
+
+Baseline and source control
+
+All 431 baseline runtime files matched the approved installed .2 manifest before
+editing; no Staging connection was made in this local-only task. Development starts
+from local/published .2 documentation tip a381f5a55606d450c6859813dd23643ca3110247,
+whose runtime matches source checkpoint 1f5fa9880b23ce035092bffac0a6c4151a765b44.
+Baseline tree: f0ad3fdde68fb066fd4771ec402e6fcc94ea038aabb0e5373586ba17dc9c66b9.
+Implementation commit: 13ccd54dfa1e1a62b91a3c0ee2a68edb399cecb2.
+Local branch: codex/issue124-device-checkout-local. No upstream/push or new remote PR.
+This is the requested local checkpoint associated with Issue #124 and parent draft
+PR #127. Published .2 provenance, PRs #125/#126/#127 and their branches are unchanged.
+The follow-up documentation commit records the release identity; it changes no runtime.
+A recoverable incremental Git bundle is retained outside the checkout after closeout.
+LOCAL-SCOPE.txt explains the inherited isolated-clone preflight path/stash warnings.
+
+Findings and corrections
+
+1. Safari footer action race: CONCLUSIVELY reproduced as a controller/lifecycle
+   mechanism, then eliminated in deterministic local Chromium and WebKit tests.
+   Native Event Tickets ready/bindEvents always disables its purchase submit button,
+   including its pageshow/history path. .2 also used that button for continuing an
+   existing cart and did not consistently reconcile a submit-only disabled write.
+   The new guarded cart-navigation link is visually the footer action but does not
+   share TEC's purchase selectors. The native submit remains for actual additions.
+   Native afterSetup reconciles readiness; loading, pending cart context, active
+   submissions, invalid native quantities, failed extensions and checkout blockers
+   remain guarded. Asynchronous guest results refresh readiness. Disabled navigation
+   has no href or keyboard tab stop. The former unconditional pageshow enable is
+   removed. A navigation/submission lock prevents repeated activation. Recognized
+   cart changes invalidate the snapshot and reload through GET; a stale queued
+   delta is rejected before transport. No arbitrary disabled attribute is globally
+   force-enabled, and native/server validation is not bypassed.
+   This resolves the reproduced race; physical iOS Safari with installed theme and
+   real hosting has not been newly accepted. Local WebKit is not a device certificate.
+
+2. Guest-email layout: the actual V2 surface lacked the progressive class required
+   by its responsive selectors. Those selectors now apply to V2 at narrow widths.
+   Input/button stack vertically with bounded widths; long labels/status text wrap.
+   Desktop/tablet two-column layouts are preserved at their existing breakpoint.
+   The new navigation action explicitly retains pointer access inside the existing
+   sticky footer, whose parent intentionally has pointer-events disabled.
+
+3. Amounts: existing event-ticket value, additional items and selected event-ticket
+   estimate are separate. Increasing one $1 GA ticket to two shows existing $1,
+   additional $1 and selected ticket estimate $2. A separate CURRENT cart total
+   comes directly from WooCommerce's existing formatted total and excludes unadded
+   selections. Copy identifies estimates and directs final discounts/tax/payable
+   totals to cart/checkout. The PHP addition reads the total only; it does not
+   recalculate prices/tax, save a cart/order, change payment logic or charge anything.
+   Missing Woo/cart context says See cart instead of inventing a payable total.
+
+4. Quantities: restored totals still have the intentional existing-cart minimum.
+   Each total explanation now has a direct Reduce or remove tickets in cart link.
+   Existing self/guest assignments are preserved. No negative delta or restored-total
+   replay is introduced; an increase submits only the positive requested difference.
+
+Exact runtime changes (7 files, no runtime additions/deletions)
+
+- assets/vms-ticketing-front.js — guarded navigation, lifecycle/readiness handling,
+  cart-editing links and display-only amount context.
+- assets/css/vms-ticketing-front.css — responsive guest layout/wrapping, scoped
+  navigation styling and separate summary label/value columns.
+- includes/integrations/ticketing-rules-v2.php — new read-only total snapshot helper
+  and one event-page localized configuration key; all other bytes are unchanged.
+- backstage-venue-manager.php
+- includes/core/registry/constants.php
+- readme.txt
+- vms-build.txt — these four files advance only .2 to .3 version markers.
+
+All 424 unrelated runtime files match .2 byte for byte, including protected Staff
+Portal and Unified Staff Console source. The formerly untouched PHP rules file now
+has the specifically required display-only addition; all eligibility, assignment,
+atomic addition, pricing, permission and payment functions remain identical.
+Checkout Policies, Square, Ops, Express Bar, Rentals and companion source is untouched.
+Repo-only additions/edits: device-checkout.cjs, cart-summary.php, visible-action helper
+in quantity-lifecycle.cjs, tests README, build_device_candidate.py, scoped evidence/
+release documentation and the required remediation-ledger entry. None is packaged.
+
+Focused qualification
+
+236 final-candidate assertions PASS on the frozen runtime tree below:
+- 158 local Chromium/WebKit assertions: delayed/repeated native ready, loading and
+  native loader locks, invalid native constraints/extensions, rejected/approved
+  guests, stale cart invalidation, keyboard navigation, active/repeated submissions,
+  delta-only additions, return/reload/removal snapshots, Veteran and first-responder
+  restrictions, unpaid-order routing and narrow/large-text guest and summary layout.
+- 71 existing local quantity/admission assertions. Only the helper choosing the
+  visible action was adapted for the separate link and stricter disabled states;
+  all 71 assertions remain. Native TEC quantity JS is used with intercepted transport.
+- 7 PHP assertions: no cart context, formatted/zero/locale amounts and read-only
+  total access. PHP/JS syntax and diff checks pass.
+The unchanged .2 baseline separately reproduces the disabled action in BOTH engines
+(two assertions). Local views at 320/393/768/1100px and WebKit screenshots were
+reviewed. All network requests were intercepted at synthetic .test origins; no
+WordPress/database/payment-provider operation or real order was invoked.
+
+Original 28 browser + 9 PHP eligibility checks (37) are reused for byte-identical
+eligibility/assignment logic, not counted as new assertions. evidence-reuse.json
+pins relevant function hashes and the prior result files. Existing policy/ownership,
+status and staff evidence applies to unchanged code. No broad suite was repeated.
+The 158/71/7 final runs all used the exact runtime manifest packaged below.
+
+Immutable candidate
+
+Backstage Venue Manager 1.3.19-checkout.20261109.3
+ZIP: backstage-venue-manager-1.3.19-checkout.20261109.3.zip
+ZIP SHA-256: f856ae22e70f1bbe9aba0918b7847e7996f1a41ff93d22e32cb9dc82ba048c7e
+Source-tree SHA-256: 52944323f26f0cdf965815107831b7ebce79c75730ed9481621751a30d4ea5c3
+Source: implementation commit 13ccd54dfa1e1a62b91a3c0ee2a68edb399cecb2.
+431 manifest-whitelisted ordinary files; all ZIP members and CRC verified.
+An independent export of the committed blobs reproduces the ZIP byte for byte.
+ZIP, manifest and index are retained read-only in investigation/issue124-device-correction/artifacts.
+No old package was overwritten; no obsolete/unmanifested runtime files are included.
+The source checkpoint is local only; publication needs authorization under the manual
+release protocol before any process step that requires remote branch/PR tracking.
+
+Staging plan and rollback — PROPOSAL ONLY
+
+1. Obtain explicit .3 Staging installation approval and any required checkpoint
+   publication approval. Recheck fresh Staging .2 baseline and companion/security
+   manifests against the recorded baseline; STOP if baseline/scope differs.
+2. Verify the exact .3 ZIP/tree hashes above. Preserve a verified current .2 file
+   backup and normal recoverable database/configuration backup under the existing
+   manual release procedure. Keep original isolation and Square settings unchanged.
+3. Install only this immutable BVM .3 package by that procedure; no installed-code
+   patching. Verify all 431 installed files, version, served JS/CSS and runtime use;
+   confirm 424 non-target files and all companion/security manifests unchanged.
+4. Under separate acceptance authorization, run the focused hydrated native Cart/
+   event return and footer-action path, including the installed-theme Safari
+   lifecycle and displayed Woo cart totals. Reuse unaffected prior passing checks.
+   No Square transaction or security exception is included in this plan.
+5. On install/runtime/acceptance failure stop the path and retain evidence. If the
+   candidate was installed, restore the verified .2 plugin backup/package; verify
+   source tree f0ad3fdde68fb066fd4771ec402e6fcc94ea038aabb0e5373586ba17dc9c66b9,
+   BVM .2 runtime/served assets and unchanged companions/security. Restore no
+   unrelated database/customer data. There is no schema/data migration to reverse.
+
+Retained rollback ZIP: backstage-venue-manager-1.3.19-checkout.20261109.2.zip
+SHA-256: 1979232d04c3a024deaf6925f340dd6e89d64f7a5ed580bf67101887b5117df7.
+Location: investigation/quantity-correction/artifacts (verified unchanged locally).
+Checkout Policies .1 ZIP also remains unchanged at SHA-256
+ac8e144f00cfe3954bee19d6687f0844bf5ca7e4a688c9b1d07de2635c5d4094.
+
+Outstanding limits and cleanup
+
+Staging installation/adoption, installed-theme/physical Safari acceptance and the
+previously planned genuine Square sandbox transactions remain outstanding. No
+server-side native Woo flow, Square capture/refund, ticket issuance or duplicate
+provider charge was newly certified by these synthetic tests. Their financial,
+ownership and policy controls were preserved, not relaxed.
+All local browser contexts closed. Local test HTML/carts existed only in memory;
+no customer/order fixtures were created or modified remotely. Previous private
+Staging fixtures/handoff are untouched. Reports, screenshots, reproducibility
+export and immutable source/package evidence are intentionally retained.
+No Staging/Production access, installation, security change, Square request, real
+customer/order modification, push or PR merge occurred. The previously approved
+sandbox exception window remains unused by this correction and must not be
+activated as part of it. Production remains HOLD pending final acceptance and
+separate explicit authorization.

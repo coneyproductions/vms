@@ -6620,6 +6620,15 @@ function bvmgr_ticketing_v2_event_purchase_status(int $event_id, int $user_id, a
     return $result;
 }
 
+/** Display-only snapshot of WooCommerce's current total; never recalculate or pay. */
+function bvmgr_ticketing_v2_current_cart_summary(): array
+{
+    if (!function_exists('WC') || !WC() || !WC()->cart) {
+        return array();
+    }
+    return array('total' => html_entity_decode(wp_strip_all_tags((string) WC()->cart->get_total()), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+}
+
 function bvmgr_ticketing_v2_enqueue_front_bundle(): void
 {
     if (is_admin()) return;
@@ -7280,6 +7289,7 @@ function bvmgr_ticketing_v2_enqueue_front_bundle(): void
         'eventIsRsvp' => !empty($event_is_rsvp) ? 1 : 0,
         'ticketAccessMap' => $ticket_access_map,
         'cartTicketQuantities' => $cart_ticket_quantities,
+        'cartSummary' => $is_event ? bvmgr_ticketing_v2_current_cart_summary() : array(),
         'eventPurchaseStatus' => $event_purchase_status,
         'ticketRemainingMap' => $ticket_remaining_map,
         'ticketPriceMap' => $ticket_price_map,

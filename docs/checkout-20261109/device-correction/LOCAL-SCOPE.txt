@@ -1,0 +1,32 @@
+Issue #124 targeted physical-device correction — local development only.
+
+Authorization: user's explicit targeted checkout corrections request permits local
+source changes, focused tests, commits and a fresh immutable BVM candidate. It does
+not permit push, deployment, guard changes, transactions or PR merge. The checkpoint
+is a new LOCAL branch codex/issue124-device-checkout-local from a381f5a. Published
+.2 source/PR #127 and all historical artifacts remain unchanged.
+
+Preflight: initial status and diff check were clean; all 431 runtime files matched
+approved .2 manifest f0ad3fdde68fb066fd4771ec402e6fcc94ea038aabb0e5373586ba17dc9c66b9.
+The inherited WordPress.org preflight assumes a different packages/... mirror path,
+a sibling live install and a protected stash in that original repository. This is
+instead the already-authorized isolated recovery clone described in BASELINE.txt
+and SOURCE-CONTROL-REPORT.txt. Its path/stash warnings are expected and do not mean
+source drift. A second captured run also sees this task's own new documentation
+folder. No stash or sibling tree was manufactured, edited or synchronized. Keeping
+regular Local plugins and the frozen public-review mirror untouched follows the
+explicit verified-baseline/preservation scope; generic mirror synchronization is
+not being applied to a different installed plugin baseline.
+
+No Staging or Production connection was made. All browser traffic was intercepted
+at a synthetic .test origin. Read-only native TEC/WordPress assets were used in
+synthetic HTML. WebKit is a local browser engine, not a physical iPhone certification.
+The single sandbox/security window remains unused by this work.
+
+Test adaptation: the existing quantity-lifecycle helper now activates the visible
+cart-navigation link or purchase control, and respects a disabled control. All 71
+assertions remain. Original harness history is preserved in Git. New device tests
+cover the stricter guest-readiness states and native controller race directly.
+The CSS fixture uses universal border-box sizing; without a theme sizing reset,
+the simplified native ticket rows introduced 5px of desktop fixture overflow,
+independent of the long email. No product CSS was changed for that fixture issue.

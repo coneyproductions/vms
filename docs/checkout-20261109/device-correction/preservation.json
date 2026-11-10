@@ -1,0 +1,16 @@
+{
+  "changed_runtime_files": [
+    "assets/css/vms-ticketing-front.css",
+    "assets/vms-ticketing-front.js",
+    "backstage-venue-manager.php",
+    "includes/core/registry/constants.php",
+    "includes/integrations/ticketing-rules-v2.php",
+    "readme.txt",
+    "vms-build.txt"
+  ],
+  "unchanged_runtime_files": 424,
+  "server_guardrails_unchanged_except_display_only_helper_and_enqueue_key": true,
+  "staff_portal_console_source_unchanged": true,
+  "policy_square_ops_companions_no_changes": true,
+  "original_37_eligibility_regressions_reused": "server eligibility/cart/admission/ownership/payment functions byte-identical; no rerun claimed"
+}

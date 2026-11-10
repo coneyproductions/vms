@@ -1,0 +1,27 @@
+WARN: mirror repository root does not end with /packages/vms-github-reconcile: /Users/treyconey/.codex-worktrees/checkout-source-recovery-20261109/repository
+WARN: tree is missing: /Users/treyconey/.codex-worktrees/vms
+WARN: git status --short is not clean
+WARN: protected stash not found by message: WPORG-16D preserve unrelated sidebar+doc work
+Repository root: /Users/treyconey/.codex-worktrees/checkout-source-recovery-20261109/repository
+Current branch: codex/issue124-device-checkout-local
+HEAD: a381f5a55606d450c6859813dd23643ca3110247 Complete Issue 124 native cart browser acceptance
+Mirror tree: /Users/treyconey/.codex-worktrees/checkout-source-recovery-20261109/repository
+Live tree: /Users/treyconey/.codex-worktrees/vms
+
+git status --short
+?? docs/checkout-20261109/device-correction/
+
+git diff --check
+(clean)
+
+git remote -v
+origin	https://github.com/coneyproductions/vms.git (fetch)
+origin	https://github.com/coneyproductions/vms.git (push)
+
+git stash list
+(no stashes)
+
+protected stash match
+(missing)
+
+RESULT: WARN (4 issue(s))

@@ -2838,6 +2838,12 @@
       setAttributeIfChanged(input, 'aria-describedby', describedBy.join(' '));
       setAttributeIfChanged(input, 'aria-label', labelText);
       setText(query('p', note), String(inCart) + ' already in cart. ' + String(additionalTicketQty(state, input)) + ' additional selected. To remove cart tickets, use Review cart above.');
+      var editCart = query('.vms-ticket-edit-cart', note);
+      if (!editCart) {
+        editCart = createEl('a', 'vms-ticket-edit-cart', 'Reduce or remove tickets in cart');
+        editCart.href = cfg.cartUrl || normalizeUrl('/cart/');
+        note.appendChild(editCart);
+      }
     });
   }
 
@@ -3112,6 +3118,29 @@
     }
     state.actionStack = stack;
 
+    // Existing-cart navigation is a GET, not a ticket purchase submission. TEC
+    // owns its submit button and disables it again during ready/pageshow setup.
+    // Give navigation a separate, guarded control outside TEC's submit selectors.
+    var cartContinue = query('#vms-ticket-cart-continue', stack);
+    if (!cartContinue) {
+      cartContinue = createEl('a', 'vms-ticket-cart-continue');
+      cartContinue.id = 'vms-ticket-cart-continue';
+      cartContinue.setAttribute('role', 'link');
+      cartContinue.hidden = true;
+      stack.appendChild(cartContinue);
+      cartContinue.addEventListener('click', function (event) {
+        event.preventDefault();
+        var current = cartContinue.__vmsCartNavigationState;
+        if (!stateBelongsToCurrentDocument(current)) return;
+        refreshSubmitState(current);
+        if (!cartContinue.hidden && cartContinue.getAttribute('aria-disabled') === 'false') {
+          handleAtomicSubmit(current);
+        }
+      });
+    }
+    cartContinue.__vmsCartNavigationState = state;
+    state.cartContinue = cartContinue;
+
     var summaryStack = null;
     if (useV2Layout() && state.summarySection) {
       summaryStack = query('#vms-ticketing-summary-stack', state.summarySection);
@@ -3143,6 +3172,17 @@
     if (hasEventTicketsInCart()) {
       setText(query('.vms-ticketing-subtotal__line-label', subtotal), 'Additional tickets');
       setText(query('.vms-ticketing-subtotal__line--subtotal .vms-ticketing-subtotal__line-label', subtotal), 'Additional items subtotal');
+      var cartDetails = query('.vms-ticketing-cart-details', subtotal);
+      if (!cartDetails) {
+        cartDetails = createEl('div', 'vms-ticketing-cart-details');
+        cartDetails.innerHTML =
+          '<div class="vms-ticketing-subtotal__line"><span>Tickets already in cart (this event)</span><span data-vms-existing-ticket-value></span></div>' +
+          '<div class="vms-ticketing-subtotal__line"><strong>Selected tickets estimate (this event)</strong><strong data-vms-selected-ticket-value></strong></div>' +
+          '<div class="vms-ticketing-subtotal__line"><span>Current cart total — WooCommerce</span><span data-vms-current-cart-total></span></div>' +
+          '<p>Current cart total includes only items already added. Ticket estimates use the displayed prices. Review cart or checkout for discounts, tax and the final amount due.</p>';
+        subtotal.insertBefore(cartDetails, subtotal.firstChild);
+      }
+      setText(query('[data-vms-current-cart-total]', subtotal), (cfg.cartSummary || {}).total || 'See cart');
     }
     state.subtotalNode = subtotal;
     state.subtotalTicketNode = query('[data-vms-subtotal-ticket]', subtotal);
@@ -3531,6 +3571,9 @@
         && !!String(cfg.claimsValidateNonce || '').trim();
       setDisabled(rowState.verifyButton, !canVerify);
     }
+    // Email edits, pending checks and asynchronous results change readiness even
+    // when no native quantity control changes.
+    if (state && state.form) refreshSubmitState(state);
   }
 
   function renderTicketClaimActions(actionsEl, actions) {
@@ -4510,9 +4553,21 @@
     setText(state.subtotalTicketNode, formatMoney(ticketTotal));
     setText(state.subtotalAddonNode, formatMoney(addonTotal));
     setText(state.subtotalAllNode, formatMoney(ticketTotal + addonTotal));
+    var existingTicketTotal = Object.keys(mapObject(cfg.cartTicketQuantities)).reduce(function (sum, productId) {
+      return sum + cartTicketQty(state, toInt(productId, 0)) * getTicketUnitPrice(state, toInt(productId, 0), null);
+    }, 0);
+    setText(query('[data-vms-existing-ticket-value]', state.subtotalNode), formatMoney(existingTicketTotal));
+    setText(query('[data-vms-selected-ticket-value]', state.subtotalNode), formatMoney(existingTicketTotal + ticketTotal));
     if (state.subtotalSecondaryNode) {
       state.subtotalSecondaryNode.hidden = !(addonTotal > 0);
     }
+  }
+
+  function ticketPurchaseIsBusy(state) {
+    return !!(state.isSubmitting || state.isNavigating || state.cartSnapshotStale || state.cartContextPending
+      || state.form.getAttribute('aria-busy') === 'true'
+      || state.form.classList.contains('tribe-tickets__tickets-form--loading')
+      || query('.tribe-common-c-loader:not(.tribe-common-a11y-hidden):not([hidden])', state.form));
   }
 
   function refreshSubmitState(state) {
@@ -4523,13 +4578,46 @@
     var hasExtensions = extensionResult.quantity > 0;
     var hasTickets = ticketLines.length > 0 || hasNativeTicketSelection(state);
     var continueExistingCart = !hasTickets && !hasAddons && !hasExtensions && (hasEventTicketsInCart() || pendingEventPayment());
-    var shouldEnable = state.isSubmitting ? false : (hasTickets || hasAddons || hasExtensions || continueExistingCart);
+    var busy = ticketPurchaseIsBusy(state);
+    var validQuantities = queryAll(SELECTORS.nativeQty, state.form).every(function (input) {
+      return input.disabled || !input.validity || input.validity.valid;
+    });
+    var canContinue = continueExistingCart && !busy && validQuantities && extensionResult.ok && !configFlag(cfg.hasCheckoutBlockers);
+    if (state.cartContinue) {
+      state.cartContinue.hidden = !continueExistingCart;
+      if (canContinue) {
+        state.cartContinue.href = pendingEventPayment() ? pendingEventPayment().url : (cfg.checkoutUrl || normalizeUrl('/checkout/'));
+      } else {
+        state.cartContinue.removeAttribute('href');
+      }
+      setText(state.cartContinue, pendingEventPayment() ? 'Complete Payment' : 'Continue to checkout');
+      setAttributeIfChanged(state.cartContinue, 'aria-disabled', canContinue ? 'false' : 'true');
+      setAttributeIfChanged(state.cartContinue, 'tabindex', canContinue ? '0' : '-1');
+    }
+    var assignmentsReady = ticketLines.every(function (line) {
+      var model = (state.ticketClaimsByProduct || {})[String(line.product_id)];
+      if (!model || !model.context || !model.context.showPanel) return true;
+      return model.visibleSeats.every(function (seat) {
+        var row = model.rowStates[String(seat)];
+        return row && !row.isPending && isTicketClaimRowConfirmed(row, normalizeEmail(ticketClaimRowValue(row)));
+      });
+    });
+    var addonsReady = state.addons.every(function (addon) {
+      return !addon.qty || (addon.canAdd && addon.qty <= computeAddonLimit(state, addon));
+    });
+    var shouldEnable = !busy && validQuantities && assignmentsReady && addonsReady && extensionResult.ok
+      && !configFlag(cfg.hasCheckoutBlockers) && (hasTickets || hasAddons || hasExtensions);
 
     state.submitButtons.forEach(function (button) {
       if (!button) {
         return;
       }
       setDisabled(button, !shouldEnable || state.isSubmitting);
+      if (continueExistingCart) {
+        setAttributeIfChanged(button, 'data-vms-cart-navigation-hidden', '1');
+      } else {
+        button.removeAttribute('data-vms-cart-navigation-hidden');
+      }
       var defaultLabel = button.getAttribute('data-vms-label-default') || state.originalSubmitLabel || 'Get Tickets';
       var nextLabel = state.isSubmitting ? 'Adding…' : (continueExistingCart ? (pendingEventPayment() ? 'Complete Payment' : 'Continue to checkout') : (shouldEnable ? 'Add items to cart' : defaultLabel));
       if (button.tagName && button.tagName.toLowerCase() === 'input') {
@@ -4922,6 +5010,12 @@
       if (record.type === 'attributes' && record.oldValue === record.target.getAttribute(record.attributeName)) {
         return false;
       }
+      if (record.target === state.form && (record.attributeName === 'aria-busy' || record.attributeName === 'class')) {
+        return true;
+      }
+      if (record.target && record.target.matches && record.target.matches('.tribe-common-c-loader')) {
+        return true;
+      }
       if (touches(record.target, false)) {
         return true;
       }
@@ -5012,7 +5106,7 @@
         subtree: true,
         attributes: true,
         attributeOldValue: true,
-        attributeFilter: ['value', 'aria-disabled', 'disabled', 'class']
+        attributeFilter: ['value', 'aria-disabled', 'aria-busy', 'disabled', 'class']
       });
       state.ticketQtyObserver = observer;
     }
@@ -5586,11 +5680,15 @@
   }
 
   function handleAtomicSubmit(state) {
-    if (state.isSubmitting) {
+    if (ticketPurchaseIsBusy(state) || configFlag(cfg.hasCheckoutBlockers)) {
       return;
     }
 
     syncTicketCartTotals(state, true);
+    if (queryAll(SELECTORS.nativeQty, state.form).some(function (input) { return !input.disabled && input.validity && !input.validity.valid; })) {
+      setGlobalMessage(state, 'Check the ticket quantities before continuing.', 'error');
+      return;
+    }
     var ticketBuild = buildAtomicTicketLines(state, { requireComplete: true });
     var ticketLines = ticketBuild.ok ? ticketBuild.ticketLines : [];
     var addonLines = collectAddonLines(state);
@@ -5615,10 +5713,14 @@
 
     if (!ticketLines.length && !addonLines.length && extensionResult.quantity <= 0) {
       if (pendingEventPayment()) {
+        state.isNavigating = true;
+        refreshSubmitState(state);
         window.location.href = pendingEventPayment().url;
         return;
       }
       if (hasEventTicketsInCart()) {
+        state.isNavigating = true;
+        refreshSubmitState(state);
         window.location.href = cfg.checkoutUrl || normalizeUrl('/checkout/');
         return;
       }
@@ -5637,6 +5739,9 @@
     Promise.resolve()
       .then(function () { return fetchCartContextBeforeSubmit(state, addonLines); })
       .then(function () {
+        if (state.cartSnapshotStale) {
+          throw new Error('Your cart changed. Choose Review cart before adding more tickets.');
+        }
         refresh(state, { clampAddons: true });
         ticketBuild = buildAtomicTicketLines(state, { requireComplete: true });
         if (!ticketBuild.ok) {
@@ -5700,6 +5805,8 @@
             return payload;
           }
           setGlobalMessage(state, 'Added to cart. Redirecting…', 'success');
+          state.isNavigating = true;
+          refreshSubmitState(state);
           window.location.href = payload.data.cart_url || cfg.cartUrl || normalizeUrl('/cart/');
           return payload;
         });
@@ -5719,6 +5826,7 @@
       var bundle = window.BVMGR_TICKETING_FRONT_BUNDLE || {};
       if (stateBelongsToCurrentDocument(bundle.state)) {
         bundle.state.isSubmitting = false;
+        bundle.state.isNavigating = false;
         bundle.state.allowNativeSubmit = false;
         scheduleRefresh(bundle.state);
       }
@@ -5739,7 +5847,6 @@
         } else {
           button.textContent = label;
         }
-        setDisabled(button, false);
       });
     });
   }
@@ -5997,6 +6104,32 @@
   installPageShowReset();
   installDomObserver();
   startDiagPanel();
+
+  // Reconcile after native initialization, including TEC's Safari/history ready
+  // path. Do not watch and override arbitrary disabled writes: those may be real
+  // loading/validation locks. Navigation never shares TEC's purchase selector.
+  function bindNativeTicketLifecycle() {
+    if (!window.jQuery || bindNativeTicketLifecycle.bound) return;
+    bindNativeTicketLifecycle.bound = true;
+    window.jQuery(document).on('afterSetup.tribeTicketsBlock.bvmCartNavigation', function () {
+      var state = (window.BVMGR_TICKETING_FRONT_BUNDLE || {}).state;
+      if (stateBelongsToCurrentDocument(state)) scheduleRefresh(state);
+    });
+    window.jQuery(document).on('added_to_cart.bvmCartNavigation removed_from_cart.bvmCartNavigation updated_wc_div.bvmCartNavigation', invalidateEventCartSnapshot);
+  }
+  function invalidateEventCartSnapshot() {
+    var state = (window.BVMGR_TICKETING_FRONT_BUNDLE || {}).state;
+    if (!stateBelongsToCurrentDocument(state) || configFlag(cfg.isCart) || configFlag(cfg.isCheckout) || state.cartSnapshotStale) return;
+    state.cartSnapshotStale = true;
+    refreshSubmitState(state);
+    // Read a fresh server snapshot instead of editing assignment/count data from
+    // a partially hydrated cart or continuing with stale prices and allowances.
+    if (!state.isSubmitting && !state.isNavigating) window.location.reload();
+  }
+  document.addEventListener('wc-blocks_added_to_cart', invalidateEventCartSnapshot);
+  document.addEventListener('wc-blocks_removed_from_cart', invalidateEventCartSnapshot);
+  bindNativeTicketLifecycle();
+  document.addEventListener('DOMContentLoaded', bindNativeTicketLifecycle, { once: true });
 
   document.addEventListener('bvmgr:purchase-extension-change', function () {
     var bundle = window.BVMGR_TICKETING_FRONT_BUNDLE || {};
