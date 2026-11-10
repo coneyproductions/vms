@@ -1,0 +1,20 @@
+{
+    "status": "PASS",
+    "checks": 13,
+    "records": [
+        "Original Express Bar hooks still register",
+        "Ticket-only metadata remains untouched",
+        "Ticket-only admission is not intercepted",
+        "Invalid nonce cannot stamp bar metadata",
+        "Invalid Express Bar nonce remains rejected",
+        "Native Express Bar quantity remains two",
+        "Native event\/pickup attribution preserved",
+        "Valid native bar addition remains accepted",
+        "Mixed order keeps bar attribution",
+        "Bar fulfillment\/verification defaults retained",
+        "Mixed order bar line keeps pickup metadata",
+        "Bar metadata does not leak onto ticket line",
+        "Native cart still displays event\/pickup details"
+    ],
+    "scope": "Original native BVM Express Bar PHP; in-memory Woo fixtures, no order\/provider writes"
+}

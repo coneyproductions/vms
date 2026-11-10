@@ -2837,13 +2837,7 @@
       if (describedBy.indexOf(helpId) < 0) describedBy.push(helpId);
       setAttributeIfChanged(input, 'aria-describedby', describedBy.join(' '));
       setAttributeIfChanged(input, 'aria-label', labelText);
-      setText(query('p', note), String(inCart) + ' already in cart. ' + String(additionalTicketQty(state, input)) + ' additional selected. To remove cart tickets, use Review cart above.');
-      var editCart = query('.vms-ticket-edit-cart', note);
-      if (!editCart) {
-        editCart = createEl('a', 'vms-ticket-edit-cart', 'Reduce or remove tickets in cart');
-        editCart.href = cfg.cartUrl || normalizeUrl('/cart/');
-        note.appendChild(editCart);
-      }
+      setText(query('p', note), String(inCart) + ' in cart · ' + String(additionalTicketQty(state, input)) + ' additional selected.');
     });
   }
 
@@ -2889,12 +2883,10 @@
     });
     if (inCart) {
       var cartCount = Object.keys(mapObject(cfg.cartTicketQuantities)).reduce(function (sum, pid) { return sum + Math.max(0, toInt(cfg.cartTicketQuantities[pid], 0)); }, 0);
-      var actions = [{ label: 'Review cart', url: cfg.cartUrl || '/cart/' }];
-      if (!pending.length) actions.push({ label: 'Complete checkout', url: cfg.checkoutUrl || '/checkout/' });
-      var selectionHelp = state.form
-        ? 'Each Total tickets field includes the tickets already in your cart. Increase a total only to add more tickets. '
-        : 'Review your cart before selecting more tickets. ';
-      addStatus('You have ' + cartCount + ' ticket' + (cartCount === 1 ? '' : 's') + ' in your cart for this event. These cart items have not been purchased. ' + selectionHelp + 'To remove tickets, choose Review cart.', actions);
+      var actions = [];
+      if (!pending.length) actions.push({ label: 'Checkout', url: cfg.checkoutUrl || '/checkout/' });
+      actions.push({ label: 'Edit cart', url: cfg.cartUrl || '/cart/' });
+      addStatus(String(cartCount) + ' ticket' + (cartCount === 1 ? ' is' : 's are') + " already in your cart. They haven't been purchased yet.", actions);
     }
     if (issuedCount > 0) {
       addStatus('You have ' + issuedCount + ' issued ticket' + (issuedCount === 1 ? '' : 's') + ' for this event.', [
@@ -3121,13 +3113,16 @@
     // Existing-cart navigation is a GET, not a ticket purchase submission. TEC
     // owns its submit button and disables it again during ready/pageshow setup.
     // Give navigation a separate, guarded control outside TEC's submit selectors.
-    var cartContinue = query('#vms-ticket-cart-continue', stack);
+    var cartContinue = query('#vms-ticket-cart-continue', stack) || state.cartContinue;
     if (!cartContinue) {
       cartContinue = createEl('a', 'vms-ticket-cart-continue');
       cartContinue.id = 'vms-ticket-cart-continue';
       cartContinue.setAttribute('role', 'link');
       cartContinue.hidden = true;
       stack.appendChild(cartContinue);
+    }
+    if (!cartContinue.__vmsCartNavigationBound) {
+      cartContinue.__vmsCartNavigationBound = true;
       cartContinue.addEventListener('click', function (event) {
         event.preventDefault();
         var current = cartContinue.__vmsCartNavigationState;
@@ -3138,8 +3133,25 @@
         }
       });
     }
+    if (cartContinue.parentNode !== stack) stack.appendChild(cartContinue);
     cartContinue.__vmsCartNavigationState = state;
     state.cartContinue = cartContinue;
+    var actionFeedback = query('#vms-ticket-action-feedback', stack);
+    if (!actionFeedback) {
+      actionFeedback = createEl('p', 'vms-ticket-action-feedback');
+      actionFeedback.id = 'vms-ticket-action-feedback';
+      actionFeedback.setAttribute('role', 'status');
+      actionFeedback.setAttribute('aria-live', 'polite');
+      actionFeedback.setAttribute('aria-atomic', 'true');
+      stack.appendChild(actionFeedback);
+    }
+    state.actionFeedback = actionFeedback;
+    var editCart = query('.vms-ticket-edit-cart', stack);
+    if (!editCart && hasEventTicketsInCart()) {
+      editCart = createEl('a', 'vms-ticket-edit-cart', 'Edit cart to reduce or remove tickets');
+      editCart.href = cfg.cartUrl || normalizeUrl('/cart/');
+      stack.appendChild(editCart);
+    }
 
     var summaryStack = null;
     if (useV2Layout() && state.summarySection) {
@@ -3159,12 +3171,15 @@
       subtotal = createEl('div', 'vms-ticketing-subtotal');
       subtotal.id = 'vms-ticketing-subtotal';
       subtotal.innerHTML = '' +
+        '<div class="vms-ticketing-total"><strong data-vms-total-label></strong><strong data-vms-total-value></strong></div>' +
+        '<p class="vms-ticketing-total-note" data-vms-total-note></p>' +
+        '<details class="vms-ticketing-breakdown"><summary>Price details</summary>' +
         '<div class="vms-ticketing-subtotal__primary">' +
           '<div class="vms-ticketing-subtotal__line"><span class="vms-ticketing-subtotal__line-label">Tickets</span><span class="vms-ticketing-subtotal__line-value" data-vms-subtotal-ticket>$0.00</span></div>' +
           '<div class="vms-ticketing-subtotal__line"><span class="vms-ticketing-subtotal__line-label">Add-ons</span><span class="vms-ticketing-subtotal__line-value" data-vms-subtotal-addon>$0.00</span></div>' +
           '<div class="vms-ticketing-subtotal__line vms-ticketing-subtotal__line--subtotal"><span class="vms-ticketing-subtotal__line-label"><strong>Subtotal</strong></span><span class="vms-ticketing-subtotal__line-value" data-vms-subtotal-all><strong>$0.00</strong></span></div>' +
         '</div>' +
-        '<div class="vms-ticketing-subtotal__secondary" hidden><div class="vms-ticketing-subtotal__addons"><div class="vms-ticketing-subtotal__addons-title">Selected add-ons</div><div class="vms-ticketing-subtotal__addon-list" data-vms-addon-summary></div></div></div>';
+        '<div class="vms-ticketing-subtotal__secondary" hidden><div class="vms-ticketing-subtotal__addons"><div class="vms-ticketing-subtotal__addons-title">Selected add-ons</div><div class="vms-ticketing-subtotal__addon-list" data-vms-addon-summary></div></div></div></details>';
     }
     if (subtotal.parentNode !== subtotalHost) {
       subtotalHost.appendChild(subtotal);
@@ -3178,9 +3193,8 @@
         cartDetails.innerHTML =
           '<div class="vms-ticketing-subtotal__line"><span>Tickets already in cart (this event)</span><span data-vms-existing-ticket-value></span></div>' +
           '<div class="vms-ticketing-subtotal__line"><strong>Selected tickets estimate (this event)</strong><strong data-vms-selected-ticket-value></strong></div>' +
-          '<div class="vms-ticketing-subtotal__line"><span>Current cart total — WooCommerce</span><span data-vms-current-cart-total></span></div>' +
-          '<p>Current cart total includes only items already added. Ticket estimates use the displayed prices. Review cart or checkout for discounts, tax and the final amount due.</p>';
-        subtotal.insertBefore(cartDetails, subtotal.firstChild);
+          '<div class="vms-ticketing-subtotal__line"><span>Current cart total</span><span data-vms-current-cart-total></span></div>';
+        query('.vms-ticketing-breakdown', subtotal).insertBefore(cartDetails, query('.vms-ticketing-subtotal__primary', subtotal));
       }
       setText(query('[data-vms-current-cart-total]', subtotal), (cfg.cartSummary || {}).total || 'See cart');
     }
@@ -3566,10 +3580,13 @@
     if (rowState.verifyButton) {
       var canVerify = canEdit
         && !rowState.isPending
+        && !isTicketClaimRowConfirmed(rowState, normalizeEmail(ticketClaimRowValue(rowState)))
         && !(state && state.isSubmitting)
         && !!String(cfg.claimsValidateUrl || '').trim()
         && !!String(cfg.claimsValidateNonce || '').trim();
       setDisabled(rowState.verifyButton, !canVerify);
+      setText(rowState.verifyButton, rowState.isPending ? 'Checking…' : (isTicketClaimRowConfirmed(rowState, normalizeEmail(ticketClaimRowValue(rowState))) ? 'Guest added' : 'Add guest'));
+      setAttributeIfChanged(rowState.verifyButton, 'aria-busy', rowState.isPending ? 'true' : 'false');
     }
     // Email edits, pending checks and asynchronous results change readiness even
     // when no native quantity control changes.
@@ -3685,7 +3702,7 @@
       inputEl.spellcheck = false;
       inputEl.placeholder = 'name@example.com';
       inputEl.setAttribute('aria-label', 'Ticket ' + key + ' approved guest email');
-      var verifyButton = createEl('button', 'vms-claim-seat-validate', 'Add Registered Guest');
+      var verifyButton = createEl('button', 'vms-claim-seat-validate', 'Add guest');
       verifyButton.type = 'button';
       var statusEl = createEl('div', 'vms-claim-seat-status');
       statusEl.id = rowId + '-status';
@@ -3812,20 +3829,13 @@
       }
     } else if (mode === 'verified') {
       noteKind = 'benefit';
-      if (requiresAssignments) {
-        if (showPanel) {
-          noteText = 'Your account covers ' + String(claimAllowanceQty) + ' ticket' + (claimAllowanceQty === 1 ? '' : 's') + ' for ' + ticketName + '. Enter one approved guest email for each additional ticket below.';
-        } else {
-          noteText = 'Your account covers ' + String(claimAllowanceQty) + ' ticket' + (claimAllowanceQty === 1 ? '' : 's') + ' for ' + ticketName + '. Increase quantity to add additional approved guests, then enter their approved guest emails below.';
-        }
-      } else {
-        noteText = 'Your account covers ' + String(claimAllowanceQty) + ' ticket' + (claimAllowanceQty === 1 ? '' : 's') + ' for ' + ticketName + '.';
-      }
       var assignedCartQty = Math.max(0, toInt(access.current_user_assigned_cart_qty, 0));
       if (assignedCartQty > 0) {
-        noteText = String(assignedCartQty) + ' ' + ticketName + ' ticket' + (assignedCartQty === 1 ? ' is' : 's are') + ' already assigned to your account in your cart. ' +
-          (selectedQty > 0 ? noteText : 'You can continue to checkout without adding a guest email.');
-        actions.push({ label: 'Review cart', url: cfg.cartUrl || '/cart/' });
+        noteText = 'Your ' + ticketName + ' ticket' + (assignedCartQty === 1 ? ' is' : 's are') + ' already in your cart.';
+      } else if (claimAllowanceQty > 0) {
+        noteText = 'Your approval covers ' + String(claimAllowanceQty) + ' ' + ticketName + ' ticket' + (claimAllowanceQty === 1 ? '.' : 's.');
+      } else {
+        noteText = 'Your approved allowance is already in use.';
       }
       if (cfg.myBenefitsUrl) {
         actions.push({ label: 'My Benefits', url: cfg.myBenefitsUrl });
@@ -3851,6 +3861,8 @@
         panelHelp = 'Enter their registered email below only if they already have an approved ' + ticketName + ' account.';
       }
     }
+
+    if (showPanel) panelHelp = 'Adding a ticket for another approved ' + ticketName.replace(/ Admission$/, '') + '? Enter their registered email address. You do not need to enter your own email.';
 
     var showHelp = selectedQty > 0 && requiresAssignments;
     var helpTitle = 'Need help ordering ' + ticketName + ' tickets?';
@@ -4165,10 +4177,11 @@
       ? Math.max(0, toInt(ticketModel.context.selfEligibleQty, 0))
       : 0;
     var buyerEmail = normalizeEmail(cfg.currentUserEmail || '');
-    if (buyerReservedQty > 0 && buyerEmail && emailKey === buyerEmail) {
+    var buyerInCart = ticketModel.context && ticketModel.context.access ? toInt(ticketModel.context.access.current_user_assigned_cart_qty, 0) : 0;
+    if ((buyerReservedQty > 0 || buyerInCart > 0) && buyerEmail && emailKey === buyerEmail) {
       return {
         ok: false,
-        message: 'Ticket ' + String(rowState.seat) + ': use a different approved guest email for additional tickets.',
+        message: 'Your account is already included. Enter the registered email of the additional approved guest.',
         email: email,
         emailKey: emailKey
       };
@@ -4239,7 +4252,7 @@
       } else if (rowState.statusKind === 'invalid' && rowState.statusText) {
         verificationMessage = rowState.statusText;
       } else {
-        verificationMessage = 'Ticket ' + String(rowState.seat) + ': click Add Registered Guest after entering the approved guest email.';
+        verificationMessage = 'Ticket ' + String(rowState.seat) + ': choose Add guest after entering their registered email.';
       }
 
       if (opts.requireComplete !== false) {
@@ -4328,6 +4341,8 @@
       return;
     }
 
+    if (rowState.isPending || state.isSubmitting || isTicketClaimRowConfirmed(rowState, normalizeEmail(ticketClaimRowValue(rowState)))) return;
+
     var access = ticketModel.context && ticketModel.context.access ? ticketModel.context.access : getTicketAccessEntry(state, ticketModel.productId);
     if (!access) {
       setTicketClaimRowState(rowState, 'invalid', 'Ticket validation is temporarily unavailable.');
@@ -4345,7 +4360,7 @@
     var requestToken = toInt(rowState.requestToken, 0) + 1;
     rowState.requestToken = requestToken;
     rowState.isPending = true;
-    setTicketClaimRowState(rowState, 'pending', 'Checking approved guest email...');
+    setTicketClaimRowState(rowState, 'pending', 'Checking guest…');
     updateTicketClaimRowControls(state, rowState, !(ticketModel.context && ticketModel.context.canEditAssignments === false));
 
     var payload = new URLSearchParams();
@@ -4385,7 +4400,6 @@
       rowState.isPending = false;
       if (result && result.success && result.data && result.data.ok) {
         var confirmedEmail = String(result.data.assignee_email || local.email).trim();
-        var ticketLabel = String((result.data && result.data.ticket_label) || (ticketModel.context && ticketModel.context.ticketName) || '').trim();
         rowState.email = confirmedEmail;
         rowState.lastValidatedEmail = confirmedEmail;
         if (rowState.inputEl && normalizeEmail(rowState.inputEl.value) !== normalizeEmail(confirmedEmail)) {
@@ -4394,14 +4408,14 @@
         setTicketClaimRowState(
           rowState,
           'valid',
-          'Added: ' + confirmedEmail + (ticketLabel ? ' - ' + ticketLabel + ' eligible' : '')
+          'Guest added. Change the email to replace this guest.'
         );
       } else {
         rowState.lastValidatedEmail = '';
         setTicketClaimRowState(
           rowState,
           'invalid',
-          String((result && result.data && result.data.message) || 'Could not check this guest email right now.')
+          'We could not confirm this guest. Check their registered email and remaining approved ticket allowance.'
         );
       }
       updateTicketClaimRowControls(state, rowState, !(ticketModel.context && ticketModel.context.canEditAssignments === false));
@@ -4558,6 +4572,14 @@
     }, 0);
     setText(query('[data-vms-existing-ticket-value]', state.subtotalNode), formatMoney(existingTicketTotal));
     setText(query('[data-vms-selected-ticket-value]', state.subtotalNode), formatMoney(existingTicketTotal + ticketTotal));
+    var additionalTotal = ticketTotal + addonTotal;
+    var hasAdditional = readTicketLines(state).length > 0 || collectAddonLines(state).length > 0 || extensionResult.quantity > 0;
+    var currentTotal = String((cfg.cartSummary || {}).total || '');
+    setText(query('[data-vms-total-label]', state.subtotalNode), hasAdditional ? 'Additional selections' : 'Current cart total');
+    setText(query('[data-vms-total-value]', state.subtotalNode), hasAdditional ? formatMoney(additionalTotal) : (currentTotal || 'See cart'));
+    setText(query('[data-vms-total-note]', state.subtotalNode), hasAdditional
+      ? (currentTotal ? 'Already in cart: ' + currentTotal + '. ' : '') + 'Add your selections to update the combined total. Tax and discounts are confirmed at checkout.'
+      : 'Final amount confirmed at checkout.');
     if (state.subtotalSecondaryNode) {
       state.subtotalSecondaryNode.hidden = !(addonTotal > 0);
     }
@@ -4571,6 +4593,7 @@
   }
 
   function refreshSubmitState(state) {
+    if (!state.cartContinue || !state.form.contains(state.cartContinue) || !state.actionFeedback || !state.form.contains(state.actionFeedback)) ensureActionStack(state);
     var addonLines = collectAddonLines(state);
     var ticketLines = readTicketLines(state);
     var extensionResult = collectPurchaseExtensions(state, { validate: false });
@@ -4584,13 +4607,21 @@
     });
     var canContinue = continueExistingCart && !busy && validQuantities && extensionResult.ok && !configFlag(cfg.hasCheckoutBlockers);
     if (state.cartContinue) {
-      state.cartContinue.hidden = !continueExistingCart;
+      if (state.cartContinue.hidden === continueExistingCart) state.cartContinue.hidden = !continueExistingCart;
+      if (continueExistingCart) {
+        // Only BVM owns this GET control. Busy/invalid states stay visible but
+        // disabled; restoring its presentation never enables a TEC submission.
+        ['display', 'visibility', 'opacity'].forEach(function (name) {
+          if (state.cartContinue.style.getPropertyValue(name)) state.cartContinue.style.removeProperty(name);
+        });
+      }
       if (canContinue) {
         state.cartContinue.href = pendingEventPayment() ? pendingEventPayment().url : (cfg.checkoutUrl || normalizeUrl('/checkout/'));
       } else {
         state.cartContinue.removeAttribute('href');
       }
-      setText(state.cartContinue, pendingEventPayment() ? 'Complete Payment' : 'Continue to checkout');
+      setText(state.cartContinue, busy ? (state.isNavigating ? 'Opening checkout…' : 'Updating cart…') : (pendingEventPayment() ? 'Complete Payment' : 'Continue to checkout'));
+      setAttributeIfChanged(state.cartContinue, 'aria-busy', busy ? 'true' : 'false');
       setAttributeIfChanged(state.cartContinue, 'aria-disabled', canContinue ? 'false' : 'true');
       setAttributeIfChanged(state.cartContinue, 'tabindex', canContinue ? '0' : '-1');
     }
@@ -4618,8 +4649,9 @@
       } else {
         button.removeAttribute('data-vms-cart-navigation-hidden');
       }
-      var defaultLabel = button.getAttribute('data-vms-label-default') || state.originalSubmitLabel || 'Get Tickets';
-      var nextLabel = state.isSubmitting ? 'Adding…' : (continueExistingCart ? (pendingEventPayment() ? 'Complete Payment' : 'Continue to checkout') : (shouldEnable ? 'Add items to cart' : defaultLabel));
+      var nextLabel = busy ? (state.isNavigating ? 'Opening cart…' : 'Updating cart…') : 'Add items to cart';
+      setAttributeIfChanged(button, 'aria-busy', busy ? 'true' : 'false');
+      setAttributeIfChanged(button, 'aria-describedby', 'vms-ticket-action-feedback');
       if (button.tagName && button.tagName.toLowerCase() === 'input') {
         if (button.value !== nextLabel) {
           button.value = nextLabel;
@@ -4634,8 +4666,22 @@
         button.removeAttribute('data-vms-busy');
         button.removeAttribute('data-vms-busy-since');
       }
-      button.classList.toggle('vms-rw-submit--busy', state.isSubmitting);
+      button.classList.toggle('vms-rw-submit--busy', busy);
     });
+    var guestPending = Object.keys(state.ticketClaimsByProduct || {}).some(function (id) {
+      var model = state.ticketClaimsByProduct[id];
+      return (model.visibleSeats || []).some(function (seat) { var row = model.rowStates[String(seat)]; return !!(row && row.isPending); });
+    });
+    var explanation = busy ? (state.isNavigating ? 'Opening the next page…' : 'Updating cart… Please wait.')
+      : (!validQuantities ? 'Check the ticket quantities.'
+        : (!extensionResult.ok ? extensionResult.message
+          : (!assignmentsReady ? (guestPending ? 'Checking guest… Please wait.' : 'Enter and confirm each additional approved guest email.')
+            : (!addonsReady ? 'Review the selected add-ons.'
+              : (configFlag(cfg.hasCheckoutBlockers) ? 'Review your cart before continuing.' : '')))));
+    if (state.actionFeedback) {
+      setText(state.actionFeedback, explanation);
+      if (state.actionFeedback.hidden === !!explanation) state.actionFeedback.hidden = !explanation;
+    }
   }
 
   function refresh(state, options) {
@@ -5010,6 +5056,10 @@
       if (record.type === 'attributes' && record.oldValue === record.target.getAttribute(record.attributeName)) {
         return false;
       }
+      if (record.target === state.cartContinue || record.target === state.actionStack || record.target === state.actionFeedback) return true;
+      if (record.type === 'childList' && Array.prototype.some.call(record.removedNodes || [], function (node) {
+        return node === state.cartContinue || node === state.actionStack || node === state.actionFeedback;
+      })) return true;
       if (record.target === state.form && (record.attributeName === 'aria-busy' || record.attributeName === 'class')) {
         return true;
       }
@@ -5106,7 +5156,7 @@
         subtree: true,
         attributes: true,
         attributeOldValue: true,
-        attributeFilter: ['value', 'aria-disabled', 'aria-busy', 'disabled', 'class']
+        attributeFilter: ['value', 'aria-disabled', 'aria-busy', 'disabled', 'class', 'hidden', 'style']
       });
       state.ticketQtyObserver = observer;
     }
@@ -5740,7 +5790,7 @@
       .then(function () { return fetchCartContextBeforeSubmit(state, addonLines); })
       .then(function () {
         if (state.cartSnapshotStale) {
-          throw new Error('Your cart changed. Choose Review cart before adding more tickets.');
+          throw new Error('Your cart changed. Choose Edit cart before adding more tickets.');
         }
         refresh(state, { clampAddons: true });
         ticketBuild = buildAtomicTicketLines(state, { requireComplete: true });
@@ -5763,7 +5813,7 @@
             // Native submission adds the displayed totals, which would replay
             // existing cart tickets. Keep the cart intact if delta submission
             // is unavailable.
-            throw new Error('We could not safely add more tickets. Choose Review cart to check your existing tickets, then try again.');
+            throw new Error('We could not safely add more tickets. Choose Edit cart to check your existing tickets, then try again.');
           }
           if (!addonLines.length && extensionResult.quantity <= 0) {
             state.isSubmitting = false;

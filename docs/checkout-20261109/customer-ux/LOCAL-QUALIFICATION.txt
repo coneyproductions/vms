@@ -1,0 +1,56 @@
+Issue #124 — .4 local customer UX checkpoint
+Physical-device status remains HOLD; no full physical fix acceptance is claimed.
+
+Owner findings: iPhone13 Pro/iOS27.0.1 Safari and iPad10th-generation/iPadOS27.0.1;
+core cart/approval behavior and guest layout reportedly work; bottom action missing
+at exact existing-cart quantities. A fresh two-ticket case on iPad reproduces the
+owner's missing action report. Native Safari hardware results cannot be inferred
+from local WebKit or synthetic browser profiles.
+
+Confirmed code gaps: .3 hides native TEC submission when there is no positive
+addition, but does not repair the separate BVM link if it is removed, hidden or
+replaced; it does not bind a reused/cloned link. Its link has different placement
+rules from the native action. .4 restores only the owned GET control, observes
+its attachment/presentation, binds once, and shares safe action placement. Busy,
+invalid, stale-cart, extension and admission gates stay enforced. No unconditional
+native enablement is added. Native atomic difference-only logic is unchanged,
+except two customer-facing references renamed Edit cart.
+
+Important limit: normal synthetic transitions and native-page local replay show
+.3's link. Read-only prepared-account capture also finds a connected, enabled,
+non-hidden link; a WebKit viewport placed it off-screen. The exact physical Safari
+trigger (including scrolling/placement/cache/lifecycle differences) is not proven.
+Fault-injected .3 control loss is a diagnostic regression, not proof that the
+owner's device suffered that mutation. Do not call the physical race conclusively
+resolved or promote past HOLD on these local results alone.
+
+Customer behavior:
+- Main notice: '2 tickets are already in your cart. They haven't been purchased yet.'
+  Dynamic count; Checkout and Edit cart links. Existing tickets retain their minimum;
+  one nearby edit route explains reduction/removal without repeated card directions.
+- Additional ticket: 'Adding a ticket for another approved Veteran? Enter their
+  registered email address. You do not need to enter your own email.'
+- Already represented own email is explained locally; guest requests remain native
+  validated. Checking..., Guest added, duplicate validation suppression and deliberate
+  replacement are explicit; approval details are not exposed in confirmation.
+- Visible guarded action and live instruction remain while guests are missing or
+  processing. Cart operations announce Updating cart with progress decoration.
+- Primary amount is the authoritative current cart total or clearly labelled
+  additional selections. Price details are collapsed. No client tax calculation or
+  invented combined payable total; update cart/checkout establishes the final total.
+
+Focused local browser and native-hook checks are recorded in qualification.json.
+They cover real native TEC JavaScript/CSS, two browser engines, actual synthetic
+reload/direct/history transitions, attachment/style/hit testing, guarded guests,
+repeat activation, difference-only additions, native checkout state, Express Bar
+forms/mixed-cart totals and metadata. The in-memory backends are not real WooCommerce
+financial acceptance; no Square completion/refund/ticket issuance claim is made.
+Server admission, cart mutation, policies, Square/mirror, Staff/Unified Console/Ops
+and Express Bar source is preserved. All unchanged installed evidence retains its
+original scope. The400 controller checks are not rerun; that immutable controller
+remains bound to .3 and cannot be silently used for a revised BVM artifact.
+
+Stop: no Staging installation, code patch, security activation, capture/refund,
+Production access, real-customer change or PR merge. The previously conditional
+window remains unused. Requalify compatibility and obtain any revised approvals
+before using a .4 release with a future controller/window.

@@ -1,0 +1,1327 @@
+{
+  "status": "PASS",
+  "checks": 330,
+  "scope": "Synthetic local backend, native TEC scripts/CSS, Chromium/WebKit mobile profiles; no provider or physical-device certification",
+  "records": [
+    {
+      "engine": "chromium",
+      "label": "iPhone zero delta false/0 is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone zero delta false/0 attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone positive delta is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone zero delta false/1 is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone zero delta false/1 attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone positive delta is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad zero delta false/0 is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad zero delta false/0 attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad positive delta is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad zero delta false/1 is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad zero delta false/1 attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad positive delta is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "chromium",
+      "label": "real document reload at zero delta is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "real document reload at zero delta attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "late native setup 0 is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "late native setup 0 attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "late native setup 1 is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "late native setup 1 attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair hidden is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair hidden attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair display is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair display attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair removed is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair removed attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair cloned is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair cloned attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "native loading keeps action visible is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "native loading keeps action visible attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "native loading does not allow navigation"
+    },
+    {
+      "engine": "chromium",
+      "label": "accessible native loading explanation"
+    },
+    {
+      "engine": "chromium",
+      "label": "missing guest retains action is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "missing guest retains action attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "missing guest cannot submit"
+    },
+    {
+      "engine": "chromium",
+      "label": "visible missing guest instruction"
+    },
+    {
+      "engine": "chromium",
+      "label": "guest controls fit without overlap at 320"
+    },
+    {
+      "engine": "chromium",
+      "label": "guest controls fit without overlap at 393"
+    },
+    {
+      "engine": "chromium",
+      "label": "guest controls fit without overlap at 820"
+    },
+    {
+      "engine": "chromium",
+      "label": "guest controls fit without overlap at 1100"
+    },
+    {
+      "engine": "chromium",
+      "label": "self already in cart is rejected before guest lookup"
+    },
+    {
+      "engine": "chromium",
+      "label": "self email gets clear explanation"
+    },
+    {
+      "engine": "chromium",
+      "label": "guest pending visibly guarded"
+    },
+    {
+      "engine": "chromium",
+      "label": "confirmed guest cannot be repeatedly submitted"
+    },
+    {
+      "engine": "chromium",
+      "label": "confirmation does not disclose account details"
+    },
+    {
+      "engine": "chromium",
+      "label": "even programmatic repeated guest validation is ignored"
+    },
+    {
+      "engine": "chromium",
+      "label": "deliberate email replacement re-enables validation"
+    },
+    {
+      "engine": "chromium",
+      "label": "replacement approved guest restores submission"
+    },
+    {
+      "engine": "chromium",
+      "label": "another additional guest has independent entry"
+    },
+    {
+      "engine": "chromium",
+      "label": "another unvalidated seat remains blocked"
+    },
+    {
+      "engine": "chromium",
+      "label": "duplicate guest claim reaches server with prior assignment count and stays blocked"
+    },
+    {
+      "engine": "chromium",
+      "label": "price details start collapsed"
+    },
+    {
+      "engine": "chromium",
+      "label": "zero delta shows actual current cart total"
+    },
+    {
+      "engine": "chromium",
+      "label": "incremental $1 is labelled as additional"
+    },
+    {
+      "engine": "chromium",
+      "label": "combined final amount is deferred accurately"
+    },
+    {
+      "engine": "chromium",
+      "label": "optional detail distinguishes selected ticket estimate"
+    },
+    {
+      "engine": "chromium",
+      "label": "customer pricing omits implementation label"
+    },
+    {
+      "engine": "chromium",
+      "label": "concise dynamic cart status"
+    },
+    {
+      "engine": "chromium",
+      "label": "cart editing is obvious without repetitive card links"
+    },
+    {
+      "engine": "chromium",
+      "label": "atomic update visibly busy and duplicate-protected"
+    },
+    {
+      "engine": "chromium",
+      "label": "one difference-only request for repeated activation"
+    },
+    {
+      "engine": "chromium",
+      "label": "actual browser return at zero delta is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "actual browser return at zero delta attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "return adopts refreshed cart baseline"
+    },
+    {
+      "engine": "chromium",
+      "label": "new snapshot after cart reduction/removal is accurate"
+    },
+    {
+      "engine": "chromium",
+      "label": "keyboard checkout after repair never adds tickets"
+    },
+    {
+      "engine": "chromium",
+      "label": "no browser exceptions"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone zero delta true/0 is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone zero delta true/0 attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone positive delta is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone zero delta true/1 is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone zero delta true/1 attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone positive delta is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPhone positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad zero delta true/0 is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad zero delta true/0 attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad positive delta is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad zero delta true/1 is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad zero delta true/1 attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad positive delta is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "iPad positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "chromium",
+      "label": "real document reload at zero delta is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "real document reload at zero delta attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "late native setup 0 is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "late native setup 0 attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "late native setup 1 is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "late native setup 1 attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair hidden is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair hidden attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair display is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair display attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair removed is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair removed attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair cloned is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "owned control repair cloned attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "native loading keeps action visible is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "native loading keeps action visible attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "native loading does not allow navigation"
+    },
+    {
+      "engine": "chromium",
+      "label": "accessible native loading explanation"
+    },
+    {
+      "engine": "chromium",
+      "label": "missing guest retains action is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "missing guest retains action attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "missing guest cannot submit"
+    },
+    {
+      "engine": "chromium",
+      "label": "visible missing guest instruction"
+    },
+    {
+      "engine": "chromium",
+      "label": "guest controls fit without overlap at 320"
+    },
+    {
+      "engine": "chromium",
+      "label": "guest controls fit without overlap at 393"
+    },
+    {
+      "engine": "chromium",
+      "label": "guest controls fit without overlap at 820"
+    },
+    {
+      "engine": "chromium",
+      "label": "guest controls fit without overlap at 1100"
+    },
+    {
+      "engine": "chromium",
+      "label": "self already in cart is rejected before guest lookup"
+    },
+    {
+      "engine": "chromium",
+      "label": "self email gets clear explanation"
+    },
+    {
+      "engine": "chromium",
+      "label": "guest pending visibly guarded"
+    },
+    {
+      "engine": "chromium",
+      "label": "confirmed guest cannot be repeatedly submitted"
+    },
+    {
+      "engine": "chromium",
+      "label": "confirmation does not disclose account details"
+    },
+    {
+      "engine": "chromium",
+      "label": "even programmatic repeated guest validation is ignored"
+    },
+    {
+      "engine": "chromium",
+      "label": "deliberate email replacement re-enables validation"
+    },
+    {
+      "engine": "chromium",
+      "label": "replacement approved guest restores submission"
+    },
+    {
+      "engine": "chromium",
+      "label": "another additional guest has independent entry"
+    },
+    {
+      "engine": "chromium",
+      "label": "another unvalidated seat remains blocked"
+    },
+    {
+      "engine": "chromium",
+      "label": "duplicate guest claim reaches server with prior assignment count and stays blocked"
+    },
+    {
+      "engine": "chromium",
+      "label": "price details start collapsed"
+    },
+    {
+      "engine": "chromium",
+      "label": "zero delta shows actual current cart total"
+    },
+    {
+      "engine": "chromium",
+      "label": "incremental $1 is labelled as additional"
+    },
+    {
+      "engine": "chromium",
+      "label": "combined final amount is deferred accurately"
+    },
+    {
+      "engine": "chromium",
+      "label": "optional detail distinguishes selected ticket estimate"
+    },
+    {
+      "engine": "chromium",
+      "label": "customer pricing omits implementation label"
+    },
+    {
+      "engine": "chromium",
+      "label": "concise dynamic cart status"
+    },
+    {
+      "engine": "chromium",
+      "label": "cart editing is obvious without repetitive card links"
+    },
+    {
+      "engine": "chromium",
+      "label": "atomic update visibly busy and duplicate-protected"
+    },
+    {
+      "engine": "chromium",
+      "label": "one difference-only request for repeated activation"
+    },
+    {
+      "engine": "chromium",
+      "label": "actual browser return at zero delta is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "actual browser return at zero delta attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "return adopts refreshed cart baseline"
+    },
+    {
+      "engine": "chromium",
+      "label": "new snapshot after cart reduction/removal is accurate"
+    },
+    {
+      "engine": "chromium",
+      "label": "keyboard checkout after repair never adds tickets"
+    },
+    {
+      "engine": "chromium",
+      "label": "no browser exceptions"
+    },
+    {
+      "engine": "chromium",
+      "label": "mixed Express Bar/ticket existing cart is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "mixed Express Bar/ticket existing cart attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "mixed cart retains authoritative complete total"
+    },
+    {
+      "engine": "chromium",
+      "label": "ticket delta leaves Express Bar quantities untouched"
+    },
+    {
+      "engine": "chromium",
+      "label": "independent Express Bar form remains enabled and not intercepted"
+    },
+    {
+      "engine": "chromium",
+      "label": "mixed checkout navigation adds neither tickets nor bar products"
+    },
+    {
+      "engine": "chromium",
+      "label": "native checkout payment/policy state untouched"
+    },
+    {
+      "engine": "chromium",
+      "label": "failed update restores action and visible error"
+    },
+    {
+      "engine": "chromium",
+      "label": "failure followed by zero delta is visible"
+    },
+    {
+      "engine": "chromium",
+      "label": "failure followed by zero delta attached, styled and unobscured"
+    },
+    {
+      "engine": "chromium",
+      "label": "other approval-based admissions retain guest protection"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone zero delta false/0 is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone zero delta false/0 attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone positive delta is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone zero delta false/1 is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone zero delta false/1 attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone positive delta is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad zero delta false/0 is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad zero delta false/0 attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad positive delta is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad zero delta false/1 is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad zero delta false/1 attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad positive delta is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "webkit",
+      "label": "real document reload at zero delta is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "real document reload at zero delta attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "late native setup 0 is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "late native setup 0 attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "late native setup 1 is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "late native setup 1 attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair hidden is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair hidden attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair display is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair display attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair removed is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair removed attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair cloned is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair cloned attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "native loading keeps action visible is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "native loading keeps action visible attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "native loading does not allow navigation"
+    },
+    {
+      "engine": "webkit",
+      "label": "accessible native loading explanation"
+    },
+    {
+      "engine": "webkit",
+      "label": "missing guest retains action is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "missing guest retains action attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "missing guest cannot submit"
+    },
+    {
+      "engine": "webkit",
+      "label": "visible missing guest instruction"
+    },
+    {
+      "engine": "webkit",
+      "label": "guest controls fit without overlap at 320"
+    },
+    {
+      "engine": "webkit",
+      "label": "guest controls fit without overlap at 393"
+    },
+    {
+      "engine": "webkit",
+      "label": "guest controls fit without overlap at 820"
+    },
+    {
+      "engine": "webkit",
+      "label": "guest controls fit without overlap at 1100"
+    },
+    {
+      "engine": "webkit",
+      "label": "self already in cart is rejected before guest lookup"
+    },
+    {
+      "engine": "webkit",
+      "label": "self email gets clear explanation"
+    },
+    {
+      "engine": "webkit",
+      "label": "guest pending visibly guarded"
+    },
+    {
+      "engine": "webkit",
+      "label": "confirmed guest cannot be repeatedly submitted"
+    },
+    {
+      "engine": "webkit",
+      "label": "confirmation does not disclose account details"
+    },
+    {
+      "engine": "webkit",
+      "label": "even programmatic repeated guest validation is ignored"
+    },
+    {
+      "engine": "webkit",
+      "label": "deliberate email replacement re-enables validation"
+    },
+    {
+      "engine": "webkit",
+      "label": "replacement approved guest restores submission"
+    },
+    {
+      "engine": "webkit",
+      "label": "another additional guest has independent entry"
+    },
+    {
+      "engine": "webkit",
+      "label": "another unvalidated seat remains blocked"
+    },
+    {
+      "engine": "webkit",
+      "label": "duplicate guest claim reaches server with prior assignment count and stays blocked"
+    },
+    {
+      "engine": "webkit",
+      "label": "price details start collapsed"
+    },
+    {
+      "engine": "webkit",
+      "label": "zero delta shows actual current cart total"
+    },
+    {
+      "engine": "webkit",
+      "label": "incremental $1 is labelled as additional"
+    },
+    {
+      "engine": "webkit",
+      "label": "combined final amount is deferred accurately"
+    },
+    {
+      "engine": "webkit",
+      "label": "optional detail distinguishes selected ticket estimate"
+    },
+    {
+      "engine": "webkit",
+      "label": "customer pricing omits implementation label"
+    },
+    {
+      "engine": "webkit",
+      "label": "concise dynamic cart status"
+    },
+    {
+      "engine": "webkit",
+      "label": "cart editing is obvious without repetitive card links"
+    },
+    {
+      "engine": "webkit",
+      "label": "atomic update visibly busy and duplicate-protected"
+    },
+    {
+      "engine": "webkit",
+      "label": "one difference-only request for repeated activation"
+    },
+    {
+      "engine": "webkit",
+      "label": "actual browser return at zero delta is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "actual browser return at zero delta attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "return adopts refreshed cart baseline"
+    },
+    {
+      "engine": "webkit",
+      "label": "new snapshot after cart reduction/removal is accurate"
+    },
+    {
+      "engine": "webkit",
+      "label": "keyboard checkout after repair never adds tickets"
+    },
+    {
+      "engine": "webkit",
+      "label": "no browser exceptions"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone zero delta true/0 is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone zero delta true/0 attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone positive delta is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone zero delta true/1 is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone zero delta true/1 attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone positive delta is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPhone positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad zero delta true/0 is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad zero delta true/0 attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad positive delta is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad zero delta true/1 is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad zero delta true/1 attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "native purchase hidden at zero delta"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad positive delta is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "iPad positive delta attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "positive delta selects only native guarded submit"
+    },
+    {
+      "engine": "webkit",
+      "label": "real document reload at zero delta is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "real document reload at zero delta attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "late native setup 0 is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "late native setup 0 attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "late native setup 1 is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "late native setup 1 attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair hidden is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair hidden attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair display is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair display attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair removed is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair removed attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair cloned is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "owned control repair cloned attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "native loading keeps action visible is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "native loading keeps action visible attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "native loading does not allow navigation"
+    },
+    {
+      "engine": "webkit",
+      "label": "accessible native loading explanation"
+    },
+    {
+      "engine": "webkit",
+      "label": "missing guest retains action is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "missing guest retains action attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "missing guest cannot submit"
+    },
+    {
+      "engine": "webkit",
+      "label": "visible missing guest instruction"
+    },
+    {
+      "engine": "webkit",
+      "label": "guest controls fit without overlap at 320"
+    },
+    {
+      "engine": "webkit",
+      "label": "guest controls fit without overlap at 393"
+    },
+    {
+      "engine": "webkit",
+      "label": "guest controls fit without overlap at 820"
+    },
+    {
+      "engine": "webkit",
+      "label": "guest controls fit without overlap at 1100"
+    },
+    {
+      "engine": "webkit",
+      "label": "self already in cart is rejected before guest lookup"
+    },
+    {
+      "engine": "webkit",
+      "label": "self email gets clear explanation"
+    },
+    {
+      "engine": "webkit",
+      "label": "guest pending visibly guarded"
+    },
+    {
+      "engine": "webkit",
+      "label": "confirmed guest cannot be repeatedly submitted"
+    },
+    {
+      "engine": "webkit",
+      "label": "confirmation does not disclose account details"
+    },
+    {
+      "engine": "webkit",
+      "label": "even programmatic repeated guest validation is ignored"
+    },
+    {
+      "engine": "webkit",
+      "label": "deliberate email replacement re-enables validation"
+    },
+    {
+      "engine": "webkit",
+      "label": "replacement approved guest restores submission"
+    },
+    {
+      "engine": "webkit",
+      "label": "another additional guest has independent entry"
+    },
+    {
+      "engine": "webkit",
+      "label": "another unvalidated seat remains blocked"
+    },
+    {
+      "engine": "webkit",
+      "label": "duplicate guest claim reaches server with prior assignment count and stays blocked"
+    },
+    {
+      "engine": "webkit",
+      "label": "price details start collapsed"
+    },
+    {
+      "engine": "webkit",
+      "label": "zero delta shows actual current cart total"
+    },
+    {
+      "engine": "webkit",
+      "label": "incremental $1 is labelled as additional"
+    },
+    {
+      "engine": "webkit",
+      "label": "combined final amount is deferred accurately"
+    },
+    {
+      "engine": "webkit",
+      "label": "optional detail distinguishes selected ticket estimate"
+    },
+    {
+      "engine": "webkit",
+      "label": "customer pricing omits implementation label"
+    },
+    {
+      "engine": "webkit",
+      "label": "concise dynamic cart status"
+    },
+    {
+      "engine": "webkit",
+      "label": "cart editing is obvious without repetitive card links"
+    },
+    {
+      "engine": "webkit",
+      "label": "atomic update visibly busy and duplicate-protected"
+    },
+    {
+      "engine": "webkit",
+      "label": "one difference-only request for repeated activation"
+    },
+    {
+      "engine": "webkit",
+      "label": "actual browser return at zero delta is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "actual browser return at zero delta attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "return adopts refreshed cart baseline"
+    },
+    {
+      "engine": "webkit",
+      "label": "new snapshot after cart reduction/removal is accurate"
+    },
+    {
+      "engine": "webkit",
+      "label": "keyboard checkout after repair never adds tickets"
+    },
+    {
+      "engine": "webkit",
+      "label": "no browser exceptions"
+    },
+    {
+      "engine": "webkit",
+      "label": "mixed Express Bar/ticket existing cart is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "mixed Express Bar/ticket existing cart attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "mixed cart retains authoritative complete total"
+    },
+    {
+      "engine": "webkit",
+      "label": "ticket delta leaves Express Bar quantities untouched"
+    },
+    {
+      "engine": "webkit",
+      "label": "independent Express Bar form remains enabled and not intercepted"
+    },
+    {
+      "engine": "webkit",
+      "label": "mixed checkout navigation adds neither tickets nor bar products"
+    },
+    {
+      "engine": "webkit",
+      "label": "native checkout payment/policy state untouched"
+    },
+    {
+      "engine": "webkit",
+      "label": "failed update restores action and visible error"
+    },
+    {
+      "engine": "webkit",
+      "label": "failure followed by zero delta is visible"
+    },
+    {
+      "engine": "webkit",
+      "label": "failure followed by zero delta attached, styled and unobscured"
+    },
+    {
+      "engine": "webkit",
+      "label": "other approval-based admissions retain guest protection"
+    }
+  ]
+}

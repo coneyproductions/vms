@@ -1,0 +1,16 @@
+Issue #124 final customer UX correction — isolated local follow-on.
+Baseline: 97f5a5b8d8e8d1c2e0693f8c675f15bff5e40359, historical .3 branch/PR128.
+New local branch: codex/issue124-final-customer-ux-local.
+All431 initial runtime entries match tree52944323f26f0cdf965815107831b7ebce79c75730ed9481621751a30d4ea5c3.
+The same three previously documented isolated-clone preflight warnings recur:
+path is not the original packages/... mirror, no sibling installed vms tree and no
+protected stash in this recovery clone. Status/diff were clean. These warnings are
+not a new source mismatch. The explicit verified-.3/local-only/preserve-installed
+scope takes precedence over synchronizing another installed local baseline. No
+stash, live/sibling tree, historical checkpoint or installed plugin is altered.
+Local source commits and an immutable candidate are authorized. No branch push,
+merge, installation, security exception or payment/refund is authorized. A sanitized
+Issue124 finding record is explicitly requested; private capture data stays private.
+The later narrow read-only synthetic Staging DOM diagnosis used native authentication
+and blocked all other POSTs/external destinations. It did not submit cart/order/
+payment changes. The owner's prepared synthetic cart is retained untouched.

@@ -4699,3 +4699,74 @@ body.bvmgr-post-cart-offer-open{overflow:hidden}.bvmgr-post-cart-offer{position:
 .vms-ticketing-cart-details [data-vms-current-cart-total] {
   white-space: nowrap;
 }
+
+/* Issue #124: one visible action, concise feedback and optional price details. */
+.vms-ticket-ui #vms-ticketing-action-stack > .vms-ticket-cart-continue:not([hidden]) {
+  display: flex !important;
+  position: sticky !important;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 8px) !important;
+  z-index: 41 !important;
+  visibility: visible !important;
+  flex: 0 0 auto;
+  order: 10;
+  min-height: 52px;
+  -webkit-text-fill-color: #fff;
+}
+.vms-ticket-ui #vms-ticketing-action-stack > .vms-ticket-action-feedback {
+  order: 20;
+  margin: 0;
+  color: #334155;
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  pointer-events: auto;
+}
+.vms-ticket-action-feedback[hidden] { display: none !important; }
+.vms-ticket-ui #vms-ticketing-action-stack > .vms-ticket-edit-cart {
+  order: 30;
+  align-self: center;
+  margin: 0;
+  pointer-events: auto !important;
+  line-height: 1.5;
+}
+.vms-ticketing-total {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 8px 16px;
+  font-size: 18px;
+  line-height: 1.35;
+}
+.vms-ticketing-total [data-vms-total-value] { white-space: nowrap; }
+.vms-ticketing-total-note { margin: 8px 0; font-size: 14px; line-height: 1.45; }
+.vms-ticketing-breakdown > summary { cursor: pointer; padding: 8px 0; font-weight: 600; }
+.vms-ticket-ui #vms-ticketing-subtotal .vms-ticketing-breakdown .vms-ticketing-subtotal__line {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.vms-ticket-ui #vms-ticketing-subtotal .vms-ticketing-breakdown .vms-ticketing-subtotal__line-value {
+  width: auto;
+}
+.vms-ticketing-breakdown, .vms-ticketing-total-note { overflow-wrap: anywhere; }
+.vms-claim-seat-validate[aria-busy="true"]::before,
+.vms-ticket-cart-continue[aria-busy="true"]::before,
+.vms-rw-submit--busy::before {
+  content: '';
+  display: inline-block;
+  width: .85em;
+  height: .85em;
+  margin-right: .5em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: vms-checkout-wait .8s linear infinite;
+}
+@keyframes vms-checkout-wait { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .vms-claim-seat-validate[aria-busy="true"]::before,
+  .vms-ticket-cart-continue[aria-busy="true"]::before,
+  .vms-rw-submit--busy::before { animation: none; }
+}
