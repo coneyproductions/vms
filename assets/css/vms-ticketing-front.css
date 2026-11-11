@@ -4710,6 +4710,7 @@ body.bvmgr-post-cart-offer-open{overflow:hidden}.bvmgr-post-cart-offer{position:
   flex: 0 0 auto;
   order: 10;
   min-height: 52px;
+  background-color: #155fa0;
   -webkit-text-fill-color: #fff;
 }
 .vms-ticket-ui #vms-ticketing-action-stack > .vms-ticket-action-feedback {
