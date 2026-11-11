@@ -2793,6 +2793,54 @@
     return Math.max(0, readTicketQty(input) - cartTicketQty(state, resolveTicketProductId(state, input)));
   }
 
+  var CART_FLOOR_DECREASE = '.vms-cart-floor-decrease';
+  var CART_FLOOR_GUIDANCE = '.vms-cart-floor-guidance';
+
+  function syncCartFloorControl(state, input, row, floor) {
+    var wrap = input.closest('.tribe-tickets__tickets-item-quantity, .tribe-tickets__item__quantity');
+    if (!wrap) return;
+    var minus = query('.tribe-tickets__tickets-item-quantity-remove, .tribe-tickets__item__quantity__remove', wrap);
+    var button = query(CART_FLOOR_DECREASE, wrap);
+    var show = !!(cfg.cartUrl && minus && floor > 0 && !input.disabled && readTicketQty(input) === floor);
+    if (show && !button) {
+      button = createEl('button', 'vms-cart-floor-decrease', '−');
+      button.type = 'button';
+      button.setAttribute('aria-label', 'Decrease ' + resolveTicketDisplayName(input, getTicketAccessEntry(state, resolveTicketProductId(state, input))));
+    }
+    if (button) {
+      if (show && button.nextElementSibling !== minus) minus.before(button);
+      if (button.hidden === show) button.hidden = !show;
+      if (show && document.activeElement === minus) button.focus({ preventScroll: true });
+    }
+    if (!floor || input.disabled || readTicketQty(input) > floor) {
+      var note = query(CART_FLOOR_GUIDANCE, row);
+      if (note && !note.hidden) note.hidden = true;
+    }
+  }
+
+  function showCartFloorGuidance(state, input) {
+    if (!input || input.disabled || !cfg.cartUrl) return;
+    var row = getTicketRow(input);
+    var id = resolveTicketProductId(state, input);
+    var wrap = input.closest('.tribe-tickets__tickets-item-quantity, .tribe-tickets__item__quantity');
+    if (!row || row.hidden || !wrap || isDisabledPendingSyncTicketProductId(state, id) || !cartTicketQty(state, id)) return;
+    var note = query(CART_FLOOR_GUIDANCE, row);
+    queryAll(CART_FLOOR_GUIDANCE, state.form).forEach(function (other) {
+      if (other !== note && !other.hidden) other.hidden = true;
+    });
+    if (!note) {
+      note = createEl('p', 'vms-cart-floor-guidance');
+      note.setAttribute('role', 'status');
+      note.appendChild(document.createTextNode('To reduce tickets already in your cart, '));
+      var link = createEl('a', null, 'edit your cart');
+      link.href = cfg.cartUrl;
+      note.appendChild(link);
+      note.appendChild(document.createTextNode('.'));
+      wrap.after(note);
+    }
+    note.hidden = false;
+  }
+
   function syncTicketCartTotals(state, commit) {
     if (!state || !state.form || !hasEventTicketsInCart()) {
       return;
@@ -2801,6 +2849,7 @@
       var productId = resolveTicketProductId(state, input);
       var row = getTicketRow(input);
       if (!row || input.disabled || row.hidden || isDisabledPendingSyncTicketProductId(state, productId)) {
+        if (row) syncCartFloorControl(state, input, row, 0);
         return;
       }
       var inCart = cartTicketQty(state, productId);
@@ -2816,6 +2865,7 @@
         // Keep existing cart contents representable without permitting an increase.
         setAttributeIfChanged(input, 'max', inCart);
       }
+      syncCartFloorControl(state, input, row, inCart);
       var name = resolveTicketDisplayName(input, getTicketAccessEntry(state, productId));
       var labelText = 'Total ' + name + ' tickets';
       var note = query('.vms-ticket-total-note', row);
@@ -3146,12 +3196,6 @@
       stack.appendChild(actionFeedback);
     }
     state.actionFeedback = actionFeedback;
-    var editCart = query('.vms-ticket-edit-cart', stack);
-    if (!editCart && hasEventTicketsInCart()) {
-      editCart = createEl('a', 'vms-ticket-edit-cart', 'Edit cart to reduce or remove tickets');
-      editCart.href = cfg.cartUrl || normalizeUrl('/cart/');
-      stack.appendChild(editCart);
-    }
 
     var summaryStack = null;
     if (useV2Layout() && state.summarySection) {
@@ -5087,14 +5131,36 @@
     ['input', 'change'].forEach(function (type) {
       state.form.addEventListener(type, function (event) {
         if (event.target && event.target.matches && event.target.matches(SELECTORS.nativeQty)) {
-          if (type === 'change') syncTicketCartTotals(state, true);
+          var input = event.target;
+          if (type === 'change') {
+            var floor = cartTicketQty(state, resolveTicketProductId(state, input));
+            if (input.value !== '' && readTicketQty(input) < floor) showCartFloorGuidance(state, input);
+            syncTicketCartTotals(state, true);
+          }
           trackedRefresh();
         }
       });
     });
 
+    state.form.addEventListener('keydown', function (event) {
+      var input = event.target;
+      if (event.key !== 'ArrowDown' || event.defaultPrevented || !input.matches(SELECTORS.nativeQty) || input.disabled) return;
+      var floor = cartTicketQty(state, resolveTicketProductId(state, input));
+      if (floor > 0 && readTicketQty(input) === floor) {
+        event.preventDefault();
+        showCartFloorGuidance(state, input);
+      }
+    });
+
     state.form.addEventListener('click', function (event) {
       var target = event.target;
+      var floorButton = target && target.closest ? target.closest(CART_FLOOR_DECREASE) : null;
+      if (floorButton) {
+        var input = resolveNativeQtyInputFromButton(floorButton);
+        var floor = input ? cartTicketQty(state, resolveTicketProductId(state, input)) : 0;
+        if (!floorButton.hidden && floor > 0 && readTicketQty(input) === floor) showCartFloorGuidance(state, input);
+        return;
+      }
       var btn = target && target.closest ? target.closest(SELECTORS.nativeQtyButtons) : null;
       if (!btn) {
         return;
