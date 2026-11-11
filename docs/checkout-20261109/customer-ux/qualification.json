@@ -1,0 +1,27 @@
+{
+  "status": "LOCAL PASS / PHYSICAL HOLD",
+  "recommendation": "HOLD",
+  "local_checks": 425,
+  "groups": {
+    "Chromium_WebKit_customer_UX": 330,
+    "native_quantity_lifecycle": 71,
+    "other_approved_admissions": 11,
+    "native_Express_Bar_in_memory_hooks": 13
+  },
+  "baseline_expected_failure": "Original .3 cannot repair externally hidden owned navigation; this injected failure is not proof of the owner physical trigger",
+  "candidate_tree_sha256": "edf778c75419bcc1839947858271209793b53e2af72095ba5e700496b74384f9",
+  "runtime_scope": [
+    "assets/css/ticketing-front/95-ticket-public-polish.css",
+    "assets/css/vms-ticketing-front.css",
+    "assets/vms-ticketing-front.js",
+    "backstage-venue-manager.php",
+    "includes/core/registry/constants.php",
+    "readme.txt",
+    "vms-build.txt"
+  ],
+  "unrelated_runtime_files_preserved": 424,
+  "physical_cause_conclusively_reproduced": false,
+  "no_square_transactions_or_security_exception": true,
+  "prior_400_controller_checks": "Reused only for unchanged .3-pinned controller; does not qualify that controller against .4",
+  "limits": "Local WebKit is not physical Safari. Captured native DOM link is attached/enabled/non-hidden; WebKit positions it off-screen in the sampled viewport. Physical concealment mechanism remains to be confirmed."
+}

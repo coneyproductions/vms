@@ -61,8 +61,8 @@ const row=(pid,initial=0)=>`<div class="tribe-tickets__tickets-item tribe-ticket
    const f=await fixture({source});
    check(await f.page.locator('#q101').inputValue()==='1'&&await f.page.locator('#q102').inputValue()==='2',`native zero defaults restored to server cart totals (${source||'ticket only'})`);
    check(!(await f.context()).showPanel,'existing self and approved guest require no further email');
-   check((await f.page.locator('.vms-event-purchase-status').innerText()).includes('3 tickets in your cart'),'notice agrees with restored totals');
-   check((await f.page.locator('[data-ticket-id="102"] .vms-ticket-total-note').innerText()).includes('2 already in cart. 0 additional selected.'),'per-admission quantities distinguish existing from additional');
+   check((await f.page.locator('.vms-event-purchase-status').innerText()).includes('3 tickets are already in your cart'),'notice agrees with restored totals');
+   check((await f.page.locator('[data-ticket-id="102"] .vms-ticket-total-note').innerText()).includes('2 in cart · 0 additional selected.'),'per-admission quantities distinguish existing from additional');
    await f.submit();check(f.calls()===0&&f.page.url()===origin+'/checkout/','unchanged totals continue checkout without any addition');
    await f.visit();check(await f.page.locator('#q102').inputValue()==='2','reload/cart return restores totals without customer intervention');
    await f.page.evaluate(()=>{for(const pid of [101,102]){const i=document.querySelector('#q'+pid);i.value=String(window.BVMGR_TICKETING_FRONT.cartTicketQuantities[pid]);i.dispatchEvent(new Event('change',{bubbles:true}));}});
@@ -100,7 +100,7 @@ const row=(pid,initial=0)=>`<div class="tribe-tickets__tickets-item tribe-ticket
   }
   f=await fixture({noAtomic:true});await f.qty(101,2);await f.submit();
   check(f.calls()===0&&f.cart[101]===1&&f.page.url()===origin+'/event/','missing atomic endpoint cannot fall back to replaying native cart totals');
-  check((await f.page.locator('#vms-addons-direct-add-status').innerText()).includes('Review cart'),'unavailable delta submission explains safe next action');await f.page.close();
+  check((await f.page.locator('#vms-addons-direct-add-status').innerText()).includes('Edit cart'),'unavailable delta submission explains safe next action');await f.page.close();
   f=await fixture();
   await f.qty(102,0);check(await f.page.locator('#q102').inputValue()==='2','committed lower total preserves cart and points to cart removal');
   await f.page.locator('#q102').focus();await f.page.locator('#q102').press('Meta+a');await f.page.locator('#q102').press('Backspace');await f.page.waitForTimeout(150);await f.page.locator('#q102').pressSequentially('12',{delay:120});check(await f.page.locator('#q102').inputValue()==='12','multi-digit keyboard editing is not overwritten mid-entry');await f.page.locator('#q102').press('Tab');
@@ -115,7 +115,7 @@ const row=(pid,initial=0)=>`<div class="tribe-tickets__tickets-item tribe-ticket
   check(await f.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'390px mobile layout has no horizontal overflow');
   await f.page.setViewportSize({width:320,height:740});await f.page.addStyleTag({content:'html{font-size:20px} .vms-ticket-total-note{font-size:20px}'});check(await f.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'320px larger-text layout keeps labels and actions within viewport');
   await f.page.screenshot({path:path.join(R,'evidence/quantity-mobile-large-text.png'),fullPage:true});
-  check(await f.page.getByRole('link',{name:'Review cart',exact:true}).first().isVisible()&&await f.page.getByRole('link',{name:'Complete checkout',exact:true}).isVisible(),'mobile cart and checkout actions remain visible');
+  check(await f.page.getByRole('link',{name:'Edit cart',exact:true}).first().isVisible()&&await f.page.getByRole('link',{name:'Checkout',exact:true}).isVisible(),'mobile cart and checkout actions remain visible');
   await f.page.setViewportSize({width:1100,height:950});await f.page.screenshot({path:path.join(R,'evidence/quantity-desktop.png'),fullPage:true});
   // Replace native quantity node as TEC may do during a form refresh.
   await f.page.locator('#q102').evaluate(el=>{const copy=el.cloneNode(true);copy.value='0';copy.setAttribute('value','0');copy.removeAttribute('aria-describedby');copy.removeAttribute('aria-label');el.replaceWith(copy);});await f.page.waitForTimeout(200);

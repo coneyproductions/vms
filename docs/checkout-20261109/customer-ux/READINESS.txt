@@ -1,0 +1,155 @@
+Issue #124 — Physical findings / local BVM .4 customer UX candidate
+Recommendation: HOLD
+Local qualification: PASS. Physical Safari disappearance is not conclusively resolved.
+
+Owner: iPhone13 Pro/iOS27.0.1 Safari and iPad10th generation/iPadOS27.0.1.
+Core cart/eligibility and guest layout reportedly pass; zero-additional action fails.
+Owner prepared paid1 + Veteran1 in the private synthetic Staging buyer cart and
+confirmed the checkout button missing on iPad. That cart was left untouched.
+No new physical-device PASS is inferred from local browser profiles.
+
+1. Diagnosis — what is established
+Zero additional selections intentionally hide TEC's purchase button. Existing-cart
+navigation belongs to a separate BVM GET link, never an enabled native submission.
+The .3 normal synthetic zero/positive/zero transitions render that link correctly.
+The prepared-account read-only DOM capture finds it ATTACHED, hidden=false,
+display:flex, opacity1, aria-disabled=false, with no hidden ancestor or busy state.
+It is not in the native submit set. At positive delta it hides, as intended.
+Thus the captured failure is not a missing eligibility allowance/native-disable
+permission problem. Sampled WebKit geometry places the static replacement below
+the viewport, while native/mobile controls have additional placement rules.
+
+Confirmed .3 code gaps: owned control hiding/removal/replacement is not repaired,
+and reused/cloned navigation does not reliably acquire its listener. The replacement
+also lacks native action placement/styling parity. A focused injected hidden-control
+case fails on immutable .3; .4 repairs hidden, style, removal and clone cases.
+This injection demonstrates a real recovery gap; it does NOT prove that the owner's
+physical browser applied that mutation. Desktop/native-page local replay is also
+not the same as instrumenting physical Safari. The precise physical trigger remains
+unconfirmed. A narrow owner clarification about whether the action appears farther
+down was requested and is not assumed answered. Keep HOLD rather than claim success.
+
+2. Local correction and customer wording
+Only the BVM-owned GET link is reattached/rebound and has presentation reconciled.
+Native initialization/quantity/history/cart events still use the guarded .3 flow.
+Busy, invalid, stale-cart, guest, extension and checkout-blocker states remain
+protected. There is no unconditional native TEC enablement or negative addition.
+
+- Zero delta with existing tickets: Continue to checkout (or distinct Complete
+  Payment for a pending order). Positive delta: Add items to cart.
+- Missing guest: visible disabled action plus 'Enter and confirm each additional
+  approved guest email.' Pending: Checking guest / Updating cart with live feedback
+  and progress decoration. Completion/failure restores the correct guarded action.
+- Main notice: '2 tickets are already in your cart. They haven't been purchased yet.'
+  Count is dynamic; Checkout and Edit cart are obvious. Existing quantity minimums
+  remain; one nearby edit action explains reductions/removal. No repeated 'above'.
+- Guest: 'Adding a ticket for another approved Veteran? Enter their registered email
+  address. You do not need to enter your own email.' Already represented own email
+  gets an explanation before lookup. Confirmed validation shows Guest added and
+  cannot repeat; editing permits deliberate replacement. New seats need their own
+  server-checked assignment, with existing confirmed counts preserved.
+- Pricing: one current-cart total or clearly labelled additional-selection amount;
+  optional collapsed Price details. No 'WooCommerce' customer label. Current mixed
+  cart value comes unchanged from the server; no invented tax-inclusive combined
+  total. Add selections to update the combined total; checkout confirms tax/discounts.
+
+3. Immutable candidate and source
+Version: 1.3.19-checkout.20261109.4
+ZIP SHA-256: e15bfa3d00ec2e586e0e677a5031f99f2bf3562062d726da16fcc4708e91d19b
+Runtime-tree SHA-256: edf778c75419bcc1839947858271209793b53e2af72095ba5e700496b74384f9
+Implementation commit: 59f0e9807ba753a86e0c4a24e1d6a54f6ed0cf65
+Local branch: codex/issue124-final-customer-ux-local
+Baseline .3 commit: 97f5a5b8d8e8d1c2e0693f8c675f15bff5e40359
+Baseline .3 tree: 52944323f26f0cdf965815107831b7ebce79c75730ed9481621751a30d4ea5c3
+ZIP: artifacts/backstage-venue-manager-1.3.19-checkout.20261109.4.zip
+Manifest: artifacts/backstage-venue-manager-1.3.19-checkout.20261109.4-manifest.json
+A second independent export from the committed blobs reproduced the ZIP exactly.
+No historical artifact/branch/PR was overwritten or force-pushed. Branch is LOCAL,
+unpublished; draft PR128 remains the historical .3 checkpoint, not this .4 source.
+
+Exactly seven runtime files differ from .3:
+  assets/css/ticketing-front/95-ticket-public-polish.css
+  assets/css/vms-ticketing-front.css
+  assets/vms-ticketing-front.js
+  backstage-venue-manager.php
+  includes/core/registry/constants.php
+  readme.txt
+  vms-build.txt
+
+424 other runtime entries match .3. All431 ZIP entries match the tested manifest.
+PHP eligibility/cart/pricing, Square mirror, native Express Bar and Staff Portal/
+Unified Console/Ops code is unchanged. Eleven critical front-end delta/assignment/
+composition helpers match .3; handleAtomicSubmit differs only in two display strings.
+Tests, builder, sanitized notes/evidence and a ledger entry are repo-only additions.
+The documented isolated recovery-clone preflight warnings are unchanged; no sibling
+installed source or protected stash was altered/synchronized.
+
+4. Focused qualification
+425 checks PASS:
+  330 real Chromium/WebKit customer UX assertions with native TEC JavaScript/CSS;
+   71 existing native quantity/admission/cart lifecycle checks;
+   11 other approval-based admission checks;
+   13 original Express Bar PHP hooks using in-memory Woo fixtures.
+Native HTML reload, direct entry, actual synthetic history return, repeated native
+setup, zero-positive-zero states, DOM attachment/computed styles/hit testing, owned
+control loss/replacement, busy/invalid locks, guests/replacement/duplicate counts,
+positive-difference-only repeated activation, reductions/removal snapshots and
+keyboard navigation pass. Narrow guest controls fit320/393/820/1100px.
+The native/synthetic transport backend is NOT real Woo Cart/provider acceptance.
+
+Express Bar: separate bar form remains enabled/unintercepted; ticket deltas preserve
+existing bar quantity, mixed total remains server-supplied, checkout navigation adds
+neither product type, and native bar nonce/quantity/cart/order/pickup hooks retain
+attribution without leaking bar metadata onto ticket lines. Real bar purchase/
+payment remains untested. All payment controls/policy states remain untouched.
+
+Changed customer labels and the intentional disabled negative action were adapted
+in two existing harnesses; their admission assertions remain. An early fixture's
+missing UTF-8 content type and a guarded new row-creation null check were corrected;
+final same-source runs pass. Parser/diff checks pass. No broad236-check rerun or
+provider matrix. Unchanged server/Policies/Square evidence retains its prior scope.
+The400 security-controller checks are reused for that unchanged .3-pinned artifact,
+not presented as controller/payment qualification for BVM .4.
+
+5. Safety and private evidence
+No Staging code/install/security patch, Square window, provider capture/refund,
+Production access, real-customer/order edit or PR merge occurred. Narrow synthetic
+native authentication and GET-only page diagnosis were performed; all other POSTs
+and external destinations were blocked. Browser quantity changes were local UI
+only, not cart additions/removals. Owner's prepared cart remains retained for the
+ongoing diagnosis. Local mocked fixtures/browsers are closed. Raw DOM, config/session
+and security data remain private; only sanitized findings are suitable for GitHub.
+
+Existing controller issue124-square-controller-20261110.1 remains unchanged:
+3b74875b84b0b28a1d7e51461db0ab3dcf42f52433876fcf3ff669fc97499eea.
+Its pending activation template is still false. Its BVM .3 pins intentionally reject
+substituting .4. Conditional financial/security approvals are not executed or silently
+transferred to revised code. Fresh compatibility qualification and any required
+renewed exact-artifact authorization must precede future payment acceptance.
+
+6. Minimal future Staging acceptance / rollback plan — NOT AUTHORIZED NOW
+After resolving the diagnostic HOLD or explicitly reviewing the remaining uncertainty,
+obtain separate approval for this exact .4 ZIP and focused synthetic NONPAYMENT scope.
+Verify installed .3 all431 entries, companion inventories/settings/security hashes,
+new artifact/tree, fresh recoverable source/DB backup and rollback before transfer.
+Use the existing manual procedure for only the seven approved BVM changed files.
+No Policies/Square/Express Bar/Ops/companion update or security exception.
+
+Read back .4 all431 hashes/version and served JS/CSS/runtime adoption; preserve424
+unrelated entries. Verify zero-delta action without a forced enable/DOM workaround,
+zero-positive-zero, native initialization, direct entry/reload/history/cart changes,
+visible missing-guest/busy/errors and guest confirmation/replacement. Verify native
+Cart-block decreases/removal, event totals, difference-only additions and actual
+Express Bar/mixed cart navigation. Physical native iPhone/iPad on .4 remain a required
+separate acceptance gate; stop before payment. No Square window during these tests.
+
+If a material regression occurs, stop. Restore the seven verified .3 files from the
+retained .3 ZIP (SHA f856ae22e70f1bbe9aba0918b7847e7996f1a41ff93d22e32cb9dc82ba048c7e),
+then verify the full original .3 tree52944323f26f0cdf965815107831b7ebce79c75730ed9481621751a30d4ea5c3,
+served assets, native runtime and companion/security preservation. No schema change;
+DB restore only if required under the approved rollback procedure. Preserve private
+failure evidence; never process a refund/real order as a code-rollback step.
+
+Final: HOLD. Local .4 correction and immutable source/artifact are reviewable, but
+physical disappearance is not conclusively resolved. Staging/Production and Square
+execution stay HOLD. Issue124 remains open; draft PRs remain unmerged.

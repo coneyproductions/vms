@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "baseline_tree_sha256": "52944323f26f0cdf965815107831b7ebce79c75730ed9481621751a30d4ea5c3",
+  "changed_runtime_files": [
+    "assets/css/ticketing-front/95-ticket-public-polish.css",
+    "assets/css/vms-ticketing-front.css",
+    "assets/vms-ticketing-front.js",
+    "backstage-venue-manager.php",
+    "includes/core/registry/constants.php",
+    "readme.txt",
+    "vms-build.txt"
+  ],
+  "preserved_runtime_files": 424,
+  "preserved_functions": {
+    "cartTicketQty": "efee8af6dfe19b41508c7a361be6d84e1c326050a6419ed556ebe7ede5b95cb0",
+    "additionalTicketQty": "61c256589c010dec47ea9009f0b09024392b8dda181956bbbacacabf9e56e0e1",
+    "readTicketLines": "129cf3c04af0f111968d8a89d8db358f17f5de35df730f987bdf27c2e83e6b93",
+    "buildAtomicTicketLines": "fbfa955881cdc7d6b198b9ebcfb4b57f2147a7abf87901b73995e6a06ba337dc",
+    "prepareTicketClaimAssignments": "5a28d4286e614c966e0f685084fd4548804f3f7c6f44dbee6f2062f3a4924911",
+    "collectTicketClaimVerifiedCounts": "d3f1703c6c9462e3ad8d373baa5f86e9c30cf37027e8e16e5b92c6c9e0d72718",
+    "computeAddonLimit": "55047afb7e74b2e7b2efda516b4bb6b358450aab441b770e9690d6e3a056d60c",
+    "collectAddonLines": "8054aab8929fa8f3a67dfd35a3390a5d72682260ec0c2eeb2324ffff71e90d5b",
+    "selectedQualifyingQty": "2408eb6bfd005672989f94b2183e1c8cd21e8f9978622c4931ff295350abf42c",
+    "collectPurchaseExtensions": "49d18ef6d9ad99c4c057b12ee4302ac02f71476c59cf3b1e31403603e2fd4a2a",
+    "fetchCartContextBeforeSubmit": "bc3143ddc2f52cf9cca230486a76ac7ed76d99598396c2f828daa560a72705d6"
+  },
+  "atomic_submit_only_two_display_strings_changed": true,
+  "server_eligibility_cart_pricing_and_financial_PHP_unchanged": true,
+  "existing_controller_zip_unchanged": true,
+  "activation_template_still_false": true
+}
