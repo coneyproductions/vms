@@ -1962,6 +1962,37 @@ details.vms-av-method[data-method="ics"] .field input[type="url"] {
   text-align: right;
 }
 
+/* #143: restore the existing concise complimentary-admission disclosure. */
+.vms-vp-progress-breakdown__details {
+  min-width: 0;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.vms-vp-progress-breakdown__details > summary {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.vms-vp-progress-breakdown__details > summary:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.vms-vp-progress-breakdown__details[open] > summary {
+  margin-bottom: 4px;
+}
+
+.vms-vp-progress-breakdown__details .vms-vp-progress-breakdown__row {
+  padding-block: 2px;
+  padding-inline-start: 12px;
+}
+
 .vms-vp-progress-inline-note {
   font-size: 12px;
   font-weight: 700;

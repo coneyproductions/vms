@@ -979,6 +979,38 @@ if (!function_exists('bvmgr_vendor_portal_get_count_breakdown')) {
             : 0;
         $guest_admissions = bvmgr_vendor_portal_get_guest_admissions_count($plan_id);
         $comp_guest = max(0, $free_online + $free_door + $guest_admissions);
+        $comp_detail = array();
+        $remaining_free = max(0, $free_online + $free_door);
+        foreach ((array) ($merged_snapshot['complimentary_categories'] ?? array()) as $category) {
+            if (!is_array($category) || $remaining_free <= 0) {
+                continue;
+            }
+            $label = trim(wp_strip_all_tags((string) ($category['label'] ?? '')));
+            $qty = min($remaining_free, max(0, (int) ($category['qty'] ?? 0)));
+            if ($label === '' || $qty <= 0) {
+                continue;
+            }
+            $comp_detail[] = array(
+                'key' => sanitize_key((string) ($category['key'] ?? $label)),
+                'label' => $label,
+                'qty' => $qty,
+            );
+            $remaining_free -= $qty;
+        }
+        if ($remaining_free > 0) {
+            $comp_detail[] = array(
+                'key' => 'other_complimentary_admissions',
+                'label' => __('Other complimentary admissions', 'backstage-venue-manager'),
+                'qty' => $remaining_free,
+            );
+        }
+        if ($guest_admissions > 0) {
+            $comp_detail[] = array(
+                'key' => 'guest_passes',
+                'label' => __('Guest passes', 'backstage-venue-manager'),
+                'qty' => $guest_admissions,
+            );
+        }
 
         $lines = array(
             array(
@@ -1002,6 +1034,7 @@ if (!function_exists('bvmgr_vendor_portal_get_count_breakdown')) {
             'presales' => $presales,
             'door_sales' => $door_sales,
             'comp_guest' => $comp_guest,
+            'comp_detail' => $comp_detail,
             'lines' => $lines,
             'has_any' => ($presales > 0) || ($door_sales > 0) || ($comp_guest > 0) || !empty($merged_snapshot) || !empty($stats_payload),
         );
@@ -1035,6 +1068,30 @@ if (!function_exists('bvmgr_vendor_portal_render_count_breakdown_markup')) {
             echo '<span class="vms-vp-progress-breakdown__label">' . esc_html($label) . '</span>';
             echo '<strong>' . esc_html(number_format_i18n($qty)) . '</strong>';
             echo '</div>';
+        }
+        $comp_detail = isset($count_breakdown['comp_detail']) && is_array($count_breakdown['comp_detail'])
+            ? (array) $count_breakdown['comp_detail']
+            : array();
+        if (!empty($comp_detail)) {
+            $comp_total = max(0, (int) ($count_breakdown['comp_guest'] ?? 0));
+            echo '<details class="vms-vp-progress-breakdown__details">';
+            /* translators: %d: total complimentary and guest admissions. */
+            echo '<summary>' . esc_html(sprintf(__('Complimentary admissions — %d', 'backstage-venue-manager'), $comp_total)) . '</summary>';
+            foreach ($comp_detail as $detail) {
+                if (!is_array($detail)) {
+                    continue;
+                }
+                $detail_label = trim((string) ($detail['label'] ?? ''));
+                $detail_qty = max(0, (int) ($detail['qty'] ?? 0));
+                if ($detail_label === '' || $detail_qty <= 0) {
+                    continue;
+                }
+                echo '<div class="vms-vp-progress-breakdown__row">';
+                echo '<span class="vms-vp-progress-breakdown__label">' . esc_html($detail_label) . '</span>';
+                echo '<strong>' . esc_html(number_format_i18n($detail_qty)) . '</strong>';
+                echo '</div>';
+            }
+            echo '</details>';
         }
         echo '</div>';
         return (string) ob_get_clean();
@@ -1479,7 +1536,10 @@ if (!function_exists('bvmgr_vendor_portal_render_progress_cards_section')) {
 
             echo '<div class="vms-vp-progress-card__countline">';
             /* translators: %d: attendance count for this vendor event card. */
-            echo '<strong>' . esc_html(sprintf($history_mode ? __('Final count: %d', 'backstage-venue-manager') : __('Current count: %d', 'backstage-venue-manager'), $attendance_count)) . '</strong>';
+            $count_label = $history_mode
+                ? __('Final paid count: %d', 'backstage-venue-manager')
+                : __('Current paid count: %d', 'backstage-venue-manager');
+            echo '<strong>' . esc_html(sprintf($count_label, $attendance_count)) . '</strong>';
             echo '</div>';
 
             if ($meter_enabled) {
