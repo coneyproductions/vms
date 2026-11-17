@@ -1,0 +1,125 @@
+.vms-door-checkin {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px;
+  background: linear-gradient(180deg, #f6f9ff 0%, #ffffff 100%);
+  border: 1px solid #d8dfeb;
+  border-radius: 12px;
+}
+
+.vms-door-toolbar {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.vms-door-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.vms-door-toolbar input,
+.vms-door-toolbar select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid #bac7dd;
+  border-radius: 8px;
+  padding: 0 12px;
+}
+
+.vms-door-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.vms-door-filters button {
+  border: 1px solid #c4cedf;
+  background: #ffffff;
+  border-radius: 999px;
+  min-height: 38px;
+  padding: 0 12px;
+}
+
+.vms-door-filters button.is-active {
+  background: #103b7a;
+  border-color: #103b7a;
+  color: #ffffff;
+}
+
+.vms-door-summary {
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.vms-door-feedback {
+  min-height: 18px;
+  margin: 0 0 10px;
+}
+
+.vms-door-feedback.is-error {
+  color: #a02222;
+}
+
+.vms-door-results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vms-door-card {
+  border: 1px solid #cfd9ea;
+  border-radius: 10px;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.vms-door-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.vms-door-card-top h3 {
+  margin: 0;
+  font-size: 21px;
+}
+
+.vms-door-badge {
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: #d8e8ff;
+  font-weight: 700;
+}
+
+.vms-door-note,
+.vms-door-phone {
+  margin: 8px 0;
+}
+
+.vms-door-checkin-btn {
+  min-height: 44px;
+  border: 1px solid #1b4f9a;
+  border-radius: 8px;
+  background: #1b4f9a;
+  color: #ffffff;
+  font-weight: 700;
+  width: 100%;
+}
+
+.vms-door-checkin-btn[disabled] {
+  background: #dde3ef;
+  border-color: #dde3ef;
+  color: #63708a;
+}
+
+@media (min-width: 640px) {
+  .vms-door-toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -1,0 +1,278 @@
+<?php
+if (!defined('ABSPATH')) exit;
+
+/**
+ * VMS – Venue Default Compensation by Day of Week
+ *
+ * Stores per-day defaults on vms_venue as meta:
+ *   _vms_default_comp_by_dow (array)
+ *
+ * Day-of-week keys:
+ *   0 = Sunday . . . 6 = Saturday  (matches PHP date('w'))
+ *
+ * Each day stores:
+ *   structure          flat_fee | flat_fee_door_split | door_split | attendance_bonus
+ *   flat_fee_amount    float
+ *   door_split_percent float
+ *   attendance_bonus_mode step | continuous
+ *   attendance_bonus_start_count int
+ *   attendance_bonus_step_size int
+ *   attendance_bonus_step_bonus float
+ *   attendance_bonus_per_ticket_rate float
+ *   attendance_bonus_max_bonus float
+ *   commission_percent float   (optional; useful for agency venues)
+ *   commission_mode    artist_fee | gross
+ */
+
+/**
+ * Register metabox on Venue edit screen.
+ */
+add_action('add_meta_boxes', function () {
+    add_meta_box(
+        'vms_venue_comp_defaults',
+        __('Default Pay (By Day)', 'backstage-venue-manager'),
+        'bvmgr_render_venue_comp_defaults_metabox',
+        'vms_venue',
+        'normal',
+        'default'
+    );
+});
+
+/**
+ * Save metabox data.
+ */
+add_action('save_post_vms_venue', function ($post_id, $post) {
+
+    if (!$post || $post->post_type !== 'vms_venue') return;
+
+    // Autosave / revisions guards
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    if (wp_is_post_revision($post_id)) return;
+
+    // Nonce
+    $nonce = (isset($_POST['bvmgr_venue_comp_defaults_nonce']) && !is_array($_POST['bvmgr_venue_comp_defaults_nonce']))
+        ? sanitize_text_field(wp_unslash((string) $_POST['bvmgr_venue_comp_defaults_nonce']))
+        : '';
+    if ($nonce === '' || !wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_save_venue_comp_defaults'))) {
+        return;
+    }
+
+    // Permission
+    if (!current_user_can('edit_post', $post_id)) return;
+
+    $incoming = isset($_POST['vms_venue_comp_by_dow']) && is_array($_POST['vms_venue_comp_by_dow'])
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structured venue compensation defaults are unslashed here and normalized field-by-field below.
+        ? (array) wp_unslash($_POST['vms_venue_comp_by_dow'])
+        : array();
+
+    $out = array();
+
+    // Expected days 0..6
+    for ($dow = 0; $dow <= 6; $dow++) {
+        $row = isset($incoming[$dow]) && is_array($incoming[$dow]) ? $incoming[$dow] : array();
+
+        $structure = isset($row['structure']) ? sanitize_key((string) $row['structure']) : '';
+        if (!in_array($structure, array('flat_fee', 'flat_fee_door_split', 'door_split'), true)) {
+            $structure = 'flat_fee';
+        }
+
+        // Numbers: allow blank -> '' (meaning “no default provided”)
+        $flat  = isset($row['flat_fee_amount']) ? trim((string) $row['flat_fee_amount']) : '';
+        $split = isset($row['door_split_percent']) ? trim((string) $row['door_split_percent']) : '';
+        $comm  = isset($row['commission_percent']) ? trim((string) $row['commission_percent']) : '';
+
+        $flat_val  = ($flat === '') ? '' : (float) $flat;
+        $split_val = ($split === '') ? '' : (float) $split;
+        $comm_val  = ($comm === '') ? '' : (float) $comm;
+
+        // Commission mode
+        $comm_mode = isset($row['commission_mode']) ? sanitize_key((string) $row['commission_mode']) : 'artist_fee';
+        if (!in_array($comm_mode, array('artist_fee', 'gross'), true)) {
+            $comm_mode = 'artist_fee';
+        }
+
+        // Normalize bounds
+        if ($split_val !== '' && ($split_val < 0 || $split_val > 100)) $split_val = '';
+        if ($comm_val !== '' && ($comm_val < 0 || $comm_val > 100)) $comm_val = '';
+        if ($flat_val !== '' && $flat_val < 0) $flat_val = '';
+
+        $out[$dow] = array(
+            'structure'          => $structure,
+            'flat_fee_amount'    => $flat_val,
+            'door_split_percent' => $split_val,
+            'commission_percent' => $comm_val,
+            'commission_mode'    => $comm_mode,
+        );
+    }
+
+    update_post_meta($post_id, '_vms_default_comp_by_dow', $out);
+
+}, 20, 2);
+
+/**
+ * Render metabox UI.
+ */
+function bvmgr_render_venue_comp_defaults_metabox($post) {
+
+    wp_nonce_field('bvmgr_save_venue_comp_defaults', 'bvmgr_venue_comp_defaults_nonce');
+
+    $saved = get_post_meta($post->ID, '_vms_default_comp_by_dow', true);
+    if (!is_array($saved)) $saved = array();
+
+    // Default row template
+    $defaults = array(
+        'structure'          => 'flat_fee',
+        'flat_fee_amount'    => '',
+        'door_split_percent' => '',
+        'commission_percent' => '',
+        'commission_mode'    => 'artist_fee',
+    );
+
+    // Days in UI order (Mon..Sun is easier for humans)
+    $days = array(
+        1 => __('Mon', 'backstage-venue-manager'),
+        2 => __('Tue', 'backstage-venue-manager'),
+        3 => __('Wed', 'backstage-venue-manager'),
+        4 => __('Thu', 'backstage-venue-manager'),
+        5 => __('Fri', 'backstage-venue-manager'),
+        6 => __('Sat', 'backstage-venue-manager'),
+        0 => __('Sun', 'backstage-venue-manager'),
+    );
+
+    echo '<div class="vms-note">';
+    echo '<strong>' . esc_html__('How this works:', 'backstage-venue-manager') . '</strong> ';
+    echo esc_html__('When you create/edit an Event Plan, we can auto-fill compensation based on Venue + Event Date. Event Plan values remain the final override.', 'backstage-venue-manager');
+    echo '<div class="vms-help">' . esc_html__('Holidays/closed days will be layered on top in the next step.', 'backstage-venue-manager') . '</div>';
+    echo '</div>';
+
+    echo '<table class="vms-comp-table widefat striped">';
+    echo '<thead><tr>';
+    echo '<th>' . esc_html__('Day', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Structure', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Flat Fee', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Door Split %', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Commission %', 'backstage-venue-manager') . '</th>';
+    echo '<th>' . esc_html__('Commission Mode', 'backstage-venue-manager') . '</th>';
+    echo '</tr></thead><tbody>';
+
+    foreach ($days as $dow => $label) {
+
+        $row = isset($saved[$dow]) && is_array($saved[$dow]) ? $saved[$dow] : array();
+        $row = array_merge($defaults, $row);
+
+        $name = 'vms_venue_comp_by_dow[' . (int)$dow . ']';
+
+        echo '<tr>';
+        echo '<td class="vms-day">' . esc_html($label) . '</td>';
+
+        // Structure
+        echo '<td>';
+        echo '<select name="' . esc_attr($name . '[structure]') . '">';
+        echo '<option value="flat_fee" ' . selected($row['structure'], 'flat_fee', false) . '>' . esc_html__('Flat Fee Only', 'backstage-venue-manager') . '</option>';
+        echo '<option value="flat_fee_door_split" ' . selected($row['structure'], 'flat_fee_door_split', false) . '>' . esc_html__('Flat Fee + Door Split', 'backstage-venue-manager') . '</option>';
+        echo '<option value="door_split" ' . selected($row['structure'], 'door_split', false) . '>' . esc_html__('Door Split Only', 'backstage-venue-manager') . '</option>';
+        echo '</select>';
+        echo '</td>';
+
+        // Flat fee
+        echo '<td>';
+        echo '<input type="number" step="0.01" min="0" name="' . esc_attr($name . '[flat_fee_amount]') . '" value="' . esc_attr($row['flat_fee_amount']) . '" placeholder="0.00">';
+        echo '</td>';
+
+        // Split
+        echo '<td>';
+        echo '<input type="number" step="0.01" min="0" max="100" name="' . esc_attr($name . '[door_split_percent]') . '" value="' . esc_attr($row['door_split_percent']) . '" placeholder="0">';
+        echo '</td>';
+
+        // Commission %
+        echo '<td>';
+        echo '<input type="number" step="0.01" min="0" max="100" name="' . esc_attr($name . '[commission_percent]') . '" value="' . esc_attr($row['commission_percent']) . '" placeholder="">';
+        echo '<div class="vms-help">' . esc_html__('Optional. Leave blank for no default agent fee.', 'backstage-venue-manager') . '</div>';
+        echo '</td>';
+
+        // Commission mode
+        echo '<td>';
+        echo '<select name="' . esc_attr($name . '[commission_mode]') . '">';
+        echo '<option value="artist_fee" ' . selected($row['commission_mode'], 'artist_fee', false) . '>' . esc_html__('Added to artist fee', 'backstage-venue-manager') . '</option>';
+        echo '<option value="gross" ' . selected($row['commission_mode'], 'gross', false) . '>' . esc_html__('Taken from gross', 'backstage-venue-manager') . '</option>';
+        echo '</select>';
+        echo '</td>';
+
+        echo '</tr>';
+    }
+
+    echo '</tbody></table>';
+
+    echo '<p class="vms-help vms-venue-comp-help-bottom">' .
+        esc_html__('Tip: Leaving a value blank means “no default” for that day; the Event Plan can still be set manually.', 'backstage-venue-manager') .
+        '</p>';
+}
+
+/**
+ * Helper: get all per-day defaults for a venue.
+ */
+
+if (!function_exists('bvmgr_get_venue_default_comp_by_dow')) {
+function bvmgr_get_venue_default_comp_by_dow(int $venue_id): array {
+    $saved = get_post_meta($venue_id, '_vms_default_comp_by_dow', true);
+    return is_array($saved) ? $saved : array();
+}
+}
+
+
+
+
+if (!function_exists('bvmgr_get_venue_default_comp_for_date')) {
+function bvmgr_get_venue_default_comp_for_date(int $venue_id, string $event_date): array {
+    $event_date = trim($event_date);
+    if ($venue_id <= 0 || $event_date === '') return array();
+
+    // Use VMS timezone helper if you have it; fallback to WP timezone.
+    $tz = null;
+    if (function_exists('bvmgr_get_timezone')) {
+        $tz = bvmgr_get_timezone(); // expected DateTimeZone
+    }
+    if (!$tz instanceof DateTimeZone) {
+        $tz = wp_timezone();
+    }
+
+    // Parse date safely
+    try {
+        $dt = new DateTimeImmutable($event_date, $tz);
+    } catch (Exception $e) {
+        return array();
+    }
+
+    $dow = (int) $dt->format('w'); // 0..6 (Sun..Sat)
+
+    $all = bvmgr_get_venue_default_comp_by_dow($venue_id);
+    if (!isset($all[$dow]) || !is_array($all[$dow])) return array();
+
+    // Normalize output keys
+    $row = $all[$dow];
+
+    $normalized_terms = function_exists('bvmgr_normalize_comp_terms') ? bvmgr_normalize_comp_terms($row) : array();
+    $out = array(
+        'structure'          => isset($normalized_terms['structure']) ? (string) $normalized_terms['structure'] : (isset($row['structure']) ? (string) $row['structure'] : 'flat_fee'),
+        'flat_fee_amount'    => $normalized_terms['flat_fee_amount'] ?? ($row['flat_fee_amount'] ?? ''),
+        'door_split_percent' => $normalized_terms['door_split_percent'] ?? ($row['door_split_percent'] ?? ''),
+        'attendance_bonus_mode' => $normalized_terms['attendance_bonus_mode'] ?? null,
+        'attendance_bonus_start_count' => $normalized_terms['attendance_bonus_start_count'] ?? null,
+        'attendance_bonus_step_size' => $normalized_terms['attendance_bonus_step_size'] ?? null,
+        'attendance_bonus_step_bonus' => $normalized_terms['attendance_bonus_step_bonus'] ?? null,
+        'attendance_bonus_per_ticket_rate' => $normalized_terms['attendance_bonus_per_ticket_rate'] ?? null,
+        'attendance_bonus_max_bonus' => $normalized_terms['attendance_bonus_max_bonus'] ?? null,
+        'commission_percent' => $row['commission_percent'] ?? '',
+        'commission_mode'    => isset($row['commission_mode']) ? (string) $row['commission_mode'] : 'artist_fee',
+    );
+
+    if (!in_array($out['structure'], array('flat_fee', 'flat_fee_door_split', 'door_split', 'attendance_bonus'), true)) {
+        $out['structure'] = 'flat_fee';
+    }
+    if (!in_array($out['commission_mode'], array('artist_fee', 'gross'), true)) {
+        $out['commission_mode'] = 'artist_fee';
+    }
+
+    return $out;
+}
+}
