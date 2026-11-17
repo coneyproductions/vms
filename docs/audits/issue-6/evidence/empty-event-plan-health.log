@@ -1,0 +1,13 @@
+{
+    "fixture": "empty synthetic plan payload",
+    "health": {
+        "status": "critical",
+        "label": "Critical",
+        "summary": "3 critical items need attention now."
+    },
+    "red_alerts": [
+        "Venue missing",
+        "Event date missing",
+        "Primary vendor missing"
+    ]
+}
