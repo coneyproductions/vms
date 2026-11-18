@@ -1,0 +1,290 @@
+.vms-event-profitability-admin {
+  max-width: 1400px;
+}
+
+.vms-event-profitability-intro {
+  max-width: 980px;
+  margin: 0 0 16px;
+}
+
+.vms-event-profitability-note-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.vms-event-profitability-note,
+.vms-event-profitability-summary-card,
+.vms-event-profitability-card {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+}
+
+.vms-event-profitability-note {
+  padding: 12px 14px;
+}
+
+.vms-event-profitability-note strong,
+.vms-event-profitability-summary-card strong,
+.vms-event-profitability-big-metric strong {
+  display: block;
+}
+
+.vms-event-profitability-note span,
+.vms-event-profitability-summary-card .label,
+.vms-event-profitability-big-metric .label,
+.vms-event-profitability-metrics dt {
+  color: #50575e;
+}
+
+.vms-event-profitability-filters {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 18px;
+}
+
+.vms-event-profitability-view-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vms-event-profitability-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid #c3c4c7;
+  background: #fff;
+  color: #1d2327;
+  text-decoration: none;
+}
+
+.vms-event-profitability-tab.is-active {
+  background: #2271b1;
+  border-color: #2271b1;
+  color: #fff;
+}
+
+.vms-event-profitability-search-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vms-event-profitability-search-row input[type="search"] {
+  min-width: 220px;
+  flex: 1 1 260px;
+}
+
+.vms-event-profitability-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 0 0 18px;
+}
+
+.vms-event-profitability-summary-card {
+  padding: 14px;
+}
+
+.vms-event-profitability-summary-card .label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  line-height: 1.35;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vms-event-profitability-summary-card strong {
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.vms-event-profitability-list {
+  display: grid;
+  gap: 14px;
+}
+
+.vms-event-profitability-card {
+  padding: 14px;
+}
+
+.vms-event-profitability-card-head {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.vms-event-profitability-card-title-wrap h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.vms-event-profitability-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  color: #50575e;
+  font-size: 13px;
+}
+
+.vms-event-profitability-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vms-profit-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.vms-profit-pill-stage,
+.vms-profit-pill-status {
+  background: #f6f7f7;
+  border-color: #dcdcde;
+  color: #1d2327;
+}
+
+.vms-profit-pill.is-good {
+  background: #edfaef;
+  border-color: #7ad09b;
+  color: #0f5132;
+}
+
+.vms-profit-pill.is-decent {
+  background: #fff8e1;
+  border-color: #e8c14b;
+  color: #7a5600;
+}
+
+.vms-profit-pill.is-bust {
+  background: #fef1f2;
+  border-color: #f0a0ab;
+  color: #8b1e2d;
+}
+
+.vms-profit-pill.is-cancelled {
+  background: #f1f2f4;
+  border-color: #c3c4c7;
+  color: #50575e;
+}
+
+.vms-event-profitability-core {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.vms-event-profitability-big-metric {
+  padding: 12px;
+  border-radius: 12px;
+  background: #f6f7f7;
+}
+
+.vms-event-profitability-big-metric strong {
+  margin-top: 4px;
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.vms-event-profitability-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.vms-event-profitability-metrics div {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #eaecf0;
+}
+
+.vms-event-profitability-metrics dt {
+  margin: 0 0 6px;
+  font-size: 12px;
+  line-height: 1.35;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vms-event-profitability-metrics dd {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+  color: #111827;
+}
+
+.vms-event-profitability-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.vms-event-profitability-admin .is-positive {
+  color: #0f5132;
+}
+
+.vms-event-profitability-admin .is-negative {
+  color: #8b1e2d;
+}
+
+.vms-event-profitability-admin .is-neutral {
+  color: #1d2327;
+}
+
+@media (min-width: 900px) {
+  .vms-event-profitability-card-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+}
+
+@media (max-width: 782px) {
+  .vms-event-profitability-admin {
+    margin-right: 10px;
+  }
+
+  .vms-event-profitability-core {
+    grid-template-columns: 1fr;
+  }
+
+  .vms-event-profitability-card {
+    padding: 12px;
+  }
+
+  .vms-event-profitability-big-metric strong {
+    font-size: 22px;
+  }
+
+  .vms-event-profitability-metrics dd {
+    font-size: 17px;
+  }
+
+  .vms-event-profitability-card-actions {
+    justify-content: stretch;
+  }
+
+  .vms-event-profitability-card-actions .button {
+    width: 100%;
+    text-align: center;
+  }
+}

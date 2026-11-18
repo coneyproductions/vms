@@ -1,0 +1,23 @@
+<?php
+defined('ABSPATH') || exit;
+
+/**
+ * Legacy main-filename bridge.
+ *
+ * This file intentionally has no WordPress plugin header, so the package exposes
+ * one plugin entry only. Existing same-directory installations whose active
+ * basename still points here load the canonical bootstrap. Activation state
+ * remains exclusively controlled by the administrator through WordPress.
+ */
+
+if (!defined('BVMGR_LEGACY_PLUGIN_FILE')) {
+	define('BVMGR_LEGACY_PLUGIN_FILE', __FILE__);
+}
+
+$bvmgr_canonical_plugin_file = __DIR__ . '/backstage-venue-manager.php';
+require_once $bvmgr_canonical_plugin_file;
+
+register_activation_hook(__FILE__, 'bvmgr_activate_plugin');
+register_deactivation_hook(__FILE__, 'bvmgr_deactivate_plugin');
+
+unset($bvmgr_canonical_plugin_file);

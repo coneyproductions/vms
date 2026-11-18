@@ -1,0 +1,32 @@
+{
+  "version": "1.3.21-cumulative.20261117.61021431",
+  "complete_release_files": 432,
+  "public_source_files": 430,
+  "package_sha256": "e31cf6ece94470995b0e89dfadb19d0019dba6eaeb2d373112509be7e9efdc93",
+  "complete_manifest_sha256": "a4b613343123c157966e57fb7951965e5fc76ca5a46a74147a4f84583b343da4",
+  "production_source_commit_private": "bd49d97ba4c486f68c315751fedbc737b3911acd",
+  "complete_source_bvm_tree_private": "6e3797f45ad5eb8663f30e86a35472536f636582",
+  "sanitized_public_bvm_tree": "43a319980f6555c6863696fb7aa7e3a6ac1fa415",
+  "public_base_commit": "58ad78d0826200b5875a6f744065d4866b6f37c8",
+  "prior_public_sanitized_baseline_commit": "af519b6949b580e9996e10d083aa4cf48ddf1e20",
+  "private_assets": [
+    {
+      "path": "artifacts/business-discount-qr/customer-offer.png",
+      "sha256": "cc2bbc482e9b5b72c9129340b99de13c834a934e807bd9aac7e87f29889e29ea",
+      "size": 194837,
+      "policy": "retained privately; omitted from public tree and newly published objects"
+    },
+    {
+      "path": "artifacts/business-discount-qr/operator-distribution.png",
+      "sha256": "d12da24b35a300f361cbb367c5213cabbf996510c474db17b430221ce3f3096d",
+      "size": 119665,
+      "policy": "retained privately; omitted from public tree and newly published objects"
+    }
+  ],
+  "accepted_test_count": 9,
+  "production_install_utc": "2026-11-18T04:26:27.364462+00:00",
+  "production_verification_utc": "2026-11-18T04:32:24.136623+00:00",
+  "qualification": "bounded deployment and smoke verification; accepted coverage gaps retained",
+  "source_publication": "pending separate owner approval",
+  "owner_acceptance_and_issue_closure": "not inferred from deployment verification"
+}

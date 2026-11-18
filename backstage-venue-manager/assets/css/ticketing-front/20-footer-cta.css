@@ -1,0 +1,156 @@
+/* Module: Footer CTA + RSVP + Desktop Widths */
+/* Use VMS unified subtotal as the only prominent total display. */
+.single-tribe_events .tribe-tickets__tickets-footer [class*="tickets-footer-total"],
+.single-tribe_events .tribe-tickets__tickets-footer [class*="tickets-footer-quantity"],
+.tribe-events-single .tribe-tickets__tickets-footer [class*="tickets-footer-total"],
+.tribe-events-single .tribe-tickets__tickets-footer [class*="tickets-footer-quantity"] {
+  display: none !important;
+}
+
+/* Force footer action stack: subtotal first, CTA centered below (theme-proof). */
+:is(.single-tribe_events, .tribe-events-single) .vms-ticketing-action-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-footer.vms-ticketing-footer-stack {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  margin-top: 18px !important;
+  padding-top: 12px !important;
+  border-top: 1px solid rgba(15, 23, 42, 0.10);
+}
+
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-footer.vms-ticketing-footer-stack .vms-ticketing-action-stack > #vms-ticketing-subtotal {
+  order: 10 !important;
+  flex: 0 0 auto !important;
+  width: min(100%, 280px) !important;
+  margin: 0 auto !important;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-footer.vms-ticketing-footer-stack .vms-ticketing-action-stack > #tribe-tickets__tickets-submit,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-footer.vms-ticketing-footer-stack .vms-ticketing-action-stack > .tribe-tickets__tickets-buy {
+  order: 20 !important;
+  display: block !important;
+  flex: 0 0 auto !important;
+  margin: 14px auto 0 !important;
+  min-width: 0 !important;
+  width: min(100%, 280px) !important;
+  text-align: center !important;
+}
+
+/* Keep desktop/mobile hit-target behavior consistent across theme wrappers and nested label spans. */
+.single-tribe_events #tribe-tickets__tickets-submit,
+.single-tribe_events .tribe-tickets__tickets-buy,
+.tribe-events-single #tribe-tickets__tickets-submit,
+.tribe-events-single .tribe-tickets__tickets-buy {
+  pointer-events: auto !important;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Ensure clicks on CTA text/inner nodes resolve to the button itself. */
+.single-tribe_events #tribe-tickets__tickets-submit *,
+.single-tribe_events .tribe-tickets__tickets-buy *,
+.tribe-events-single #tribe-tickets__tickets-submit *,
+.tribe-events-single .tribe-tickets__tickets-buy * {
+  pointer-events: none !important;
+}
+
+/* Raise GA ticket quantity control legibility. */
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-form {
+  font-size: 17px;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-title,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-content-title {
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-price,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-extra-price {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-availability,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-extra-available {
+  font-size: 15px !important;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity input,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity button {
+  font-size: 18px !important;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-item-quantity input {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+:is(.single-tribe_events, .tribe-events-single) #tribe-tickets__tickets-submit,
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__tickets-buy {
+  min-height: 44px;
+  font-size: 16px;
+  padding: 10px 16px;
+}
+
+/* Keep the RSVP card aligned with the widened ticket card, and leave a clear gap before tickets. */
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__rsvp-wrapper {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .event-tickets + .tribe-tickets__tickets-wrapper .tribe-tickets__tickets-form {
+  margin-top: 32px !important;
+}
+
+:is(.single-tribe_events, .tribe-events-single) .tribe-tickets__rsvp {
+  width: 100%;
+}
+
+@media (max-width: 782px) {
+  .single-tribe_events .tribe-tickets__tickets[data-vms-addons-mounted="1"],
+  .single-tribe_events .tribe-tickets__tickets-form[data-vms-addons-mounted="1"],
+  .single-tribe_events #tribe-tickets[data-vms-addons-mounted="1"],
+  .tribe-events-single .tribe-tickets__tickets[data-vms-addons-mounted="1"],
+  .tribe-events-single .tribe-tickets__tickets-form[data-vms-addons-mounted="1"],
+  .tribe-events-single #tribe-tickets[data-vms-addons-mounted="1"] {
+    padding-bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .vms-ent-remove,
+  .vms-sub-remove {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+}
+
+@media (min-width: 960px) {
+  .single-tribe_events .tribe-tickets__rsvp-wrapper,
+  .single-tribe_events .tribe-tickets__rsvp,
+  .single-tribe_events .tribe-tickets__tickets,
+  .single-tribe_events .tribe-tickets__tickets-form,
+  .single-tribe_events .tribe-tickets__tickets-item,
+  .single-tribe_events .tribe-tickets,
+  .tribe-events-single .tribe-tickets__rsvp-wrapper,
+  .tribe-events-single .tribe-tickets__rsvp,
+  .tribe-events-single .tribe-tickets__tickets,
+  .tribe-events-single .tribe-tickets__tickets-form,
+  .tribe-events-single .tribe-tickets__tickets-item,
+  .tribe-events-single .tribe-tickets {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}

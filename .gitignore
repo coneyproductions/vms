@@ -20,3 +20,7 @@ test-results/
 *.rar
 *.tar
 *.tgz
+
+# Private BVM release assets: retained separately, never public source.
+/backstage-venue-manager/artifacts/business-discount-qr/customer-offer.png
+/backstage-venue-manager/artifacts/business-discount-qr/operator-distribution.png
