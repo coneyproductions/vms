@@ -1,0 +1,1410 @@
+.single-tribe_events .tribe-tickets__tickets-form[data-vms-ticketing-rewrite="1"],
+.tribe-events-single .tribe-tickets__tickets-form[data-vms-ticketing-rewrite="1"],
+#tribe-tickets form[data-vms-ticketing-rewrite="1"] {
+  display: block;
+}
+
+.single-tribe_events .vms-rw-addons,
+.tribe-events-single .vms-rw-addons,
+#tribe-tickets .vms-rw-addons {
+  margin: 18px 0 0;
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.vms-ticketing-flow .vms-addon-mount .vms-rw-addons {
+  margin-top: 0;
+}
+
+.single-tribe_events .vms-rw-addons__header,
+.tribe-events-single .vms-rw-addons__header,
+#tribe-tickets .vms-rw-addons__header {
+  margin-bottom: 12px;
+}
+
+.single-tribe_events .vms-rw-addons__title,
+.tribe-events-single .vms-rw-addons__title,
+#tribe-tickets .vms-rw-addons__title {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+  line-height: 1.25;
+}
+
+.single-tribe_events .vms-rw-addons__intro,
+.tribe-events-single .vms-rw-addons__intro,
+#tribe-tickets .vms-rw-addons__intro {
+  margin: 0;
+  font-size: 0.94rem;
+  opacity: 0.78;
+}
+
+.single-tribe_events .vms-rw-addons__message,
+.tribe-events-single .vms-rw-addons__message,
+#tribe-tickets .vms-rw-addons__message {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+}
+
+.single-tribe_events .vms-rw-addons__message.is-error,
+.tribe-events-single .vms-rw-addons__message.is-error,
+#tribe-tickets .vms-rw-addons__message.is-error {
+  background: rgba(180, 35, 24, 0.08);
+  color: #7a1e18;
+}
+
+.single-tribe_events .vms-rw-addons__message.is-success,
+.tribe-events-single .vms-rw-addons__message.is-success,
+#tribe-tickets .vms-rw-addons__message.is-success {
+  background: rgba(28, 110, 54, 0.08);
+  color: #185d2e;
+}
+
+.single-tribe_events .vms-rw-addon-list,
+.tribe-events-single .vms-rw-addon-list,
+#tribe-tickets .vms-rw-addon-list {
+  display: grid;
+  gap: 12px;
+}
+
+.single-tribe_events .vms-rw-addon,
+.tribe-events-single .vms-rw-addon,
+#tribe-tickets .vms-rw-addon {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.single-tribe_events .vms-rw-addon.is-selected,
+.tribe-events-single .vms-rw-addon.is-selected,
+#tribe-tickets .vms-rw-addon.is-selected {
+  border-color: rgba(0, 0, 0, 0.28);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.single-tribe_events .vms-rw-addon__image img,
+.tribe-events-single .vms-rw-addon__image img,
+#tribe-tickets .vms-rw-addon__image img {
+  display: block;
+  width: 100%;
+  max-width: 120px;
+  height: auto;
+  border-radius: 12px;
+}
+
+.single-tribe_events .vms-rw-addon__head,
+.tribe-events-single .vms-rw-addon__head,
+#tribe-tickets .vms-rw-addon__head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.single-tribe_events .vms-rw-addon__title,
+.tribe-events-single .vms-rw-addon__title,
+#tribe-tickets .vms-rw-addon__title {
+  display: block;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.single-tribe_events .vms-rw-addon__price,
+.tribe-events-single .vms-rw-addon__price,
+#tribe-tickets .vms-rw-addon__price {
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.single-tribe_events .vms-rw-addon__main,
+.tribe-events-single .vms-rw-addon__main,
+#tribe-tickets .vms-rw-addon__main {
+  min-width: 0;
+}
+
+.single-tribe_events .vms-rw-addon__main .vms-ent-descline,
+.tribe-events-single .vms-rw-addon__main .vms-ent-descline,
+#tribe-tickets .vms-rw-addon__main .vms-ent-descline {
+  margin-top: 8px;
+}
+
+.single-tribe_events .vms-rw-addon__note,
+.tribe-events-single .vms-rw-addon__note,
+#tribe-tickets .vms-rw-addon__note {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  opacity: 0.78;
+}
+
+.single-tribe_events .vms-rw-addon__side,
+.tribe-events-single .vms-rw-addon__side,
+#tribe-tickets .vms-rw-addon__side {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.single-tribe_events .vms-rw-stepper,
+.tribe-events-single .vms-rw-stepper,
+#tribe-tickets .vms-rw-stepper {
+  align-items: center;
+  display: inline-grid;
+  grid-template-columns: 44px minmax(58px, 70px) 44px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 12px;
+  overflow: hidden;
+  width: max-content;
+}
+
+.single-tribe_events .vms-rw-stepper__btn,
+.tribe-events-single .vms-rw-stepper__btn,
+#tribe-tickets .vms-rw-stepper__btn,
+.single-tribe_events .vms-rw-stepper__input,
+.tribe-events-single .vms-rw-stepper__input,
+#tribe-tickets .vms-rw-stepper__input {
+  min-height: 44px;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+  box-shadow: none;
+}
+
+.single-tribe_events .vms-rw-stepper__btn,
+.tribe-events-single .vms-rw-stepper__btn,
+#tribe-tickets .vms-rw-stepper__btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  padding: 0 !important;
+  vertical-align: middle !important;
+  background: #f6f6f6;
+  color: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.single-tribe_events .vms-rw-stepper__input,
+.tribe-events-single .vms-rw-stepper__input,
+#tribe-tickets .vms-rw-stepper__input {
+  width: 100%;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0 6px;
+  background: #fff;
+  -moz-appearance: textfield;
+}
+
+.single-tribe_events .vms-rw-stepper__input::-webkit-outer-spin-button,
+.single-tribe_events .vms-rw-stepper__input::-webkit-inner-spin-button,
+.tribe-events-single .vms-rw-stepper__input::-webkit-outer-spin-button,
+.tribe-events-single .vms-rw-stepper__input::-webkit-inner-spin-button,
+#tribe-tickets .vms-rw-stepper__input::-webkit-outer-spin-button,
+#tribe-tickets .vms-rw-stepper__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.single-tribe_events .vms-rw-addon__status,
+.tribe-events-single .vms-rw-addon__status,
+#tribe-tickets .vms-rw-addon__status,
+.single-tribe_events .vms-rw-addon__soldout,
+.tribe-events-single .vms-rw-addon__soldout,
+#tribe-tickets .vms-rw-addon__soldout {
+  font-size: 0.88rem;
+  opacity: 0.78;
+}
+
+@media (min-width: 700px) {
+  .single-tribe_events .vms-rw-addon,
+  .tribe-events-single .vms-rw-addon,
+  #tribe-tickets .vms-rw-addon {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .single-tribe_events .vms-rw-addon__side,
+  .tribe-events-single .vms-rw-addon__side,
+  #tribe-tickets .vms-rw-addon__side {
+    justify-items: end;
+  }
+}
+
+/* Final UI polish pass: keep the purchase surface coherent across tickets, add-ons, summary, and CTA. */
+.vms-ticket-ui.vms-ticket-ui-v2 {
+  --vms-ui-surface: #ffffff;
+  --vms-ui-surface-soft: #f8fbff;
+  --vms-ui-surface-strong: #eef6ff;
+  --vms-ui-border: rgba(148, 163, 184, 0.26);
+  --vms-ui-border-strong: rgba(96, 165, 250, 0.34);
+  --vms-ui-shadow: 0 10px 20px rgba(15, 23, 42, 0.05);
+  --vms-ui-shadow-soft: 0 5px 12px rgba(15, 23, 42, 0.035);
+  --vms-ui-copy: rgba(15, 23, 42, 0.78);
+  --vms-ui-muted: rgba(15, 23, 42, 0.64);
+  --vms-ui-control-size: 42px;
+  --vms-ui-control-radius: 12px;
+  --vms-ui-input-width: 54px;
+  --vms-ui-summary-rail-width: 320px;
+  gap: 16px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2.vms-ticketing-flow {
+  border-color: rgba(15, 23, 42, 0.10);
+  border-radius: 18px;
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.94) 100%);
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets {
+  margin-top: 24px;
+  padding-top: 20px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item {
+  row-gap: 10px !important;
+  padding: 14px 16px !important;
+  border-radius: 14px !important;
+  border: 1px solid var(--vms-ui-border) !important;
+  background: linear-gradient(180deg, rgba(238, 246, 255, 0.80) 0%, rgba(255, 255, 255, 0.98) 100%) !important;
+  box-shadow: var(--vms-ui-shadow-soft) !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-content-title-container {
+  gap: 5px !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-content-title,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-title {
+  font-size: clamp(1.45rem, 1.32rem + 0.45vw, 1.85rem) !important;
+  line-height: 1.08 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-description,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-content-description,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .vms-ticket-desc {
+  color: var(--vms-ui-copy) !important;
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .vms-ticket-right-stack {
+  column-gap: 12px !important;
+  row-gap: 3px !important;
+  align-items: stretch !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity {
+  align-self: center !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra-price,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra-price * {
+  color: #0f172a !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra-price {
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: flex-end !important;
+  min-height: var(--vms-ui-control-size) !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra-available {
+  width: 54px !important;
+  color: var(--vms-ui-muted) !important;
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity {
+  gap: 8px !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity button,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-stepper__btn,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-validate {
+  min-height: var(--vms-ui-control-size) !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: var(--vms-ui-control-size) !important;
+  height: var(--vms-ui-control-size) !important;
+  min-width: var(--vms-ui-control-size) !important;
+  padding: 0 !important;
+  border: 1px solid rgba(15, 23, 42, 0.16) !important;
+  border-radius: var(--vms-ui-control-radius) !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  font-size: 22px !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity-number {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: var(--vms-ui-input-width) !important;
+  min-width: var(--vms-ui-input-width) !important;
+  height: var(--vms-ui-control-size) !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity-number-input,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-stepper__input {
+  width: var(--vms-ui-input-width) !important;
+  min-width: var(--vms-ui-input-width) !important;
+  max-width: var(--vms-ui-input-width) !important;
+  height: var(--vms-ui-control-size) !important;
+  min-height: var(--vms-ui-control-size) !important;
+  border: 1px solid rgba(15, 23, 42, 0.16) !important;
+  border-radius: var(--vms-ui-control-radius) !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 8px !important;
+  font-size: 19px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .tribe-tickets__tickets-item-quantity button:disabled,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-stepper__btn:disabled,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-addon-plus:disabled,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-addon-minus:disabled {
+  opacity: 0.42;
+  background: rgba(241, 245, 249, 0.92) !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-lock-note {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(245, 158, 11, 0.30);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.98) 0%, rgba(255, 247, 237, 0.96) 100%);
+  box-shadow: none;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-lock-copy {
+  color: var(--vms-ui-copy);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-benefit-note {
+  border-color: rgba(34, 197, 94, 0.24);
+  background: linear-gradient(180deg, rgba(236, 253, 245, 0.98) 0%, rgba(240, 253, 250, 0.96) 100%);
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-benefit-note .vms-ticket-lock-copy {
+  color: #166534;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-lock-actions {
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-lock-actions .vms-ticket-lock-action {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 38px;
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+  border-color: rgba(15, 23, 42, 0.18) !important;
+  background: #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+}
+
+
+/* 0.2.24.632: Ticket-specific help card is collapsible, compact, and collapsed by default. */
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-ticket-help {
+  margin-top: 10px !important;
+  padding: 12px !important;
+  border: 1px solid rgba(37, 99, 235, 0.20) !important;
+  border-radius: 14px !important;
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.98) 0%, rgba(248, 250, 252, 0.96) 100%) !important;
+  box-shadow: none !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-ticket-help-title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  cursor: pointer !important;
+  color: var(--vms-ui-ink) !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  margin: 0 !important;
+  list-style: none !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-ticket-help-title::-webkit-details-marker {
+  display: none !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-ticket-help-title::after {
+  content: '+' !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.10) !important;
+  color: var(--vms-ui-ink) !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-ticket-help[open] .vms-claim-ticket-help-title::after {
+  content: '–' !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-ticket-help-body {
+  margin-top: 8px !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-ticket-help-list {
+  margin: 0 !important;
+  padding-left: 0 !important;
+  color: var(--vms-ui-copy) !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-ticket-help-line {
+  margin: 0 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-ticket-help-line + .vms-claim-ticket-help-line {
+  margin-top: 6px !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-ticket-help-foot {
+  margin: 8px 0 0 !important;
+  color: var(--vms-ui-copy) !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-ticket-help[hidden] {
+  display: none !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-panel {
+  margin-top: 10px !important;
+  padding: 12px !important;
+  border: 1px solid var(--vms-ui-border) !important;
+  border-radius: 14px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-head {
+  margin-bottom: 12px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-title {
+  font-size: 17px !important;
+  line-height: 1.2 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-help,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-status {
+  color: var(--vms-ui-copy) !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-disclosure {
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-disclosure-summary {
+  font-size: 14px !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-disclosure-copy {
+  color: var(--vms-ui-copy) !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-rows {
+  gap: 12px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-row {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-label {
+  margin-bottom: 8px !important;
+  font-size: 14px !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-input-wrap {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 10px !important;
+  align-items: stretch !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-input {
+  min-height: 44px !important;
+  border: 1px solid rgba(15, 23, 42, 0.18) !important;
+  border-radius: 12px !important;
+  padding: 0 14px !important;
+  background: #ffffff !important;
+  font-size: 16px !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-validate {
+  min-width: 156px !important;
+  max-width: 100%;
+  padding: 0 16px !important;
+  border: 1px solid #0f172a !important;
+  border-radius: 12px !important;
+  background: #0f172a !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+  white-space: normal !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-validate:hover,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-validate:focus-visible {
+  border-color: #1d4ed8 !important;
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-validate:disabled {
+  border-color: rgba(15, 23, 42, 0.16) !important;
+  background: rgba(226, 232, 240, 0.96) !important;
+  color: rgba(15, 23, 42, 0.54) !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-summary {
+  display: flex;
+  justify-content: flex-end;
+  margin: 8px 0 0;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 #vms-ticketing-summary-stack {
+  width: min(100%, var(--vms-ui-summary-rail-width));
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-summary #vms-ticketing-subtotal {
+  box-sizing: border-box;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 12px 14px;
+  border: 1px solid var(--vms-ui-border);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: var(--vms-ui-shadow-soft);
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-summary .vms-ticketing-subtotal__primary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px;
+  align-items: baseline;
+  column-gap: 14px;
+  row-gap: 8px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-summary .vms-ticketing-subtotal__line {
+  display: contents;
+  font-size: 15px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-summary .vms-ticketing-subtotal__line-label {
+  min-width: 0;
+  align-self: baseline;
+  text-align: left;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-summary .vms-ticketing-subtotal__line-value {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  align-self: baseline;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-summary .vms-ticketing-subtotal__secondary {
+  margin-top: 10px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-summary .vms-ticketing-subtotal__addons-title {
+  font-size: 13px;
+  color: var(--vms-ui-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-summary .vms-ticketing-subtotal__addon-item {
+  font-size: 14px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar {
+  margin: 18px 0 0;
+  padding: 0;
+  border-top: 0;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar .tribe-tickets__tickets-footer.vms-ticketing-footer-stack {
+  display: block !important;
+  padding: 0 !important;
+  background: transparent;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar #vms-ticketing-action-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  width: min(100%, var(--vms-ui-summary-rail-width)) !important;
+  margin: 0 0 0 auto !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar #vms-ticketing-action-stack > #tribe-tickets__tickets-submit,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar #vms-ticketing-action-stack > .tribe-tickets__tickets-buy,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar #vms-ticketing-action-stack > #vms-addons-direct-add-status {
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar #vms-ticketing-action-stack > #tribe-tickets__tickets-submit,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar #vms-ticketing-action-stack > .tribe-tickets__tickets-buy {
+  min-height: 52px !important;
+  border-radius: 14px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar #vms-ticketing-action-stack > #vms-addons-direct-add-status {
+  padding: 10px 12px;
+  border-radius: 14px;
+  border-color: var(--vms-ui-border);
+  background: rgba(248, 250, 252, 0.96);
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addons {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addons__header {
+  margin-bottom: 14px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addons__title {
+  margin: 0 0 6px;
+  font-size: clamp(1.35rem, 1.2rem + 0.35vw, 1.65rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addons__intro {
+  margin: 0;
+  color: var(--vms-ui-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon-list {
+  gap: 12px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "main side";
+  gap: 10px 14px;
+  align-items: start;
+  padding: 13px 15px;
+  border: 1px solid var(--vms-ui-border);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(255, 255, 255, 0.98) 100%);
+  box-shadow: var(--vms-ui-shadow-soft);
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon.is-selected {
+  border-color: var(--vms-ui-border-strong);
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.90) 0%, rgba(255, 255, 255, 0.98) 100%);
+  box-shadow: var(--vms-ui-shadow-soft);
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon:not(.vms-rw-addon--no-image) {
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  grid-template-areas: "image main side";
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon__image {
+  grid-area: image;
+  align-self: start;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon__image img {
+  max-width: 72px;
+  border-radius: 14px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon__main {
+  grid-area: main;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon__head {
+  gap: 8px 12px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon__title {
+  font-size: 18px;
+  line-height: 1.18;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon__price {
+  font-size: 22px;
+  line-height: 1.05;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon__main .vms-ent-descline {
+  margin-top: 4px;
+  color: var(--vms-ui-copy);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon__note {
+  margin-top: 6px;
+  color: var(--vms-ui-muted);
+  font-size: 14px;
+  line-height: 1.42;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon__side {
+  grid-area: side;
+  justify-items: end;
+  align-content: start;
+  gap: 8px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  width: auto;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-stepper__btn {
+  width: var(--vms-ui-control-size);
+  min-width: var(--vms-ui-control-size);
+  height: var(--vms-ui-control-size);
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  border-radius: var(--vms-ui-control-radius);
+  background: #ffffff;
+  box-shadow: none;
+  font-size: 20px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-stepper__input {
+  padding: 0 8px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon__status,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon__soldout {
+  color: var(--vms-ui-muted);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: right;
+}
+
+@media (max-width: 782px) {
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticketing-flow {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas:
+      "title"
+      "right" !important;
+    row-gap: 12px !important;
+    padding: 16px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .vms-ticket-right-stack {
+    width: 100% !important;
+    min-width: 0 !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "qty price"
+      "avail avail" !important;
+    column-gap: 12px !important;
+    row-gap: 2px !important;
+    align-items: start !important;
+    justify-content: stretch !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity {
+    grid-area: qty !important;
+    justify-self: stretch !important;
+    align-self: start !important;
+    justify-content: flex-end !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra {
+    display: contents !important;
+    align-self: start !important;
+    text-align: right !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra-price {
+    grid-area: price !important;
+    justify-self: end !important;
+    min-height: 0 !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra-available {
+    grid-area: avail !important;
+    justify-self: end !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 112px !important;
+    text-align: right !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-summary {
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 #vms-ticketing-summary-stack {
+    width: min(100%, var(--vms-ui-summary-rail-width));
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar {
+    position: sticky;
+    bottom: 0;
+    z-index: 31;
+    padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(15, 23, 42, 0.10);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 -10px 22px rgba(15, 23, 42, 0.10);
+    backdrop-filter: saturate(160%) blur(12px);
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar .tribe-tickets__tickets-footer.vms-ticketing-footer-stack {
+    padding: 0 8px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar #vms-ticketing-action-stack {
+    margin: 0 auto !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar #vms-ticketing-action-stack > #tribe-tickets__tickets-submit,
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar #vms-ticketing-action-stack > .tribe-tickets__tickets-buy,
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-stickybar #vms-ticketing-action-stack > #vms-addons-direct-add-status {
+    width: 100% !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-addons {
+    padding-bottom: 0;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-lock-note,
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-claim-seat-panel {
+    padding: 14px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui-progressive .vms-claim-seat-input-wrap {
+    grid-template-columns: 1fr !important;
+    align-items: stretch !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui-progressive .vms-claim-seat-input,
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui-progressive .vms-claim-seat-validate {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex-basis: auto !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "main"
+      "side";
+    padding: 14px 16px;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon:not(.vms-rw-addon--no-image) {
+    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-areas:
+      "image main"
+      "side side";
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-rw-addon__image img {
+    max-width: 56px;
+  }
+}
+
+/* Server-controls desktop compact pass: keep V2 rows in a true two-column layout. */
+@media (min-width: 783px) {
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets {
+    margin-top: 18px;
+    padding-top: 14px;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .tribe-tickets__tickets-title {
+    margin-bottom: 10px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .tribe-tickets__tickets-item {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas: "title right" !important;
+    column-gap: 16px !important;
+    row-gap: 8px !important;
+    padding: 12px 16px !important;
+    align-items: start !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .tribe-tickets__tickets-item-content-title-container {
+    gap: 4px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .tribe-tickets__tickets-item-content-title,
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .tribe-tickets__tickets-item-title {
+    font-size: clamp(1.3rem, 1.2rem + 0.3vw, 1.6rem) !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .tribe-tickets__tickets-item-description,
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .tribe-tickets__tickets-item-content-description,
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .vms-ticket-desc {
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .vms-ticket-right-stack {
+    width: auto !important;
+    min-width: 196px !important;
+    max-width: none !important;
+    align-self: start !important;
+    display: grid !important;
+    grid-template-columns: auto auto !important;
+    grid-template-areas:
+      "qty price"
+      "avail avail" !important;
+    column-gap: 10px !important;
+    row-gap: 3px !important;
+    justify-content: end !important;
+    justify-items: end !important;
+    align-items: stretch !important;
+    align-content: start !important;
+    text-align: right !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra {
+    display: contents !important;
+    align-self: start !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .tribe-tickets__tickets-item-quantity {
+    grid-area: qty !important;
+    justify-self: end !important;
+    align-self: start !important;
+    gap: 6px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra-price,
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra-price * {
+    font-size: 20px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra-price {
+    grid-area: price !important;
+    min-height: 38px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .tribe-tickets__tickets-item-extra-available {
+    grid-area: avail !important;
+    width: auto !important;
+    max-width: none !important;
+    justify-self: center !important;
+    text-align: center !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets .tribe-tickets__tickets-item,
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-tickets [class*="tickets-item"] {
+    margin-bottom: 8px !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-lock-note,
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-benefit-note,
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-claim-seat-panel {
+    margin-top: 8px !important;
+    padding: 10px 12px !important;
+  }
+}
+
+
+/* v0.2.24.317 — force the V2 unified add-on mobile controls into the same visual order as ticket rows:
+   qty picker first, price second, with the whole bundle pinned to the right edge. */
+@media (max-width: 782px) {
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-side {
+    clear: both !important;
+    display: grid !important;
+    grid-template-columns: auto auto !important;
+    grid-template-areas:
+      "qty price"
+      "note note"
+      "status status" !important;
+    width: max-content !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 12px 0 0 auto !important;
+    justify-content: end !important;
+    justify-items: end !important;
+    align-items: stretch !important;
+    align-content: start !important;
+    column-gap: 8px !important;
+    row-gap: 8px !important;
+    text-align: right !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty {
+    grid-area: qty !important;
+    order: initial !important;
+    display: flex !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    justify-content: flex-end !important;
+    align-items: stretch !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-price {
+    grid-area: price !important;
+    order: initial !important;
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    justify-self: end !important;
+    align-self: center !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-addon-controls,
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-qty .vms-rw-stepper {
+    display: inline-flex !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+    justify-content: flex-end !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-ent-note {
+    grid-area: note !important;
+    width: 100% !important;
+    max-width: none !important;
+    justify-self: stretch !important;
+    text-align: left !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-rw-addon__status:empty {
+    display: none !important;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-rw-addon__status,
+  .vms-ticket-ui.vms-ticket-ui-v2.vms-ticket-ui--server-controls .vms-ticket-ui-addons .vms-entitlements-block.vms-entitlements--compact .vms-entitlements-soldout {
+    grid-area: status !important;
+    order: initial !important;
+    width: 100% !important;
+    margin: 0 !important;
+    text-align: left !important;
+  }
+}
+
+
+.vms-ticket-ui-help {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  background: rgba(255,255,255,.78);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-help {
+  margin-bottom: 16px;
+}
+
+.vms-ticket-ui .vms-hidden {
+  display: none !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-addons .vms-addon-controls--checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-addons .vms-ent-note {
+  grid-area: note !important;
+  width: 100% !important;
+  max-width: 320px !important;
+  margin: 0 !important;
+  justify-self: end !important;
+  text-align: left !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  font-weight: 600 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-addons .vms-ent-note--rule {
+  color: #b42318 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-addons .vms-ent-note--selected {
+  color: #187d54 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-addons .vms-ent-note:empty {
+  display: none !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-addons .vms-addon-checkbox-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-addons .vms-addon-input--checkbox {
+  flex: 0 0 auto;
+  width: 18px !important;
+  min-width: 18px !important;
+  max-width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  max-height: 18px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+  -moz-appearance: checkbox !important;
+  background: initial !important;
+  border: initial !important;
+  border-radius: 0 !important;
+  accent-color: initial !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-addons .vms-addon-checkbox-label {
+  white-space: nowrap;
+  font-size: 15px !important;
+  line-height: 1.2 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-addons .vms-addon-checkbox-wrap.is-selected {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-ui-addons .vms-rw-addon.is-selected {
+  border-color: rgba(24, 125, 84, 0.28);
+  box-shadow: 0 0 0 2px rgba(24, 125, 84, 0.08);
+}
+
+
+
+/* 0.2.24.629: Public ticket-choice help for progressive ticketing. */
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-choice-help {
+  margin: -2px 0 14px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 14px;
+  background: #f8fbff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-choice-help__summary {
+  cursor: pointer;
+  padding: 10px 14px;
+  color: #1d4ed8;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+  list-style-position: inside;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-choice-help__body {
+  padding: 0 14px 12px;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-choice-help__body p {
+  margin: 0 0 8px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-choice-help__list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-choice-help__list li + li {
+  margin-top: 5px;
+}
+
+@media (max-width: 782px) {
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-choice-help {
+    margin: 0 0 16px;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-choice-help__summary {
+    font-size: 16px;
+    padding: 12px 14px;
+  }
+
+  .vms-ticket-ui.vms-ticket-ui-v2 .vms-ticket-choice-help__body {
+    font-size: 15px;
+  }
+}
+
+/* 0.2.24.636: Inline approved/free admission row help. */
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-qualified-ticket-more-info {
+  margin-top: 6px !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-qualified-ticket-more-info-summary {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  color: var(--vms-ui-link, #2563eb) !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
+  list-style: none !important;
+  margin-top: 3px !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-qualified-ticket-more-info-summary::-webkit-details-marker {
+  display: none !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-qualified-ticket-more-info-summary::after {
+  content: '+' !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.10) !important;
+  color: var(--vms-ui-ink, #0f172a) !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-qualified-ticket-more-info[open] .vms-qualified-ticket-more-info-summary::after {
+  content: '–' !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-qualified-ticket-more-info-body {
+  margin-top: 8px !important;
+  color: var(--vms-ui-copy, #334155) !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-qualified-ticket-more-info-intro {
+  margin: 0 0 6px !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-qualified-ticket-more-info-list {
+  list-style-position: inside !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-qualified-ticket-more-info-list li + li {
+  margin-top: 4px !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-qualified-ticket-more-info-action {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-top: 10px !important;
+  padding: 8px 12px !important;
+  border-radius: 999px !important;
+  background: var(--vms-ui-ink, #0f172a) !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  text-decoration: none !important;
+}
+
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-qualified-ticket-more-info-action:hover,
+.vms-ticket-ui.vms-ticket-ui-v2 .vms-qualified-ticket-more-info-action:focus-visible {
+  filter: brightness(1.05) !important;
+  text-decoration: none !important;
+}

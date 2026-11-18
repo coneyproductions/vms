@@ -1,0 +1,88 @@
+.vms-safety-admin .vms-safety-panel {
+  margin-top: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.vms-safety-admin .vms-safety-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.vms-safety-admin .vms-safety-form {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.vms-safety-admin .vms-safety-card {
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+}
+
+.vms-safety-admin .vms-safety-checklist {
+  list-style: none;
+  padding-left: 0;
+  margin: 8px 0 0;
+}
+
+.vms-safety-admin .vms-safety-checklist li {
+  border-top: 1px solid #f0f0f1;
+  padding: 8px 0;
+}
+
+.vms-safety-admin .vms-safety-checklist li.is-done span {
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+.vms-safety-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.vms-safety-inline-form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.vms-safety-chip {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  background: #f0f6fc;
+  border: 1px solid #c3d9ed;
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-left: 6px;
+}
+
+.vms-safety-sticky-save {
+  position: sticky;
+  bottom: 0;
+  background: #ffffff;
+  border-top: 1px solid #dcdcde;
+  margin: 12px -14px -14px;
+  padding: 10px 14px;
+  z-index: 20;
+}
+
+.vms-safety-form[data-vms-safety-dirty="0"] .vms-safety-sticky-save {
+  opacity: 0.6;
+}
+
+.vms-safety-activity {
+  margin-left: 1.2em;
+}
+
+@media (min-width: 960px) {
+  .vms-safety-admin .vms-safety-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

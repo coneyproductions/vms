@@ -1,0 +1,526 @@
+<?php
+defined('ABSPATH') || exit;
+
+if (!function_exists('bvmgr_event_plan_import_filter_upload_dir')) {
+	/**
+	 * @param array<string,mixed> $uploads
+	 * @return array<string,mixed>
+	 */
+	function bvmgr_event_plan_import_filter_upload_dir(array $uploads): array
+	{
+		$context = isset($GLOBALS['bvmgr_event_plan_import_upload_dir_context']) && is_array($GLOBALS['bvmgr_event_plan_import_upload_dir_context'])
+			? $GLOBALS['bvmgr_event_plan_import_upload_dir_context']
+			: array();
+		$path = isset($context['path']) ? trim((string) $context['path']) : '';
+		if ($path === '') {
+			return $uploads;
+		}
+
+		$uploads['path'] = $path;
+		$uploads['basedir'] = $path;
+		$uploads['subdir'] = '';
+		$uploads['url'] = '';
+		$uploads['baseurl'] = '';
+		$uploads['error'] = false;
+
+		return $uploads;
+	}
+}
+
+if (!function_exists('bvmgr_event_plan_import_with_scoped_upload_dir')) {
+	/**
+	 * @param array<string,mixed> $context
+	 * @return mixed
+	 */
+	function bvmgr_event_plan_import_with_scoped_upload_dir(array $context, callable $callback)
+	{
+        $had_context = array_key_exists('bvmgr_event_plan_import_upload_dir_context', $GLOBALS);
+        $previous = $GLOBALS['bvmgr_event_plan_import_upload_dir_context'] ?? null;
+        $had_filter = has_filter('upload_dir', 'bvmgr_event_plan_import_filter_upload_dir') !== false;
+        $GLOBALS['bvmgr_event_plan_import_upload_dir_context'] = $context;
+        if (!$had_filter) add_filter('upload_dir', 'bvmgr_event_plan_import_filter_upload_dir');
+
+        try {
+            return $callback();
+        } finally {
+            if (!$had_filter) remove_filter('upload_dir', 'bvmgr_event_plan_import_filter_upload_dir');
+            if ($had_context) $GLOBALS['bvmgr_event_plan_import_upload_dir_context'] = $previous;
+            else unset($GLOBALS['bvmgr_event_plan_import_upload_dir_context']);
+        }
+	}
+}
+
+if (!function_exists('bvmgr_event_plan_import_redirect_storage_failure')) {
+	function bvmgr_event_plan_import_redirect_storage_failure(): void
+	{
+		bvmgr_event_plan_import_set_notice('error', __('Failed to store uploaded CSV file.', 'backstage-venue-manager'));
+		wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
+		exit;
+	}
+}
+
+if (!function_exists('bvmgr_event_plan_import_handle_preview_action')) {
+	function bvmgr_event_plan_import_handle_preview_action(): void
+	{
+		if (!current_user_can('manage_options')) {
+			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
+		}
+
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_import_preview', '_wpnonce'), '_wpnonce');
+
+		$upload = bvmgr_upload_read_file($_FILES, 'event_plan_csv_file');
+		if (is_wp_error($upload)) {
+			bvmgr_event_plan_import_set_notice('error', __('Please choose a valid CSV file to preview.', 'backstage-venue-manager'));
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
+			exit;
+		}
+
+		$validated = bvmgr_validate_uploaded_file(
+			$upload,
+			array(
+				'allowed_mimes' => bvmgr_event_plan_import_allowed_mimes(),
+				'max_bytes' => bvmgr_event_plan_import_max_bytes(),
+				'type_message' => __('Please choose a valid CSV file to preview.', 'backstage-venue-manager'),
+				'empty_message' => __('The uploaded CSV file is empty.', 'backstage-venue-manager'),
+				'too_large_message' => __('The uploaded CSV file is too large.', 'backstage-venue-manager'),
+				'tmp_invalid_message' => __('The uploaded CSV file could not be verified.', 'backstage-venue-manager'),
+			)
+		);
+		if (is_wp_error($validated)) {
+			bvmgr_event_plan_import_set_notice('error', $validated->get_error_message());
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
+			exit;
+		}
+
+		$token = bvmgr_event_plan_import_make_token();
+		$source_name = isset($upload['name']) ? (string) $upload['name'] : '';
+		$prepared = bvmgr_event_plan_import_prepare_generated_path('csv', $token, 'source');
+		if (is_wp_error($prepared)) {
+			bvmgr_event_plan_import_set_notice('error', $prepared->get_error_message());
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
+			exit;
+		}
+
+		$target_path = (string) ($prepared['path'] ?? '');
+		$target_key = (string) ($prepared['storage_key'] ?? '');
+		$tmp_name = trim((string) ($validated['tmp_name'] ?? ''));
+		if ($target_path === '' || $target_key === '' || $tmp_name === '') {
+			bvmgr_event_plan_import_redirect_storage_failure();
+		}
+
+		if (!function_exists('wp_handle_upload')) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+
+		$upload_for_handle = $upload;
+		$upload_for_handle['size'] = max(0, (int) ($validated['size'] ?? ($upload['size'] ?? 0)));
+		$target_dir = dirname($target_path);
+		$target_basename = basename($target_path);
+		$handled = bvmgr_event_plan_import_with_scoped_upload_dir(
+			array(
+				'path' => $target_dir,
+			),
+			static function () use (&$upload_for_handle, $target_basename): array {
+				return wp_handle_upload(
+					$upload_for_handle,
+					array(
+						'test_form' => false,
+						'mimes' => bvmgr_event_plan_import_allowed_mimes(),
+						'unique_filename_callback' => static function (string $dir, string $name, string $ext) use ($target_basename): string {
+							unset($dir, $name, $ext);
+							return $target_basename;
+						},
+					)
+				);
+			}
+		);
+
+		$handled_file = is_array($handled) && isset($handled['file']) ? trim((string) $handled['file']) : '';
+		$target_real = realpath($target_path);
+		$handled_real = $handled_file !== '' ? realpath($handled_file) : false;
+		$path_matches_target = (
+			is_string($target_real)
+			&& $target_real !== ''
+			&& is_string($handled_real)
+			&& $handled_real !== ''
+			&& wp_normalize_path($handled_real) === wp_normalize_path($target_real)
+		);
+		if (!is_array($handled) || !empty($handled['error']) || !$path_matches_target) {
+			if (
+				$handled_file !== ''
+				&& file_exists($handled_file)
+				&& is_file($handled_file)
+				&& function_exists('bvmgr_event_plan_import_path_is_safe')
+				&& bvmgr_event_plan_import_path_is_safe($handled_file)
+			) {
+				wp_delete_file($handled_file);
+			}
+
+			bvmgr_event_plan_import_redirect_storage_failure();
+		}
+		@chmod($target_path, 0640); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- Preserve 0640 permissions on the validated private staging CSV so administrator preview uploads remain stored under the private import bucket without widening web access; WP_Filesystem would add credential-driven semantics.
+
+		$options = array(
+			'auto_create_missing_vendors' => !empty($_POST['auto_create_missing_vendors']),
+			'allow_update_locked_plans' => !empty($_POST['allow_update_locked_plans']),
+		);
+
+		$preview = bvmgr_event_plan_import_build_preview_from_csv($target_path, $source_name, $options, $token, $target_key);
+		if (is_wp_error($preview)) {
+			bvmgr_event_plan_import_delete_stored_file($target_key);
+			bvmgr_record_operational_issue(
+				'event_plan_import_preview_failed',
+				array(
+					'service' => 'event_plan_import',
+					'operation' => 'preview',
+					'stage' => 'build_preview',
+					'status' => 'failed',
+				),
+				$preview
+			);
+			bvmgr_event_plan_import_set_notice('error', $preview->get_error_message());
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
+			exit;
+		}
+
+		bvmgr_event_plan_import_set_preview_payload($token, $preview);
+
+		$summary = isset($preview['summary']) && is_array($preview['summary']) ? $preview['summary'] : array();
+		$message = sprintf(
+			/* translators: 1: create count, 2: update count, 3: skip count, 4: error count */
+			__('Preview ready. Create: %1$d, Update: %2$d, Skip: %3$d, Errors: %4$d.', 'backstage-venue-manager'),
+			(int) ($summary['create'] ?? 0),
+			(int) ($summary['update'] ?? 0),
+			(int) ($summary['skip'] ?? 0),
+			(int) ($summary['errors'] ?? 0)
+		);
+		bvmgr_event_plan_import_set_notice('success', $message);
+
+		wp_safe_redirect(bvmgr_event_plan_import_admin_page_url(array('preview_token' => $token)));
+		exit;
+	}
+}
+add_action('admin_post_vms_event_plan_import_preview', 'bvmgr_event_plan_import_handle_preview_action');
+
+if (!function_exists('bvmgr_event_plan_import_read_selected_rows_from_post')) {
+	/**
+	 * @return array<int,int>
+	 */
+	function bvmgr_event_plan_import_read_selected_rows_from_post(array $source): array
+	{
+		$selected_rows_raw = bvmgr_request_read_array($source, 'selected_rows');
+		if ($selected_rows_raw === null) {
+			return array();
+		}
+
+		$selected_rows = array();
+		foreach ($selected_rows_raw as $row_number) {
+			if (!is_scalar($row_number)) {
+				continue;
+			}
+
+			$row_number = trim((string) $row_number);
+			if ($row_number === '' || !ctype_digit($row_number)) {
+				continue;
+			}
+
+			$row_number = (int) $row_number;
+			if ($row_number > 0) {
+				$selected_rows[] = $row_number;
+			}
+		}
+
+		return array_values(array_unique($selected_rows));
+	}
+}
+
+if (!function_exists('bvmgr_event_plan_import_handle_commit_action')) {
+	function bvmgr_event_plan_import_handle_commit_action(): void
+	{
+		if (!current_user_can('manage_options')) {
+			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
+		}
+
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_import_commit', '_wpnonce'), '_wpnonce');
+
+		$token = isset($_POST['preview_token']) ? sanitize_key((string) $_POST['preview_token']) : '';
+		if ($token === '') {
+			bvmgr_event_plan_import_set_notice('error', __('Missing preview token. Please run Preview again.', 'backstage-venue-manager'));
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
+			exit;
+		}
+
+		$preview = bvmgr_event_plan_import_get_preview_payload($token);
+		if (empty($preview)) {
+			bvmgr_event_plan_import_set_notice('error', __('Preview has expired or is missing. Please run Preview again.', 'backstage-venue-manager'));
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
+			exit;
+		}
+
+		$commit_scope_raw = isset($_POST['commit_scope']) ? sanitize_key((string) $_POST['commit_scope']) : 'all';
+		$commit_scope = in_array($commit_scope_raw, array('all', 'selected'), true) ? $commit_scope_raw : 'all';
+		$selected_rows = bvmgr_event_plan_import_read_selected_rows_from_post($_POST);
+
+		if ($commit_scope === 'selected' && empty($selected_rows)) {
+			bvmgr_event_plan_import_set_notice('error', __('Select at least one eligible row before committing selected rows.', 'backstage-venue-manager'));
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url(array('preview_token' => $token)));
+			exit;
+		}
+
+		$result = bvmgr_event_plan_import_run_commit($preview, array(
+			'scope' => $commit_scope,
+			'selected_rows' => $selected_rows,
+		));
+		if (is_wp_error($result)) {
+			bvmgr_record_operational_issue(
+				'event_plan_import_commit_failed',
+				array(
+					'service' => 'event_plan_import',
+					'operation' => 'commit',
+					'stage' => 'run_commit',
+					'status' => 'failed',
+				),
+				$result
+			);
+			bvmgr_event_plan_import_set_notice('error', $result->get_error_message());
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url(array('preview_token' => $token)));
+			exit;
+		}
+
+		bvmgr_event_plan_import_delete_preview_payload($token);
+
+		$summary = isset($result['summary']) && is_array($result['summary']) ? $result['summary'] : array();
+		$message = sprintf(
+			/* translators: 1: create count, 2: update count, 3: skip count, 4: error count */
+			__('Import committed. Create: %1$d, Update: %2$d, Skip: %3$d, Errors: %4$d.', 'backstage-venue-manager'),
+			(int) ($summary['create'] ?? 0),
+			(int) ($summary['update'] ?? 0),
+			(int) ($summary['skip'] ?? 0),
+			(int) ($summary['errors'] ?? 0)
+		);
+
+		$template_not_applied = (int) ($summary['template_not_applied'] ?? 0);
+		if ($template_not_applied > 0) {
+			$message .= ' ' . sprintf(
+				/* translators: %d: plans count */
+				__('Ticketing template not applied on %d plan(s).', 'backstage-venue-manager'),
+				$template_not_applied
+			);
+		}
+		if ($commit_scope === 'selected') {
+			$message .= ' ' . sprintf(
+				/* translators: %d: selected rows committed */
+				__('Selected rows committed: %d.', 'backstage-venue-manager'),
+				(int) ($summary['selected_rows_committed'] ?? 0)
+			);
+		}
+
+		bvmgr_event_plan_import_set_notice('success', $message);
+		wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
+		exit;
+	}
+}
+add_action('admin_post_vms_event_plan_import_commit', 'bvmgr_event_plan_import_handle_commit_action');
+
+if (!function_exists('bvmgr_event_plan_import_handle_download_report_action')) {
+	function bvmgr_event_plan_import_handle_download_report_action(): void
+	{
+		if (!current_user_can('manage_options')) {
+			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
+		}
+
+		$token = isset($_REQUEST['preview_token']) ? sanitize_key((string) $_REQUEST['preview_token']) : '';
+		if ($token === '') {
+			wp_die(esc_html__('Missing preview token.', 'backstage-venue-manager'));
+		}
+
+		$nonce = (isset($_REQUEST['_wpnonce']) && !is_array($_REQUEST['_wpnonce']))
+			? sanitize_text_field(wp_unslash((string) $_REQUEST['_wpnonce']))
+			: '';
+		if (!wp_verify_nonce($nonce, bvmgr_nonce_action_for_value($nonce, 'bvmgr_event_plan_import_download_report_' . $token))) {
+			wp_die(esc_html__('Invalid request nonce.', 'backstage-venue-manager'));
+		}
+
+		$preview = bvmgr_event_plan_import_get_preview_payload($token);
+		if (empty($preview) || !is_array($preview)) {
+			wp_die(esc_html__('Preview report is no longer available. Run Preview again.', 'backstage-venue-manager'));
+		}
+
+		$path = bvmgr_event_plan_import_storage_path((string) ($preview['report_csv_storage_key'] ?? ($preview['report_csv_path'] ?? '')));
+		if ($path === '' || !file_exists($path) || !bvmgr_event_plan_import_path_is_safe($path)) {
+			wp_die(esc_html__('Preview report file is missing.', 'backstage-venue-manager'));
+		}
+
+		$filename = 'vms-event-plan-import-preview-' . gmdate('Ymd-His') . '.csv';
+		if (function_exists('bvmgr_private_files_stream_path')) {
+			bvmgr_private_files_stream_path($path, $filename, 'text/csv');
+		}
+
+		nocache_headers();
+		header('Content-Type: text/csv; charset=utf-8');
+		header('Content-Disposition: attachment; filename="' . sanitize_file_name($filename) . '"');
+		readfile($path); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile -- Stream the validated private preview report CSV directly to the authorized administrator response; WordPress has no equivalent streamed file-download helper for this local staged file.
+		exit;
+	}
+}
+add_action('admin_post_vms_event_plan_import_download_report_csv', 'bvmgr_event_plan_import_handle_download_report_action');
+
+if (!function_exists('bvmgr_event_plan_import_handle_revert_last_action')) {
+	function bvmgr_event_plan_import_handle_revert_last_action(): void
+	{
+		if (!current_user_can('manage_options')) {
+			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
+		}
+
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_import_revert_last', '_wpnonce'), '_wpnonce');
+
+		$result = bvmgr_event_plan_import_revert_last_run();
+		if (is_wp_error($result)) {
+			bvmgr_record_operational_issue(
+				'event_plan_import_revert_failed',
+				array(
+					'service' => 'event_plan_import',
+					'operation' => 'revert',
+					'stage' => 'run_revert',
+					'status' => 'failed',
+				),
+				$result
+			);
+			bvmgr_event_plan_import_set_notice('error', $result->get_error_message());
+			wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
+			exit;
+		}
+
+		$message = sprintf(
+			/* translators: 1: restored count, 2: failed count */
+			__('Revert complete. Restored: %1$d, Failed: %2$d.', 'backstage-venue-manager'),
+			(int) ($result['restored'] ?? 0),
+			(int) ($result['failed'] ?? 0)
+		);
+		bvmgr_event_plan_import_set_notice('success', $message);
+		wp_safe_redirect(bvmgr_event_plan_import_admin_page_url());
+		exit;
+	}
+}
+add_action('admin_post_vms_event_plan_import_revert_last', 'bvmgr_event_plan_import_handle_revert_last_action');
+
+if (!function_exists('bvmgr_event_plan_import_handle_download_sample_csv')) {
+	function bvmgr_event_plan_import_handle_download_sample_csv(): void
+	{
+		if (!current_user_can('manage_options')) {
+			wp_die(esc_html__('Access denied.', 'backstage-venue-manager'));
+		}
+
+		check_admin_referer(bvmgr_nonce_action_for_request('bvmgr_event_plan_import_download_sample_csv', '_wpnonce'), '_wpnonce');
+
+		nocache_headers();
+		$filename = 'vms-event-plan-import-sample-' . gmdate('Ymd-His') . '.csv';
+		header('Content-Type: text/csv; charset=utf-8');
+		header('Content-Disposition: attachment; filename="' . sanitize_file_name($filename) . '"');
+
+		$out = fopen('php://output', 'wb');
+		if (!is_resource($out)) {
+			wp_die(esc_html__('Could not open output stream.', 'backstage-venue-manager'));
+		}
+
+		fputcsv($out, array(
+			'event_key',
+			'event_date',
+			'venue_name',
+			'primary_vendor_name',
+			'event_title',
+			'start_time',
+			'end_time',
+			'agenda_text',
+			'comp_structure',
+			'flat_fee_amount',
+			'door_split_percent',
+			'attendance_bonus_mode',
+			'attendance_bonus_start_count',
+			'attendance_bonus_step_size',
+			'attendance_bonus_step_bonus',
+			'attendance_bonus_per_ticket_rate',
+			'attendance_bonus_max_bonus',
+			'secondary_vendor_type',
+			'secondary_vendor_1',
+			'secondary_vendor_2',
+			'secondary_vendor_3',
+		));
+
+		fputcsv($out, array(
+			'2026-03-07-wheelhouse',
+			'2026-03-07',
+			'Main Venue',
+			'Wheelhouse',
+			'Wheelhouse',
+			'19:00',
+			'21:30',
+			'Bring a chair.',
+			'flat_fee',
+			'500',
+			'',
+			'',
+			'',
+			'',
+			'',
+			'',
+			'',
+			'food_truck',
+			'Taco Truck',
+			'BBQ Trailer',
+			'',
+		));
+
+		fputcsv($out, array(
+			'2026-03-08-acoustic-night',
+			'2026-03-08',
+			'Main Venue',
+			'Acoustic Duo',
+			'Acoustic Night',
+			'19:30',
+			'22:00',
+			'Doors at 6:30pm.',
+			'door_split',
+			'',
+			'70',
+			'',
+			'',
+			'',
+			'',
+			'',
+			'',
+			'photographer',
+			'Jane Photos',
+			'',
+			'',
+		));
+
+		fputcsv($out, array(
+			'2026-03-09-bonus-night',
+			'2026-03-09',
+			'Main Venue',
+			'Bonus Band',
+			'Bonus Night',
+			'20:00',
+			'23:00',
+			'Bonus starts after the presale threshold.',
+			'attendance_bonus',
+			'500',
+			'',
+			'step',
+			'100',
+			'50',
+			'250',
+			'',
+			'10000',
+			'',
+			'',
+			'',
+			'',
+		));
+
+		fclose($out); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Close the php://output sample-download stream after writing the fixed CSV template; WPCS allows the corresponding php://output fopen() but cannot infer the stream type here.
+		exit;
+	}
+}
+add_action('admin_post_vms_event_plan_import_download_sample_csv', 'bvmgr_event_plan_import_handle_download_sample_csv');
